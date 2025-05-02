@@ -1,16 +1,16 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 
-export default function LandingPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+const LandingPage = () => {
+  const { user } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      navigate("/dashboard")
     }
-  }, [user, navigate]);
+  }, [user, navigate])
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-400 to-purple-600 text-white">
@@ -18,12 +18,8 @@ export default function LandingPage() {
       <header className="flex justify-between items-center p-6">
         <h1 className="text-2xl font-bold">MoneyManager</h1>
         <nav className="space-x-4">
-          <a href="/login" className="hover:underline">
-            Login
-          </a>
-          <a href="/register" className="hover:underline">
-            Register
-          </a>
+          <a href="/login" className="hover:underline">Login</a>
+          <a href="/register" className="hover:underline">Register</a>
         </nav>
       </header>
 
@@ -56,5 +52,7 @@ export default function LandingPage() {
         © 2025 MoneyManager. All rights reserved.
       </footer>
     </div>
-  );
+  )
 }
+
+export default LandingPage
