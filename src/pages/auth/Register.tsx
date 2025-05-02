@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { doc, setDoc } from 'firebase/firestore'
+import { auth, db } from '../lib/firebase'
 
 const Register = () => {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,21 +19,21 @@ const Register = () => {
     setError('')
     setSuccess('')
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: 'https://moniq.pages.dev/login', // ganti sesuai URL kamu
-      },
-    })
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
 
-    if (signUpError) {
-      setError(signUpError.message)
-      setLoading(false)
-      return
+      await setDoc(doc(db, 'profiles', user.uid), {
+        full_name: fullName,
+        created_at: new Date(),
+      })
+
+      setSuccess('Berhasil daftar! Silakan login.')
+      setTimeout(() => navigate('/login'), 1000)
+    } catch (err: any) {
+      setError(err.message)
     }
 
-    setSuccess('Berhasil daftar! Silakan cek email kamu untuk verifikasi sebelum login.')
     setLoading(false)
   }
 
