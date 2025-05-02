@@ -38,13 +38,17 @@ const RegisterPage = () => {
       await sendEmailVerification(user)
       await signOut(auth)
 
-      setRedirecting(true) // aktifkan spinner
+      // ✅ Simpan credential sementara (dienkripsi ringan)
+      sessionStorage.setItem("moniq_temp_email", btoa(email))
+      sessionStorage.setItem("moniq_temp_password", btoa(password))
+
+      setRedirecting(true)
 
       setTimeout(() => {
         navigate("/verify-email-pending", {
           state: { email, password },
         })
-      }, 1200) // kasih delay 1.2 detik biar keliatan transisinya
+      }, 1200)
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat mendaftar.")
       setLoading(false)

@@ -6,25 +6,41 @@ import { sendEmailVerification, signInWithEmailAndPassword } from "firebase/auth
 const VerifyEmailPending = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { email, password } = location.state || {}
+
+  // Ambil dari state atau fallback ke sessionStorage (dengan decode btoa)
+  const email = location.state?.email || atob(sessionStorage.getItem("moniq_temp_email") || "")
+  const password = location.state?.password || atob(sessionStorage.getItem("moniq_temp_password") || "")
+
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
   const [verified, setVerified] = useState(false)
 
-  // 1. Auto-polling cek verifikasi
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
         const currentUser = auth.currentUser
+
+        // login ulang kalau user belum ada
+        if (!currentUser && email && password) {
+          await signInWithEmailAndPassword(auth, email, password)
+          return
+        }
+
         if (currentUser) {
           await currentUser.reload()
           if (currentUser.emailVerified) {
             clearInterval(interval)
             setVerified(true)
             setMessage("Email telah diverifikasi! Masuk otomatis...")
+
             setTimeout(async () => {
               try {
-                await signInWithEmailAndPassword(auth, email, password)
+                // login ulang hanya kalau belum login
+                if (!auth.currentUser) {
+                  await signInWithEmailAndPassword(auth, email, password)
+                }
+                sessionStorage.removeItem("moniq_temp_email")
+                sessionStorage.removeItem("moniq_temp_password")
                 navigate("/dashboard")
               } catch (err) {
                 console.error("Gagal auto-login:", err)
@@ -41,10 +57,10 @@ const VerifyEmailPending = () => {
     return () => clearInterval(interval)
   }, [email, password, navigate])
 
-  // 2. Kirim ulang email verifikasi
   const handleResend = async () => {
     setLoading(true)
     setMessage("")
+
     try {
       const user = auth.currentUser
       if (user) {
