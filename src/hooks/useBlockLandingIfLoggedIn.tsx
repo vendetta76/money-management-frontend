@@ -24,7 +24,10 @@ export const useBlockLandingIfLoggedIn = () => {
             OK
           </button>
         </div>
-      ), { duration: 10000 }) // tampil selama 10 detik max
+      ), {
+        duration: 10000,
+        id: "block-landing-warning", // optional: biar nggak dobel
+      })
     }
   }, [user, loading, navigate])
 }
