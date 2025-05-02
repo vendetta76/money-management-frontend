@@ -9,8 +9,8 @@ const LandingPage = () => {
       <header className="flex justify-between items-center p-6">
         <h1 className="text-2xl font-bold">MoniQ</h1>
         <nav className="space-x-4">
-          <a href="/login" className="hover:underline transition">Login</a>
-          <a href="/register" className="hover:underline transition">Register</a>
+          <a href="/login" className="hover:underline">Login</a>
+          <a href="/register" className="hover:underline">Register</a>
         </nav>
       </header>
 
@@ -19,7 +19,7 @@ const LandingPage = () => {
         <h2 className="text-4xl md:text-5xl font-extrabold leading-tight mb-6 animate-bounce">
           Kelola Keuanganmu Dengan Mudah
         </h2>
-        <p className="text-lg md:text-xl mb-8 max-w-xl">
+        <p className="text-lg md:text-xl mb-8">
           MoneyManager membantu kamu mengatur pemasukan dan pengeluaran secara efektif dan efisien.
         </p>
         <div className="space-x-4">

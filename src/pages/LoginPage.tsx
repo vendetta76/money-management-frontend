@@ -4,9 +4,10 @@ import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth
 import { auth } from "../lib/firebaseClient"
 import { useAuth } from "../context/AuthContext"
 import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn"
+import BackButton from "../components/BackButton" // pastikan file ini ada
 
 const LoginPage = () => {
-  useRedirectIfLoggedIn() // ✅ Auto redirect kalau sudah login & verified
+  useRedirectIfLoggedIn()
 
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -33,7 +34,7 @@ const LoginPage = () => {
         return
       }
 
-       // fallback, meski biasanya udah diredirect otomatis (  isi navigate("/profile")         )
+      navigate("/profile") // fallback manual
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat login.")
     } finally {
@@ -55,7 +56,10 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-700 p-4">
       <div className="bg-white w-full max-w-md p-8 rounded-xl shadow-xl">
+        <BackButton />
+
         <h1 className="text-3xl font-bold text-center text-purple-700 mb-6">Login ke MoniQ</h1>
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -105,12 +109,21 @@ const LoginPage = () => {
             {loading ? "Loading..." : "Login"}
           </button>
         </form>
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Belum punya akun?{" "}
-          <a href="/register" className="text-purple-600 hover:underline">
-            Daftar sekarang
-          </a>
-        </p>
+
+        {/* Link navigasi bawah */}
+        <div className="text-center text-sm text-gray-600 mt-4 space-y-2">
+          <p>
+            Belum punya akun?{" "}
+            <a href="/register" className="text-purple-600 hover:underline">
+              Daftar sekarang
+            </a>
+          </p>
+          <p>
+            <a href="/forgot-password" className="text-purple-600 hover:underline">
+              Lupa password?
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   )
