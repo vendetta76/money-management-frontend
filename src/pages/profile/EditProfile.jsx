@@ -1,3 +1,5 @@
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
+import { auth } from "../../lib/firebaseClient";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
@@ -20,7 +22,7 @@ export default function EditProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (user?.id) {
-        const { data, error } = await supabase
+        const { data, error } = await firebase
           .from("profiles")
           .select("username, avatar_url")
           .eq("id", user.id)

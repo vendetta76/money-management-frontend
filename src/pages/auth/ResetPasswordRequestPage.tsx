@@ -1,3 +1,5 @@
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebaseClient";
 // src/pages/auth/ResetPasswordRequestPage.tsx
 import { useState } from 'react'
 
@@ -7,7 +9,7 @@ export default function ResetPasswordRequestPage() {
   const [error, setError] = useState('')
 
   const handleReset = async () => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await firebase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     })
     if (error) setError(error.message)

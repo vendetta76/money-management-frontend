@@ -1,3 +1,5 @@
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebaseClient";
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -14,7 +16,7 @@ const ResetPassword: React.FC = () => {
     setError(null)
     setSuccess(null)
 
-    const { error } = await supabase.auth.updateUser({ password })
+    const { error } = await updatePassword(authUser({ password })
 
     if (error) {
       setError(error.message)

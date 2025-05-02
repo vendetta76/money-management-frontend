@@ -1,3 +1,5 @@
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebaseClient";
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -11,7 +13,7 @@ const LoginPage = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await signInWithEmailAndPassword(auth({ email, password })
     if (error) setError(error.message)
     else navigate('/profile')
   }

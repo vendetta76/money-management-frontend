@@ -1,3 +1,5 @@
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebaseClient";
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -8,7 +10,7 @@ const EditProfilePage = () => {
   const [name, setName] = useState(user?.user_metadata.full_name || '')
 
   const handleUpdate = async () => {
-    const { error } = await supabase.auth.updateUser({
+    const { error } = await updatePassword(authUser({
       data: { full_name: name },
     })
     if (!error) navigate('/profile')

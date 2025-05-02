@@ -1,3 +1,5 @@
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
+import { auth } from "@/lib/firebaseClient";
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -16,7 +18,7 @@ const Register = () => {
     setError('')
     setSuccess('')
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError } = await createUserWithEmailAndPassword(auth({
       email,
       password,
       options: {
