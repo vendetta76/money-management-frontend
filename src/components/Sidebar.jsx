@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext"; // ✅ pakai logout dari conte
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth(); // ✅ ambil fungsi logout dari AuthContext
+  const { signOut } = useAuth(); // ✅ ambil fungsi logout dari AuthContext
   const [dark, setDark] = useState(false);
   const [openHistori, setOpenHistori] = useState(false);
 
@@ -31,7 +31,7 @@ export default function Sidebar() {
   ];
 
   const handleLogout = async () => {
-    await logout(); // ✅ logout dari Supabase
+    await signOut(); // logout user
     navigate("/");
   };
 
