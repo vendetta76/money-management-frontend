@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        await currentUser.reload() // Auto-refresh emailVerified status
+        await currentUser.reload() // Refresh verified status
         setUser(currentUser)
       } else {
         setUser(null)
