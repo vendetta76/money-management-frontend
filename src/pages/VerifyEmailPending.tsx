@@ -1,31 +1,58 @@
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { sendEmailVerification, signOut } from "firebase/auth"
+import { useEffect, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 import { auth } from "../lib/firebaseClient"
-import { useAuth } from "../context/AuthContext"
+import { sendEmailVerification, signInWithEmailAndPassword } from "firebase/auth"
 
 const VerifyEmailPending = () => {
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState("")
   const navigate = useNavigate()
+  const location = useLocation()
+  const { email, password } = location.state || {}
+  const [message, setMessage] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [verified, setVerified] = useState(false)
 
+  // 1. Auto-polling cek verifikasi
   useEffect(() => {
-    if (!user) {
-      navigate("/login")
-    }
-  }, [user, navigate])
+    const interval = setInterval(async () => {
+      try {
+        const currentUser = auth.currentUser
+        if (currentUser) {
+          await currentUser.reload()
+          if (currentUser.emailVerified) {
+            clearInterval(interval)
+            setVerified(true)
+            setMessage("Email telah diverifikasi! Masuk otomatis...")
+            setTimeout(async () => {
+              try {
+                await signInWithEmailAndPassword(auth, email, password)
+                navigate("/dashboard")
+              } catch (err) {
+                console.error("Gagal auto-login:", err)
+                navigate("/login")
+              }
+            }, 2000)
+          }
+        }
+      } catch (err) {
+        console.error("Polling verifikasi error:", err)
+      }
+    }, 2000)
 
+    return () => clearInterval(interval)
+  }, [email, password, navigate])
+
+  // 2. Kirim ulang email verifikasi
   const handleResend = async () => {
-    if (!user) return
     setLoading(true)
     setMessage("")
-
     try {
-      await sendEmailVerification(user)
-      setMessage("Email verifikasi telah dikirim ulang. Silakan cek inbox kamu.")
-      await signOut(auth)
-      navigate("/login")
+      const user = auth.currentUser
+      if (user) {
+        await sendEmailVerification(user)
+        setMessage("Email verifikasi telah dikirim ulang.")
+      } else {
+        setMessage("Tidak ada user yang login.")
+      }
     } catch (err: any) {
       setMessage(err.message || "Gagal mengirim ulang email.")
     } finally {
@@ -38,7 +65,8 @@ const VerifyEmailPending = () => {
       <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-xl text-center space-y-4">
         <h1 className="text-2xl font-bold text-yellow-700">Verifikasi Email Diperlukan</h1>
         <p className="text-sm text-gray-700">
-          Kami telah mengirimkan link verifikasi ke email kamu. Silakan verifikasi sebelum melanjutkan.
+          Kami telah mengirimkan link verifikasi ke <strong>{email}</strong>.
+          Silakan buka email kamu dan klik link tersebut.
         </p>
 
         <button
@@ -50,6 +78,7 @@ const VerifyEmailPending = () => {
         </button>
 
         {message && <p className="text-sm text-green-600">{message}</p>}
+        {verified && <p className="text-sm text-green-700 font-semibold">Email terverifikasi. Mengarahkan ke dashboard...</p>}
       </div>
     </div>
   )

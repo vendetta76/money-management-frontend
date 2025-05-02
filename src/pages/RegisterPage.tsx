@@ -1,42 +1,52 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+} from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "../lib/firebaseClient"
+import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn"
 
 const RegisterPage = () => {
+  useRedirectIfLoggedIn()
+
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    setSuccess("")
     setLoading(true)
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
 
-      // simpan data user ke Firestore
       await setDoc(doc(db, "users", user.uid), {
         fullName,
         email,
-        createdAt: new Date()
+        createdAt: new Date(),
       })
 
-      // kirim email verifikasi
       await sendEmailVerification(user)
+      await signOut(auth)
 
-      setSuccess("Pendaftaran berhasil! Cek email kamu untuk verifikasi sebelum login.")
+      setRedirecting(true) // aktifkan spinner
+
+      setTimeout(() => {
+        navigate("/verify-email-pending", {
+          state: { email, password },
+        })
+      }, 1200) // kasih delay 1.2 detik biar keliatan transisinya
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat mendaftar.")
-    } finally {
       setLoading(false)
     }
   }
@@ -81,14 +91,19 @@ const RegisterPage = () => {
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
-          {success && <p className="text-green-600 text-sm">{success}</p>}
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50"
+            disabled={loading || redirecting}
+            className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50 flex justify-center items-center"
           >
-            {loading ? "Mendaftarkan..." : "Daftar"}
+            {redirecting ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+            ) : loading ? (
+              "Mendaftarkan..."
+            ) : (
+              "Daftar"
+            )}
           </button>
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">

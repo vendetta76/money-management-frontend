@@ -1,5 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth'
+import {
+  User,
+  onAuthStateChanged,
+  signOut as firebaseSignOut,
+} from 'firebase/auth'
 import { auth } from '../lib/firebase'
 
 interface AuthContextType {
@@ -15,8 +19,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        await currentUser.reload() // Auto-refresh emailVerified status
+        setUser(currentUser)
+      } else {
+        setUser(null)
+      }
       setLoading(false)
     })
 

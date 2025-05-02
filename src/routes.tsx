@@ -26,7 +26,7 @@ const routes: RouteObject[] = [
     element: <ForgotPasswordPage />,
   },
   {
-    path: '/verify-email',
+    path: '/verify-email-pending',
     element: <VerifyEmailPending />,
   },
   {

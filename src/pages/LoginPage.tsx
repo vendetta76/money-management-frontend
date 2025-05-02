@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom"
 import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
 import { auth } from "../lib/firebaseClient"
 import { useAuth } from "../context/AuthContext"
+import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn"
 
 const LoginPage = () => {
+  useRedirectIfLoggedIn() // ✅ Auto redirect kalau sudah login & verified
+
   const { user } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
@@ -12,13 +15,6 @@ const LoginPage = () => {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [unverifiedUser, setUnverifiedUser] = useState<any>(null)
-
-  // 🔁 Auto redirect jika sudah login dan verifikasi
-  useEffect(() => {
-    if (user && user.emailVerified) {
-      navigate("/profile")
-    }
-  }, [user, navigate])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +33,7 @@ const LoginPage = () => {
         return
       }
 
-      navigate("/profile")
+       // fallback, meski biasanya udah diredirect otomatis (  isi navigate("/profile")         )
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat login.")
     } finally {
