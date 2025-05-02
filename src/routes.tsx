@@ -4,6 +4,7 @@ import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
 import EditProfilePage from './pages/EditProfilePage'
 import LandingPage from './pages/LandingPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage' //
 import PrivateRoute from './components/PrivateRoute'
 
 const routes: RouteObject[] = [
@@ -18,6 +19,10 @@ const routes: RouteObject[] = [
   {
     path: '/register',
     element: <RegisterPage />,
+  },
+  {
+    path: '/forgot-password', //
+    element: <ForgotPasswordPage />,
   },
   {
     path: '/profile',

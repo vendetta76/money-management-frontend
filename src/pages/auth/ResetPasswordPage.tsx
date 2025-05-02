@@ -1,24 +1,41 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
-import { auth } from "../lib/firebaseClient";
-// src/pages/auth/ResetPasswordPage.tsx
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { confirmPasswordReset } from "firebase/auth"
+import { auth } from "../lib/firebaseClient"
+import toast, { Toaster } from "react-hot-toast"
 
 export default function ResetPasswordPage() {
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
+  const oobCode = searchParams.get("oobCode")
+
   const handleResetPassword = async () => {
-    const { error } = await updatePassword(authUser({ password })
-    if (error) setError(error.message)
-    else navigate('/login')
+    if (!oobCode) {
+      toast.error("Link tidak valid atau sudah kedaluwarsa.")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      await confirmPasswordReset(auth, oobCode, password)
+      toast.success("Password berhasil diubah! Mengalihkan ke login...")
+      setTimeout(() => navigate("/login"), 3000)
+    } catch (err: any) {
+      toast.error(err.message || "Gagal mengubah password.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="max-w-md w-full space-y-6 bg-white p-6 rounded shadow">
-        <h2 className="text-2xl font-bold text-center">Buat Password Baru</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-4">
+      <Toaster />
+      <div className="max-w-md w-full space-y-6 bg-white p-6 rounded-xl shadow-lg animate-fade-in">
+        <h2 className="text-2xl font-bold text-center text-purple-700">Reset Password</h2>
         <input
           type="password"
           placeholder="Password Baru"
@@ -29,11 +46,10 @@ export default function ResetPasswordPage() {
         <button
           onClick={handleResetPassword}
           className="w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded"
+          disabled={loading}
         >
-          Ganti Password
+          {loading ? "Memproses..." : "Ganti Password"}
         </button>
-
-        {error && <p className="text-red-600 text-sm">{error}</p>}
       </div>
     </div>
   )
