@@ -6,7 +6,8 @@ import EditProfilePage from './pages/EditProfilePage'
 import LandingPage from './pages/LandingPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import VerifyEmailPending from './pages/VerifyEmailPending'
-import DashboardPage from './pages/DashboardPage' // ✅ pastikan file ini ada
+import ResetPasswordPage from './pages/ResetPasswordPage' // ✅ tambahkan ini
+import DashboardPage from './pages/DashboardPage'
 import PrivateRoute from './components/PrivateRoute'
 
 const routes: RouteObject[] = [
@@ -29,6 +30,10 @@ const routes: RouteObject[] = [
   {
     path: '/verify-email-pending',
     element: <VerifyEmailPending />,
+  },
+  {
+    path: '/reset-password', // ✅ custom reset password page
+    element: <ResetPasswordPage />,
   },
   {
     path: '/dashboard',
