@@ -1,16 +1,7 @@
-import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
+import { useBlockLandingIfLoggedIn } from "../hooks/useBlockLandingIfLoggedIn"
 
 const LandingPage = () => {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard")
-    }
-  }, [user, navigate])
+  useBlockLandingIfLoggedIn()
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-400 to-purple-600 text-white">
