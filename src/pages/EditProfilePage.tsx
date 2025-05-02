@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabaseClient'
 import { useNavigate } from 'react-router-dom'
 
 const EditProfilePage = () => {

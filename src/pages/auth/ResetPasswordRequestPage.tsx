@@ -1,6 +1,5 @@
 // src/pages/auth/ResetPasswordRequestPage.tsx
 import { useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
 
 export default function ResetPasswordRequestPage() {
   const [email, setEmail] = useState('')

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { supabase } from "../../lib/supabaseClient";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import Cropper from "react-easy-crop";
@@ -81,7 +80,7 @@ export default function EditProfile() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase
+
       .from("profiles")
       .update({ username, avatar_url: avatar })
       .eq("id", user.id);

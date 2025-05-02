@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabaseClient'
 
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate()

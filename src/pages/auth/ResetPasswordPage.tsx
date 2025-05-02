@@ -1,6 +1,5 @@
 // src/pages/auth/ResetPasswordPage.tsx
 import { useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
 import { useNavigate } from 'react-router-dom'
 
 export default function ResetPasswordPage() {
