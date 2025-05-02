@@ -1,5 +1,5 @@
 import { doc, updateDoc } from "firebase/firestore"
-import { db } from "@/lib/firebaseClient"
+import { db } from "../lib/firebaseClient"
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'

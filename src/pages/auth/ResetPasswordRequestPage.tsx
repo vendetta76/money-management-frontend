@@ -1,5 +1,5 @@
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
-import { auth } from "@/lib/firebaseClient";
+import { auth } from "../lib/firebaseClient";
 // src/pages/auth/ResetPasswordRequestPage.tsx
 import { useState } from 'react'
 

@@ -1,5 +1,5 @@
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
-import { auth } from "@/lib/firebaseClient";
+import { auth } from "../lib/firebaseClient";
 // src/pages/auth/ResetPasswordPage.tsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
