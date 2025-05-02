@@ -1,5 +1,5 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
-import { auth } from "@/lib/firebaseClient";
+import { doc, updateDoc } from "firebase/firestore"
+import { db } from "@/lib/firebaseClient"
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -7,13 +7,18 @@ import { useNavigate } from 'react-router-dom'
 const EditProfilePage = () => {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [name, setName] = useState(user?.user_metadata.full_name || '')
+  const [name, setName] = useState(user?.displayName || '')
 
   const handleUpdate = async () => {
-    const { error } = await updatePassword(authUser({
-      data: { full_name: name },
-    })
-    if (!error) navigate('/profile')
+    if (!user) return
+
+    try {
+      const userRef = doc(db, "users", user.uid)
+      await updateDoc(userRef, { fullName: name })
+      navigate('/profile')
+    } catch (err) {
+      console.error("Gagal update profil:", err)
+    }
   }
 
   return (
