@@ -22,12 +22,16 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-6xl mx-auto flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-purple-700">Dashboard MoniQ 🚀</h1>
-            <p className="text-gray-600 mt-1">Selamat datang di pusat kendali finansialmu, bro.</p>
+            <h1 className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+              Dashboard MoniQ 🚀
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Selamat datang di pusat kendali finansialmu, bro.
+            </p>
           </div>
           <button
             onClick={handleLogout}
@@ -63,8 +67,10 @@ const DashboardPage = () => {
         </div>
 
         {/* Donut Chart */}
-        <div className="bg-white p-6 rounded-xl shadow mt-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Distribusi Keuangan</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mt-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+            Distribusi Keuangan
+          </h2>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -81,7 +87,10 @@ const DashboardPage = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#1f2937", border: "none" }}
+                  labelStyle={{ color: "#9ca3af" }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
