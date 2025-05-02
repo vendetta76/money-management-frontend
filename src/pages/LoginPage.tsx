@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { signInWithEmailAndPassword } from "firebase/auth"
+import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
 import { auth } from "../lib/firebaseClient"
 import { useAuth } from "../context/AuthContext"
 
@@ -11,14 +11,32 @@ const LoginPage = () => {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [unverifiedUser, setUnverifiedUser] = useState<any>(null)
+
+  // 🔁 Auto redirect jika sudah login dan verifikasi
+  useEffect(() => {
+    if (user && user.emailVerified) {
+      navigate("/profile")
+    }
+  }, [user, navigate])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+    setUnverifiedUser(null)
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const signedInUser = userCredential.user
+
+      if (!signedInUser.emailVerified) {
+        setError("Email belum diverifikasi. Silakan cek inbox kamu.")
+        setUnverifiedUser(signedInUser)
+        await auth.signOut()
+        return
+      }
+
       navigate("/profile")
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat login.")
@@ -27,9 +45,15 @@ const LoginPage = () => {
     }
   }
 
-  if (user) {
-    navigate("/profile")
-    return null
+  const handleResendVerification = async () => {
+    if (!unverifiedUser) return
+    try {
+      await sendEmailVerification(unverifiedUser)
+      setError("Email verifikasi telah dikirim ulang. Silakan cek inbox.")
+      setUnverifiedUser(null)
+    } catch (err: any) {
+      setError(err.message || "Gagal mengirim ulang email.")
+    }
   }
 
   return (
@@ -66,6 +90,16 @@ const LoginPage = () => {
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
+
+          {unverifiedUser && (
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              className="text-sm text-purple-600 hover:underline mt-2 block"
+            >
+              Kirim ulang email verifikasi
+            </button>
+          )}
 
           <button
             type="submit"

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { createUserWithEmailAndPassword } from "firebase/auth"
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "../lib/firebaseClient"
 
@@ -23,14 +23,17 @@ const RegisterPage = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
 
+      // simpan data user ke Firestore
       await setDoc(doc(db, "users", user.uid), {
         fullName,
         email,
         createdAt: new Date()
       })
 
-      setSuccess("Berhasil daftar! Silakan login.")
-      navigate("/login")
+      // kirim email verifikasi
+      await sendEmailVerification(user)
+
+      setSuccess("Pendaftaran berhasil! Cek email kamu untuk verifikasi sebelum login.")
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat mendaftar.")
     } finally {

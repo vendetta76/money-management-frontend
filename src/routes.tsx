@@ -4,7 +4,8 @@ import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
 import EditProfilePage from './pages/EditProfilePage'
 import LandingPage from './pages/LandingPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage' //
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import VerifyEmailPending from './pages/VerifyEmailPending'
 import PrivateRoute from './components/PrivateRoute'
 
 const routes: RouteObject[] = [
@@ -21,8 +22,12 @@ const routes: RouteObject[] = [
     element: <RegisterPage />,
   },
   {
-    path: '/forgot-password', //
+    path: '/forgot-password',
     element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/verify-email',
+    element: <VerifyEmailPending />,
   },
   {
     path: '/profile',
