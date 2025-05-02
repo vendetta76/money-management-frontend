@@ -1,9 +1,10 @@
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword } from "firebase/auth";
-import { auth } from "@/lib/firebaseClient";
+import { createUserWithEmailAndPassword } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
+import { auth, db } from "@/lib/firebaseClient"
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const Register = () => {
+const RegisterPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -18,22 +19,24 @@ const Register = () => {
     setError('')
     setSuccess('')
 
-    const { error: signUpError } = await createUserWithEmailAndPassword(auth({
-      email,
-      password,
-      options: {
-        emailRedirectTo: 'https://moniq.pages.dev/login', // ganti sesuai URL kamu
-      },
-    })
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
 
-    if (signUpError) {
-      setError(signUpError.message)
+      // Simpan fullName ke Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        fullName,
+        email,
+        createdAt: new Date()
+      })
+
+      setSuccess('Berhasil daftar! Silakan login sekarang.')
+      navigate('/login')
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
       setLoading(false)
-      return
     }
-
-    setSuccess('Berhasil daftar! Silakan cek email kamu untuk verifikasi sebelum login.')
-    setLoading(false)
   }
 
   return (
@@ -78,4 +81,4 @@ const Register = () => {
   )
 }
 
-export default Register
+export default RegisterPage
