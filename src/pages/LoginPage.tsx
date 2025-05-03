@@ -35,15 +35,16 @@ const LoginPage = () => {
         return
       }
 
-      // ✅ Ambil data user dari Firestore
       const userDocRef = doc(db, "users", signedInUser.uid)
       const userDocSnap = await getDoc(userDocRef)
       const userData = userDocSnap.data()
 
       if (userData?.role === "Admin") {
         navigate("/admin")
-      } else {
+      } else if (userData?.role === "Regular" || userData?.role === "Premium") {
         navigate("/dashboard")
+      } else {
+        navigate("/") // fallback untuk role yang tidak dikenal
       }
 
     } catch (err: any) {

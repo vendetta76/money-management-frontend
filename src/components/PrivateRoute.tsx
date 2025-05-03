@@ -4,9 +4,10 @@ import { useAuth } from "../context/AuthContext"
 
 interface PrivateRouteProps {
   children: ReactNode
+  requiredRole?: string // "Admin", "Regular", "Premium" (opsional)
 }
 
-const PrivateRoute = ({ children }: PrivateRouteProps) => {
+const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
   const { user, loading, userMeta } = useAuth()
   const location = useLocation()
 
@@ -21,10 +22,13 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
   }
 
   if (!user.emailVerified && location.pathname !== "/verify-email-pending") {
-    return <Navigate to="/verify-email-pending" state={{ email: user.email }} replace />
+    return (
+      <Navigate to="/verify-email-pending" state={{ email: user.email }} replace />
+    )
   }
 
-  if (userMeta?.role !== "admin") {
+  // ✅ Jika ada role yang diwajibkan dan user bukan role itu
+  if (requiredRole && userMeta?.role !== requiredRole) {
     return <Navigate to="/unauthorized" replace />
   }
 

@@ -63,7 +63,7 @@ const routes: RouteObject[] = [
   {
     path: '/admin',
     element: (
-      <PrivateRoute>
+      <PrivateRoute requiredRole="Admin">
         <AdminPage />
       </PrivateRoute>
     ),
@@ -72,7 +72,7 @@ const routes: RouteObject[] = [
     path: '/unauthorized',
     element: (
       <div className="p-6 text-center text-red-600 text-xl">
-        🚫 Akses ditolak: hanya untuk admin.
+        🚫 Akses ditolak: kamu tidak memiliki izin untuk halaman ini.
       </div>
     ),
   },
