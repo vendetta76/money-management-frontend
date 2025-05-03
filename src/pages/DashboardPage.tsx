@@ -19,7 +19,11 @@ const DashboardPage = () => {
   const { signOut, userMeta } = useAuth()
   const navigate = useNavigate()
 
-  const [labels, setLabels] = useState(["Pemasukan", "Pengeluaran", "Saldo Investasi"])
+  const [labels, setLabels] = useState([
+    "Pemasukan",
+    "Pengeluaran",
+    "Saldo Investasi",
+  ])
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   const handleLogout = async () => {
@@ -34,8 +38,13 @@ const DashboardPage = () => {
     setEditingIndex(null)
   }
 
+  const handleAddCard = () => {
+    setLabels([...labels, `Kategori Baru ${labels.length + 1}`])
+  }
+
   const renderEditableLabel = (index: number) => {
-    const canEdit = userMeta?.role === "premium" || (userMeta?.role === "user" && index < 2)
+    const canEdit =
+      userMeta?.role === "premium" || (userMeta?.role === "user" && index < 2)
 
     if (!canEdit) return labels[index]
 
@@ -88,26 +97,32 @@ const DashboardPage = () => {
 
           {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <CardBalance
-              initialBalance={4000000}
-              cardHolder={renderEditableLabel(0)}
-              cardNumber=""
-              expiry=""
-            />
-            <CardBalance
-              initialBalance={2000000}
-              cardHolder={renderEditableLabel(1)}
-              cardNumber=""
-              expiry=""
-            />
-            <PremiumOnly>
-              <CardBalance
-                initialBalance={1500000}
-                cardHolder={renderEditableLabel(2)}
-                cardNumber=""
-                expiry=""
-              />
-            </PremiumOnly>
+            {labels.map((label, index) => {
+              const card = (
+                <CardBalance
+                  key={index}
+                  initialBalance={
+                    index === 0 ? 4000000 : index === 1 ? 2000000 : 1500000
+                  }
+                  cardHolder={renderEditableLabel(index)}
+                  cardNumber=""
+                  expiry=""
+                />
+              )
+              if (index >= 2) {
+                return <PremiumOnly key={index}>{card}</PremiumOnly>
+              }
+              return card
+            })}
+
+            {/* Tombol Tambah Card */}
+            <div
+              onClick={handleAddCard}
+              className="flex flex-col justify-center items-center bg-white dark:bg-gray-800 border-2 border-dashed border-purple-400 rounded-xl w-full h-[160px] cursor-pointer hover:bg-purple-50 transition"
+            >
+              <span className="text-4xl text-purple-600">+</span>
+              <p className="mt-2 text-sm text-gray-600">Tambah Kategori</p>
+            </div>
           </div>
 
           {/* Chart */}
@@ -125,7 +140,10 @@ const DashboardPage = () => {
                   label
                 >
                   {chartData.map((_, i) => (
-                    <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                    <Cell
+                      key={`cell-${i}`}
+                      fill={COLORS[i % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
