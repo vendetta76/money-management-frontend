@@ -4,7 +4,6 @@ import { useAuth } from "../context/AuthContext"
 import Sidebar from "../components/Sidebar"
 import CardBalance from "../components/CardBalance"
 import PremiumOnly from "../components/PremiumOnly"
-import { Pencil } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 
 const chartData = [
@@ -19,61 +18,24 @@ const DashboardPage = () => {
   const { signOut, userMeta } = useAuth()
   const navigate = useNavigate()
 
-  const [labels, setLabels] = useState(["Pemasukan"])
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [balances, setBalances] = useState([0]) // Default saldo pertama = 0
 
   const handleLogout = async () => {
     await signOut()
     navigate("/login")
   }
 
-  const handleLabelChange = (index: number, newLabel: string) => {
-    const updated = [...labels]
-    updated[index] = newLabel
-    setLabels(updated)
-    setEditingIndex(null)
-  }
-
   const handleAddCard = () => {
     const isPremium = userMeta?.role === "premium"
-    const cardCount = labels.length
+    const cardCount = balances.length
 
     if (cardCount === 1) {
-      setLabels([...labels, "Pengeluaran"])
+      setBalances([...balances, 1500000])
     } else if (cardCount === 2 && isPremium) {
-      setLabels([...labels, "Saldo Investasi"])
+      setBalances([...balances, 2500000])
     } else if (cardCount === 2 && !isPremium) {
       alert("Upgrade ke Premium untuk menambahkan kartu ketiga.")
     }
-  }
-
-  const renderEditableLabel = (index: number) => {
-    const isEditable =
-      userMeta?.role === "premium" || (userMeta?.role === "user" && index < 2)
-
-    if (!isEditable) return labels[index]
-
-    if (editingIndex === index) {
-      return (
-        <input
-          value={labels[index]}
-          onChange={(e) => handleLabelChange(index, e.target.value)}
-          onBlur={() => setEditingIndex(null)}
-          autoFocus
-          className="border px-2 py-1 rounded text-sm dark:bg-gray-700 dark:text-white"
-        />
-      )
-    }
-
-    return (
-      <span
-        onClick={() => setEditingIndex(index)}
-        className="flex items-center gap-1 cursor-pointer group"
-      >
-        {labels[index]}
-        <Pencil className="w-3 h-3 text-gray-400 group-hover:text-black dark:group-hover:text-white" />
-      </span>
-    )
   }
 
   return (
@@ -92,22 +54,16 @@ const DashboardPage = () => {
                 Selamat datang di pusat kendali finansialmu, bro.
               </p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-            >
-              Logout
-            </button>
           </div>
 
           {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {labels.map((label, index) => {
+            {balances.map((amount, index) => {
               const card = (
                 <CardBalance
                   key={index}
-                  initialBalance={(index + 1) * 1500000}
-                  cardHolder={renderEditableLabel(index)}
+                  initialBalance={amount}
+                  cardHolder={`Jumlah Saldo`}
                   compact
                 />
               )
@@ -119,8 +75,8 @@ const DashboardPage = () => {
               )
             })}
 
-            {/* Tambah Kartu */}
-            {labels.length < 3 && (
+            {/* Tambah Kategori */}
+            {balances.length < 3 && (
               <div
                 onClick={handleAddCard}
                 className="flex flex-col justify-center items-center bg-white dark:bg-gray-800 border-2 border-dashed border-purple-400 rounded-xl w-full h-[160px] cursor-pointer hover:bg-purple-50 transition"

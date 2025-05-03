@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react"
 import {
   Home, LogOut, Sun, Moon, Settings,
-  ArrowDownRight, ArrowUpRight, Clock
+  ArrowDownRight, ArrowUpRight, Clock, ChevronDown
 } from "lucide-react"
 import { NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore"
-import { db } from "../lib/firebase"
 
 const avatar = "https://res.cloudinary.com/dvbn6oqlp/image/upload/v1746252421/Default_pfp_zoecp6.webp"
 
 const Sidebar = () => {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark")
+  const [isTransactionOpen, setIsTransactionOpen] = useState(true)
   const navigate = useNavigate()
   const { user, userMeta, signOut } = useAuth()
 
@@ -24,22 +23,6 @@ const Sidebar = () => {
       localStorage.setItem("theme", "light")
     }
   }, [darkMode])
-
-  const handleBuyPremium = async () => {
-    if (!user) return
-    const start = new Date()
-    const end = new Date()
-    end.setDate(start.getDate() + 7)
-
-    await updateDoc(doc(db, "users", user.uid), {
-      role: "premium",
-      premiumStartDate: start.toISOString(),
-      premiumEndDate: end.toISOString(),
-      updatedAt: serverTimestamp(),
-    })
-
-    window.location.reload()
-  }
 
   const handleLogout = async () => {
     await signOut()
@@ -55,7 +38,9 @@ const Sidebar = () => {
         {/* Profile */}
         <div className="flex flex-col items-center text-center mb-6">
           <img src={avatar} className="w-16 h-16 rounded-full mb-2" />
-          <p className="text-sm font-semibold text-gray-700 dark:text-white">{userMeta?.name || "User"}</p>
+          <p className="text-sm font-semibold text-gray-700 dark:text-white">
+            {userMeta?.name || "User"}
+          </p>
           <span className="text-xs text-gray-500 dark:text-gray-300">
             {userMeta?.role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
           </span>
@@ -73,15 +58,42 @@ const Sidebar = () => {
             <Home size={18} /> Dashboard
           </NavLink>
 
-          {/* Transaction */}
-          <div className="space-y-1">
-            <div className="text-xs text-gray-500 pl-3">Transaction</div>
-            <NavLink to="/income" className="flex items-center gap-3 px-5 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
-              <ArrowDownRight size={16} /> Income
-            </NavLink>
-            <NavLink to="/outcome" className="flex items-center gap-3 px-5 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
-              <ArrowUpRight size={16} /> Outcome
-            </NavLink>
+          {/* Expand/Collapse Transaction */}
+          <div>
+            <button
+              onClick={() => setIsTransactionOpen(!isTransactionOpen)}
+              className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+            >
+              <span className="flex items-center gap-2">
+                <ChevronDown className={`w-4 h-4 transition-transform ${isTransactionOpen ? "rotate-180" : ""}`} />
+                Transaction
+              </span>
+            </button>
+
+            {isTransactionOpen && (
+              <div className="pl-8 mt-1 space-y-1">
+                <NavLink
+                  to="/income"
+                  className={({ isActive }) =>
+                    `block py-1 text-sm ${
+                      isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"
+                    }`
+                  }
+                >
+                  Income
+                </NavLink>
+                <NavLink
+                  to="/outcome"
+                  className={({ isActive }) =>
+                    `block py-1 text-sm ${
+                      isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"
+                    }`
+                  }
+                >
+                  Outcome
+                </NavLink>
+              </div>
+            )}
           </div>
 
           <NavLink to="/history" className={({ isActive }) =>
