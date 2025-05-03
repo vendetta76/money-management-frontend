@@ -29,7 +29,7 @@ const CardBalance = ({
   const [currency, setCurrency] = useState("IDR")
   const [locale, setLocale] = useState("id-ID")
   const [searchTerm, setSearchTerm] = useState("")
-  const [balance] = useState(initialBalance)
+  const [balance] = useState(Number(initialBalance) || 0)
   const [showBalance, setShowBalance] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -76,14 +76,11 @@ const CardBalance = ({
   }
 
   return (
-    <div
-      className={`rounded-xl text-white shadow-md p-6 w-full bg-gradient-to-br from-purple-600 to-indigo-700 ${
-        compact ? "text-sm" : ""
-      }`}
-    >
+    <div className={`rounded-xl text-white shadow-md p-6 w-full bg-gradient-to-br from-purple-600 to-indigo-700 ${compact ? "text-sm" : ""}`}>
       {/* Label at top */}
       <div className="text-base font-semibold mb-3">{cardHolder}</div>
 
+      {/* Action Buttons */}
       <div className="flex justify-between items-start mb-4 relative" ref={dropdownRef}>
         <div className="text-sm font-medium">Total Saldo</div>
         <div className="flex items-center gap-2">
