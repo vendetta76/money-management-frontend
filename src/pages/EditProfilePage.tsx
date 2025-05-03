@@ -1,3 +1,4 @@
+import { logActivity } from "../../utils/logActivity"
 import { doc, updateDoc } from "firebase/firestore"
 import { db } from "../lib/firebaseClient"
 import { useState } from 'react'
