@@ -19,11 +19,7 @@ const DashboardPage = () => {
   const { signOut, userMeta } = useAuth()
   const navigate = useNavigate()
 
-  const [labels, setLabels] = useState([
-    "Pemasukan",
-    "Pengeluaran",
-    "Saldo Investasi",
-  ])
+  const [labels, setLabels] = useState(["Pemasukan"])
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   const handleLogout = async () => {
@@ -39,14 +35,23 @@ const DashboardPage = () => {
   }
 
   const handleAddCard = () => {
-    setLabels([...labels, `Kategori Baru ${labels.length + 1}`])
+    const isPremium = userMeta?.role === "premium"
+    const cardCount = labels.length
+
+    if (cardCount === 1) {
+      setLabels([...labels, "Pengeluaran"])
+    } else if (cardCount === 2 && isPremium) {
+      setLabels([...labels, "Saldo Investasi"])
+    } else if (cardCount === 2 && !isPremium) {
+      alert("Upgrade ke Premium untuk menambahkan kartu ketiga.")
+    }
   }
 
   const renderEditableLabel = (index: number) => {
-    const canEdit =
+    const isEditable =
       userMeta?.role === "premium" || (userMeta?.role === "user" && index < 2)
 
-    if (!canEdit) return labels[index]
+    if (!isEditable) return labels[index]
 
     if (editingIndex === index) {
       return (
@@ -101,28 +106,29 @@ const DashboardPage = () => {
               const card = (
                 <CardBalance
                   key={index}
-                  initialBalance={
-                    index === 0 ? 4000000 : index === 1 ? 2000000 : 1500000
-                  }
+                  initialBalance={(index + 1) * 1500000}
                   cardHolder={renderEditableLabel(index)}
-                  cardNumber=""
-                  expiry=""
+                  compact
                 />
               )
-              if (index >= 2) {
-                return <PremiumOnly key={index}>{card}</PremiumOnly>
-              }
-              return card
+
+              return index === 2 ? (
+                <PremiumOnly key={index}>{card}</PremiumOnly>
+              ) : (
+                card
+              )
             })}
 
-            {/* Tombol Tambah Card */}
-            <div
-              onClick={handleAddCard}
-              className="flex flex-col justify-center items-center bg-white dark:bg-gray-800 border-2 border-dashed border-purple-400 rounded-xl w-full h-[160px] cursor-pointer hover:bg-purple-50 transition"
-            >
-              <span className="text-4xl text-purple-600">+</span>
-              <p className="mt-2 text-sm text-gray-600">Tambah Kategori</p>
-            </div>
+            {/* Tambah Kartu */}
+            {labels.length < 3 && (
+              <div
+                onClick={handleAddCard}
+                className="flex flex-col justify-center items-center bg-white dark:bg-gray-800 border-2 border-dashed border-purple-400 rounded-xl w-full h-[160px] cursor-pointer hover:bg-purple-50 transition"
+              >
+                <span className="text-4xl text-purple-600">+</span>
+                <p className="mt-2 text-sm text-gray-600">Tambah Kategori</p>
+              </div>
+            )}
           </div>
 
           {/* Chart */}
@@ -140,10 +146,7 @@ const DashboardPage = () => {
                   label
                 >
                   {chartData.map((_, i) => (
-                    <Cell
-                      key={`cell-${i}`}
-                      fill={COLORS[i % COLORS.length]}
-                    />
+                    <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
