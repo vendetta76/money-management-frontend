@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import {
-  Home, User, ShoppingCart, BarChart, Menu, X, Sun, Moon,
-  LogOut, Settings
+  Home, LogOut, Sun, Moon, Settings,
+  ArrowDownRight, ArrowUpRight, Clock
 } from "lucide-react"
 import { NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
@@ -10,20 +10,10 @@ import { db } from "../lib/firebase"
 
 const avatar = "https://res.cloudinary.com/dvbn6oqlp/image/upload/v1746252421/Default_pfp_zoecp6.webp"
 
-const navItems = [
-  { label: "Dashboard", icon: <Home size={18} />, href: "/dashboard" },
-  { label: "Users", icon: <User size={18} />, href: "/users" },
-  { label: "Orders", icon: <ShoppingCart size={18} />, href: "/orders" },
-  { label: "Analytics", icon: <BarChart size={18} />, href: "/analytics" },
-]
-
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark")
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const dropdownRef = useRef(null)
   const navigate = useNavigate()
-  const { user, userMeta } = useAuth()
+  const { user, userMeta, signOut } = useAuth()
 
   useEffect(() => {
     if (darkMode) {
@@ -35,19 +25,8 @@ const Sidebar = () => {
     }
   }, [darkMode])
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !(dropdownRef.current as any).contains(e.target)) {
-        setDropdownOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
   const handleBuyPremium = async () => {
     if (!user) return
-
     const start = new Date()
     const end = new Date()
     end.setDate(start.getDate() + 7)
@@ -62,133 +41,96 @@ const Sidebar = () => {
     window.location.reload()
   }
 
+  const handleLogout = async () => {
+    await signOut()
+    navigate("/login")
+  }
+
   return (
-    <>
-      {/* Topbar for mobile */}
-      <div className="md:hidden p-4 bg-white border-b flex justify-between items-center dark:bg-gray-900">
-        <h1 className="text-xl font-bold text-purple-700 dark:text-purple-300">MoniQ</h1>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="text-purple-700 dark:text-purple-300"
-            title="Toggle dark mode"
-          >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-          <button onClick={() => setIsOpen(!isOpen)} className="text-purple-700 dark:text-purple-300">
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+    <aside className="bg-white dark:bg-gray-900 border-r dark:border-gray-800 min-h-screen p-4 w-64 flex flex-col justify-between">
+      <div>
+        {/* Brand */}
+        <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-6">MoniQ</h1>
+
+        {/* Profile */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <img src={avatar} className="w-16 h-16 rounded-full mb-2" />
+          <p className="text-sm font-semibold text-gray-700 dark:text-white">{userMeta?.name || "User"}</p>
+          <span className="text-xs text-gray-500 dark:text-gray-300">
+            {userMeta?.role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
+          </span>
         </div>
+
+        {/* Navigation */}
+        <nav className="space-y-2">
+          <NavLink to="/dashboard" className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${
+              isActive
+                ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`
+          }>
+            <Home size={18} /> Dashboard
+          </NavLink>
+
+          {/* Transaction */}
+          <div className="space-y-1">
+            <div className="text-xs text-gray-500 pl-3">Transaction</div>
+            <NavLink to="/income" className="flex items-center gap-3 px-5 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+              <ArrowDownRight size={16} /> Income
+            </NavLink>
+            <NavLink to="/outcome" className="flex items-center gap-3 px-5 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+              <ArrowUpRight size={16} /> Outcome
+            </NavLink>
+          </div>
+
+          <NavLink to="/history" className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${
+              isActive
+                ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`
+          }>
+            <Clock size={18} /> History
+          </NavLink>
+
+          <NavLink to="/settings" className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${
+              isActive
+                ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`
+          }>
+            <Settings size={18} /> Settings
+          </NavLink>
+        </nav>
       </div>
 
-      {/* Sidebar */}
-      <aside
-        className={`bg-white dark:bg-gray-900 border-r dark:border-gray-800 min-h-screen p-4 w-64 z-40 fixed md:static top-0 left-0 transform md:translate-x-0
-        transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:block`}
-      >
-        <div className="flex justify-between items-center mb-6 relative">
-          <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 hidden md:block">MoniQ</h1>
-          <div className="flex items-center gap-3 relative" ref={dropdownRef}>
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="text-purple-700 dark:text-purple-300"
-              title="Toggle dark mode"
-            >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <img
-              src={avatar}
-              alt="User"
-              className="w-8 h-8 rounded-full border cursor-pointer"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+      {/* Bottom */}
+      <div className="mt-6 space-y-3">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 text-sm text-red-600 dark:text-red-400 px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900 rounded transition"
+        >
+          <LogOut size={16} /> Logout
+        </button>
+
+        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300 px-3">
+          Dark Mode
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={darkMode}
+              onChange={() => setDarkMode(!darkMode)}
+              className="sr-only peer"
             />
-            {dropdownOpen && (
-              <div className="absolute top-12 right-0 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-2 z-50">
-                <button
-                  onClick={() => navigate("/profile")}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                >
-                  <Settings size={16} />
-                  Edit Profil
-                </button>
-                <button
-                  onClick={() => navigate("/login")}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500 flex items-center gap-2"
-                >
-                  <LogOut size={16} />
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <nav className="space-y-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.href}
-              onClick={() => setIsOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${
-                  isActive
-                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`
-              }
-            >
-              {item.icon}
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* 🔐 Status Akun & Premium */}
-        {userMeta && (
-          <div className="mt-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-2">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-white">Status Akun</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-600 dark:text-gray-300 text-sm">Role:</span>
-              {userMeta.role === "premium" ? (
-                <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
-                  💎 Premium
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-gray-600 bg-gray-200 rounded-full">
-                  🧑‍💻 User
-                </span>
-              )}
+            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer dark:bg-gray-700 peer-checked:bg-purple-600 relative transition duration-300">
+              <span className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-4" />
             </div>
-
-            {userMeta.role === "premium" && (
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Sisa hari premium:{" "}
-                <span className="font-semibold text-green-600 dark:text-green-400">
-                  {userMeta.daysLeft} hari
-                </span>
-              </p>
-            )}
-
-            {userMeta.role !== "premium" && (
-              <button
-                onClick={handleBuyPremium}
-                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold text-xs px-3 py-2 rounded shadow mt-1"
-              >
-                Beli Premium 7 Hari 🔥
-              </button>
-            )}
-          </div>
-        )}
-      </aside>
-
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-30 md:hidden"
-          onClick={() => setIsOpen(false)}
-        ></div>
-      )}
-    </>
+          </label>
+        </div>
+      </div>
+    </aside>
   )
 }
 
