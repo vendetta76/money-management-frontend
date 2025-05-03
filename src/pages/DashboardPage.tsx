@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import StatCard from "../components/StatCard"
+import CardBalance from "../components/CardBalance"
 import Sidebar from "../components/Sidebar"
 import { DollarSign, ShoppingCart, Eye, Pencil } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
@@ -148,10 +148,25 @@ const DashboardPage = () => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon={DollarSign} title={renderLabel(0)} value="Rp 4.000.000" />
-            <StatCard icon={ShoppingCart} title={renderLabel(1)} value="Rp 2.000.000" />
+            <CardBalance
+              initialBalance={4000000}
+              cardHolder={renderLabel(0)}
+              cardNumber="1234 5678 9012 3456"
+              expiry="12/25"
+            />
+            <CardBalance
+              initialBalance={2000000}
+              cardHolder={renderLabel(1)}
+              cardNumber="4567 8910 1112 1314"
+              expiry="06/26"
+            />
             <PremiumOnly>
-              <StatCard icon={Eye} title={renderLabel(2)} value="Rp 1.500.000" />
+              <CardBalance
+                initialBalance={1500000}
+                cardHolder={renderLabel(2)}
+                cardNumber="9999 8888 7777 6666"
+                expiry="01/30"
+              />
             </PremiumOnly>
           </div>
 
