@@ -9,6 +9,9 @@ import VerifyEmailPending from './pages/VerifyEmailPending'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import AdminPage from './pages/AdminPage'
+import IncomePage from './pages/IncomePage'
+import OutcomePage from './pages/OutcomePage'
+import HistoryPage from './pages/HistoryPage' // (kalau belum ada, tinggal buat)
 import PrivateRoute from './components/PrivateRoute'
 
 const routes: RouteObject[] = [
@@ -41,6 +44,30 @@ const routes: RouteObject[] = [
     element: (
       <PrivateRoute>
         <DashboardPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/income',
+    element: (
+      <PrivateRoute>
+        <IncomePage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/outcome',
+    element: (
+      <PrivateRoute>
+        <OutcomePage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/history',
+    element: (
+      <PrivateRoute>
+        <HistoryPage />
       </PrivateRoute>
     ),
   },
