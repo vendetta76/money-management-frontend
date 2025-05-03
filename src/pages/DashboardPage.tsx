@@ -1,10 +1,13 @@
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import StatCard from "../components/StatCard"
-import CardBalance from "../components/CardBalance"
 import Sidebar from "../components/Sidebar"
-import { DollarSign, ShoppingCart, Eye } from "lucide-react"
+import { DollarSign, ShoppingCart, Eye, Pencil } from "lucide-react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore"
+import { db } from "../lib/firebase"
+import PremiumOnly from "../components/PremiumOnly"
+import { useState } from "react"
 
 const data = [
   { name: "Savings", value: 400 },
@@ -15,12 +18,71 @@ const data = [
 const COLORS = ["#4F46E5", "#22C55E", "#EF4444"]
 
 const DashboardPage = () => {
-  const { signOut } = useAuth()
+  const { signOut, user, userMeta } = useAuth()
   const navigate = useNavigate()
+
+  const [labels, setLabels] = useState([
+    "Pemasukan",
+    "Pengeluaran",
+    "Saldo Investasi"
+  ])
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   const handleLogout = async () => {
     await signOut()
     navigate("/login")
+  }
+
+  const handleBuyPremium = async () => {
+    if (!user) return
+
+    const start = new Date()
+    const end = new Date()
+    end.setDate(start.getDate() + 7)
+
+    await updateDoc(doc(db, "users", user.uid), {
+      role: "premium",
+      premiumStartDate: start.toISOString(),
+      premiumEndDate: end.toISOString(),
+      updatedAt: serverTimestamp(),
+    })
+
+    window.location.reload()
+  }
+
+  const handleLabelChange = (index: number, newLabel: string) => {
+    const newLabels = [...labels]
+    newLabels[index] = newLabel
+    setLabels(newLabels)
+    setEditingIndex(null)
+  }
+
+  const renderLabel = (index: number) => {
+    const isEditable =
+      userMeta?.role === "premium" || (userMeta?.role === "user" && index < 2)
+
+    if (!isEditable) return labels[index]
+
+    if (editingIndex === index) {
+      return (
+        <input
+          value={labels[index]}
+          onChange={(e) => handleLabelChange(index, e.target.value)}
+          onBlur={() => setEditingIndex(null)}
+          autoFocus
+          className="border px-2 py-1 rounded text-sm"
+        />
+      )
+    }
+
+    return (
+      <span
+        className="flex items-center gap-1 cursor-pointer group"
+        onClick={() => setEditingIndex(index)}
+      >
+        {labels[index]} <Pencil className="w-3 h-3 text-gray-400 group-hover:text-black" />
+      </span>
+    )
   }
 
   return (
@@ -46,75 +108,74 @@ const DashboardPage = () => {
             </button>
           </div>
 
-          {/* Card Balances (3 columns) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div>
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Dompet Utama</h3>
-              <CardBalance initialBalance={53250000} compact />
+          {userMeta && (
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow space-y-2">
+              <h2 className="text-lg font-semibold text-gray-700 dark:text-white">
+                Status Akun
+              </h2>
+
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 dark:text-gray-300">Role:</span>
+                {userMeta.role === "premium" ? (
+                  <span className="inline-flex items-center px-3 py-1 text-sm font-semibold text-yellow-800 bg-yellow-200 rounded-full">
+                    💎 Premium
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-3 py-1 text-sm font-semibold text-gray-600 bg-gray-200 rounded-full">
+                    🧑‍💻 User
+                  </span>
+                )}
+              </div>
+
+              {userMeta.role === "premium" && (
+                <p className="text-gray-600 dark:text-gray-300">
+                  Sisa hari premium:{" "}
+                  <span className="font-medium text-green-600 dark:text-green-400">
+                    {userMeta.daysLeft} hari
+                  </span>
+                </p>
+              )}
+
+              {userMeta.role !== "premium" && (
+                <button
+                  onClick={handleBuyPremium}
+                  className="mt-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded shadow"
+                >
+                  Beli Premium 7 Hari 🔥
+                </button>
+              )}
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Tabungan</h3>
-              <CardBalance initialBalance={2250000} compact />
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Investasi</h3>
-              <CardBalance initialBalance={8750000} compact />
-            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard icon={DollarSign} title={renderLabel(0)} value="Rp 4.000.000" />
+            <StatCard icon={ShoppingCart} title={renderLabel(1)} value="Rp 2.000.000" />
+            <PremiumOnly>
+              <StatCard icon={Eye} title={renderLabel(2)} value="Rp 1.500.000" />
+            </PremiumOnly>
           </div>
 
-          {/* Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <StatCard
-              title="Total Profit"
-              value="$82,373.21"
-              change="+3.4% dari bulan lalu"
-              changeType="positive"
-              icon={<DollarSign />}
-            />
-            <StatCard
-              title="Total Orders"
-              value="7,234"
-              change="-2.8% dari bulan lalu"
-              changeType="negative"
-              icon={<ShoppingCart />}
-            />
-            <StatCard
-              title="Impression"
-              value="3.1M"
-              change="+4.6% dari bulan lalu"
-              changeType="positive"
-              icon={<Eye />}
-            />
-          </div>
-
-          {/* Donut Chart */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow mt-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-white">
               Distribusi Keuangan
             </h2>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#1f2937", border: "none" }}
-                    labelStyle={{ color: "#9ca3af" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={data}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={100}
+                  fill="#8884d8"
+                  label
+                >
+                  {data.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </main>

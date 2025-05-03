@@ -1,5 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
+import { db } from "../lib/firebase"
+import { doc, updateDoc } from "firebase/firestore"
 
 interface CardBalanceProps {
   initialBalance: number
@@ -18,11 +21,19 @@ const currencies = [
 ]
 
 const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry, compact = false }: CardBalanceProps) => {
+  const { user, userMeta } = useAuth()
   const [currency, setCurrency] = useState("IDR")
   const [locale, setLocale] = useState("id-ID")
   const [searchTerm, setSearchTerm] = useState("")
   const [balance] = useState(initialBalance)
   const [showBalance, setShowBalance] = useState(true)
+
+  useEffect(() => {
+    if (userMeta?.preferredCurrency) {
+      setCurrency(userMeta.preferredCurrency.code)
+      setLocale(userMeta.preferredCurrency.locale)
+    }
+  }, [userMeta])
 
   const formatCurrency = (amount: number, currencyCode: string, localeStr: string) => {
     return new Intl.NumberFormat(localeStr, {
@@ -36,9 +47,15 @@ const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry, compact =
     c.label.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleCurrencyChange = (code: string, localeStr: string) => {
+  const handleCurrencyChange = async (code: string, localeStr: string) => {
     setCurrency(code)
     setLocale(localeStr)
+
+    if (user) {
+      await updateDoc(doc(db, "users", user.uid), {
+        preferredCurrency: { code, locale: localeStr },
+      })
+    }
   }
 
   return (
