@@ -1,4 +1,4 @@
-import { db } from "../../firebase"
+import { db } from "../lib/firebaseClient"
 import { addDoc, collection, serverTimestamp } from "firebase/firestore"
 
 export const logActivity = async (
