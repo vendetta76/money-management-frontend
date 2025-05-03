@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
-import { auth } from "../lib/firebaseClient"
+import { doc, getDoc } from "firebase/firestore"
+import { auth, db } from "../lib/firebaseClient"
 import { useAuth } from "../context/AuthContext"
 import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn"
-import BackButton from "../components/BackButton" // pastikan file ini ada
+import BackButton from "../components/BackButton"
 
 const LoginPage = () => {
   useRedirectIfLoggedIn()
@@ -34,7 +35,17 @@ const LoginPage = () => {
         return
       }
 
-      navigate("/profile") // fallback manual
+      // ✅ Ambil data user dari Firestore
+      const userDocRef = doc(db, "users", signedInUser.uid)
+      const userDocSnap = await getDoc(userDocRef)
+      const userData = userDocSnap.data()
+
+      if (userData?.role === "Admin") {
+        navigate("/admin")
+      } else {
+        navigate("/dashboard")
+      }
+
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat login.")
     } finally {
@@ -62,9 +73,7 @@ const LoginPage = () => {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
             <input
               id="email"
               type="email"
@@ -76,9 +85,7 @@ const LoginPage = () => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
             <input
               id="password"
               type="password"
@@ -110,7 +117,6 @@ const LoginPage = () => {
           </button>
         </form>
 
-        {/* Link navigasi bawah */}
         <div className="text-center text-sm text-gray-600 mt-4 space-y-2">
           <p>
             Belum punya akun?{" "}

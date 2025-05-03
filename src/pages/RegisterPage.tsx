@@ -5,10 +5,11 @@ import {
   sendEmailVerification,
   signOut,
 } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
+import { doc, setDoc, serverTimestamp } from "firebase/firestore"
 import { auth, db } from "../lib/firebaseClient"
 import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn"
-import BackButton from "../components/BackButton" // ✅ tombol kembali
+import BackButton from "../components/BackButton"
+import { logActivity } from "../utils/logActivity" // ✅ Logging helper
 
 const RegisterPage = () => {
   useRedirectIfLoggedIn()
@@ -30,12 +31,20 @@ const RegisterPage = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
 
+      // ✅ Tambahkan data lengkap ke Firestore
       await setDoc(doc(db, "users", user.uid), {
         fullName,
         email,
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
+        role: "Regular",
+        premium: false,
+        currency: "IDR",
       })
 
+      // ✅ Log aktivitas registrasi
+      await logActivity(email, "register")
+
+      // ✅ Kirim verifikasi email & logout sementara
       await sendEmailVerification(user)
       await signOut(auth)
 
