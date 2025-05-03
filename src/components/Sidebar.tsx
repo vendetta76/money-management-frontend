@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react"
-import { Home, User, ShoppingCart, BarChart, Menu, X, Sun, Moon } from "lucide-react"
-import { NavLink } from "react-router-dom"
-import avatar from "../assets/avatar.png"
+import { useEffect, useRef, useState } from "react"
+import { Home, User, ShoppingCart, BarChart, Menu, X, Sun, Moon, LogOut, Settings } from "lucide-react"
+import { NavLink, useNavigate } from "react-router-dom"
+
+const avatar = "https://res.cloudinary.com/dvbn6oqlp/image/upload/v1746252421/Default_pfp_zoecp6.webp"
 
 const navItems = [
   { label: "Dashboard", icon: <Home size={18} />, href: "/dashboard" },
@@ -12,12 +13,12 @@ const navItems = [
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [darkMode, setDarkMode] = useState(() => {
-    // Ambil dari localStorage kalau ada
-    return localStorage.getItem("theme") === "dark"
-  })
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark")
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+  const navigate = useNavigate()
 
-  // 🔁 Terapkan class dark ke <html>
+  // Apply dark mode to <html>
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark")
@@ -27,6 +28,17 @@ const Sidebar = () => {
       localStorage.setItem("theme", "light")
     }
   }, [darkMode])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !(dropdownRef.current as any).contains(e.target)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   return (
     <>
@@ -50,12 +62,12 @@ const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`bg-white dark:bg-gray-900 border-r dark:border-gray-800 min-h-screen p-4 w-64 z-40 fixed md:static top-0 left-0 transform md:translate-x-0
-          transition-transform duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full"} md:block`}
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:block`}
       >
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 relative">
           <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 hidden md:block">MoniQ</h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative" ref={dropdownRef}>
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="text-purple-700 dark:text-purple-300"
@@ -66,10 +78,30 @@ const Sidebar = () => {
             <img
               src={avatar}
               alt="User"
-              className="w-8 h-8 rounded-full border"
+              className="w-8 h-8 rounded-full border cursor-pointer"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
             />
+            {dropdownOpen && (
+              <div className="absolute top-12 right-0 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-2 z-50">
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                >
+                  <Settings size={16} />
+                  Edit Profil
+                </button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500 flex items-center gap-2"
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
         <nav className="space-y-2">
           {navItems.map((item) => (
             <NavLink
