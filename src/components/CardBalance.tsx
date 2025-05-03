@@ -1,10 +1,12 @@
 import { useState } from "react"
+import { Eye, EyeOff } from "lucide-react"
 
 interface CardBalanceProps {
   initialBalance: number
   cardHolder: string
   cardNumber: string
   expiry: string
+  compact?: boolean
 }
 
 const currencies = [
@@ -15,11 +17,12 @@ const currencies = [
   { label: "Yen (JPY)", code: "JPY", locale: "ja-JP" },
 ]
 
-const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry }: CardBalanceProps) => {
+const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry, compact = false }: CardBalanceProps) => {
   const [currency, setCurrency] = useState("IDR")
   const [locale, setLocale] = useState("id-ID")
   const [searchTerm, setSearchTerm] = useState("")
-  const [balance, setBalance] = useState(initialBalance)
+  const [balance] = useState(initialBalance)
+  const [showBalance, setShowBalance] = useState(true)
 
   const formatCurrency = (amount: number, currencyCode: string, localeStr: string) => {
     return new Intl.NumberFormat(localeStr, {
@@ -39,47 +42,61 @@ const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry }: CardBal
   }
 
   return (
-    <div className="rounded-xl text-white shadow-md p-6 w-full bg-gradient-to-br from-purple-600 to-indigo-700">
+    <div className={`rounded-xl text-white shadow-md p-6 w-full bg-gradient-to-br from-purple-600 to-indigo-700 ${compact ? "text-sm" : ""}`}>
       <div className="flex justify-between items-start mb-4">
         <div className="text-sm font-medium">Total Saldo</div>
-        <div className="text-sm bg-white text-gray-800 p-2 rounded shadow-md">
-          <input
-            type="text"
-            placeholder="Cari mata uang..."
-            className="text-xs px-2 py-1 w-full border-b border-gray-200 mb-2 outline-none"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <ul className="max-h-32 overflow-y-auto">
-            {filteredCurrencies.map((c) => (
-              <li
-                key={c.code}
-                onClick={() => handleCurrencyChange(c.code, c.locale)}
-                className={`cursor-pointer px-2 py-1 hover:bg-gray-100 text-xs ${
-                  currency === c.code ? "font-bold text-purple-600" : ""
-                }`}
-              >
-                {c.label}
-              </li>
-            ))}
-          </ul>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBalance(!showBalance)}
+            className="text-white"
+            title={showBalance ? "Sembunyikan saldo" : "Tampilkan saldo"}
+          >
+            {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+          <div className="text-sm bg-white text-gray-800 p-2 rounded shadow-md">
+            <input
+              type="text"
+              placeholder="Cari mata uang..."
+              className="text-xs px-2 py-1 w-full border-b border-gray-200 mb-2 outline-none"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <ul className="max-h-32 overflow-y-auto">
+              {filteredCurrencies.map((c) => (
+                <li
+                  key={c.code}
+                  onClick={() => handleCurrencyChange(c.code, c.locale)}
+                  className={`cursor-pointer px-2 py-1 hover:bg-gray-100 text-xs ${
+                    currency === c.code ? "font-bold text-purple-600" : ""
+                  }`}
+                >
+                  {c.label}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
 
-      <div className="text-2xl font-bold mb-6">{formatCurrency(balance, currency, locale)}</div>
-
-      <div className="flex justify-between text-xs">
-        <div>
-          <div className="text-gray-200">Nomor Kartu</div>
-          <div className="tracking-widest font-semibold">{cardNumber}</div>
-        </div>
-        <div>
-          <div className="text-gray-200">Berlaku</div>
-          <div className="font-semibold">{expiry}</div>
-        </div>
+      <div className={`font-bold mb-6 ${compact ? "text-xl" : "text-2xl"}`}>
+        {showBalance ? formatCurrency(balance, currency, locale) : "••••••••••"}
       </div>
 
-      <div className="mt-6 text-sm font-semibold">{cardHolder}</div>
+      {!compact && (
+        <>
+          <div className="flex justify-between text-xs">
+            <div>
+              <div className="text-gray-200">Nomor Kartu</div>
+              <div className="tracking-widest font-semibold">{cardNumber}</div>
+            </div>
+            <div>
+              <div className="text-gray-200">Berlaku</div>
+              <div className="font-semibold">{expiry}</div>
+            </div>
+          </div>
+          <div className="mt-6 text-sm font-semibold">{cardHolder}</div>
+        </>
+      )}
     </div>
   )
 }
