@@ -7,7 +7,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute = ({ children }: PrivateRouteProps) => {
-  const { user, loading } = useAuth()
+  const { user, loading, userMeta } = useAuth()
   const location = useLocation()
 
   useEffect(() => {
@@ -22,6 +22,10 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
 
   if (!user.emailVerified && location.pathname !== "/verify-email-pending") {
     return <Navigate to="/verify-email-pending" state={{ email: user.email }} replace />
+  }
+
+  if (userMeta?.role !== "admin") {
+    return <Navigate to="/unauthorized" replace />
   }
 
   return <>{children}</>

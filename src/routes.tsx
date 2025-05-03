@@ -6,8 +6,9 @@ import EditProfilePage from './pages/EditProfilePage'
 import LandingPage from './pages/LandingPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import VerifyEmailPending from './pages/VerifyEmailPending'
-import ResetPasswordPage from './pages/ResetPasswordPage' // ✅ tambahkan ini
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
+import AdminPage from './pages/AdminPage'
 import PrivateRoute from './components/PrivateRoute'
 
 const routes: RouteObject[] = [
@@ -32,7 +33,7 @@ const routes: RouteObject[] = [
     element: <VerifyEmailPending />,
   },
   {
-    path: '/reset-password', // ✅ custom reset password page
+    path: '/reset-password',
     element: <ResetPasswordPage />,
   },
   {
@@ -57,6 +58,22 @@ const routes: RouteObject[] = [
       <PrivateRoute>
         <EditProfilePage />
       </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin',
+    element: (
+      <PrivateRoute>
+        <AdminPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/unauthorized',
+    element: (
+      <div className="p-6 text-center text-red-600 text-xl">
+        🚫 Akses ditolak: hanya untuk admin.
+      </div>
     ),
   },
   {

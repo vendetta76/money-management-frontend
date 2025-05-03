@@ -19,7 +19,7 @@ export default function Profile() {
         </div>
         <div>
           <span className="block text-sm text-gray-600">Role</span>
-          <span className="font-semibold capitalize">{user.role || "user"}</span>
+          <span className="font-semibold capitalize">{user.role || "Regular"}</span>
         </div>
       </div>
     </div>
