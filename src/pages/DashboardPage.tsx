@@ -104,9 +104,9 @@ const DashboardPage = () => {
                     contentStyle={{ backgroundColor: "#1f2937", border: "none" }}
                     labelStyle={{ color: "#9ca3af" }}
                   />
-                </Tooltip>
-              </PieChart>
-            </ResponsiveContainer>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </main>
