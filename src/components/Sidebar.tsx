@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react"
-import { Home, User, ShoppingCart, BarChart, Menu, X, Sun, Moon, LogOut, Settings } from "lucide-react"
+import {
+  Home, User, ShoppingCart, BarChart, Menu, X, Sun, Moon,
+  LogOut, Settings
+} from "lucide-react"
 import { NavLink, useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore"
+import { db } from "../lib/firebase"
 
 const avatar = "https://res.cloudinary.com/dvbn6oqlp/image/upload/v1746252421/Default_pfp_zoecp6.webp"
 
@@ -17,8 +23,8 @@ const Sidebar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
   const navigate = useNavigate()
+  const { user, userMeta } = useAuth()
 
-  // Apply dark mode to <html>
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark")
@@ -29,7 +35,6 @@ const Sidebar = () => {
     }
   }, [darkMode])
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !(dropdownRef.current as any).contains(e.target)) {
@@ -40,9 +45,26 @@ const Sidebar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  const handleBuyPremium = async () => {
+    if (!user) return
+
+    const start = new Date()
+    const end = new Date()
+    end.setDate(start.getDate() + 7)
+
+    await updateDoc(doc(db, "users", user.uid), {
+      role: "premium",
+      premiumStartDate: start.toISOString(),
+      premiumEndDate: end.toISOString(),
+      updatedAt: serverTimestamp(),
+    })
+
+    window.location.reload()
+  }
+
   return (
     <>
-      {/* Topbar */}
+      {/* Topbar for mobile */}
       <div className="md:hidden p-4 bg-white border-b flex justify-between items-center dark:bg-gray-900">
         <h1 className="text-xl font-bold text-purple-700 dark:text-purple-300">MoniQ</h1>
         <div className="flex items-center gap-4">
@@ -121,9 +143,45 @@ const Sidebar = () => {
             </NavLink>
           ))}
         </nav>
+
+        {/* 🔐 Status Akun & Premium */}
+        {userMeta && (
+          <div className="mt-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-2">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-white">Status Akun</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600 dark:text-gray-300 text-sm">Role:</span>
+              {userMeta.role === "premium" ? (
+                <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">
+                  💎 Premium
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-gray-600 bg-gray-200 rounded-full">
+                  🧑‍💻 User
+                </span>
+              )}
+            </div>
+
+            {userMeta.role === "premium" && (
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Sisa hari premium:{" "}
+                <span className="font-semibold text-green-600 dark:text-green-400">
+                  {userMeta.daysLeft} hari
+                </span>
+              </p>
+            )}
+
+            {userMeta.role !== "premium" && (
+              <button
+                onClick={handleBuyPremium}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold text-xs px-3 py-2 rounded shadow mt-1"
+              >
+                Beli Premium 7 Hari 🔥
+              </button>
+            )}
+          </div>
+        )}
       </aside>
 
-      {/* Overlay for mobile */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-30 z-30 md:hidden"
