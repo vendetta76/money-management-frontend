@@ -46,13 +46,21 @@ const DashboardPage = () => {
             </button>
           </div>
 
-          {/* Card Balance */}
-          <CardBalance
-            initialBalance={53250000}
-            cardHolder="Jonas"
-            cardNumber="**** **** **** 6252"
-            expiry="02/25"
-          />
+          {/* Card Balances (3 columns) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Dompet Utama</h3>
+              <CardBalance initialBalance={53250000} compact />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Tabungan</h3>
+              <CardBalance initialBalance={2250000} compact />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Investasi</h3>
+              <CardBalance initialBalance={8750000} compact />
+            </div>
+          </div>
 
           {/* Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
