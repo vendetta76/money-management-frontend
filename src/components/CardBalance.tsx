@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 import { db } from "../lib/firebase"
 import { doc, updateDoc } from "firebase/firestore"
@@ -20,13 +20,19 @@ const currencies = [
   { label: "Yen (JPY)", code: "JPY", locale: "ja-JP" },
 ]
 
-const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry, compact = false }: CardBalanceProps) => {
+const CardBalance = ({
+  initialBalance,
+  cardHolder,
+  compact = false,
+}: CardBalanceProps) => {
   const { user, userMeta } = useAuth()
   const [currency, setCurrency] = useState("IDR")
   const [locale, setLocale] = useState("id-ID")
   const [searchTerm, setSearchTerm] = useState("")
   const [balance] = useState(initialBalance)
-  const [showBalance, setShowBalance] = useState(true)
+  const [showBalance, setShowBalance] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     if (userMeta?.preferredCurrency) {
@@ -34,6 +40,16 @@ const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry, compact =
       setLocale(userMeta.preferredCurrency.locale)
     }
   }, [userMeta])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !(dropdownRef.current as any).contains(e.target)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const formatCurrency = (amount: number, currencyCode: string, localeStr: string) => {
     return new Intl.NumberFormat(localeStr, {
@@ -50,6 +66,7 @@ const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry, compact =
   const handleCurrencyChange = async (code: string, localeStr: string) => {
     setCurrency(code)
     setLocale(localeStr)
+    setDropdownOpen(false)
 
     if (user) {
       await updateDoc(doc(db, "users", user.uid), {
@@ -59,8 +76,15 @@ const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry, compact =
   }
 
   return (
-    <div className={`rounded-xl text-white shadow-md p-6 w-full bg-gradient-to-br from-purple-600 to-indigo-700 ${compact ? "text-sm" : ""}`}>
-      <div className="flex justify-between items-start mb-4">
+    <div
+      className={`rounded-xl text-white shadow-md p-6 w-full bg-gradient-to-br from-purple-600 to-indigo-700 ${
+        compact ? "text-sm" : ""
+      }`}
+    >
+      {/* Label at top */}
+      <div className="text-base font-semibold mb-3">{cardHolder}</div>
+
+      <div className="flex justify-between items-start mb-4 relative" ref={dropdownRef}>
         <div className="text-sm font-medium">Total Saldo</div>
         <div className="flex items-center gap-2">
           <button
@@ -70,50 +94,44 @@ const CardBalance = ({ initialBalance, cardHolder, cardNumber, expiry, compact =
           >
             {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
-          <div className="text-sm bg-white text-gray-800 p-2 rounded shadow-md">
-            <input
-              type="text"
-              placeholder="Cari mata uang..."
-              className="text-xs px-2 py-1 w-full border-b border-gray-200 mb-2 outline-none"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <ul className="max-h-32 overflow-y-auto">
-              {filteredCurrencies.map((c) => (
-                <li
-                  key={c.code}
-                  onClick={() => handleCurrencyChange(c.code, c.locale)}
-                  className={`cursor-pointer px-2 py-1 hover:bg-gray-100 text-xs ${
-                    currency === c.code ? "font-bold text-purple-600" : ""
-                  }`}
-                >
-                  {c.label}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="text-white"
+            title="Ganti mata uang"
+          >
+            {dropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+          {dropdownOpen && (
+            <div className="absolute top-10 right-0 z-50 text-black bg-white rounded shadow w-48 p-2">
+              <input
+                type="text"
+                placeholder="Cari mata uang..."
+                className="text-xs px-2 py-1 w-full border-b border-gray-200 mb-2 outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <ul className="max-h-32 overflow-y-auto text-sm">
+                {filteredCurrencies.map((c) => (
+                  <li
+                    key={c.code}
+                    onClick={() => handleCurrencyChange(c.code, c.locale)}
+                    className={`cursor-pointer px-2 py-1 hover:bg-gray-100 ${
+                      currency === c.code ? "font-bold text-purple-600" : ""
+                    }`}
+                  >
+                    {c.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className={`font-bold mb-6 ${compact ? "text-xl" : "text-2xl"}`}>
+      {/* Balance */}
+      <div className={`font-bold mb-2 ${compact ? "text-xl" : "text-2xl"}`}>
         {showBalance ? formatCurrency(balance, currency, locale) : "••••••••••"}
       </div>
-
-      {!compact && (
-        <>
-          <div className="flex justify-between text-xs">
-            <div>
-              <div className="text-gray-200">Nomor Kartu</div>
-              <div className="tracking-widest font-semibold">{cardNumber}</div>
-            </div>
-            <div>
-              <div className="text-gray-200">Berlaku</div>
-              <div className="font-semibold">{expiry}</div>
-            </div>
-          </div>
-          <div className="mt-6 text-sm font-semibold">{cardHolder}</div>
-        </>
-      )}
     </div>
   )
 }
