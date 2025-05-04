@@ -1,3 +1,4 @@
+// Final OutcomePage with edit & delete features synced to HistoryPage
 import { useState, useEffect } from "react"
 import { useAuth } from "../context/AuthContext"
 import { db } from "../lib/firebaseClient"
@@ -9,8 +10,10 @@ import {
   orderBy,
   serverTimestamp,
   updateDoc,
+  deleteDoc,
   doc,
-  increment
+  increment,
+  arrayUnion
 } from "firebase/firestore"
 import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
 
@@ -21,6 +24,7 @@ interface OutcomeEntry {
   amount: number
   currency: string
   createdAt?: any
+  editHistory?: any[]
 }
 
 interface WalletEntry {
@@ -36,6 +40,7 @@ const OutcomePage = () => {
   const [outcomes, setOutcomes] = useState<OutcomeEntry[]>([])
   const [wallets, setWallets] = useState<WalletEntry[]>([])
   const [form, setForm] = useState({ wallet: "", description: "", amount: "", currency: "" })
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -103,24 +108,56 @@ const OutcomePage = () => {
     setLoading(true)
 
     try {
-      const selectedWallet = wallets.find(w => w.id === form.wallet)
-      if (selectedWallet && selectedWallet.balance < parseFloat(form.amount)) {
-        alert("Saldo wallet tidak mencukupi.")
-        setLoading(false)
-        return
+      const parsedAmount = parseFloat(form.amount)
+
+      if (!editingId) {
+        const selectedWallet = wallets.find(w => w.id === form.wallet)
+        if (selectedWallet && selectedWallet.balance < parsedAmount) {
+          alert("Saldo wallet tidak mencukupi.")
+          setLoading(false)
+          return
+        }
+
+        await addDoc(collection(db, "users", user.uid, "outcomes"), {
+          ...form,
+          amount: parsedAmount,
+          createdAt: serverTimestamp(),
+        })
+
+        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+          balance: increment(-parsedAmount)
+        })
+      } else {
+        const old = outcomes.find(i => i.id === editingId)
+        if (!old) return
+
+        const diff = parsedAmount - old.amount
+        const selectedWallet = wallets.find(w => w.id === form.wallet)
+        if (selectedWallet && selectedWallet.balance + old.amount < parsedAmount) {
+          alert("Saldo wallet tidak mencukupi.")
+          setLoading(false)
+          return
+        }
+
+        await updateDoc(doc(db, "users", user.uid, "outcomes", editingId), {
+          description: form.description,
+          amount: parsedAmount,
+          wallet: form.wallet,
+          currency: form.currency,
+          editHistory: arrayUnion({
+            description: old.description,
+            amount: old.amount,
+            editedAt: new Date()
+          })
+        })
+
+        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+          balance: increment(-diff)
+        })
       }
 
-      await addDoc(collection(db, "users", user.uid, "outcomes"), {
-        ...form,
-        amount: parseFloat(form.amount),
-        createdAt: serverTimestamp(),
-      })
-
-      await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
-        balance: increment(-parseFloat(form.amount))
-      })
-
       setForm({ wallet: "", description: "", amount: "", currency: "" })
+      setEditingId(null)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 2000)
     } catch (err) {
@@ -130,14 +167,34 @@ const OutcomePage = () => {
     }
   }
 
+  const handleEdit = (item: OutcomeEntry) => {
+    setForm({
+      wallet: item.wallet,
+      description: item.description,
+      amount: item.amount.toString(),
+      currency: item.currency,
+    })
+    setEditingId(item.id || null)
+  }
+
+  const handleDelete = async (id: string, amount: number, wallet: string) => {
+    if (!user) return
+    await deleteDoc(doc(db, "users", user.uid, "outcomes", id))
+    await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
+      balance: increment(amount)
+    })
+  }
+
   return (
     <LayoutWithSidebar>
       <div className="max-w-4xl mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6 text-red-600 dark:text-red-400">📤 Tambah Pengeluaran</h1>
+        <h1 className="text-2xl font-bold mb-6 text-red-600 dark:text-red-400">
+          📤 {editingId ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
+        </h1>
 
         {success && (
           <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg border border-green-300">
-            ✅ Pengeluaran berhasil disimpan!
+            ✅ {editingId ? "Pengeluaran berhasil diperbarui!" : "Pengeluaran berhasil disimpan!"}
           </div>
         )}
 
@@ -195,13 +252,27 @@ const OutcomePage = () => {
             {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
-          >
-            {loading ? "Menyimpan..." : "Simpan"}
-          </button>
+          <div className="flex justify-between">
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({ wallet: "", description: "", amount: "", currency: "" })
+                  setEditingId(null)
+                }}
+                className="text-sm text-gray-500 hover:underline"
+              >
+                Batal Edit
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+            >
+              {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
+            </button>
+          </div>
         </form>
 
         <div className="mt-8">
@@ -218,6 +289,7 @@ const OutcomePage = () => {
                     <th className="px-4 py-2 border-b">Nominal</th>
                     <th className="px-4 py-2 border-b">Mata Uang</th>
                     <th className="px-4 py-2 border-b">Tanggal</th>
+                    <th className="px-4 py-2 border-b">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -231,6 +303,20 @@ const OutcomePage = () => {
                         {entry.createdAt?.toDate
                           ? new Date(entry.createdAt.toDate()).toLocaleString()
                           : "-"}
+                      </td>
+                      <td className="px-4 py-2 border-b space-x-2">
+                        <button
+                          onClick={() => handleEdit(entry)}
+                          className="text-blue-600 text-xs hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(entry.id!, entry.amount, entry.wallet)}
+                          className="text-red-600 text-xs hover:underline"
+                        >
+                          Hapus
+                        </button>
                       </td>
                     </tr>
                   ))}

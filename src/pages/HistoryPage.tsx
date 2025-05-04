@@ -1,4 +1,4 @@
-// Final compact HistoryPage.tsx tanpa kolom kategori
+// Final read-only HistoryPage with detailed logs
 import { useState, useEffect } from "react"
 import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
 import { useAuth } from "../context/AuthContext"
@@ -7,12 +7,9 @@ import {
   collection,
   onSnapshot,
   query,
-  orderBy,
-  doc,
-  updateDoc,
-  deleteDoc,
-  arrayUnion
+  orderBy
 } from "firebase/firestore"
+import { Search } from "lucide-react"
 
 interface EditEntry {
   description: string
@@ -43,8 +40,6 @@ const HistoryPage = () => {
   const [selectedDate, setSelectedDate] = useState("")
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [wallets, setWallets] = useState<WalletEntry[]>([])
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ description: "", amount: 0 })
 
   useEffect(() => {
     if (!user) return
@@ -103,143 +98,82 @@ const HistoryPage = () => {
   })
 
   const getWalletName = (walletId: string) => {
-    return wallets.find((w) => w.id === walletId)?.name || walletId
+    const wallet = wallets.find((w) => w.id === walletId)
+    return wallet ? wallet.name : `${walletId} (Telah dihapus)`
   }
 
   const getWalletCurrency = (walletId: string) => {
-    return wallets.find((w) => w.id === walletId)?.currency || ""
+    const wallet = wallets.find((w) => w.id === walletId)
+    return wallet ? wallet.currency : "-"
   }
 
   return (
     <LayoutWithSidebar>
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-6">
         <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
 
-        <div className="flex flex-wrap gap-4 mb-4">
-          <input
-            type="text"
-            placeholder="Cari deskripsi..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border px-3 py-2 rounded w-full md:w-1/3 dark:bg-gray-800 dark:text-white"
-          />
+        <div className="flex flex-wrap gap-4 mb-6 items-center">
+          <div className="relative w-full md:w-1/3">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Cari deskripsi..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
+            />
+          </div>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="border px-3 py-2 rounded dark:bg-gray-800 dark:text-white"
+            className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
           />
         </div>
 
         {filtered.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-300">Tidak ada transaksi ditemukan.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm bg-white dark:bg-gray-800 rounded shadow">
-              <thead>
-                <tr className="text-left text-gray-500 border-b dark:border-gray-600">
-                  <th className="py-2 px-3">Tipe</th>
-                  <th className="py-2 px-3">Dompet</th>
-                  <th className="py-2 px-3">Mata Uang</th>
-                  <th className="py-2 px-3">Deskripsi</th>
-                  <th className="py-2 px-3">Jumlah</th>
-                  <th className="py-2 px-3">Tanggal</th>
-                  <th className="py-2 px-3">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-700 dark:text-gray-200">
-                {filtered.map((item) => (
-                  <tr key={item.id} className="border-t dark:border-gray-700">
-                    <td className="py-1.5 px-3 font-semibold">
-                      {item.type === "income" ? "📥 Income" : "📤 Outcome"}
-                    </td>
-                    <td className="py-1.5 px-3">{getWalletName(item.wallet)}</td>
-                    <td className="py-1.5 px-3">{getWalletCurrency(item.wallet)}</td>
-                    <td className="py-1.5 px-3">
-                      {editingId === item.id ? (
-                        <input
-                          value={editForm.description}
-                          onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                          className="border px-2 py-1 rounded text-sm w-full dark:bg-gray-800 dark:text-white"
-                        />
-                      ) : (
-                        item.description
-                      )}
-                    </td>
-                    <td className="py-1.5 px-3">
-                      {editingId === item.id ? (
-                        <input
-                          type="number"
-                          value={editForm.amount}
-                          onChange={(e) => setEditForm({ ...editForm, amount: parseInt(e.target.value) })}
-                          className="border px-2 py-1 rounded text-sm w-full dark:bg-gray-800 dark:text-white"
-                        />
-                      ) : (
-                        `${item.type === "income" ? "+" : "-"} Rp ${item.amount.toLocaleString("id-ID")}`
-                      )}
-                    </td>
-                    <td className="py-1.5 px-3">
-                      {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID")}
-                    </td>
-                    <td className="py-1.5 px-3 space-x-2">
-                      {editingId === item.id ? (
-                        <>
-                          <button
-                            onClick={async () => {
-                              if (!user) return
-                              const docRef = doc(db, "users", user.uid, item.type + "s", item.id!)
-                              await updateDoc(docRef, {
-                                description: editForm.description,
-                                amount: editForm.amount,
-                                editHistory: arrayUnion({
-                                  description: item.description,
-                                  amount: item.amount,
-                                  editedAt: new Date(),
-                                }),
-                              })
-                              setEditingId(null)
-                            }}
-                            className="text-green-600 text-sm hover:underline"
-                          >
-                            Simpan
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="text-gray-500 text-sm hover:underline"
-                          >
-                            Batal
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => {
-                              setEditForm({
-                                description: item.description,
-                                amount: item.amount,
-                              })
-                              setEditingId(item.id!)
-                            }}
-                            className="text-blue-600 text-sm hover:underline"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={async () => {
-                              if (!user) return
-                              await deleteDoc(doc(db, "users", user.uid, item.type + "s", item.id!))
-                            }}
-                            className="text-red-600 text-sm hover:underline"
-                          >
-                            Hapus
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid gap-4">
+            {filtered.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-md transition border-l-4 "
+                style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    {item.type === "income" ? "📥 Income" : "📤 Outcome"} • {getWalletName(item.wallet)} ({getWalletCurrency(item.wallet)})
+                  </span>
+                  <span
+                    className={`text-sm font-semibold ${item.type === "income" ? "text-green-600" : "text-red-500"}`}
+                  >
+                    {item.type === "income" ? "+" : "-"} Rp {item.amount.toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-100">
+                  {item.description}
+                  {item.editHistory && item.editHistory.length > 0 && (
+                    <span className="text-xs text-blue-500 ml-2">(edited)</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID")}
+                </div>
+                {item.editHistory && item.editHistory.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded">
+                    <p className="font-semibold mb-1">Histori Perubahan:</p>
+                    <ul className="list-disc ml-5 space-y-1">
+                      {item.editHistory.map((log, i) => (
+                        <li key={i}>
+                          {new Date(log.editedAt?.toDate?.() ?? log.editedAt).toLocaleString("id-ID")}: {log.description} - Rp {log.amount.toLocaleString("id-ID")}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
