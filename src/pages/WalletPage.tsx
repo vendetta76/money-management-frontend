@@ -14,7 +14,7 @@ import {
   serverTimestamp,
   setDoc
 } from "firebase/firestore"
-import { Settings, Plus, X, Trash2 } from "lucide-react"
+import { Settings, Plus, X, Eye, EyeOff } from "lucide-react"
 
 interface WalletEntry {
   id?: string
@@ -32,6 +32,13 @@ const WalletPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState("")
   const [showForm, setShowForm] = useState(false)
+  const [showBalance, setShowBalance] = useState(false)
+
+  const totalsByCurrency = wallets.reduce((acc, wallet) => {
+    if (!acc[wallet.currency]) acc[wallet.currency] = 0
+    acc[wallet.currency] += wallet.balance
+    return acc
+  }, {} as Record<string, number>)
 
   useEffect(() => {
     if (!user) return
@@ -120,11 +127,14 @@ const WalletPage = () => {
     setShowForm(true)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
+    if (!editingId) return
     const confirm = window.confirm("Are you sure you want to delete this wallet?")
     if (!confirm) return
     try {
-      await deleteDoc(doc(db, "users", user!.uid, "wallets", id))
+      await deleteDoc(doc(db, "users", user!.uid, "wallets", editingId))
+      setEditingId(null)
+      setShowForm(false)
     } catch (err) {
       console.error("Error deleting wallet:", err)
     }
@@ -148,88 +158,30 @@ const WalletPage = () => {
           )}
         </div>
 
-        {success && (
-          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg border border-green-300">
-            ✅ {success}
-          </div>
-        )}
-
-        {showForm && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
-            <form onSubmit={handleSubmit} className="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false)
-                  setEditingId(null)
-                }}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
-              <h2 className="text-lg font-semibold mb-4">{editingId ? "Edit Wallet" : "Add Wallet"}</h2>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Wallet Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="e.g., Main Wallet"
-                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                    errors.name && "border-red-500"
-                  }`}
-                />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+        <div className="mb-4 space-y-2">
+          {Object.entries(totalsByCurrency).map(([currency, total]) => (
+            total > 0 && (
+              <div key={currency} className="text-sm font-medium text-gray-700">
+                Total {currency}: {new Intl.NumberFormat('id-ID', {
+                  style: 'currency',
+                  currency,
+                  maximumFractionDigits: 0
+                }).format(total)}
               </div>
+            )
+          ))}
+        </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Initial Balance</label>
-                <input
-                  type="number"
-                  name="balance"
-                  value={form.balance}
-                  onChange={handleChange}
-                  placeholder="e.g., 1000"
-                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                    errors.balance && "border-red-500"
-                  }`}
-                />
-                {errors.balance && <p className="text-red-500 text-sm mt-1">{errors.balance}</p>}
-              </div>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-lg font-semibold">Your Wallets</h2>
+          <button
+            onClick={() => setShowBalance(!showBalance)}
+            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+          >
+            {showBalance ? <Eye size={16} /> : <EyeOff size={16} />} {showBalance ? "Hide" : "Show"} Balance
+          </button>
+        </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Currency</label>
-                <select
-                  name="currency"
-                  value={form.currency}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                    errors.currency && "border-red-500"
-                  }`}
-                >
-                  <option value="">-- Select Currency --</option>
-                  <option value="USD">USD</option>
-                  <option value="IDR">IDR</option>
-                  <option value="EUR">EUR</option>
-                  <option value="JPY">JPY</option>
-                </select>
-                {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  {editingId ? "Update Wallet" : "Add Wallet"}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        <h2 className="text-lg font-semibold mb-4">Your Wallets</h2>
         {wallets.length === 0 ? (
           <p className="text-gray-500">No wallets found.</p>
         ) : (
@@ -241,23 +193,19 @@ const WalletPage = () => {
               >
                 <div className="flex justify-between items-center">
                   <h3 className="text-sm font-medium">{wallet.name}</h3>
-                  <div className="flex gap-2 items-center">
-                    <Trash2
-                      className="w-5 h-5 opacity-80 hover:opacity-100 cursor-pointer"
-                      onClick={() => handleDelete(wallet.id!)}
-                    />
-                    <Settings
-                      className="w-5 h-5 opacity-80 hover:opacity-100 cursor-pointer"
-                      onClick={() => handleEdit(wallet)}
-                    />
-                  </div>
+                  <Settings
+                    className="w-5 h-5 opacity-80 hover:opacity-100 cursor-pointer"
+                    onClick={() => handleEdit(wallet)}
+                  />
                 </div>
                 <div className="mt-4 text-2xl font-bold">
-                  {new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: wallet.currency || 'IDR',
-                    maximumFractionDigits: 0
-                  }).format(wallet.balance)}
+                  {showBalance
+                    ? new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: wallet.currency || 'IDR',
+                        maximumFractionDigits: 0
+                      }).format(wallet.balance)
+                    : "••••••••"}
                 </div>
               </div>
             ))}
