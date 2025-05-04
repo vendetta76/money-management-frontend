@@ -126,7 +126,7 @@ const WalletPage = () => {
 
   return (
     <LayoutWithSidebar>
-      <div className="p-6 max-w-2xl">
+      <div className="p-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Wallet Management</h1>
           <button
@@ -145,7 +145,14 @@ const WalletPage = () => {
 
         {showForm && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
-            <form onSubmit={handleSubmit} className="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm">
+            <form onSubmit={handleSubmit} className="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm relative">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
               <h2 className="text-lg font-semibold mb-4">{editingId ? "Edit Wallet" : "Add Wallet"}</h2>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Wallet Name</label>
@@ -208,43 +215,28 @@ const WalletPage = () => {
           </div>
         )}
 
-        <h2 className="text-lg font-semibold mb-2">Your Wallets</h2>
+        <h2 className="text-lg font-semibold mb-4">Your Wallets</h2>
         {wallets.length === 0 ? (
           <p className="text-gray-500">No wallets found.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {wallets.map((wallet) => (
               <div
                 key={wallet.id}
-                className="bg-white p-4 rounded-xl shadow flex justify-between items-center"
+                className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-2xl shadow flex flex-col justify-between"
               >
-                <div>
-                  <p className="font-semibold">{wallet.name}</p>
-                  <p className="text-sm text-gray-500">
-                    Balance: {new Intl.NumberFormat('id-ID', {
-                      style: 'currency',
-                      currency: wallet.currency || 'IDR',
-                      maximumFractionDigits: 0
-                    }).format(wallet.balance)}
-                  </p>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-medium">{wallet.name}</h3>
+                  <button onClick={() => handleEdit(wallet)}>
+                    <Settings className="w-5 h-5 opacity-80 hover:opacity-100" />
+                  </button>
                 </div>
-                <div className="flex gap-3 items-center">
-                  <button
-                    onClick={() => handleEdit(wallet)}
-                    className="text-blue-600 text-sm hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(wallet.id!)}
-                    className="text-red-600 text-sm hover:underline"
-                  >
-                    Delete
-                  </button>
-                  <Settings
-                    className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer"
-                    onClick={() => handleEdit(wallet)}
-                  />
+                <div className="mt-4 text-2xl font-bold">
+                  {new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: wallet.currency || 'IDR',
+                    maximumFractionDigits: 0
+                  }).format(wallet.balance)}
                 </div>
               </div>
             ))}
