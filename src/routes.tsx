@@ -14,33 +14,20 @@ import OutcomePage from './pages/OutcomePage'
 import HistoryPage from './pages/HistoryPage'
 import WalletPage from './pages/WalletPage'
 import PrivateRoute from './components/PrivateRoute'
-import { ProfilePage as SettingsProfile, SecurityPage, PreferencesPage } from './pages/SettingsPages'
+import {
+  ProfilePage as SettingsProfile,
+  SecurityPage,
+  PreferencesPage,
+} from './pages/SettingsPages'
 
 const routes: RouteObject[] = [
-  {
-    path: '/',
-    element: <LandingPage />,
-  },
-  {
-    path: '/login',
-    element: <LoginPage />,
-  },
-  {
-    path: '/register',
-    element: <RegisterPage />,
-  },
-  {
-    path: '/forgot-password',
-    element: <ForgotPasswordPage />,
-  },
-  {
-    path: '/verify-email-pending',
-    element: <VerifyEmailPending />,
-  },
-  {
-    path: '/reset-password',
-    element: <ResetPasswordPage />,
-  },
+  { path: '/', element: <LandingPage /> },
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/verify-email-pending', element: <VerifyEmailPending /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
+
   {
     path: '/dashboard',
     element: (
@@ -137,10 +124,7 @@ const routes: RouteObject[] = [
       </div>
     ),
   },
-  {
-    path: '*',
-    element: <LoginPage />,
-  },
+  { path: '*', element: <LoginPage /> },
 ]
 
 export default routes
