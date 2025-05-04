@@ -54,10 +54,10 @@ const IncomePage = () => {
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
-    if (!form.wallet.trim()) newErrors.wallet = "Wallet is required"
-    if (!form.description.trim()) newErrors.description = "Description is required"
-    if (!form.amount.trim() || parseFloat(form.amount) <= 0) newErrors.amount = "Amount must be greater than 0"
-    if (!form.currency.trim()) newErrors.currency = "Currency is required"
+    if (!form.wallet.trim()) newErrors.wallet = "Dompet wajib dipilih."
+    if (!form.description.trim()) newErrors.description = "Deskripsi wajib diisi."
+    if (!form.amount.trim() || parseFloat(form.amount) <= 0) newErrors.amount = "Nominal harus lebih dari 0."
+    if (!form.currency.trim()) newErrors.currency = "Mata uang wajib dipilih."
     return newErrors
   }
 
@@ -83,7 +83,7 @@ const IncomePage = () => {
       setSuccess(true)
       setTimeout(() => setSuccess(false), 2000)
     } catch (err) {
-      console.error("Failed to save income:", err)
+      console.error("Gagal menyimpan pemasukan:", err)
     } finally {
       setLoading(false)
     }
@@ -92,17 +92,17 @@ const IncomePage = () => {
   return (
     <LayoutWithSidebar>
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-6">Create Income</h1>
+        <h1 className="text-2xl font-bold mb-6">Tambah Pemasukan</h1>
 
         {success && (
           <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg border border-green-300">
-            ✅ Income saved successfully!
+            ✅ Pemasukan berhasil disimpan!
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="bg-white shadow rounded-xl p-6 mb-6 max-w-xl">
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Choose your wallet</label>
+            <label className="block mb-1 text-sm font-medium">Pilih Dompet</label>
             <select
               name="wallet"
               value={form.wallet}
@@ -111,22 +111,22 @@ const IncomePage = () => {
                 errors.wallet && "border-red-500"
               }`}
             >
-              <option value="">-- Select Wallet --</option>
-              <option value="Main">Main Wallet</option>
-              <option value="Savings">Savings</option>
-              <option value="Investment">Investment</option>
+              <option value="">-- Pilih Dompet --</option>
+              <option value="Main">Dompet Utama</option>
+              <option value="Savings">Tabungan</option>
+              <option value="Investment">Investasi</option>
             </select>
             {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Description</label>
+            <label className="block mb-1 text-sm font-medium">Deskripsi</label>
             <input
               name="description"
               value={form.description}
               onChange={handleChange}
               type="text"
-              placeholder="Description"
+              placeholder="Tulis deskripsi"
               className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
                 errors.description && "border-red-500"
               }`}
@@ -152,7 +152,7 @@ const IncomePage = () => {
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Currency</label>
+            <label className="block mb-1 text-sm font-medium">Mata Uang</label>
             <select
               name="currency"
               value={form.currency}
@@ -161,11 +161,11 @@ const IncomePage = () => {
                 errors.currency && "border-red-500"
               }`}
             >
-              <option value="">-- Select Currency --</option>
+              <option value="">-- Pilih Mata Uang --</option>
               <option value="USD">USD</option>
               <option value="IDR">IDR</option>
               <option value="EUR">EUR</option>
-              <option value="EUR">THB</option>
+              <option value="THB">THB</option>
             </select>
             {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
           </div>
@@ -175,24 +175,24 @@ const IncomePage = () => {
             disabled={loading}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? "Submitting" : "Submit"}
+            {loading ? "Menyimpan..." : "Simpan"}
           </button>
         </form>
 
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Recent Transaction</h2>
+          <h2 className="text-xl font-semibold mb-4">Transaksi Terbaru</h2>
           {incomes.length === 0 ? (
-            <p className="text-gray-500">No income entries yet.</p>
+            <p className="text-gray-500">Belum ada data pemasukan.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white border rounded-xl shadow">
                 <thead>
                   <tr className="bg-gray-100 text-sm text-left">
-                    <th className="px-4 py-2 border-b">Wallet</th>
-                    <th className="px-4 py-2 border-b">Description</th>
+                    <th className="px-4 py-2 border-b">Dompet</th>
+                    <th className="px-4 py-2 border-b">Deskripsi</th>
                     <th className="px-4 py-2 border-b">Nominal</th>
-                    <th className="px-4 py-2 border-b">Currency</th>
-                    <th className="px-4 py-2 border-b">Date</th>
+                    <th className="px-4 py-2 border-b">Mata Uang</th>
+                    <th className="px-4 py-2 border-b">Tanggal</th>
                   </tr>
                 </thead>
                 <tbody>
