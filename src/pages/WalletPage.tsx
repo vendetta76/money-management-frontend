@@ -42,12 +42,10 @@ const WalletPage = () => {
 
   useEffect(() => {
     if (!user) return
-
     const q = query(
       collection(db, "users", user.uid, "wallets"),
       orderBy("createdAt", "desc")
     )
-
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -55,7 +53,6 @@ const WalletPage = () => {
       })) as WalletEntry[]
       setWallets(data)
     })
-
     return () => unsubscribe()
   }, [user])
 
@@ -93,7 +90,6 @@ const WalletPage = () => {
         currency: form.currency,
         createdAt: serverTimestamp(),
       }
-
       const userDocRef = doc(db, "users", user!.uid)
       const docRef = editingId
         ? doc(db, "users", user!.uid, "wallets", editingId)
@@ -158,20 +154,32 @@ const WalletPage = () => {
           )}
         </div>
 
-        <div className="mb-4 space-y-2">
+        {/* Total Summary Block */}
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {Object.entries(totalsByCurrency).map(([currency, total]) => (
             total > 0 && (
-              <div key={currency} className="text-sm font-medium text-gray-700">
-                Total {currency}: {new Intl.NumberFormat('id-ID', {
-                  style: 'currency',
-                  currency,
-                  maximumFractionDigits: 0
-                }).format(total)}
+              <div
+                key={currency}
+                className="bg-white shadow rounded-lg px-5 py-4 border text-sm font-medium text-gray-800"
+              >
+                <div className="flex items-center justify-between">
+                  <span>Total {currency}</span>
+                  <span>
+                    {showBalance
+                      ? new Intl.NumberFormat('id-ID', {
+                          style: 'currency',
+                          currency,
+                          maximumFractionDigits: 0
+                        }).format(total)
+                      : "••••••••"}
+                  </span>
+                </div>
               </div>
             )
           ))}
         </div>
 
+        {/* Wallet Grid & Toggle */}
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-lg font-semibold">Your Wallets</h2>
           <button
@@ -209,6 +217,89 @@ const WalletPage = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Floating Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm relative"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false)
+                  setEditingId(null)
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-lg font-semibold mb-4">{editingId ? "Edit Wallet" : "Add Wallet"}</h2>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Wallet Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="e.g., Main Wallet"
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.name && "border-red-500"}`}
+                />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Initial Balance</label>
+                <input
+                  type="number"
+                  name="balance"
+                  value={form.balance}
+                  onChange={handleChange}
+                  placeholder="e.g., 1000"
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.balance && "border-red-500"}`}
+                />
+                {errors.balance && <p className="text-red-500 text-sm mt-1">{errors.balance}</p>}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Currency</label>
+                <select
+                  name="currency"
+                  value={form.currency}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.currency && "border-red-500"}`}
+                >
+                  <option value="">-- Select Currency --</option>
+                  <option value="USD">USD</option>
+                  <option value="IDR">IDR</option>
+                  <option value="EUR">EUR</option>
+                  <option value="JPY">JPY</option>
+                </select>
+                {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+              </div>
+
+              <div className="flex justify-between items-center">
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="text-red-600 hover:underline text-sm"
+                  >
+                    Delete Wallet
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  {editingId ? "Update Wallet" : "Add Wallet"}
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </div>
