@@ -137,7 +137,6 @@ const IncomePage = () => {
           <div className="mb-4">
             <label className="block mb-1 text-sm font-medium">Nominal</label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-500">$</span>
               <input
                 name="amount"
                 value={form.amount}
@@ -166,6 +165,7 @@ const IncomePage = () => {
               <option value="USD">USD</option>
               <option value="IDR">IDR</option>
               <option value="EUR">EUR</option>
+              <option value="EUR">THB</option>
             </select>
             {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
           </div>
@@ -175,12 +175,12 @@ const IncomePage = () => {
             disabled={loading}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? "Saving..." : "Save Income"}
+            {loading ? "Submitting" : "Submit"}
           </button>
         </form>
 
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Recent Incomes</h2>
+          <h2 className="text-xl font-semibold mb-4">Recent Transaction</h2>
           {incomes.length === 0 ? (
             <p className="text-gray-500">No income entries yet.</p>
           ) : (

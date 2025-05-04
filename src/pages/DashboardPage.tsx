@@ -1,108 +1,65 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
 import { useAuth } from "../context/AuthContext"
+import { db } from "../lib/firebaseClient"
+import { collection, onSnapshot } from "firebase/firestore"
 import Sidebar from "../components/Sidebar"
 import CardBalance from "../components/CardBalance"
-import PremiumOnly from "../components/PremiumOnly"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
-
-const chartData = [
-  { name: "Savings", value: 400 },
-  { name: "Investments", value: 300 },
-  { name: "Expenses", value: 300 },
-]
 
 const COLORS = ["#4F46E5", "#22C55E", "#EF4444"]
 
 const DashboardPage = () => {
-  const { signOut, userMeta } = useAuth()
-  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
+  const [totalBalance, setTotalBalance] = useState(0)
+  const [chartData, setChartData] = useState([
+    { name: "Savings", value: 400 },
+    { name: "Investments", value: 300 },
+    { name: "Expenses", value: 300 },
+  ])
 
-  const [balances, setBalances] = useState([0]) // Default saldo pertama = 0
+  useEffect(() => {
+    if (!user) return
 
-  const handleLogout = async () => {
-    await signOut()
-    navigate("/login")
-  }
+    const unsubscribe = onSnapshot(
+      collection(db, "users", user.uid, "wallets"),
+      (snapshot) => {
+        const wallets = snapshot.docs.map((doc) => doc.data())
+        const total = wallets.reduce((sum, w: any) => sum + (w.balance || 0), 0)
+        setTotalBalance(total)
+      }
+    )
 
-  const handleAddCard = () => {
-    const isPremium = userMeta?.role === "premium"
-    const cardCount = balances.length
-
-    if (cardCount === 1) {
-      setBalances([...balances, 1500000])
-    } else if (cardCount === 2 && isPremium) {
-      setBalances([...balances, 2500000])
-    } else if (cardCount === 2 && !isPremium) {
-      alert("Upgrade ke Premium untuk menambahkan kartu ketiga.")
-    }
-  }
+    return () => unsubscribe()
+  }, [user])
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex">
       <Sidebar />
-
       <main className="flex-1 p-6">
-        <div className="max-w-6xl mx-auto flex flex-col gap-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-purple-700 dark:text-purple-300">
-                Dashboard MoniQ 🚀
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Selamat datang di pusat kendali finansialmu, bro.
-              </p>
-            </div>
-          </div>
+        <h1 className="text-2xl font-bold mb-6">Welcome back!</h1>
 
-          {/* Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {balances.map((amount, index) => {
-              const card = (
-                <CardBalance
-                  key={index}
-                  initialBalance={amount}
-                  cardHolder={`Jumlah Saldo`}
-                  compact
-                />
-              )
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <CardBalance title="Total Balance" value={`$${totalBalance.toFixed(2)}`} />
+          <CardBalance title="Pemasukan" value="$0.00" />
+          <CardBalance title="Pengeluaran" value="$0.00" />
+        </div>
 
-              return index === 2 ? (
-                <PremiumOnly key={index}>{card}</PremiumOnly>
-              ) : (
-                card
-              )
-            })}
-
-            {/* Tambah Kategori */}
-            {balances.length < 3 && (
-              <div
-                onClick={handleAddCard}
-                className="flex flex-col justify-center items-center bg-white dark:bg-gray-800 border-2 border-dashed border-purple-400 rounded-xl w-full h-[160px] cursor-pointer hover:bg-purple-50 transition"
-              >
-                <span className="text-4xl text-purple-600">+</span>
-                <p className="mt-2 text-sm text-gray-600">Tambah Kategori</p>
-              </div>
-            )}
-          </div>
-
-          {/* Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-white">
-              Distribusi Keuangan
-            </h2>
-            <ResponsiveContainer width="100%" height={300}>
+        <div className="bg-white rounded-xl p-6 shadow-md">
+          <h2 className="text-lg font-semibold mb-4">Spending Overview</h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={chartData}
                   dataKey="value"
                   nameKey="name"
-                  outerRadius={100}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
                   label
                 >
-                  {chartData.map((_, i) => (
-                    <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                  {chartData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />

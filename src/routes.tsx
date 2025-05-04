@@ -13,6 +13,7 @@ import IncomePage from './pages/IncomePage'
 import OutcomePage from './pages/OutcomePage'
 import HistoryPage from './pages/HistoryPage' // (kalau belum ada, tinggal buat)
 import PrivateRoute from './components/PrivateRoute'
+import WalletPage from './pages/WalletPage'
 
 const routes: RouteObject[] = [
   {
@@ -44,6 +45,14 @@ const routes: RouteObject[] = [
     element: (
       <PrivateRoute>
         <DashboardPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/wallet',
+    element: (
+      <PrivateRoute>
+        <WalletPage />
       </PrivateRoute>
     ),
   },
