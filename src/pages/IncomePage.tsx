@@ -20,9 +20,18 @@ interface IncomeEntry {
   createdAt?: any
 }
 
+interface WalletEntry {
+  id?: string
+  name: string
+  balance: number
+  currency: string
+  createdAt?: any
+}
+
 const IncomePage = () => {
   const { user } = useAuth()
   const [incomes, setIncomes] = useState<IncomeEntry[]>([])
+  const [wallets, setWallets] = useState<WalletEntry[]>([])
   const [form, setForm] = useState({ wallet: "", description: "", amount: "", currency: "" })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
@@ -31,12 +40,8 @@ const IncomePage = () => {
   useEffect(() => {
     if (!user) return
 
-    const q = query(
-      collection(db, "users", user.uid, "incomes"),
-      orderBy("createdAt", "desc")
-    )
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const q = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"))
+    const unsubIncomes = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -44,12 +49,34 @@ const IncomePage = () => {
       setIncomes(data)
     })
 
-    return () => unsubscribe()
+    const walletRef = collection(db, "users", user.uid, "wallets")
+    const unsubWallets = onSnapshot(walletRef, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as WalletEntry[]
+      setWallets(data)
+    })
+
+    return () => {
+      unsubIncomes()
+      unsubWallets()
+    }
   }, [user])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
     setErrors({ ...errors, [e.target.name]: "" })
+  }
+
+  const handleWalletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedWallet = wallets.find(w => w.id === e.target.value)
+    setForm({
+      ...form,
+      wallet: e.target.value,
+      currency: selectedWallet?.currency || ""
+    })
+    setErrors({ ...errors, wallet: "", currency: "" })
   }
 
   const validate = () => {
@@ -106,15 +133,15 @@ const IncomePage = () => {
             <select
               name="wallet"
               value={form.wallet}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                errors.wallet && "border-red-500"
-              }`}
+              onChange={handleWalletChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.wallet && "border-red-500"}`}
             >
               <option value="">-- Pilih Dompet --</option>
-              <option value="Main">Dompet Utama</option>
-              <option value="Savings">Tabungan</option>
-              <option value="Investment">Investasi</option>
+              {wallets.map((wallet) => (
+                <option key={wallet.id} value={wallet.id}>
+                  {wallet.name}
+                </option>
+              ))}
             </select>
             {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
           </div>
@@ -127,46 +154,32 @@ const IncomePage = () => {
               onChange={handleChange}
               type="text"
               placeholder="Tulis deskripsi"
-              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                errors.description && "border-red-500"
-              }`}
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.description && "border-red-500"}`}
             />
             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
           </div>
 
           <div className="mb-4">
             <label className="block mb-1 text-sm font-medium">Nominal</label>
-            <div className="relative">
-              <input
-                name="amount"
-                value={form.amount}
-                onChange={handleChange}
-                type="number"
-                placeholder="0.00"
-                className={`w-full pl-7 pr-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                  errors.amount && "border-red-500"
-                }`}
-              />
-            </div>
+            <input
+              name="amount"
+              value={form.amount}
+              onChange={handleChange}
+              type="number"
+              placeholder="0.00"
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.amount && "border-red-500"}`}
+            />
             {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
           </div>
 
           <div className="mb-4">
             <label className="block mb-1 text-sm font-medium">Mata Uang</label>
-            <select
-              name="currency"
+            <input
+              type="text"
               value={form.currency}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                errors.currency && "border-red-500"
-              }`}
-            >
-              <option value="">-- Pilih Mata Uang --</option>
-              <option value="USD">USD</option>
-              <option value="IDR">IDR</option>
-              <option value="EUR">EUR</option>
-              <option value="THB">THB</option>
-            </select>
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-200 text-gray-700"
+            />
             {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
           </div>
 
@@ -198,9 +211,9 @@ const IncomePage = () => {
                 <tbody>
                   {incomes.slice(0, 10).map((entry) => (
                     <tr key={entry.id} className="text-sm">
-                      <td className="px-4 py-2 border-b">{entry.wallet}</td>
+                      <td className="px-4 py-2 border-b">{wallets.find(w => w.id === entry.wallet)?.name || entry.wallet}</td>
                       <td className="px-4 py-2 border-b">{entry.description}</td>
-                      <td className="px-4 py-2 border-b">${entry.amount.toFixed(2)}</td>
+                      <td className="px-4 py-2 border-b">{entry.amount.toLocaleString()}</td>
                       <td className="px-4 py-2 border-b">{entry.currency}</td>
                       <td className="px-4 py-2 border-b">
                         {entry.createdAt?.toDate
