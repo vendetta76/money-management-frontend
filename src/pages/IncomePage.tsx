@@ -13,16 +13,17 @@ import {
 
 interface IncomeEntry {
   id?: string
+  wallet: string
   description: string
   amount: number
-  category: string
+  currency: string
   createdAt?: any
 }
 
 const IncomePage = () => {
   const { user } = useAuth()
   const [incomes, setIncomes] = useState<IncomeEntry[]>([])
-  const [form, setForm] = useState({ description: "", amount: "", category: "" })
+  const [form, setForm] = useState({ wallet: "", description: "", amount: "", currency: "" })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -46,16 +47,17 @@ const IncomePage = () => {
     return () => unsubscribe()
   }, [user])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
     setErrors({ ...errors, [e.target.name]: "" })
   }
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
-    if (!form.description.trim()) newErrors.description = "Description required"
-    if (!form.category.trim()) newErrors.category = "Category required"
+    if (!form.wallet.trim()) newErrors.wallet = "Wallet is required"
+    if (!form.description.trim()) newErrors.description = "Description is required"
     if (!form.amount.trim() || parseFloat(form.amount) <= 0) newErrors.amount = "Amount must be greater than 0"
+    if (!form.currency.trim()) newErrors.currency = "Currency is required"
     return newErrors
   }
 
@@ -77,7 +79,7 @@ const IncomePage = () => {
         createdAt: serverTimestamp(),
       })
 
-      setForm({ description: "", amount: "", category: "" })
+      setForm({ wallet: "", description: "", amount: "", currency: "" })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 2000)
     } catch (err) {
@@ -100,7 +102,25 @@ const IncomePage = () => {
 
         <form onSubmit={handleSubmit} className="bg-white shadow rounded-xl p-6 mb-6 max-w-xl">
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Income Description</label>
+            <label className="block mb-1 text-sm font-medium">Choose your wallet</label>
+            <select
+              name="wallet"
+              value={form.wallet}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
+                errors.wallet && "border-red-500"
+              }`}
+            >
+              <option value="">-- Select Wallet --</option>
+              <option value="Main">Main Wallet</option>
+              <option value="Savings">Savings</option>
+              <option value="Investment">Investment</option>
+            </select>
+            {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Description</label>
             <input
               name="description"
               value={form.description}
@@ -115,22 +135,7 @@ const IncomePage = () => {
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Category</label>
-            <input
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              type="text"
-              placeholder="e.g., Project, Salary"
-              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                errors.category && "border-red-500"
-              }`}
-            />
-            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
-          </div>
-
-          <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Amount</label>
+            <label className="block mb-1 text-sm font-medium">Nominal</label>
             <div className="relative">
               <span className="absolute left-3 top-2.5 text-gray-500">$</span>
               <input
@@ -147,6 +152,24 @@ const IncomePage = () => {
             {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
           </div>
 
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Currency</label>
+            <select
+              name="currency"
+              value={form.currency}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
+                errors.currency && "border-red-500"
+              }`}
+            >
+              <option value="">-- Select Currency --</option>
+              <option value="USD">USD</option>
+              <option value="IDR">IDR</option>
+              <option value="EUR">EUR</option>
+            </select>
+            {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -155,6 +178,42 @@ const IncomePage = () => {
             {loading ? "Saving..." : "Save Income"}
           </button>
         </form>
+
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Recent Incomes</h2>
+          {incomes.length === 0 ? (
+            <p className="text-gray-500">No income entries yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border rounded-xl shadow">
+                <thead>
+                  <tr className="bg-gray-100 text-sm text-left">
+                    <th className="px-4 py-2 border-b">Wallet</th>
+                    <th className="px-4 py-2 border-b">Description</th>
+                    <th className="px-4 py-2 border-b">Nominal</th>
+                    <th className="px-4 py-2 border-b">Currency</th>
+                    <th className="px-4 py-2 border-b">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {incomes.slice(0, 10).map((entry) => (
+                    <tr key={entry.id} className="text-sm">
+                      <td className="px-4 py-2 border-b">{entry.wallet}</td>
+                      <td className="px-4 py-2 border-b">{entry.description}</td>
+                      <td className="px-4 py-2 border-b">${entry.amount.toFixed(2)}</td>
+                      <td className="px-4 py-2 border-b">{entry.currency}</td>
+                      <td className="px-4 py-2 border-b">
+                        {entry.createdAt?.toDate
+                          ? new Date(entry.createdAt.toDate()).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </LayoutWithSidebar>
   )
