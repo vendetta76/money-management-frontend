@@ -1,5 +1,3 @@
-// Final WalletPage.tsx with searchable currency dropdown
-
 import { useEffect, useState } from "react"
 import { db } from "../lib/firebaseClient"
 import { useAuth } from "../context/AuthContext"
@@ -17,11 +15,7 @@ import {
   setDoc
 } from "firebase/firestore"
 import { Settings, Plus, X, Eye, EyeOff } from "lucide-react"
-
-const currencyOptions = [
-  "USD", "IDR", "EUR", "JPY", "GBP", "CHF", "AUD", "CAD",
-  "SGD", "CNY", "KRW", "THB", "PHP", "MYR"
-]
+import Select from "react-select"
 
 interface WalletEntry {
   id?: string
@@ -31,10 +25,26 @@ interface WalletEntry {
   createdAt?: any
 }
 
+const currencyOptions = [
+  { value: "USD", label: "USD" },
+  { value: "IDR", label: "IDR" },
+  { value: "EUR", label: "EUR" },
+  { value: "JPY", label: "JPY" },
+  { value: "GBP", label: "GBP" },
+  { value: "CHF", label: "CHF" },
+  { value: "AUD", label: "AUD" },
+  { value: "CAD", label: "CAD" },
+  { value: "SGD", label: "SGD" },
+  { value: "CNY", label: "CNY" },
+  { value: "KRW", label: "KRW" },
+  { value: "THB", label: "THB" },
+  { value: "PHP", label: "PHP" },
+  { value: "MYR", label: "MYR" },
+]
+
 const WalletPage = () => {
   const { user, userMeta } = useAuth()
   const [form, setForm] = useState({ name: "", balance: "", currency: "USD" })
-  const [currencySearch, setCurrencySearch] = useState("")
   const [wallets, setWallets] = useState<WalletEntry[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -64,39 +74,238 @@ const WalletPage = () => {
     return () => unsubscribe()
   }, [user])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
     setErrors({ ...errors, [e.target.name]: "" })
   }
 
-  // ... other functions unchanged ...
+  const validate = () => {
+    const newErrors: Record<string, string> = {}
+    if (!form.name.trim()) newErrors.name = "Wallet name is required"
+    if (!form.balance.trim() || parseFloat(form.balance) < 0) newErrors.balance = "Balance must be ≥ 0"
+    if (!form.currency) newErrors.currency = "Currency is required"
+    return newErrors
+  }
 
-  // Inside the form where currency dropdown is rendered:
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const validation = validate()
+    if (Object.keys(validation).length > 0) {
+      setErrors(validation)
+      return
+    }
 
-  <div className="mb-4">
-    <label className="block text-sm font-medium mb-1">Currency</label>
-    <input
-      type="text"
-      placeholder="Search currency..."
-      value={currencySearch}
-      onChange={(e) => setCurrencySearch(e.target.value.toUpperCase())}
-      className="mb-2 w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none"
-    />
-    <select
-      name="currency"
-      value={form.currency}
-      onChange={handleChange}
-      className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.currency && "border-red-500"}`}
-    >
-      <option value="">-- Select Currency --</option>
-      {currencyOptions
-        .filter(cur => cur.includes(currencySearch))
-        .map(cur => (
-          <option key={cur} value={cur}>{cur}</option>
-        ))}
-    </select>
-    {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
-  </div>
+    const maxWallets = userMeta?.role === "premium" ? 10 : 5
+    if (!editingId && wallets.length >= maxWallets) {
+      alert(`Limit reached. ${userMeta?.role === "premium" ? "Premium" : "Regular"} users can create up to ${maxWallets} wallets.`)
+      return
+    }
+
+    try {
+      const payload = {
+        name: form.name,
+        balance: parseFloat(form.balance),
+        currency: form.currency,
+        createdAt: serverTimestamp(),
+      }
+      const userDocRef = doc(db, "users", user!.uid)
+      const docRef = editingId
+        ? doc(db, "users", user!.uid, "wallets", editingId)
+        : null
+
+      if (!editingId) {
+        await setDoc(userDocRef, {}, { merge: true })
+        await addDoc(collection(db, "users", user!.uid, "wallets"), payload)
+        setSuccess("Wallet added successfully!")
+      } else {
+        await updateDoc(docRef!, payload)
+        setSuccess("Wallet updated successfully!")
+      }
+
+      setForm({ name: "", balance: "", currency: "USD" })
+      setEditingId(null)
+      setShowForm(false)
+      setTimeout(() => setSuccess(""), 2000)
+    } catch (err) {
+      console.error("Error saving wallet:", err)
+    }
+  }
+
+  const handleEdit = (wallet: WalletEntry) => {
+    setForm({
+      name: wallet.name,
+      balance: wallet.balance.toString(),
+      currency: wallet.currency || "USD",
+    })
+    setEditingId(wallet.id!)
+    setShowForm(true)
+  }
+
+  const handleDelete = async () => {
+    if (!editingId) return
+    const confirm = window.confirm("Are you sure you want to delete this wallet?")
+    if (!confirm) return
+    try {
+      await deleteDoc(doc(db, "users", user!.uid, "wallets", editingId))
+      setEditingId(null)
+      setShowForm(false)
+    } catch (err) {
+      console.error("Error deleting wallet:", err)
+    }
+  }
+
+  return (
+    <LayoutWithSidebar>
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Wallet Management</h1>
+          {!editingId && (
+            <button
+              onClick={() => {
+                setForm({ name: "", balance: "", currency: "USD" })
+                setShowForm(true)
+              }}
+              className="flex items-center gap-2 text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700"
+            >
+              <Plus size={16} /> Add Wallet
+            </button>
+          )}
+        </div>
+
+        {/* Total Balance Block */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">Total Keseluruhan</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {Object.entries(totalsByCurrency).map(([currency, total]) => (
+              total > 0 && (
+                <div key={currency} className="bg-white border rounded-xl px-5 py-4 shadow text-sm font-medium text-gray-800">
+                  <div className="flex items-center justify-between">
+                    <span>Total {currency}</span>
+                    <span className="font-semibold">
+                      {showBalance
+                        ? new Intl.NumberFormat('id-ID', { style: 'currency', currency, maximumFractionDigits: 0 }).format(total)
+                        : "••••••••"}
+                    </span>
+                  </div>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+
+        {/* Wallets List */}
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-lg font-semibold">Your Wallets</h2>
+          <button
+            onClick={() => setShowBalance(!showBalance)}
+            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+          >
+            {showBalance ? <Eye size={16} /> : <EyeOff size={16} />} {showBalance ? "Hide" : "Show"} Balance
+          </button>
+        </div>
+
+        {wallets.length === 0 ? (
+          <p className="text-gray-500">No wallets found.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {wallets.map((wallet) => (
+              <div key={wallet.id} className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-2xl shadow">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-medium">{wallet.name}</h3>
+                  <Settings className="w-5 h-5 opacity-80 hover:opacity-100 cursor-pointer" onClick={() => handleEdit(wallet)} />
+                </div>
+                <div className="mt-4 text-2xl font-bold">
+                  {showBalance
+                    ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: wallet.currency || 'IDR', maximumFractionDigits: 0 }).format(wallet.balance)
+                    : "••••••••"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm relative"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false)
+                  setEditingId(null)
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-lg font-semibold mb-4">{editingId ? "Edit Wallet" : "Add Wallet"}</h2>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Wallet Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.name && "border-red-500"}`}
+                />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Initial Balance</label>
+                <input
+                  type="number"
+                  name="balance"
+                  value={form.balance}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.balance && "border-red-500"}`}
+                />
+                {errors.balance && <p className="text-red-500 text-sm mt-1">{errors.balance}</p>}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Currency</label>
+                <Select
+                  name="currency"
+                  value={currencyOptions.find(opt => opt.value === form.currency)}
+                  onChange={(selected) =>
+                    setForm({ ...form, currency: selected?.value || "" })
+                  }
+                  options={currencyOptions}
+                  classNamePrefix="react-select"
+                  placeholder="Select currency..."
+                  isSearchable
+                />
+                {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+              </div>
+
+              <div className="flex justify-between items-center">
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="text-red-600 hover:underline text-sm"
+                  >
+                    Delete Wallet
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  {editingId ? "Update Wallet" : "Add Wallet"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+    </LayoutWithSidebar>
+  )
 }
 
 export default WalletPage
