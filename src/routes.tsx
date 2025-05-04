@@ -11,9 +11,10 @@ import DashboardPage from './pages/DashboardPage'
 import AdminPage from './pages/AdminPage'
 import IncomePage from './pages/IncomePage'
 import OutcomePage from './pages/OutcomePage'
-import HistoryPage from './pages/HistoryPage' // (kalau belum ada, tinggal buat)
-import PrivateRoute from './components/PrivateRoute'
+import HistoryPage from './pages/HistoryPage'
 import WalletPage from './pages/WalletPage'
+import PrivateRoute from './components/PrivateRoute'
+import { ProfilePage as SettingsProfile, SecurityPage, PreferencesPage } from './pages/SettingsPages'
 
 const routes: RouteObject[] = [
   {
@@ -93,6 +94,30 @@ const routes: RouteObject[] = [
     element: (
       <PrivateRoute>
         <EditProfilePage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/settings/profile',
+    element: (
+      <PrivateRoute>
+        <SettingsProfile />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/settings/security',
+    element: (
+      <PrivateRoute>
+        <SecurityPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/settings/preferences',
+    element: (
+      <PrivateRoute>
+        <PreferencesPage />
       </PrivateRoute>
     ),
   },
