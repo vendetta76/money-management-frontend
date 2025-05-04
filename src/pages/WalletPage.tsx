@@ -12,6 +12,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  setDoc
 } from "firebase/firestore"
 
 interface WalletEntry {
@@ -74,6 +75,10 @@ const WalletPage = () => {
         balance: parseFloat(form.balance),
         createdAt: serverTimestamp(),
       }
+
+      // pastikan user doc utama tersedia
+      const userDocRef = doc(db, "users", user!.uid)
+      await setDoc(userDocRef, { role: "regular" }, { merge: true })
 
       if (editingId) {
         const docRef = doc(db, "users", user!.uid, "wallets", editingId)
