@@ -14,7 +14,7 @@ import {
   serverTimestamp,
   setDoc
 } from "firebase/firestore"
-import { Settings, Plus } from "lucide-react"
+import { Settings, Plus, X } from "lucide-react"
 
 interface WalletEntry {
   id?: string
@@ -133,7 +133,7 @@ const WalletPage = () => {
             onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-2 text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700"
           >
-            <Plus size={16} /> {showForm ? "Cancel" : "Add Wallet"}
+            {showForm ? <X size={16} /> : <Plus size={16} />} {showForm ? "Cancel" : "Add Wallet"}
           </button>
         </div>
 
@@ -144,63 +144,68 @@ const WalletPage = () => {
         )}
 
         {showForm && (
-          <form onSubmit={handleSubmit} className="bg-white shadow rounded-xl p-6 mb-6">
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Wallet Name</label>
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="e.g., Main Wallet"
-                className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                  errors.name && "border-red-500"
-                }`}
-              />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-            </div>
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+            <form onSubmit={handleSubmit} className="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm">
+              <h2 className="text-lg font-semibold mb-4">{editingId ? "Edit Wallet" : "Add Wallet"}</h2>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Wallet Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="e.g., Main Wallet"
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
+                    errors.name && "border-red-500"
+                  }`}
+                />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Initial Balance</label>
-              <input
-                type="number"
-                name="balance"
-                value={form.balance}
-                onChange={handleChange}
-                placeholder="e.g., 1000"
-                className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                  errors.balance && "border-red-500"
-                }`}
-              />
-              {errors.balance && <p className="text-red-500 text-sm mt-1">{errors.balance}</p>}
-            </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Initial Balance</label>
+                <input
+                  type="number"
+                  name="balance"
+                  value={form.balance}
+                  onChange={handleChange}
+                  placeholder="e.g., 1000"
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
+                    errors.balance && "border-red-500"
+                  }`}
+                />
+                {errors.balance && <p className="text-red-500 text-sm mt-1">{errors.balance}</p>}
+              </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Currency</label>
-              <select
-                name="currency"
-                value={form.currency}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
-                  errors.currency && "border-red-500"
-                }`}
-              >
-                <option value="">-- Select Currency --</option>
-                <option value="USD">USD</option>
-                <option value="IDR">IDR</option>
-                <option value="EUR">EUR</option>
-                <option value="JPY">JPY</option>
-              </select>
-              {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
-            </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Currency</label>
+                <select
+                  name="currency"
+                  value={form.currency}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
+                    errors.currency && "border-red-500"
+                  }`}
+                >
+                  <option value="">-- Select Currency --</option>
+                  <option value="USD">USD</option>
+                  <option value="IDR">IDR</option>
+                  <option value="EUR">EUR</option>
+                  <option value="JPY">JPY</option>
+                </select>
+                {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+              </div>
 
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-            >
-              {editingId ? "Update Wallet" : "Add Wallet"}
-            </button>
-          </form>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  {editingId ? "Update Wallet" : "Add Wallet"}
+                </button>
+              </div>
+            </form>
+          </div>
         )}
 
         <h2 className="text-lg font-semibold mb-2">Your Wallets</h2>
@@ -216,7 +221,11 @@ const WalletPage = () => {
                 <div>
                   <p className="font-semibold">{wallet.name}</p>
                   <p className="text-sm text-gray-500">
-                    Balance: {wallet.currency} {Math.floor(wallet.balance).toLocaleString()}
+                    Balance: {new Intl.NumberFormat('id-ID', {
+                      style: 'currency',
+                      currency: wallet.currency || 'IDR',
+                      maximumFractionDigits: 0
+                    }).format(wallet.balance)}
                   </p>
                 </div>
                 <div className="flex gap-3 items-center">
