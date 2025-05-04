@@ -14,7 +14,7 @@ import {
   serverTimestamp,
   setDoc
 } from "firebase/firestore"
-import { Settings, Plus, X } from "lucide-react"
+import { Settings, Plus, X, Trash2 } from "lucide-react"
 
 interface WalletEntry {
   id?: string
@@ -25,7 +25,7 @@ interface WalletEntry {
 }
 
 const WalletPage = () => {
-  const { user } = useAuth()
+  const { user, userMeta } = useAuth()
   const [form, setForm] = useState({ name: "", balance: "", currency: "USD" })
   const [wallets, setWallets] = useState<WalletEntry[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -70,6 +70,12 @@ const WalletPage = () => {
     const validation = validate()
     if (Object.keys(validation).length > 0) {
       setErrors(validation)
+      return
+    }
+
+    const maxWallets = userMeta?.role === "premium" ? 10 : 5
+    if (!editingId && wallets.length >= maxWallets) {
+      alert(`Limit reached. ${userMeta?.role === "premium" ? "Premium" : "Regular"} users can create up to ${maxWallets} wallets.`)
       return
     }
 
@@ -227,9 +233,16 @@ const WalletPage = () => {
               >
                 <div className="flex justify-between items-center">
                   <h3 className="text-sm font-medium">{wallet.name}</h3>
-                  <button onClick={() => handleEdit(wallet)}>
-                    <Settings className="w-5 h-5 opacity-80 hover:opacity-100" />
-                  </button>
+                  <div className="flex gap-2 items-center">
+                    <Trash2
+                      className="w-5 h-5 opacity-80 hover:opacity-100 cursor-pointer"
+                      onClick={() => handleDelete(wallet.id!)}
+                    />
+                    <Settings
+                      className="w-5 h-5 opacity-80 hover:opacity-100 cursor-pointer"
+                      onClick={() => handleEdit(wallet)}
+                    />
+                  </div>
                 </div>
                 <div className="mt-4 text-2xl font-bold">
                   {new Intl.NumberFormat('id-ID', {
