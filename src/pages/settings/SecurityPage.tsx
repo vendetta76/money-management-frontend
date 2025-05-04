@@ -3,7 +3,7 @@ import React from 'react'
 
 const SecurityPage = () => {
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="p-6 max-w-xl mx-auto sticky top-0">
       <h1 className="text-2xl font-bold mb-4">🔐 Keamanan</h1>
       <form className="space-y-4">
         <div>

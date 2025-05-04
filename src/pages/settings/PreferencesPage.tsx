@@ -10,7 +10,7 @@ const PreferencesPage = () => {
   }, [darkMode])
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="p-6 max-w-xl mx-auto sticky top-0">
       <h1 className="text-2xl font-bold mb-4">⚙️ Preferensi</h1>
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Mode Gelap</span>
