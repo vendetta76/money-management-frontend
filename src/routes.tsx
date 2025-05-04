@@ -1,120 +1,85 @@
 import { RouteObject } from 'react-router-dom'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import ProfilePage from './pages/ProfilePage'
-import EditProfilePage from './pages/EditProfilePage'
-import LandingPage from './pages/LandingPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import VerifyEmailPending from './pages/VerifyEmailPending'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import DashboardPage from './pages/DashboardPage'
-import AdminPage from './pages/AdminPage'
-import IncomePage from './pages/IncomePage'
-import OutcomePage from './pages/OutcomePage'
-import HistoryPage from './pages/HistoryPage'
-import WalletPage from './pages/WalletPage'
+import { lazy, Suspense } from 'react'
 import PrivateRoute from './components/PrivateRoute'
-import {
-  ProfilePage as SettingsProfile,
-  SecurityPage,
-  PreferencesPage,
-} from './pages/SettingsPages'
+
+// Auth & Utility
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const VerifyEmailPending = lazy(() => import('./pages/VerifyEmailPending'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+
+// Core Pages
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const WalletPage = lazy(() => import('./pages/WalletPage'))
+const IncomePage = lazy(() => import('./pages/IncomePage'))
+const OutcomePage = lazy(() => import('./pages/OutcomePage'))
+const HistoryPage = lazy(() => import('./pages/HistoryPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
+
+// Profile
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const EditProfilePage = lazy(() => import('./pages/EditProfilePage'))
+
+// Settings Modular
+const SettingsProfile = lazy(() => import('./pages/settings/ProfilePage'))
+const SecurityPage = lazy(() => import('./pages/settings/SecurityPage'))
+const PreferencesPage = lazy(() => import('./pages/settings/PreferencesPage'))
+
+const loading = <div className="p-6 text-sm text-gray-500">Loading...</div>
 
 const routes: RouteObject[] = [
-  { path: '/', element: <LandingPage /> },
-  { path: '/login', element: <LoginPage /> },
-  { path: '/register', element: <RegisterPage /> },
-  { path: '/forgot-password', element: <ForgotPasswordPage /> },
-  { path: '/verify-email-pending', element: <VerifyEmailPending /> },
-  { path: '/reset-password', element: <ResetPasswordPage /> },
+  { path: '/', element: <Suspense fallback={loading}><LandingPage /></Suspense> },
+  { path: '/login', element: <Suspense fallback={loading}><LoginPage /></Suspense> },
+  { path: '/register', element: <Suspense fallback={loading}><RegisterPage /></Suspense> },
+  { path: '/forgot-password', element: <Suspense fallback={loading}><ForgotPasswordPage /></Suspense> },
+  { path: '/verify-email-pending', element: <Suspense fallback={loading}><VerifyEmailPending /></Suspense> },
+  { path: '/reset-password', element: <Suspense fallback={loading}><ResetPasswordPage /></Suspense> },
 
   {
     path: '/dashboard',
-    element: (
-      <PrivateRoute>
-        <DashboardPage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><DashboardPage /></Suspense></PrivateRoute>,
   },
   {
     path: '/wallet',
-    element: (
-      <PrivateRoute>
-        <WalletPage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><WalletPage /></Suspense></PrivateRoute>,
   },
   {
     path: '/income',
-    element: (
-      <PrivateRoute>
-        <IncomePage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><IncomePage /></Suspense></PrivateRoute>,
   },
   {
     path: '/outcome',
-    element: (
-      <PrivateRoute>
-        <OutcomePage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><OutcomePage /></Suspense></PrivateRoute>,
   },
   {
     path: '/history',
-    element: (
-      <PrivateRoute>
-        <HistoryPage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><HistoryPage /></Suspense></PrivateRoute>,
   },
   {
     path: '/profile',
-    element: (
-      <PrivateRoute>
-        <ProfilePage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><ProfilePage /></Suspense></PrivateRoute>,
   },
   {
     path: '/profile/edit',
-    element: (
-      <PrivateRoute>
-        <EditProfilePage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><EditProfilePage /></Suspense></PrivateRoute>,
   },
   {
     path: '/settings/profile',
-    element: (
-      <PrivateRoute>
-        <SettingsProfile />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><SettingsProfile /></Suspense></PrivateRoute>,
   },
   {
     path: '/settings/security',
-    element: (
-      <PrivateRoute>
-        <SecurityPage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><SecurityPage /></Suspense></PrivateRoute>,
   },
   {
     path: '/settings/preferences',
-    element: (
-      <PrivateRoute>
-        <PreferencesPage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute><Suspense fallback={loading}><PreferencesPage /></Suspense></PrivateRoute>,
   },
   {
     path: '/admin',
-    element: (
-      <PrivateRoute requiredRole="Admin">
-        <AdminPage />
-      </PrivateRoute>
-    ),
+    element: <PrivateRoute requiredRole="Admin"><Suspense fallback={loading}><AdminPage /></Suspense></PrivateRoute>,
   },
   {
     path: '/unauthorized',
@@ -124,7 +89,7 @@ const routes: RouteObject[] = [
       </div>
     ),
   },
-  { path: '*', element: <LoginPage /> },
+  { path: '*', element: <Suspense fallback={loading}><LoginPage /></Suspense> },
 ]
 
 export default routes
