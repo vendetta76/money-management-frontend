@@ -1,150 +1,163 @@
-import { useState, useEffect } from "react";
-import LayoutWithSidebar from "../layouts/LayoutWithSidebar";
-import { useAuth } from "../context/AuthContext";
-import { db } from "../lib/firebaseClient";
-import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { useState, useEffect } from "react"
+import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
+import { useAuth } from "../context/AuthContext"
+import { db } from "../lib/firebaseClient"
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+} from "firebase/firestore"
 
 interface IncomeEntry {
-  id?: string;
-  description: string;
-  amount: number;
-  currency: string;
-  wallet: string;
-  createdAt?: any;
+  id?: string
+  description: string
+  amount: number
+  category: string
+  createdAt?: any
 }
 
 const IncomePage = () => {
-  const { user } = useAuth();
-  const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
-  const [form, setForm] = useState({ description: "", amount: "", currency: "IDR", wallet: "" });
+  const { user } = useAuth()
+  const [incomes, setIncomes] = useState<IncomeEntry[]>([])
+  const [form, setForm] = useState({ description: "", amount: "", category: "" })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) return
 
     const q = query(
       collection(db, "users", user.uid, "incomes"),
       orderBy("createdAt", "desc")
-    );
+    )
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as IncomeEntry[];
-      setIncomes(data);
-    });
+      })) as IncomeEntry[]
+      setIncomes(data)
+    })
 
-    return () => unsubscribe();
-  }, [user]);
+    return () => unsubscribe()
+  }, [user])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+    setErrors({ ...errors, [e.target.name]: "" })
+  }
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {}
+    if (!form.description.trim()) newErrors.description = "Description required"
+    if (!form.category.trim()) newErrors.category = "Category required"
+    if (!form.amount.trim() || parseFloat(form.amount) <= 0) newErrors.amount = "Amount must be greater than 0"
+    return newErrors
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
+    e.preventDefault()
+    const validation = validate()
+    if (Object.keys(validation).length > 0) {
+      setErrors(validation)
+      return
+    }
 
-    await addDoc(collection(db, "users", user.uid, "incomes"), {
-      description: form.description,
-      amount: parseInt(form.amount),
-      currency: form.currency,
-      wallet: form.wallet,
-      createdAt: new Date(),
-    });
+    if (!user) return
+    setLoading(true)
 
-    setForm({ description: "", amount: "", currency: "IDR", wallet: "" });
-  };
+    try {
+      await addDoc(collection(db, "users", user.uid, "incomes"), {
+        ...form,
+        amount: parseFloat(form.amount),
+        createdAt: serverTimestamp(),
+      })
+
+      setForm({ description: "", amount: "", category: "" })
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 2000)
+    } catch (err) {
+      console.error("Failed to save income:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <LayoutWithSidebar>
-      <div className="max-w-4xl mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4 text-purple-700 dark:text-purple-300">📥 Pemasukan</h1>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">Create Income</h1>
 
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-gray-800 p-6 rounded shadow-md"
-        >
-          <input
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Deskripsi"
-            required
-            className="border px-4 py-2 rounded dark:bg-gray-900 dark:text-white"
-          />
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg border border-green-300">
+            ✅ Income saved successfully!
+          </div>
+        )}
 
-          <input
-            name="amount"
-            value={form.amount}
-            onChange={handleChange}
-            placeholder="Nominal"
-            type="number"
-            required
-            className="border px-4 py-2 rounded dark:bg-gray-900 dark:text-white"
-          />
+        <form onSubmit={handleSubmit} className="bg-white shadow rounded-xl p-6 mb-6 max-w-xl">
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Income Description</label>
+            <input
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              type="text"
+              placeholder="e.g., Freelance project"
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
+                errors.description && "border-red-500"
+              }`}
+            />
+            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+          </div>
 
-          <select
-            name="currency"
-            value={form.currency}
-            onChange={handleChange}
-            required
-            className="border px-4 py-2 rounded dark:bg-gray-900 dark:text-white"
-          >
-            <option value="IDR">🇮🇩 IDR</option>
-            <option value="USD">🇺🇸 USD</option>
-            <option value="EUR">🇪🇺 EUR</option>
-          </select>
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Category</label>
+            <input
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              type="text"
+              placeholder="e.g., Project, Salary"
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
+                errors.category && "border-red-500"
+              }`}
+            />
+            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+          </div>
 
-          <input
-            name="wallet"
-            value={form.wallet}
-            onChange={handleChange}
-            placeholder="Ke Wallet Apa"
-            required
-            className="border px-4 py-2 rounded dark:bg-gray-900 dark:text-white"
-          />
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Amount</label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-500">$</span>
+              <input
+                name="amount"
+                value={form.amount}
+                onChange={handleChange}
+                type="number"
+                placeholder="0.00"
+                className={`w-full pl-7 pr-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
+                  errors.amount && "border-red-500"
+                }`}
+              />
+            </div>
+            {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
+          </div>
 
           <button
             type="submit"
-            className="col-span-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition"
+            disabled={loading}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            Tambah
+            {loading ? "Saving..." : "Save Income"}
           </button>
         </form>
-
-        {incomes.length > 0 && (
-          <div className="mt-6 bg-white dark:bg-gray-800 rounded shadow p-4">
-            <h2 className="text-lg font-semibold mb-3 text-gray-700 dark:text-white">Daftar Pemasukan</h2>
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300">
-                <tr>
-                  <th className="text-left py-2">Deskripsi</th>
-                  <th className="text-left py-2">Jumlah</th>
-                  <th className="text-left py-2">Mata Uang</th>
-                  <th className="text-left py-2">Wallet</th>
-                  <th className="text-left py-2">Tanggal</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-700 dark:text-gray-200">
-                {incomes.map((inc) => (
-                  <tr key={inc.id} className="border-t border-gray-200 dark:border-gray-700">
-                    <td className="py-2">{inc.description}</td>
-                    <td className="py-2">{inc.amount.toLocaleString("id-ID")}</td>
-                    <td className="py-2">{inc.currency}</td>
-                    <td className="py-2">{inc.wallet}</td>
-                    <td className="py-2">
-                      {new Date(inc.createdAt?.toDate?.() ?? inc.createdAt).toLocaleDateString("id-ID")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </LayoutWithSidebar>
-  );
-};
+  )
+}
 
-export default IncomePage;
+export default IncomePage
