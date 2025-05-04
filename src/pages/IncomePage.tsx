@@ -1,101 +1,110 @@
-import { useState, useEffect } from "react"
-import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
-import { useAuth } from "../context/AuthContext"
-import { db } from "../lib/firebaseClient"
-import {
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  orderBy
-} from "firebase/firestore"
+import { useState, useEffect } from "react";
+import LayoutWithSidebar from "../layouts/LayoutWithSidebar";
+import { useAuth } from "../context/AuthContext";
+import { db } from "../lib/firebaseClient";
+import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 
 interface IncomeEntry {
-  id?: string
-  description: string
-  amount: number
-  category: string
-  createdAt?: any
+  id?: string;
+  description: string;
+  amount: number;
+  currency: string;
+  wallet: string;
+  createdAt?: any;
 }
 
 const IncomePage = () => {
-  const { user } = useAuth()
-  const [incomes, setIncomes] = useState<IncomeEntry[]>([])
-  const [form, setForm] = useState({ description: "", amount: "", category: "" })
+  const { user } = useAuth();
+  const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
+  const [form, setForm] = useState({ description: "", amount: "", currency: "IDR", wallet: "" });
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return;
 
     const q = query(
       collection(db, "users", user.uid, "incomes"),
       orderBy("createdAt", "desc")
-    )
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as IncomeEntry[]
-      setIncomes(data)
-    })
+      })) as IncomeEntry[];
+      setIncomes(data);
+    });
 
-    return () => unsubscribe()
-  }, [user])
+    return () => unsubscribe();
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) return
+    e.preventDefault();
+    if (!user) return;
 
     await addDoc(collection(db, "users", user.uid, "incomes"), {
       description: form.description,
       amount: parseInt(form.amount),
-      category: form.category,
+      currency: form.currency,
+      wallet: form.wallet,
       createdAt: new Date(),
-    })
+    });
 
-    setForm({ description: "", amount: "", category: "" })
-  }
+    setForm({ description: "", amount: "", currency: "IDR", wallet: "" });
+  };
 
   return (
     <LayoutWithSidebar>
       <div className="max-w-4xl mx-auto p-6">
         <h1 className="text-2xl font-bold mb-4 text-purple-700 dark:text-purple-300">📥 Pemasukan</h1>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-gray-800 p-6 rounded shadow-md"
+        >
           <input
             name="description"
             value={form.description}
             onChange={handleChange}
             placeholder="Deskripsi"
             required
-            className="border px-3 py-2 rounded dark:bg-gray-900 dark:text-white"
+            className="border px-4 py-2 rounded dark:bg-gray-900 dark:text-white"
           />
+
           <input
             name="amount"
             value={form.amount}
             onChange={handleChange}
-            placeholder="Jumlah"
+            placeholder="Nominal"
             type="number"
             required
-            className="border px-3 py-2 rounded dark:bg-gray-900 dark:text-white"
+            className="border px-4 py-2 rounded dark:bg-gray-900 dark:text-white"
           />
+
           <select
-            name="category"
-            value={form.category}
+            name="currency"
+            value={form.currency}
             onChange={handleChange}
             required
-            className="border px-3 py-2 rounded dark:bg-gray-900 dark:text-white"
+            className="border px-4 py-2 rounded dark:bg-gray-900 dark:text-white"
           >
-            <option value="">Pilih Kategori</option>
-            <option value="Gaji">Gaji</option>
-            <option value="Bonus">Bonus</option>
-            <option value="Freelance">Freelance</option>
-            <option value="Lainnya">Lainnya</option>
+            <option value="IDR">🇮🇩 IDR</option>
+            <option value="USD">🇺🇸 USD</option>
+            <option value="EUR">🇪🇺 EUR</option>
           </select>
+
+          <input
+            name="wallet"
+            value={form.wallet}
+            onChange={handleChange}
+            placeholder="Ke Wallet Apa"
+            required
+            className="border px-4 py-2 rounded dark:bg-gray-900 dark:text-white"
+          />
+
           <button
             type="submit"
             className="col-span-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition"
@@ -112,16 +121,18 @@ const IncomePage = () => {
                 <tr>
                   <th className="text-left py-2">Deskripsi</th>
                   <th className="text-left py-2">Jumlah</th>
-                  <th className="text-left py-2">Kategori</th>
+                  <th className="text-left py-2">Mata Uang</th>
+                  <th className="text-left py-2">Wallet</th>
                   <th className="text-left py-2">Tanggal</th>
                 </tr>
               </thead>
               <tbody className="text-gray-700 dark:text-gray-200">
-                {incomes.map((inc, i) => (
-                  <tr key={i} className="border-t border-gray-200 dark:border-gray-700">
+                {incomes.map((inc) => (
+                  <tr key={inc.id} className="border-t border-gray-200 dark:border-gray-700">
                     <td className="py-2">{inc.description}</td>
-                    <td className="py-2">Rp {inc.amount.toLocaleString("id-ID")}</td>
-                    <td className="py-2">{inc.category}</td>
+                    <td className="py-2">{inc.amount.toLocaleString("id-ID")}</td>
+                    <td className="py-2">{inc.currency}</td>
+                    <td className="py-2">{inc.wallet}</td>
                     <td className="py-2">
                       {new Date(inc.createdAt?.toDate?.() ?? inc.createdAt).toLocaleDateString("id-ID")}
                     </td>
@@ -133,7 +144,7 @@ const IncomePage = () => {
         )}
       </div>
     </LayoutWithSidebar>
-  )
-}
+  );
+};
 
-export default IncomePage
+export default IncomePage;
