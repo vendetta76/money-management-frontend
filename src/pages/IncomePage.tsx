@@ -9,6 +9,9 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  updateDoc,
+  doc,
+  increment
 } from "firebase/firestore"
 
 interface IncomeEntry {
@@ -104,6 +107,10 @@ const IncomePage = () => {
         ...form,
         amount: parseFloat(form.amount),
         createdAt: serverTimestamp(),
+      })
+
+      await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+        balance: increment(parseFloat(form.amount))
       })
 
       setForm({ wallet: "", description: "", amount: "", currency: "" })
@@ -209,7 +216,7 @@ const IncomePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {incomes.slice(0, 10).map((entry) => (
+                  {incomes.map((entry) => (
                     <tr key={entry.id} className="text-sm">
                       <td className="px-4 py-2 border-b">{wallets.find(w => w.id === entry.wallet)?.name || entry.wallet}</td>
                       <td className="px-4 py-2 border-b">{entry.description}</td>

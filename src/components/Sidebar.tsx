@@ -47,7 +47,7 @@ const Sidebar = () => {
         <div className="flex flex-col items-center text-center mb-6">
           <img src={avatar} className="w-16 h-16 rounded-full mb-2" />
           <p className="text-sm font-semibold text-gray-700 dark:text-white">
-            {userMeta?.name || "User"}
+            {userMeta?.name || user?.displayName || "User"}
           </p>
           <span className="text-xs text-gray-500 dark:text-gray-300">
             {userMeta?.role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
@@ -66,7 +66,6 @@ const Sidebar = () => {
             <Home size={18} /> Dashboard
           </NavLink>
 
-          {/* ✅ Wallet */}
           <NavLink to="/wallet" className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${
               isActive
@@ -77,7 +76,6 @@ const Sidebar = () => {
             <Wallet size={18} /> Wallet
           </NavLink>
 
-          {/* Transaction Group */}
           <div>
             <button
               onClick={() => setIsTransactionOpen(!isTransactionOpen)}
@@ -137,7 +135,6 @@ const Sidebar = () => {
         </nav>
       </div>
 
-      {/* Bottom Section */}
       <div className="mt-6 space-y-3">
         <button
           onClick={handleLogout}

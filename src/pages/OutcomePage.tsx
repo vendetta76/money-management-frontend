@@ -8,6 +8,9 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  updateDoc,
+  doc,
+  increment
 } from "firebase/firestore"
 import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
 
@@ -17,7 +20,6 @@ interface OutcomeEntry {
   description: string
   amount: number
   currency: string
-  category: string
   createdAt?: any
 }
 
@@ -33,7 +35,7 @@ const OutcomePage = () => {
   const { user } = useAuth()
   const [outcomes, setOutcomes] = useState<OutcomeEntry[]>([])
   const [wallets, setWallets] = useState<WalletEntry[]>([])
-  const [form, setForm] = useState({ wallet: "", description: "", amount: "", currency: "", category: "" })
+  const [form, setForm] = useState({ wallet: "", description: "", amount: "", currency: "" })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -65,7 +67,7 @@ const OutcomePage = () => {
     }
   }, [user])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
     setErrors({ ...errors, [e.target.name]: "" })
   }
@@ -86,7 +88,6 @@ const OutcomePage = () => {
     if (!form.description.trim()) newErrors.description = "Deskripsi wajib diisi."
     if (!form.amount.trim() || parseFloat(form.amount) <= 0) newErrors.amount = "Nominal harus lebih dari 0."
     if (!form.currency.trim()) newErrors.currency = "Mata uang wajib dipilih."
-    if (!form.category.trim()) newErrors.category = "Kategori wajib dipilih."
     return newErrors
   }
 
@@ -102,13 +103,24 @@ const OutcomePage = () => {
     setLoading(true)
 
     try {
+      const selectedWallet = wallets.find(w => w.id === form.wallet)
+      if (selectedWallet && selectedWallet.balance < parseFloat(form.amount)) {
+        alert("Saldo wallet tidak mencukupi.")
+        setLoading(false)
+        return
+      }
+
       await addDoc(collection(db, "users", user.uid, "outcomes"), {
         ...form,
         amount: parseFloat(form.amount),
         createdAt: serverTimestamp(),
       })
 
-      setForm({ wallet: "", description: "", amount: "", currency: "", category: "" })
+      await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+        balance: increment(-parseFloat(form.amount))
+      })
+
+      setForm({ wallet: "", description: "", amount: "", currency: "" })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 2000)
     } catch (err) {
@@ -121,7 +133,7 @@ const OutcomePage = () => {
   return (
     <LayoutWithSidebar>
       <div className="max-w-4xl mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4 text-red-600 dark:text-red-400">📤 Tambah Pengeluaran</h1>
+        <h1 className="text-2xl font-bold mb-6 text-red-600 dark:text-red-400">📤 Tambah Pengeluaran</h1>
 
         {success && (
           <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg border border-green-300">
@@ -129,97 +141,104 @@ const OutcomePage = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-gray-800 p-4 rounded shadow">
-          <select
-            name="wallet"
-            value={form.wallet}
-            onChange={handleWalletChange}
-            className={`border px-3 py-2 rounded dark:bg-gray-900 dark:text-white ${errors.wallet && "border-red-500"}`}
-          >
-            <option value="">Pilih Dompet</option>
-            {wallets.map((wallet) => (
-              <option key={wallet.id} value={wallet.id}>{wallet.name}</option>
-            ))}
-          </select>
+        <form onSubmit={handleSubmit} className="bg-white shadow rounded-xl p-6 mb-6 max-w-xl">
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Pilih Dompet</label>
+            <select
+              name="wallet"
+              value={form.wallet}
+              onChange={handleWalletChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.wallet && "border-red-500"}`}
+            >
+              <option value="">-- Pilih Dompet --</option>
+              {wallets.map((wallet) => (
+                <option key={wallet.id} value={wallet.id}>{wallet.name}</option>
+              ))}
+            </select>
+            {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
+          </div>
 
-          <input
-            type="text"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Deskripsi"
-            className={`border px-3 py-2 rounded dark:bg-gray-900 dark:text-white ${errors.description && "border-red-500"}`}
-          />
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Deskripsi</label>
+            <input
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              type="text"
+              placeholder="Tulis deskripsi"
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.description && "border-red-500"}`}
+            />
+            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+          </div>
 
-          <input
-            type="number"
-            name="amount"
-            value={form.amount}
-            onChange={handleChange}
-            placeholder="Jumlah"
-            className={`border px-3 py-2 rounded dark:bg-gray-900 dark:text-white ${errors.amount && "border-red-500"}`}
-          />
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Nominal</label>
+            <input
+              name="amount"
+              value={form.amount}
+              onChange={handleChange}
+              type="number"
+              placeholder="0.00"
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.amount && "border-red-500"}`}
+            />
+            {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
+          </div>
 
-          <input
-            type="text"
-            value={form.currency}
-            disabled
-            className="border px-3 py-2 rounded bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white"
-          />
-
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className={`border px-3 py-2 rounded dark:bg-gray-900 dark:text-white ${errors.category && "border-red-500"}`}
-          >
-            <option value="">Pilih Kategori</option>
-            <option value="Makan">Makan</option>
-            <option value="Transportasi">Transportasi</option>
-            <option value="Langganan">Langganan</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Mata Uang</label>
+            <input
+              type="text"
+              value={form.currency}
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-200 text-gray-700"
+            />
+            {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="col-span-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition disabled:opacity-50"
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
           >
-            {loading ? "Menyimpan..." : "Tambah"}
+            {loading ? "Menyimpan..." : "Simpan"}
           </button>
         </form>
 
-        {outcomes.length > 0 && (
-          <div className="mt-6 bg-white dark:bg-gray-800 rounded shadow p-4">
-            <h2 className="text-lg font-semibold mb-3 text-gray-700 dark:text-white">Daftar Pengeluaran</h2>
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300">
-                <tr>
-                  <th className="text-left py-2">Dompet</th>
-                  <th className="text-left py-2">Deskripsi</th>
-                  <th className="text-left py-2">Jumlah</th>
-                  <th className="text-left py-2">Mata Uang</th>
-                  <th className="text-left py-2">Kategori</th>
-                  <th className="text-left py-2">Tanggal</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-700 dark:text-gray-200">
-                {outcomes.map((out, i) => (
-                  <tr key={i} className="border-t border-gray-200 dark:border-gray-700">
-                    <td className="py-2">{wallets.find(w => w.id === out.wallet)?.name || out.wallet}</td>
-                    <td className="py-2">{out.description}</td>
-                    <td className="py-2">Rp {out.amount.toLocaleString("id-ID")}</td>
-                    <td className="py-2">{out.currency}</td>
-                    <td className="py-2">{out.category}</td>
-                    <td className="py-2">
-                      {new Date(out.createdAt?.toDate?.() ?? out.createdAt).toLocaleDateString("id-ID")}
-                    </td>
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Transaksi Pengeluaran</h2>
+          {outcomes.length === 0 ? (
+            <p className="text-gray-500">Belum ada data pengeluaran.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border rounded-xl shadow">
+                <thead>
+                  <tr className="bg-gray-100 text-sm text-left">
+                    <th className="px-4 py-2 border-b">Dompet</th>
+                    <th className="px-4 py-2 border-b">Deskripsi</th>
+                    <th className="px-4 py-2 border-b">Nominal</th>
+                    <th className="px-4 py-2 border-b">Mata Uang</th>
+                    <th className="px-4 py-2 border-b">Tanggal</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {outcomes.map((entry) => (
+                    <tr key={entry.id} className="text-sm">
+                      <td className="px-4 py-2 border-b">{wallets.find(w => w.id === entry.wallet)?.name || entry.wallet}</td>
+                      <td className="px-4 py-2 border-b">{entry.description}</td>
+                      <td className="px-4 py-2 border-b">{entry.amount.toLocaleString()}</td>
+                      <td className="px-4 py-2 border-b">{entry.currency}</td>
+                      <td className="px-4 py-2 border-b">
+                        {entry.createdAt?.toDate
+                          ? new Date(entry.createdAt.toDate()).toLocaleString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </LayoutWithSidebar>
   )

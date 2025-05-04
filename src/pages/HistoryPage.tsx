@@ -1,3 +1,4 @@
+// Final compact HistoryPage.tsx tanpa kolom kategori
 import { useState, useEffect } from "react"
 import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
 import { useAuth } from "../context/AuthContext"
@@ -16,7 +17,6 @@ import {
 interface EditEntry {
   description: string
   amount: number
-  category: string
   editedAt: any
 }
 
@@ -27,7 +27,6 @@ interface HistoryEntry {
   currency: string
   description: string
   amount: number
-  category: string
   createdAt?: any
   editHistory?: EditEntry[]
 }
@@ -45,8 +44,7 @@ const HistoryPage = () => {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [wallets, setWallets] = useState<WalletEntry[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ description: "", amount: 0, category: "" })
-  const [openCollapseId, setOpenCollapseId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({ description: "", amount: 0 })
 
   useEffect(() => {
     if (!user) return
@@ -117,7 +115,7 @@ const HistoryPage = () => {
       <div className="max-w-5xl mx-auto p-6">
         <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
 
-        <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex flex-wrap gap-4 mb-4">
           <input
             type="text"
             placeholder="Cari deskripsi..."
@@ -140,25 +138,24 @@ const HistoryPage = () => {
             <table className="w-full text-sm bg-white dark:bg-gray-800 rounded shadow">
               <thead>
                 <tr className="text-left text-gray-500 border-b dark:border-gray-600">
-                  <th className="py-3 px-4">Tipe</th>
-                  <th className="py-3 px-4">Dompet</th>
-                  <th className="py-3 px-4">Mata Uang</th>
-                  <th className="py-3 px-4">Deskripsi</th>
-                  <th className="py-3 px-4">Kategori</th>
-                  <th className="py-3 px-4">Jumlah</th>
-                  <th className="py-3 px-4">Tanggal</th>
-                  <th className="py-3 px-4">Aksi</th>
+                  <th className="py-2 px-3">Tipe</th>
+                  <th className="py-2 px-3">Dompet</th>
+                  <th className="py-2 px-3">Mata Uang</th>
+                  <th className="py-2 px-3">Deskripsi</th>
+                  <th className="py-2 px-3">Jumlah</th>
+                  <th className="py-2 px-3">Tanggal</th>
+                  <th className="py-2 px-3">Aksi</th>
                 </tr>
               </thead>
               <tbody className="text-gray-700 dark:text-gray-200">
                 {filtered.map((item) => (
                   <tr key={item.id} className="border-t dark:border-gray-700">
-                    <td className="py-2 px-4 font-semibold">
+                    <td className="py-1.5 px-3 font-semibold">
                       {item.type === "income" ? "📥 Income" : "📤 Outcome"}
                     </td>
-                    <td className="py-2 px-4">{getWalletName(item.wallet)}</td>
-                    <td className="py-2 px-4">{getWalletCurrency(item.wallet)}</td>
-                    <td className="py-2 px-4">
+                    <td className="py-1.5 px-3">{getWalletName(item.wallet)}</td>
+                    <td className="py-1.5 px-3">{getWalletCurrency(item.wallet)}</td>
+                    <td className="py-1.5 px-3">
                       {editingId === item.id ? (
                         <input
                           value={editForm.description}
@@ -169,18 +166,7 @@ const HistoryPage = () => {
                         item.description
                       )}
                     </td>
-                    <td className="py-2 px-4">
-                      {editingId === item.id ? (
-                        <input
-                          value={editForm.category}
-                          onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                          className="border px-2 py-1 rounded text-sm w-full dark:bg-gray-800 dark:text-white"
-                        />
-                      ) : (
-                        item.category
-                      )}
-                    </td>
-                    <td className="py-2 px-4">
+                    <td className="py-1.5 px-3">
                       {editingId === item.id ? (
                         <input
                           type="number"
@@ -192,20 +178,10 @@ const HistoryPage = () => {
                         `${item.type === "income" ? "+" : "-"} Rp ${item.amount.toLocaleString("id-ID")}`
                       )}
                     </td>
-                    <td className="py-2 px-4">
+                    <td className="py-1.5 px-3">
                       {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID")}
-                      {item.editHistory && item.editHistory.length > 0 && (
-                        <button
-                          onClick={() =>
-                            setOpenCollapseId((prev) => (prev === item.id ? null : item.id!))
-                          }
-                          className="ml-2 text-xs text-blue-500 hover:underline"
-                        >
-                          (edited)
-                        </button>
-                      )}
                     </td>
-                    <td className="py-2 px-4 space-x-2">
+                    <td className="py-1.5 px-3 space-x-2">
                       {editingId === item.id ? (
                         <>
                           <button
@@ -214,11 +190,9 @@ const HistoryPage = () => {
                               const docRef = doc(db, "users", user.uid, item.type + "s", item.id!)
                               await updateDoc(docRef, {
                                 description: editForm.description,
-                                category: editForm.category,
                                 amount: editForm.amount,
                                 editHistory: arrayUnion({
                                   description: item.description,
-                                  category: item.category,
                                   amount: item.amount,
                                   editedAt: new Date(),
                                 }),
@@ -242,7 +216,6 @@ const HistoryPage = () => {
                             onClick={() => {
                               setEditForm({
                                 description: item.description,
-                                category: item.category,
                                 amount: item.amount,
                               })
                               setEditingId(item.id!)
@@ -267,31 +240,6 @@ const HistoryPage = () => {
                 ))}
               </tbody>
             </table>
-
-            {filtered.map(
-              (item) =>
-                openCollapseId === item.id &&
-                item.editHistory && (
-                  <div
-                    key={`edit-${item.id}`}
-                    className="bg-gray-50 dark:bg-gray-900 text-xs p-4 border-t border-purple-200 dark:border-purple-800"
-                  >
-                    <p className="font-semibold mb-2 text-purple-700 dark:text-purple-300">
-                      Histori Edit:
-                    </p>
-                    <ul className="list-disc pl-4 space-y-1 text-gray-600 dark:text-gray-300">
-                      {item.editHistory.map((edit, idx) => (
-                        <li key={idx}>
-                          <span className="font-medium">
-                            {new Date(edit.editedAt?.toDate?.() ?? edit.editedAt).toLocaleString("id-ID")}:
-                          </span>{" "}
-                          <span>{edit.description}</span> - {edit.category} - Rp {edit.amount.toLocaleString("id-ID")}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-            )}
           </div>
         )}
       </div>
