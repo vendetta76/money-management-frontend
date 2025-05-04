@@ -135,12 +135,17 @@ const WalletPage = () => {
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Wallet Management</h1>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700"
-          >
-            {showForm ? <X size={16} /> : <Plus size={16} />} {showForm ? "Cancel" : "Add Wallet"}
-          </button>
+          {!editingId && (
+            <button
+              onClick={() => {
+                setForm({ name: "", balance: "", currency: "USD" })
+                setShowForm(true)
+              }}
+              className="flex items-center gap-2 text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700"
+            >
+              <Plus size={16} /> Add Wallet
+            </button>
+          )}
         </div>
 
         {success && (
@@ -154,7 +159,10 @@ const WalletPage = () => {
             <form onSubmit={handleSubmit} className="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm relative">
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false)
+                  setEditingId(null)
+                }}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               >
                 <X size={20} />
