@@ -126,7 +126,7 @@ const IncomePage = () => {
               value={form.description}
               onChange={handleChange}
               type="text"
-              placeholder="e.g., Freelance project"
+              placeholder="Description"
               className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${
                 errors.description && "border-red-500"
               }`}
