@@ -23,6 +23,8 @@ interface EditEntry {
 interface HistoryEntry {
   id?: string
   type: "income" | "outcome"
+  wallet: string
+  currency: string
   description: string
   amount: number
   category: string
@@ -30,11 +32,18 @@ interface HistoryEntry {
   editHistory?: EditEntry[]
 }
 
+interface WalletEntry {
+  id?: string
+  name: string
+  currency: string
+}
+
 const HistoryPage = () => {
   const { user } = useAuth()
   const [search, setSearch] = useState("")
   const [selectedDate, setSelectedDate] = useState("")
   const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [wallets, setWallets] = useState<WalletEntry[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ description: "", amount: 0, category: "" })
   const [openCollapseId, setOpenCollapseId] = useState<string | null>(null)
@@ -44,6 +53,7 @@ const HistoryPage = () => {
 
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"))
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"))
+    const walletQuery = collection(db, "users", user.uid, "wallets")
 
     const unsubIn = onSnapshot(incomeQuery, (snapshot) => {
       const incomes = snapshot.docs.map((doc) => ({
@@ -71,9 +81,18 @@ const HistoryPage = () => {
       })
     })
 
+    const unsubWallet = onSnapshot(walletQuery, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as WalletEntry[]
+      setWallets(data)
+    })
+
     return () => {
       unsubIn()
       unsubOut()
+      unsubWallet()
     }
   }, [user])
 
@@ -85,12 +104,19 @@ const HistoryPage = () => {
     return matchSearch && matchDate
   })
 
+  const getWalletName = (walletId: string) => {
+    return wallets.find((w) => w.id === walletId)?.name || walletId
+  }
+
+  const getWalletCurrency = (walletId: string) => {
+    return wallets.find((w) => w.id === walletId)?.currency || ""
+  }
+
   return (
     <LayoutWithSidebar>
       <div className="max-w-5xl mx-auto p-6">
         <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
 
-        {/* Filter */}
         <div className="flex flex-wrap gap-4 mb-6">
           <input
             type="text"
@@ -107,7 +133,6 @@ const HistoryPage = () => {
           />
         </div>
 
-        {/* Table */}
         {filtered.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-300">Tidak ada transaksi ditemukan.</p>
         ) : (
@@ -116,6 +141,8 @@ const HistoryPage = () => {
               <thead>
                 <tr className="text-left text-gray-500 border-b dark:border-gray-600">
                   <th className="py-3 px-4">Tipe</th>
+                  <th className="py-3 px-4">Dompet</th>
+                  <th className="py-3 px-4">Mata Uang</th>
                   <th className="py-3 px-4">Deskripsi</th>
                   <th className="py-3 px-4">Kategori</th>
                   <th className="py-3 px-4">Jumlah</th>
@@ -129,6 +156,8 @@ const HistoryPage = () => {
                     <td className="py-2 px-4 font-semibold">
                       {item.type === "income" ? "📥 Income" : "📤 Outcome"}
                     </td>
+                    <td className="py-2 px-4">{getWalletName(item.wallet)}</td>
+                    <td className="py-2 px-4">{getWalletCurrency(item.wallet)}</td>
                     <td className="py-2 px-4">
                       {editingId === item.id ? (
                         <input
@@ -239,7 +268,6 @@ const HistoryPage = () => {
               </tbody>
             </table>
 
-            {/* Collapse Section */}
             {filtered.map(
               (item) =>
                 openCollapseId === item.id &&
@@ -257,8 +285,7 @@ const HistoryPage = () => {
                           <span className="font-medium">
                             {new Date(edit.editedAt?.toDate?.() ?? edit.editedAt).toLocaleString("id-ID")}:
                           </span>{" "}
-                          <span>{edit.description}</span> - {edit.category} - Rp{" "}
-                          {edit.amount.toLocaleString("id-ID")}
+                          <span>{edit.description}</span> - {edit.category} - Rp {edit.amount.toLocaleString("id-ID")}
                         </li>
                       ))}
                     </ul>
