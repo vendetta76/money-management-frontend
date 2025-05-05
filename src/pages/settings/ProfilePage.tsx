@@ -58,7 +58,7 @@ const ProfilePage = () => {
     formData.append("timestamp", timestamp)
     formData.append("signature", signature)
     formData.append("upload_preset", "Userphoto")
-    formData.append("folder", "avatars")
+    formData.append("folder", folder)
 
     setLoading(true)
     const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
