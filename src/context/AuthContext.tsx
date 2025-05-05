@@ -33,7 +33,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         await currentUser.reload()
-        setUser(currentUser)
+        setUser(currentUser);
+        window.firebaseUser = currentUser;
 
         try {
           const docRef = doc(db, "users", currentUser.uid)
