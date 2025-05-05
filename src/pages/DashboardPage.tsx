@@ -4,51 +4,53 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import Sidebar from "../components/Sidebar"
 import { db } from "../lib/firebaseClient"
-import { collection, onSnapshot, query, where } from "firebase/firestore"
-import { LineChart, Line, PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { collection, onSnapshot } from "firebase/firestore"
+import {
+  LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer
+} from "recharts"
 
-const COLORS = ["#6366F1", "#10B981", "#EF4444", "#F59E0B"]
+const COLORS = ["#10B981", "#EF4444"]
 
 const DashboardPage = () => {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [income, setIncome] = useState(0)
   const [outcome, setOutcome] = useState(0)
-  const [activityData, setActivityData] = useState([])
+  const [chartData, setChartData] = useState([
+    { name: "Pemasukan", value: 0 },
+    { name: "Pengeluaran", value: 0 },
+  ])
 
   useEffect(() => {
     if (!user) return
 
-    const incomeQuery = query(
+    const unsubscribe = onSnapshot(
       collection(db, "users", user.uid, "transactions"),
-      where("type", "==", "income")
+      (snapshot) => {
+        let incomeTotal = 0
+        let outcomeTotal = 0
+
+        snapshot.forEach((doc) => {
+          const data = doc.data()
+          if (data.type === "income") {
+            incomeTotal += data.amount || 0
+          } else if (data.type === "outcome") {
+            outcomeTotal += data.amount || 0
+          }
+        })
+
+        setIncome(incomeTotal)
+        setOutcome(outcomeTotal)
+        setChartData([
+          { name: "Pemasukan", value: incomeTotal },
+          { name: "Pengeluaran", value: outcomeTotal },
+        ])
+      }
     )
 
-    const outcomeQuery = query(
-      collection(db, "users", user.uid, "transactions"),
-      where("type", "==", "outcome")
-    )
-
-    const unsubIncome = onSnapshot(incomeQuery, (snapshot) => {
-      const total = snapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0)
-      setIncome(total)
-    })
-
-    const unsubOutcome = onSnapshot(outcomeQuery, (snapshot) => {
-      const total = snapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0)
-      setOutcome(total)
-    })
-
-    return () => {
-      unsubIncome()
-      unsubOutcome()
-    }
+    return () => unsubscribe()
   }, [user])
-
-  const chartData = [
-    { name: "Pemasukan", value: income },
-    { name: "Pengeluaran", value: outcome },
-  ]
 
   const totalBalance = income - outcome
 
@@ -56,78 +58,74 @@ const DashboardPage = () => {
     <div className="flex bg-gray-100 min-h-screen">
       <Sidebar />
       <main className="flex-1 p-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow p-6 col-span-1 flex flex-col items-center justify-center text-center">
-            <h2 className="text-sm font-semibold text-gray-500 mb-2">Balance statistic</h2>
-            <ResponsiveContainer width={180} height={180}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: "Spent", value: outcome },
-                    { name: "Left", value: totalBalance },
-                  ]}
-                  innerRadius={60}
-                  outerRadius={80}
-                  startAngle={90}
-                  endAngle={450}
-                  dataKey="value"
-                >
-                  <Cell fill="#6366F1" />
-                  <Cell fill="#E5E7EB" />
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <h1 className="text-2xl font-bold mt-2">Rp {totalBalance.toLocaleString("id-ID")}</h1>
-            <p className="text-sm text-gray-500">Saldo tersisa</p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-purple-700">Dashboard</h1>
+            <p className="text-sm text-gray-500">
+              Selamat datang kembali, {user?.email}
+            </p>
           </div>
+          <button
+            onClick={() => signOut().then(() => navigate("/login"))}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+          >
+            Logout
+          </button>
+        </div>
 
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-sm font-semibold text-gray-500 mb-2">Incoming</h2>
-            <h1 className="text-xl font-bold text-gray-800 mb-4">Rp {income.toLocaleString("id-ID")}</h1>
-            <ResponsiveContainer width="100%" height={80}>
-              <LineChart data={[{ amt: 1000 }, { amt: 2000 }, { amt: income }]}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white p-6 rounded-xl shadow text-center">
+            <p className="text-gray-500 text-sm mb-2">Saldo Tersisa</p>
+            <h1 className="text-2xl font-bold text-gray-800">Rp {totalBalance.toLocaleString("id-ID")}</h1>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow">
+            <p className="text-sm text-gray-500 mb-1">Incoming</p>
+            <h2 className="text-xl font-semibold text-green-500 mb-2">Rp {income.toLocaleString("id-ID")}</h2>
+            <ResponsiveContainer width="100%" height={60}>
+              <LineChart data={[{ amt: 0 }, { amt: income }]}>
                 <Line type="monotone" dataKey="amt" stroke="#10B981" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-sm font-semibold text-gray-500 mb-2">Outgoing</h2>
-            <h1 className="text-xl font-bold text-gray-800 mb-4">Rp {outcome.toLocaleString("id-ID")}</h1>
-            <ResponsiveContainer width="100%" height={80}>
-              <LineChart data={[{ amt: 500 }, { amt: 1800 }, { amt: outcome }]}>
+          <div className="bg-white p-6 rounded-xl shadow">
+            <p className="text-sm text-gray-500 mb-1">Outgoing</p>
+            <h2 className="text-xl font-semibold text-red-500 mb-2">Rp {outcome.toLocaleString("id-ID")}</h2>
+            <ResponsiveContainer width="100%" height={60}>
+              <LineChart data={[{ amt: 0 }, { amt: outcome }]}>
                 <Line type="monotone" dataKey="amt" stroke="#EF4444" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl shadow p-6 col-span-2">
-            <h2 className="text-sm font-semibold text-gray-500 mb-4">Analytics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-6 rounded-xl shadow col-span-2">
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">Analytics</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="value" fill="#6366F1" />
+                <Bar dataKey="value">
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-sm font-semibold text-gray-500 mb-2">Quick Action</h2>
-            <p className="text-xs text-gray-400 mb-3">Akses cepat data keuangan kamu</p>
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">Quick Action</h3>
             <button
               onClick={() => navigate("/income")}
-              className="block w-full text-left px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded mb-2"
+              className="block w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 mb-2 rounded"
             >
               + Tambah Pemasukan
             </button>
             <button
               onClick={() => navigate("/outcome")}
-              className="block w-full text-left px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+              className="block w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
             >
               - Tambah Pengeluaran
             </button>
