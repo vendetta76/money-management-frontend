@@ -50,8 +50,6 @@ const ProfilePage = () => {
       setLoading(true)
 
       const token = await getAuth().currentUser?.getIdToken()
-
-      // 🔥 Ganti URL berikut dengan domain backend Render lu
       const signRes = await fetch("https://money-management-backend-f6dg.onrender.com/api/cloudinary/cloudinary-sign", {
         method: "POST",
         headers: {
@@ -82,8 +80,9 @@ const ProfilePage = () => {
         toast.success("✅ Avatar berhasil diunggah!")
         setPreviewImage("")
       } else {
-        console.error("CLOUDINARY ERROR:", data)
-  throw new Error("Upload gagal ke Cloudinary")
+        console.error("🛑 Cloudinary Response Error:", data)
+        toast.error(data?.error?.message || "❌ Upload gagal ke Cloudinary")
+        throw new Error(data?.error?.message || "Upload gagal ke Cloudinary")
       }
     } catch (err) {
       console.error(err)
