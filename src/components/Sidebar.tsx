@@ -53,12 +53,10 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
   }
 
   return (
-    <aside className={\`
-      fixed top-0 left-0 h-screen w-60 md:w-64 z-50 bg-white dark:bg-gray-900
+    <aside className={`fixed top-0 left-0 h-screen w-60 md:w-64 z-50 bg-white dark:bg-gray-900
       border-r dark:border-gray-800 transform transition-transform duration-300
-      \${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
-      p-4 flex flex-col justify-between overflow-y-auto
-    \`}>
+      ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
+      p-4 flex flex-col justify-between overflow-y-auto`}>
       <div>
         <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-6">MoniQ</h1>
         <div className="flex flex-col items-center text-center mb-6">
@@ -85,12 +83,12 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
 
         <nav className="space-y-2">
           <NavLink to="/dashboard" className={({ isActive }) =>
-            \`flex items-center gap-3 px-3 py-2 rounded-lg font-medium \${isActive ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}\`}>
+            `flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${isActive ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}>
             <Home size={18} /> Dashboard
           </NavLink>
 
           <NavLink to="/wallet" className={({ isActive }) =>
-            \`flex items-center gap-3 px-3 py-2 rounded-lg font-medium \${isActive ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}\`}>
+            `flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${isActive ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}>
             <Wallet size={18} /> Wallet
           </NavLink>
 
@@ -100,18 +98,18 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
               className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
             >
               <span className="flex items-center gap-2">
-                <ChevronDown className={\`w-4 h-4 transition-transform \${isTransactionOpen ? "rotate-180" : ""}\`} />
+                <ChevronDown className={`w-4 h-4 transition-transform ${isTransactionOpen ? "rotate-180" : ""}`} />
                 Transaction
               </span>
             </button>
             {isTransactionOpen && (
               <div className="pl-8 mt-1 space-y-1">
                 <NavLink to="/income" className={({ isActive }) =>
-                  \`block py-1 text-sm \${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}\`}>
+                  `block py-1 text-sm ${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
                   <PiggyBank size={16} className="inline mr-1" /> Income
                 </NavLink>
                 <NavLink to="/outcome" className={({ isActive }) =>
-                  \`block py-1 text-sm \${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}\`}>
+                  `block py-1 text-sm ${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
                   <Receipt size={16} className="inline mr-1" /> Outcome
                 </NavLink>
               </div>
@@ -119,7 +117,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
           </div>
 
           <NavLink to="/history" className={({ isActive }) =>
-            \`flex items-center gap-3 px-3 py-2 rounded-lg font-medium \${isActive ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}\`}>
+            `flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${isActive ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"}`}>
             <Clock size={18} /> History
           </NavLink>
 
@@ -129,22 +127,22 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
               className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
             >
               <span className="flex items-center gap-2">
-                <ChevronDown className={\`w-4 h-4 transition-transform \${isSettingsOpen ? "rotate-180" : ""}\`} />
+                <ChevronDown className={`w-4 h-4 transition-transform ${isSettingsOpen ? "rotate-180" : ""}`} />
                 Settings
               </span>
             </button>
             {isSettingsOpen && (
               <div className="pl-8 mt-1 space-y-1">
                 <NavLink to="/settings/profile" className={({ isActive }) =>
-                  \`block py-1 text-sm \${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}\`}>
+                  `block py-1 text-sm ${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
                   👤 Profile
                 </NavLink>
                 <NavLink to="/settings/security" className={({ isActive }) =>
-                  \`block py-1 text-sm \${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}\`}>
+                  `block py-1 text-sm ${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
                   🔐 Security
                 </NavLink>
                 <NavLink to="/settings/preferences" className={({ isActive }) =>
-                  \`block py-1 text-sm \${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}\`}>
+                  `block py-1 text-sm ${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
                   ⚙️ Preferences
                 </NavLink>
               </div>
