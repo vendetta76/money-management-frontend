@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
@@ -123,11 +122,7 @@ const DashboardPage = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-6 rounded-xl shadow text-center">
-            <p className="text-gray-500 text-sm mb-2">Saldo Tersisa</p>
-            <h1 className="text-2xl font-bold text-gray-800">Rp {totalBalance.toLocaleString("id-ID")}</h1>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-white p-6 rounded-xl shadow">
             <p className="text-sm text-gray-500 mb-1">Pemasukan</p>
             <h2 className="text-xl font-semibold text-green-500 mb-2">Rp {income.toLocaleString("id-ID")}</h2>
