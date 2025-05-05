@@ -1,18 +1,15 @@
-import { useEffect } from "react"
-import { useAuth } from "../context/AuthContext"
-import toast from "react-hot-toast"
-import { useNavigate } from "react-router-dom"
-
 export const useBlockLandingIfLoggedIn = () => {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!loading && user?.emailVerified) {
+    const isOnLanding = window.location.pathname === "/"
+
+    if (isOnLanding && !loading && user?.emailVerified) {
       toast((t) => (
         <div className="text-sm text-center">
           <p className="mb-2 font-semibold text-red-600">
-            Oops, Kamu Tidak Bisa Pindah Ke Halaman Lain Selain Dashboard Demi Keamanan dan Privasi Kamu
+            Kamu sudah login. Dialihkan ke Dashboard.
           </p>
           <button
             onClick={() => {
@@ -25,8 +22,8 @@ export const useBlockLandingIfLoggedIn = () => {
           </button>
         </div>
       ), {
-        duration: 10000,
-        id: "block-landing-warning", // optional: biar nggak dobel
+        duration: 8000,
+        id: "block-landing-warning",
       })
     }
   }, [user, loading, navigate])
