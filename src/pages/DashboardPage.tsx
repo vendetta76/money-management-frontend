@@ -98,7 +98,7 @@ const DashboardPage = () => {
 
   return (
   <LayoutShell>
-    <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto">
+    <main className="w-full max-w-7xl px-4 md:px-6 mx-auto">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-2">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-purple-700">Dashboard</h1>

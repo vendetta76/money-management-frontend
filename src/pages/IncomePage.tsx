@@ -173,7 +173,7 @@ const IncomePage = () => {
 
   return (
     <LayoutShell>
-      <div className="p-6">
+      <div className="w-full max-w-4xl px-4 md:px-6 mx-auto">
         <h1 className="text-2xl font-bold mb-6">{editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}</h1>
 
         {success && (

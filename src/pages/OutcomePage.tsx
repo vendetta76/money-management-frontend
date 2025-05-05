@@ -187,7 +187,7 @@ const OutcomePage = () => {
 
   return (
     <LayoutShell>
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="w-full max-w-4xl px-4 md:px-6 mx-auto">
         <h1 className="text-2xl font-bold mb-6 text-red-600 dark:text-red-400">
           📤 {editingId ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
         </h1>

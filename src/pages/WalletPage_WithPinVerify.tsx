@@ -51,7 +51,7 @@ const WalletPageWithPinVerify = () => {
   if (!verified) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-4 md:p-6 rounded-xl shadow max-w-sm w-full text-center">
+        <div className="w-full max-w-sm px-4 py-6 md:p-6 rounded-xl shadow bg-white text-center">
           <h2 className="text-xl font-bold mb-4">🔒 Verifikasi PIN</h2>
           <input
             type="password"
