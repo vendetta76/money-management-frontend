@@ -1,9 +1,10 @@
+
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import Sidebar from "../components/Sidebar"
 import { db } from "../lib/firebaseClient"
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore"
+import { collection, onSnapshot } from "firebase/firestore"
 import { format } from "date-fns"
 import { id as localeID } from "date-fns/locale"
 import {
@@ -11,7 +12,7 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie
 } from "recharts"
 
-const COLORS = ["#10B981", "#EF4444"]
+const COLORS = ["#10B981", "#EF4444", "#6366F1", "#F59E0B", "#06B6D4"]
 
 interface Transaction {
   id?: string
@@ -22,18 +23,21 @@ interface Transaction {
 }
 
 const DashboardPage = () => {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [income, setIncome] = useState(0)
   const [outcome, setOutcome] = useState(0)
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [wallets, setWallets] = useState<any[]>([])
+  const [selectedCurrency, setSelectedCurrency] = useState("all")
 
   useEffect(() => {
     if (!user) return
 
     const incomeRef = collection(db, "users", user.uid, "incomes")
     const outcomeRef = collection(db, "users", user.uid, "outcomes")
+    const walletRef = collection(db, "users", user.uid, "wallets")
 
     const unsubIncomes = onSnapshot(incomeRef, (snap) => {
       let total = 0
@@ -42,11 +46,7 @@ const DashboardPage = () => {
       snap.forEach(doc => {
         const data = doc.data()
         total += data.amount || 0
-        newTrans.push({
-          ...data,
-          type: "income",
-          id: doc.id,
-        })
+        newTrans.push({ ...data, type: "income", id: doc.id })
       })
 
       setIncome(total)
@@ -60,31 +60,41 @@ const DashboardPage = () => {
       snap.forEach(doc => {
         const data = doc.data()
         total += data.amount || 0
-        newTrans.push({
-          ...data,
-          type: "outcome",
-          id: doc.id,
-        })
+        newTrans.push({ ...data, type: "outcome", id: doc.id })
       })
 
       setOutcome(total)
       setTransactions((prev) => [...prev, ...newTrans])
     })
 
+    const unsubWallets = onSnapshot(walletRef, (snap) => {
+      const walletData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      setWallets(walletData)
+    })
+
     return () => {
       unsubIncomes()
       unsubOutcomes()
+      unsubWallets()
     }
   }, [user])
 
   const totalBalance = income - outcome
-
   const sortedTx = transactions
     .filter((tx) => tx.createdAt)
-    .sort((a, b) =>
-      b.createdAt?.seconds - a.createdAt?.seconds
-    )
+    .sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds)
     .slice(0, 5)
+
+  const allCurrencies = Array.from(new Set(wallets.map(w => w.currency)))
+  const filteredWallets = selectedCurrency === "all"
+    ? wallets
+    : wallets.filter(w => w.currency === selectedCurrency)
+
+  const total = filteredWallets.reduce((acc, wallet) => acc + (wallet.balance || 0), 0)
+  const pieData = filteredWallets.map(wallet => ({
+    name: wallet.name,
+    value: wallet.balance,
+  }))
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
@@ -99,80 +109,76 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Pie Chart Summary */}
-        <div className="bg-white p-6 rounded-xl shadow col-span-3 mb-6">
-          <h3 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Pemasukan vs Pengeluaran</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={[
-                  { name: "Pemasukan", value: income },
-                  { name: "Pengeluaran", value: outcome }
-                ]}
-                dataKey="value"
-                nameKey="name"
-                outerRadius={100}
-                label
-              >
-                <Cell fill="#10B981" />
-                <Cell fill="#EF4444" />
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-600 mb-2">Filter Mata Uang</label>
+          <select
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value)}
+            className="px-4 py-2 border rounded-lg bg-white shadow"
+          >
+            <option value="all">Semua</option>
+            {allCurrencies.map((cur) => (
+              <option key={cur} value={cur}>{cur}</option>
+            ))}
+          </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-white p-6 rounded-xl shadow">
-            <p className="text-sm text-gray-500 mb-1">Pemasukan</p>
-            <h2 className="text-xl font-semibold text-green-500 mb-2">Rp {income.toLocaleString("id-ID")}</h2>
+            <h2 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Wallet (Pie)</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={100}
+                  label
+                >
+                  {pieData.map((_, i) => (
+                    <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow">
-            <p className="text-sm text-gray-500 mb-1">Pengeluaran</p>
-            <h2 className="text-xl font-semibold text-red-500 mb-2">Rp {outcome.toLocaleString("id-ID")}</h2>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-6 rounded-xl shadow col-span-2">
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">Ringkasan Grafik</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={[
-                { name: "Pemasukan", value: income },
-                { name: "Pengeluaran", value: outcome }
-              ]}>
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="text-sm font-semibold text-gray-500 mb-4">Total Saldo {selectedCurrency === "all" ? "(Semua)" : selectedCurrency}</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={[{ name: selectedCurrency.toUpperCase(), value: total }]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey="value">
-                  <Cell fill="#10B981" />
-                  <Cell fill="#EF4444" />
+                  <Cell fill="#6366F1" />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
 
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
-            <ul className="space-y-4">
-              {sortedTx.map((tx) => (
-                <li key={tx.id} className="flex justify-between items-center text-sm">
-                  <div>
-                    <p className="font-medium">{tx.description}</p>
-                    <p className="text-xs text-gray-400">
-                      {tx.createdAt?.toDate
-                        ? format(new Date(tx.createdAt.toDate()), "dd MMM yyyy, HH:mm", { locale: localeID })
-                        : "-"}
-                    </p>
-                  </div>
-                  <span className={`text-sm font-semibold ${tx.type === "income" ? "text-green-500" : "text-red-500"}`}>
-                    {tx.type === "income" ? "+" : "-"} Rp {tx.amount.toLocaleString("id-ID")}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="bg-white p-6 rounded-xl shadow mt-6">
+          <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
+          <ul className="space-y-4">
+            {sortedTx.map((tx) => (
+              <li key={tx.id} className="flex justify-between items-center text-sm">
+                <div>
+                  <p className="font-medium">{tx.description}</p>
+                  <p className="text-xs text-gray-400">
+                    {tx.createdAt?.toDate
+                      ? format(new Date(tx.createdAt.toDate()), "dd MMM yyyy, HH:mm", { locale: localeID })
+                      : "-"}
+                  </p>
+                </div>
+                <span className={`text-sm font-semibold ${tx.type === "income" ? "text-green-500" : "text-red-500"}`}>
+                  {tx.type === "income" ? "+" : "-"} Rp {tx.amount.toLocaleString("id-ID")}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </main>
     </div>
