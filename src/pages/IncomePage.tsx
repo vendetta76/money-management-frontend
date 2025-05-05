@@ -1,6 +1,6 @@
 // Final IncomePage with edit & delete features synced to HistoryPage
 import { useState, useEffect } from "react"
-import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
+import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
 import { db } from "../lib/firebaseClient"
 import {
@@ -172,7 +172,7 @@ const IncomePage = () => {
   }
 
   return (
-    <LayoutWithSidebar>
+    <LayoutShell>
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-6">{editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}</h1>
 
@@ -312,7 +312,7 @@ const IncomePage = () => {
           )}
         </div>
       </div>
-    </LayoutWithSidebar>
+    </LayoutShell>
   )
 }
 

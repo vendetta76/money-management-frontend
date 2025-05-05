@@ -15,7 +15,7 @@ import {
   increment,
   arrayUnion
 } from "firebase/firestore"
-import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
+import LayoutShell from "../layouts/LayoutShell"
 
 interface OutcomeEntry {
   id?: string
@@ -186,7 +186,7 @@ const OutcomePage = () => {
   }
 
   return (
-    <LayoutWithSidebar>
+    <LayoutShell>
       <div className="max-w-4xl mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6 text-red-600 dark:text-red-400">
           📤 {editingId ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
@@ -326,7 +326,7 @@ const OutcomePage = () => {
           )}
         </div>
       </div>
-    </LayoutWithSidebar>
+    </LayoutShell>
   )
 }
 

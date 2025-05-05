@@ -1,6 +1,6 @@
 // Final read-only HistoryPage with detailed logs
 import { useState, useEffect } from "react"
-import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
+import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
 import { db } from "../lib/firebaseClient"
 import {
@@ -108,7 +108,7 @@ const HistoryPage = () => {
   }
 
   return (
-    <LayoutWithSidebar>
+    <LayoutShell>
       <div className="max-w-6xl mx-auto p-4 md:p-6">
         <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
 
@@ -177,7 +177,7 @@ const HistoryPage = () => {
           </div>
         )}
       </div>
-    </LayoutWithSidebar>
+    </LayoutShell>
   )
 }
 
