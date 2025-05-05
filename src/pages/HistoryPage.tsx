@@ -1,4 +1,3 @@
-// Final read-only HistoryPage with detailed logs
 import { useState, useEffect } from "react"
 import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
@@ -109,7 +108,7 @@ const HistoryPage = () => {
 
   return (
     <LayoutShell>
-      <div className="w-full max-w-6xl px-4 md:px-6 mx-auto">
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-2xl mx-auto">
         <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
 
         <div className="flex flex-wrap gap-4 mb-6 items-center">
@@ -138,7 +137,7 @@ const HistoryPage = () => {
             {filtered.map((item) => (
               <div
                 key={item.id}
-                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-md transition border-l-4 "
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-md transition border-l-4"
                 style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -176,7 +175,7 @@ const HistoryPage = () => {
             ))}
           </div>
         )}
-      </div>
+      </main>
     </LayoutShell>
   )
 }

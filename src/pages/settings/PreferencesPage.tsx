@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react'
-import LayoutWithSidebar from '../../layouts/LayoutWithSidebar'
+import LayoutShell from '../../layouts/LayoutShell'
 
 const PreferencesPage = () => {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
@@ -12,7 +11,7 @@ const PreferencesPage = () => {
 
   return (
     <LayoutShell>
-      <div className="p-4 md:p-6 max-w-xl mx-auto">
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-md mx-auto">
         <h1 className="text-2xl font-bold mb-4">⚙️ Preferensi</h1>
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Mode Gelap</span>
@@ -28,7 +27,7 @@ const PreferencesPage = () => {
             </div>
           </label>
         </div>
-      </div>
+      </main>
     </LayoutShell>
   )
 }

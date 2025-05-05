@@ -1,10 +1,9 @@
-
 import React, { useEffect, useRef, useState } from 'react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { db } from '../../lib/firebaseClient'
 import { useAuth } from '../../context/AuthContext'
-import LayoutWithSidebar from '../../layouts/LayoutWithSidebar'
+import LayoutShell from '../../layouts/LayoutShell'
 import toast from 'react-hot-toast'
 import Cropper from 'react-cropper'
 import 'cropperjs/dist/cropper.css'
@@ -52,15 +51,12 @@ const ProfilePage = () => {
       setLoading(true)
 
       if (useProxy) {
-        // Upload via backend proxy
         const formData = new FormData()
         formData.append("file", blob!)
 
         const uploadRes = await fetch("https://moniq-api.onrender.com/api/upload-avatar", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
+          headers: { Authorization: `Bearer ${token}` },
           body: formData
         })
 
@@ -73,7 +69,6 @@ const ProfilePage = () => {
           throw new Error("Upload gagal (proxy)")
         }
       } else {
-        // Upload via signed Cloudinary
         const signRes = await fetch("https://moniq-api.onrender.com/api/cloudinary/cloudinary-sign", {
           method: "POST",
           headers: {
@@ -129,7 +124,7 @@ const ProfilePage = () => {
 
   return (
     <LayoutShell>
-      <div className="p-4 md:p-6 max-w-2xl mx-auto">
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-md mx-auto">
         <h1 className="text-2xl font-bold mb-6">👤 Profil Saya</h1>
 
         <div className="flex items-center justify-between mb-4">
@@ -195,7 +190,7 @@ const ProfilePage = () => {
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </button>
         </form>
-      </div>
+      </main>
     </LayoutShell>
   )
 }

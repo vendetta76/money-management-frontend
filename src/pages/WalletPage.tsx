@@ -155,7 +155,7 @@ const WalletPage = () => {
 
   return (
     <LayoutShell>
-      <div className="w-full max-w-4xl px-4 md:px-6 mx-auto">
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 md:ml-64 pt-4 max-w-screen-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Manajemen Wallet</h1>
           <button
@@ -309,7 +309,7 @@ const WalletPage = () => {
             </form>
           </div>
         )}
-      </div>
+      </main>
     </LayoutShell>
   )
 }

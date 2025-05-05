@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { db } from "../../lib/firebaseClient"
@@ -81,7 +80,7 @@ const SecurityPage = () => {
 
   return (
     <LayoutShell>
-      <div className="p-4 md:p-6 max-w-xl mx-auto">
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-md mx-auto">
         <h1 className="text-2xl font-bold mb-6">🔐 Keamanan</h1>
 
         <div className="mb-6">
@@ -150,7 +149,7 @@ const SecurityPage = () => {
             )}
           </div>
         </form>
-      </div>
+      </main>
     </LayoutShell>
   )
 }
