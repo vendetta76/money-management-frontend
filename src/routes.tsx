@@ -1,6 +1,7 @@
 
 import { RouteObject } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
+import RoleRedirect from './pages/RoleRedirect'
 
 // Auth & Utility
 import LoginPage from './pages/LoginPage'
@@ -31,7 +32,10 @@ import PreferencesPage from './pages/settings/PreferencesPage'
 import CopyFirebaseIdToken from './pages/CopyFirebaseIdToken'
 
 const routes: RouteObject[] = [
-  { path: '/', element: <LandingPage /> },
+  {
+    path: '/',
+    element: <PrivateRoute><RoleRedirect /></PrivateRoute>,
+  },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
