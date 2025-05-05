@@ -11,7 +11,7 @@ const PreferencesPage = () => {
   }, [darkMode])
 
   return (
-    <LayoutWithSidebar>
+    <LayoutShell>
       <div className="p-4 md:p-6 max-w-xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">⚙️ Preferensi</h1>
         <div className="flex items-center justify-between mb-4">
@@ -29,7 +29,7 @@ const PreferencesPage = () => {
           </label>
         </div>
       </div>
-    </LayoutWithSidebar>
+    </LayoutShell>
   )
 }
 

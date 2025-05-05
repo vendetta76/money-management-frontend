@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { db } from "../../lib/firebaseClient"
 import { useAuth } from "../../context/AuthContext"
-import LayoutWithSidebar from "../../layouts/LayoutWithSidebar"
+import LayoutShell from "../../layouts/LayoutShell"
 
 const SecurityPage = () => {
   const { user } = useAuth()
@@ -80,7 +80,7 @@ const SecurityPage = () => {
   }
 
   return (
-    <LayoutWithSidebar>
+    <LayoutShell>
       <div className="p-4 md:p-6 max-w-xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">🔐 Keamanan</h1>
 
@@ -151,7 +151,7 @@ const SecurityPage = () => {
           </div>
         </form>
       </div>
-    </LayoutWithSidebar>
+    </LayoutShell>
   )
 }
 
