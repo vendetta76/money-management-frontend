@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebaseClient'
 import { useAuth } from '../../context/AuthContext'
 import LayoutWithSidebar from '../../layouts/LayoutWithSidebar'
+import toast from 'react-hot-toast'
 import Cropper from 'react-cropper'
 import 'cropperjs/dist/cropper.css'
 
@@ -45,7 +46,10 @@ const ProfilePage = () => {
       canvas.toBlob(resolve, "image/jpeg", 0.9)
     )
 
-    const signRes = await fetch("https://moniq-api.onrender.com/api/cloudinary-sign", { method: "POST" })
+    const signRes = await fetch("https://moniq-api.onrender.com/api/cloudinary/cloudinary-sign", {
+      method: "POST"
+    })
+
     const { signature, timestamp, apiKey, cloudName } = await signRes.json()
 
     const formData = new FormData()
@@ -53,10 +57,11 @@ const ProfilePage = () => {
     formData.append("api_key", apiKey)
     formData.append("timestamp", timestamp)
     formData.append("signature", signature)
-    formData.append("upload_preset", "moniq_avatar")
+    formData.append("upload_preset", "Userphoto")
     formData.append("folder", "avatars")
 
-    const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${dvbn6oqlp}/image/upload`, {
+    setLoading(true)
+    const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: "POST",
       body: formData
     })
@@ -64,6 +69,7 @@ const ProfilePage = () => {
     const data = await cloudRes.json()
     if (data.secure_url) {
       setAvatar(data.secure_url)
+toast.success("✅ Avatar berhasil diunggah!")
       setPreviewImage("")
     }
   }
@@ -74,10 +80,10 @@ const ProfilePage = () => {
       if (!user?.uid) throw new Error("User belum login")
       setLoading(true)
       await updateDoc(doc(db, "users", user.uid), { name, avatar })
-      alert("✅ Profil berhasil diperbarui!")
+      toast.success("✅ Profil berhasil diperbarui!")
     } catch (err) {
       console.error(err)
-      alert("❌ Gagal menyimpan profil.")
+      toast.error("❌ Gagal menyimpan profil.")
     } finally {
       setLoading(false)
     }
@@ -107,9 +113,10 @@ const ProfilePage = () => {
               />
               <button
                 onClick={uploadCroppedImage}
+                disabled={loading}
                 className="mt-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
               >
-                Upload Avatar
+                {loading ? "Mengunggah..." : "Upload Avatar"}
               </button>
             </div>
           )}
