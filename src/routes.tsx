@@ -13,7 +13,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'))
 
 // Core Pages
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
-import WalletPageWithPinVerify from './pages/WalletPage_WithPinVerify_Final'
+import WalletPageWithPinVerify from './pages/WalletPage_WithPinVerify'
 const IncomePage = lazy(() => import('./pages/IncomePage'))
 const OutcomePage = lazy(() => import('./pages/OutcomePage'))
 const HistoryPage = lazy(() => import('./pages/HistoryPage'))
