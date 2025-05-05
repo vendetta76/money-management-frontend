@@ -27,6 +27,9 @@ import SettingsProfile from './pages/settings/ProfilePage'
 import SecurityPage from './pages/settings/SecurityPage'
 import PreferencesPage from './pages/settings/PreferencesPage'
 
+// Developer Utility
+import CopyFirebaseIdToken from './pages/CopyFirebaseIdToken'
+
 const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
@@ -78,6 +81,10 @@ const routes: RouteObject[] = [
   {
     path: '/admin',
     element: <PrivateRoute requiredRole="Admin"><AdminPage /></PrivateRoute>,
+  },
+  {
+    path: '/dev/token',
+    element: <PrivateRoute><CopyFirebaseIdToken /></PrivateRoute>,
   },
   {
     path: '/unauthorized',
