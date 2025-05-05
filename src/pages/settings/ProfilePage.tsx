@@ -15,6 +15,7 @@ const ProfilePage = () => {
   const [avatar, setAvatar] = useState("")
   const [previewImage, setPreviewImage] = useState("")
   const [loading, setLoading] = useState(false)
+  const [useProxy, setUseProxy] = useState(true)
   const cropperRef = useRef<any>(null)
 
   useEffect(() => {
@@ -48,40 +49,64 @@ const ProfilePage = () => {
 
     try {
       const token = await getAuth().currentUser?.getIdToken()
-
-      const signRes = await fetch("https://moniq-api.onrender.com/api/cloudinary/cloudinary-sign", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
-
-      const { signature, timestamp, apiKey, cloudName, folder, uploadPreset } = await signRes.json()
-
-      const formData = new FormData()
-      formData.append("file", blob!)
-      formData.append("api_key", apiKey)
-      formData.append("timestamp", timestamp)
-      formData.append("signature", signature)
-      formData.append("upload_preset", uploadPreset)
-      formData.append("folder", folder)
-
       setLoading(true)
-      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData
-      })
 
-      const data = await cloudRes.json()
-      if (data.secure_url) {
-        setAvatar(data.secure_url)
-        toast.success("✅ Avatar berhasil diunggah!")
-        setPreviewImage("")
+      if (useProxy) {
+        // Upload via backend proxy
+        const formData = new FormData()
+        formData.append("file", blob!)
+
+        const uploadRes = await fetch("https://moniq-api.onrender.com/api/upload-avatar", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        })
+
+        const data = await uploadRes.json()
+        if (data.url) {
+          setAvatar(data.url)
+          toast.success("✅ Avatar berhasil diunggah lewat proxy!")
+          setPreviewImage("")
+        } else {
+          throw new Error("Upload gagal (proxy)")
+        }
+      } else {
+        // Upload via signed Cloudinary
+        const signRes = await fetch("https://moniq-api.onrender.com/api/cloudinary/cloudinary-sign", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        })
+
+        const { signature, timestamp, apiKey, cloudName, folder, uploadPreset } = await signRes.json()
+
+        const formData = new FormData()
+        formData.append("file", blob!)
+        formData.append("api_key", apiKey)
+        formData.append("timestamp", timestamp)
+        formData.append("signature", signature)
+        formData.append("upload_preset", uploadPreset)
+        formData.append("folder", folder)
+
+        const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: "POST",
+          body: formData
+        })
+
+        const data = await cloudRes.json()
+        if (data.secure_url) {
+          setAvatar(data.secure_url)
+          toast.success("✅ Avatar berhasil diunggah via signed method!")
+          setPreviewImage("")
+        }
       }
     } catch (err) {
       console.error(err)
-      toast.error("❌ Gagal mengunggah avatar.")
+      toast.error("❌ Upload gagal")
     } finally {
       setLoading(false)
     }
@@ -106,6 +131,18 @@ const ProfilePage = () => {
     <LayoutWithSidebar>
       <div className="p-6 max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">👤 Profil Saya</h1>
+
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm text-gray-600">Mode Upload:</span>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={useProxy}
+              onChange={() => setUseProxy(!useProxy)}
+            />
+            {useProxy ? "Proxy Backend" : "Signed Direct"}
+          </label>
+        </div>
 
         <div className="mb-6 text-center">
           <img
