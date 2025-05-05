@@ -162,9 +162,11 @@ const DashboardPage = () => {
 
         <div className="bg-white p-6 rounded-xl shadow mt-6">
           <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
-          <ul className="space-y-4">
+          
+  <ul className="space-y-4">
+    
             {sortedTx.map((tx) => (
-              <li key={tx.id} className="flex justify-between items-center text-sm">
+              <li key={tx.id} className="flex justify-between items-start text-sm">
                 <div>
                   <p className="font-medium">{tx.description}</p>
                   <p className="text-xs text-gray-400">
