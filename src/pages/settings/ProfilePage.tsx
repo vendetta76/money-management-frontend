@@ -82,7 +82,8 @@ const ProfilePage = () => {
         toast.success("✅ Avatar berhasil diunggah!")
         setPreviewImage("")
       } else {
-        throw new Error("Upload gagal ke Cloudinary")
+        console.error("CLOUDINARY ERROR:", data)
+  throw new Error("Upload gagal ke Cloudinary")
       }
     } catch (err) {
       console.error(err)
