@@ -1,3 +1,4 @@
+
 import { RouteObject } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import PrivateRoute from './components/PrivateRoute'
@@ -12,7 +13,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'))
 
 // Core Pages
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
-const WalletPage = lazy(() => import('./pages/WalletPage'))
+import WalletPageWithPinVerify from './pages/WalletPage_WithPinVerify_Final'
 const IncomePage = lazy(() => import('./pages/IncomePage'))
 const OutcomePage = lazy(() => import('./pages/OutcomePage'))
 const HistoryPage = lazy(() => import('./pages/HistoryPage'))
@@ -43,7 +44,7 @@ const routes: RouteObject[] = [
   },
   {
     path: '/wallet',
-    element: <PrivateRoute><Suspense fallback={loading}><WalletPage /></Suspense></PrivateRoute>,
+    element: <PrivateRoute><WalletPageWithPinVerify /></PrivateRoute>,
   },
   {
     path: '/income',
