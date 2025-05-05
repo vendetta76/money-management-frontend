@@ -8,8 +8,7 @@ const LayoutShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex relative">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      {/* Konten utama yang akan geser jika sidebar terbuka */}
-<div className={`flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-64" : "ml-0"}`}>
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-64" : ""}`}>
         <header className="md:hidden p-4 flex justify-between items-center shadow bg-white sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(true)} className="text-gray-700">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
