@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { User, onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth"
-import { auth } from "../lib/firebase"
+import { auth } from "../lib/firebaseClient"
 import { doc, getDoc } from "firebase/firestore"
-import { db } from "../lib/firebase"
+import { db } from "../lib/firebaseClient"
 
 interface UserMeta {
   role: "regular" | "premium"

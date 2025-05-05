@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import Sidebar from "../components/Sidebar"
 
@@ -7,7 +6,15 @@ const LayoutShell = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex relative">
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
       <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-64" : ""}`}>
         <header className="md:hidden p-4 flex justify-between items-center shadow bg-white sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(true)} className="text-gray-700">
@@ -18,7 +25,8 @@ const LayoutShell = ({ children }: { children: React.ReactNode }) => {
           <h1 className="text-lg font-semibold text-purple-700">MoniQ</h1>
           <div></div>
         </header>
-        <main className="min-h-screen bg-gray-50 dark:bg-gray-900">{children}</main>
+
+        <main className="w-full min-h-screen bg-gray-50 dark:bg-gray-900">{children}</main>
       </div>
     </div>
   )
