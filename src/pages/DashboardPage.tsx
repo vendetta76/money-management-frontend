@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import Sidebar from "../components/Sidebar"
 import { db } from "../lib/firebaseClient"
-import { collection, onSnapshot } from "firebase/firestore"
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore"
+import { format } from "date-fns"
+import { id as localeID } from "date-fns/locale"
 import {
   LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer
@@ -12,47 +14,78 @@ import {
 
 const COLORS = ["#10B981", "#EF4444"]
 
+interface Transaction {
+  id?: string
+  type: "income" | "outcome"
+  description: string
+  amount: number
+  createdAt: any
+}
+
 const DashboardPage = () => {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+
   const [income, setIncome] = useState(0)
   const [outcome, setOutcome] = useState(0)
-  const [chartData, setChartData] = useState([
-    { name: "Pemasukan", value: 0 },
-    { name: "Pengeluaran", value: 0 },
-  ])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
 
   useEffect(() => {
     if (!user) return
 
-    const unsubscribe = onSnapshot(
-      collection(db, "users", user.uid, "transactions"),
-      (snapshot) => {
-        let incomeTotal = 0
-        let outcomeTotal = 0
+    const incomeRef = collection(db, "users", user.uid, "incomes")
+    const outcomeRef = collection(db, "users", user.uid, "outcomes")
 
-        snapshot.forEach((doc) => {
-          const data = doc.data()
-          if (data.type === "income") {
-            incomeTotal += data.amount || 0
-          } else if (data.type === "outcome") {
-            outcomeTotal += data.amount || 0
-          }
+    const unsubIncomes = onSnapshot(incomeRef, (snap) => {
+      let total = 0
+      const newTrans: Transaction[] = []
+
+      snap.forEach(doc => {
+        const data = doc.data()
+        total += data.amount || 0
+        newTrans.push({
+          ...data,
+          type: "income",
+          id: doc.id,
         })
+      })
 
-        setIncome(incomeTotal)
-        setOutcome(outcomeTotal)
-        setChartData([
-          { name: "Pemasukan", value: incomeTotal },
-          { name: "Pengeluaran", value: outcomeTotal },
-        ])
-      }
-    )
+      setIncome(total)
+      setTransactions((prev) => [...prev, ...newTrans])
+    })
 
-    return () => unsubscribe()
+    const unsubOutcomes = onSnapshot(outcomeRef, (snap) => {
+      let total = 0
+      const newTrans: Transaction[] = []
+
+      snap.forEach(doc => {
+        const data = doc.data()
+        total += data.amount || 0
+        newTrans.push({
+          ...data,
+          type: "outcome",
+          id: doc.id,
+        })
+      })
+
+      setOutcome(total)
+      setTransactions((prev) => [...prev, ...newTrans])
+    })
+
+    return () => {
+      unsubIncomes()
+      unsubOutcomes()
+    }
   }, [user])
 
   const totalBalance = income - outcome
+
+  const sortedTx = transactions
+    .filter((tx) => tx.createdAt)
+    .sort((a, b) =>
+      b.createdAt?.seconds - a.createdAt?.seconds
+    )
+    .slice(0, 5)
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
@@ -79,56 +112,54 @@ const DashboardPage = () => {
             <h1 className="text-2xl font-bold text-gray-800">Rp {totalBalance.toLocaleString("id-ID")}</h1>
           </div>
           <div className="bg-white p-6 rounded-xl shadow">
-            <p className="text-sm text-gray-500 mb-1">Incoming</p>
+            <p className="text-sm text-gray-500 mb-1">Pemasukan</p>
             <h2 className="text-xl font-semibold text-green-500 mb-2">Rp {income.toLocaleString("id-ID")}</h2>
-            <ResponsiveContainer width="100%" height={60}>
-              <LineChart data={[{ amt: 0 }, { amt: income }]}>
-                <Line type="monotone" dataKey="amt" stroke="#10B981" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
           </div>
           <div className="bg-white p-6 rounded-xl shadow">
-            <p className="text-sm text-gray-500 mb-1">Outgoing</p>
+            <p className="text-sm text-gray-500 mb-1">Pengeluaran</p>
             <h2 className="text-xl font-semibold text-red-500 mb-2">Rp {outcome.toLocaleString("id-ID")}</h2>
-            <ResponsiveContainer width="100%" height={60}>
-              <LineChart data={[{ amt: 0 }, { amt: outcome }]}>
-                <Line type="monotone" dataKey="amt" stroke="#EF4444" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-6 rounded-xl shadow col-span-2">
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">Analytics</h3>
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">Ringkasan Grafik</h3>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={chartData}>
+              <BarChart data={[
+                { name: "Pemasukan", value: income },
+                { name: "Pengeluaran", value: outcome }
+              ]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey="value">
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
+                  <Cell fill="#10B981" />
+                  <Cell fill="#EF4444" />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
+
           <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="text-sm font-semibold text-gray-500 mb-2">Quick Action</h3>
-            <button
-              onClick={() => navigate("/income")}
-              className="block w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 mb-2 rounded"
-            >
-              + Tambah Pemasukan
-            </button>
-            <button
-              onClick={() => navigate("/outcome")}
-              className="block w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
-            >
-              - Tambah Pengeluaran
-            </button>
+            <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
+            <ul className="space-y-4">
+              {sortedTx.map((tx) => (
+                <li key={tx.id} className="flex justify-between items-center text-sm">
+                  <div>
+                    <p className="font-medium">{tx.description}</p>
+                    <p className="text-xs text-gray-400">
+                      {tx.createdAt?.toDate
+                        ? format(new Date(tx.createdAt.toDate()), "dd MMM yyyy, HH:mm", { locale: localeID })
+                        : "-"}
+                    </p>
+                  </div>
+                  <span className={`text-sm font-semibold ${tx.type === "income" ? "text-green-500" : "text-red-500"}`}>
+                    {tx.type === "income" ? "+" : "-"} Rp {tx.amount.toLocaleString("id-ID")}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </main>
