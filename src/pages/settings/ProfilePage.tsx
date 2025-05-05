@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebaseClient'
 import { useAuth } from '../../context/AuthContext'
+import LayoutWithSidebar from '../../layouts/LayoutWithSidebar'
 import Cropper from 'react-cropper'
 import 'cropperjs/dist/cropper.css'
 
@@ -83,13 +84,8 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex">
-      <aside className="sticky top-0 h-screen">
-        <div className="w-64">
-          <p className="text-center p-4 font-bold">Sidebar</p>
-        </div>
-      </aside>
-      <main className="flex-1 p-6 max-w-2xl mx-auto">
+    <LayoutWithSidebar>
+      <div className="p-6 max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">👤 Profil Saya</h1>
 
         <div className="mb-6 text-center">
@@ -142,8 +138,8 @@ const ProfilePage = () => {
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </button>
         </form>
-      </main>
-    </div>
+      </div>
+    </LayoutWithSidebar>
   )
 }
 
