@@ -45,7 +45,7 @@ const ProfilePage = () => {
       canvas.toBlob(resolve, "image/jpeg", 0.9)
     )
 
-    const signRes = await fetch("/api/cloudinary-sign", { method: "POST" })
+    const signRes = await fetch("https://moniq-api.onrender.com/api/cloudinary-sign", { method: "POST" })
     const { signature, timestamp, apiKey, cloudName } = await signRes.json()
 
     const formData = new FormData()
