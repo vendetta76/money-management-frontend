@@ -98,7 +98,6 @@ const DashboardPage = () => {
 
   return (
   <LayoutShell>
-    <Sidebar />
     <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-2">
         <div>
