@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
-import Sidebar from "../components/Sidebar"
 import { db } from "../lib/firebaseClient"
 import { collection, onSnapshot } from "firebase/firestore"
 import { format } from "date-fns"
@@ -97,7 +97,7 @@ const DashboardPage = () => {
   }))
 
   return (
-  <div className="flex flex-col md:flex-row bg-gray-100 min-h-screen">
+  <LayoutShell>
     <Sidebar />
     <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-2">
@@ -179,7 +179,7 @@ const DashboardPage = () => {
         </ul>
       </div>
     </main>
-  </div>
+  </LayoutShell>
 ) }
 
 export default DashboardPage
