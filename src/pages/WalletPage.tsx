@@ -155,7 +155,7 @@ const WalletPage = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-4xl mx-auto">
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-10 2xl:px-16 pt-4 md:ml-64 max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Manajemen Wallet</h1>
           <button
@@ -178,7 +178,7 @@ const WalletPage = () => {
 
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">Total Saldo per Mata Uang</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {Object.entries(totalsByCurrency).map(([currency, total]) => (
               total > 0 && (
                 <div
@@ -216,7 +216,7 @@ const WalletPage = () => {
         {wallets.length === 0 ? (
           <p className="text-gray-500">Belum ada wallet ditambahkan.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {wallets.map((wallet) => (
               <div
                 key={wallet.id}

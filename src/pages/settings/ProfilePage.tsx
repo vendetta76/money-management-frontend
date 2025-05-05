@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from "react"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { getAuth } from "firebase/auth"
-import { db, storage } from "../../lib/firebaseClient"
+import { db } from "../../lib/firebaseClient"
 import { useAuth } from "../../context/AuthContext"
 import LayoutShell from "../../layouts/LayoutShell"
 import toast from "react-hot-toast"
 import Cropper from "react-cropper"
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import "cropperjs/dist/cropper.css"
 
 const ProfilePage = () => {
@@ -50,14 +49,41 @@ const ProfilePage = () => {
       if (!user?.uid) throw new Error("User belum login")
       setLoading(true)
 
-      const fileRef = ref(storage, `avatars/${user.uid}.jpg`)
-      await uploadBytes(fileRef, blob!)
-      const downloadURL = await getDownloadURL(fileRef)
+      const token = await getAuth().currentUser?.getIdToken()
 
-      await updateDoc(doc(db, "users", user.uid), { avatar: downloadURL })
-      setAvatar(downloadURL)
-      toast.success("✅ Avatar berhasil diunggah!")
-      setPreviewImage("")
+      // 🔥 Ganti URL berikut dengan domain backend Render lu
+      const signRes = await fetch("https://money-management-backend-f6dg.onrender.com/api/cloudinary/cloudinary-sign", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      const { signature, timestamp, apiKey, cloudName, folder, uploadPreset } = await signRes.json()
+
+      const formData = new FormData()
+      formData.append("file", blob!)
+      formData.append("api_key", apiKey)
+      formData.append("timestamp", timestamp)
+      formData.append("signature", signature)
+      formData.append("upload_preset", uploadPreset)
+      formData.append("folder", folder)
+
+      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: "POST",
+        body: formData
+      })
+
+      const data = await cloudRes.json()
+      if (data.secure_url) {
+        await updateDoc(doc(db, "users", user.uid), { avatar: data.secure_url })
+        setAvatar(data.secure_url)
+        toast.success("✅ Avatar berhasil diunggah!")
+        setPreviewImage("")
+      } else {
+        throw new Error("Upload gagal ke Cloudinary")
+      }
     } catch (err) {
       console.error(err)
       toast.error("❌ Upload gagal")
@@ -84,13 +110,13 @@ const ProfilePage = () => {
   return (
     <LayoutShell>
       <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6">👤 Profil Saya</h1>
+        <h1 className="text-2xl font-bold mb-6 text-purple-700 flex items-center gap-2">👤 Profil Saya</h1>
 
         <div className="mb-6 text-center">
           <img
             src={avatar || "/default-avatar.png"}
             alt="Avatar"
-            className="w-24 h-24 rounded-full mx-auto mb-2 object-cover border"
+            className="w-28 h-28 rounded-full mx-auto mb-2 object-cover border"
           />
           <input type="file" accept="image/*" onChange={handleImageChange} />
           {previewImage && (
@@ -132,7 +158,7 @@ const ProfilePage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50"
           >
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </button>
