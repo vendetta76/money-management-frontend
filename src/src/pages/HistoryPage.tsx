@@ -1,0 +1,184 @@
+// Final read-only HistoryPage with detailed logs
+import { useState, useEffect } from "react"
+import LayoutWithSidebar from "../layouts/LayoutWithSidebar"
+import { useAuth } from "../context/AuthContext"
+import { db } from "../lib/firebaseClient"
+import {
+  collection,
+  onSnapshot,
+  query,
+  orderBy
+} from "firebase/firestore"
+import { Search } from "lucide-react"
+
+interface EditEntry {
+  description: string
+  amount: number
+  editedAt: any
+}
+
+interface HistoryEntry {
+  id?: string
+  type: "income" | "outcome"
+  wallet: string
+  currency: string
+  description: string
+  amount: number
+  createdAt?: any
+  editHistory?: EditEntry[]
+}
+
+interface WalletEntry {
+  id?: string
+  name: string
+  currency: string
+}
+
+const HistoryPage = () => {
+  const { user } = useAuth()
+  const [search, setSearch] = useState("")
+  const [selectedDate, setSelectedDate] = useState("")
+  const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [wallets, setWallets] = useState<WalletEntry[]>([])
+
+  useEffect(() => {
+    if (!user) return
+
+    const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"))
+    const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"))
+    const walletQuery = collection(db, "users", user.uid, "wallets")
+
+    const unsubIn = onSnapshot(incomeQuery, (snapshot) => {
+      const incomes = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        type: "income",
+        ...doc.data(),
+      })) as HistoryEntry[]
+
+      setHistory((prev) => {
+        const others = prev.filter((item) => item.type !== "income")
+        return [...incomes, ...others].sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+      })
+    })
+
+    const unsubOut = onSnapshot(outcomeQuery, (snapshot) => {
+      const outcomes = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        type: "outcome",
+        ...doc.data(),
+      })) as HistoryEntry[]
+
+      setHistory((prev) => {
+        const others = prev.filter((item) => item.type !== "outcome")
+        return [...others, ...outcomes].sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+      })
+    })
+
+    const unsubWallet = onSnapshot(walletQuery, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as WalletEntry[]
+      setWallets(data)
+    })
+
+    return () => {
+      unsubIn()
+      unsubOut()
+      unsubWallet()
+    }
+  }, [user])
+
+  const filtered = history.filter((item) => {
+    const matchSearch = item.description.toLowerCase().includes(search.toLowerCase())
+    const matchDate = selectedDate
+      ? new Date(item.createdAt?.toDate?.() ?? item.createdAt).toISOString().split("T")[0] === selectedDate
+      : true
+    return matchSearch && matchDate
+  })
+
+  const getWalletName = (walletId: string) => {
+    const wallet = wallets.find((w) => w.id === walletId)
+    return wallet ? wallet.name : `${walletId} (Telah dihapus)`
+  }
+
+  const getWalletCurrency = (walletId: string) => {
+    const wallet = wallets.find((w) => w.id === walletId)
+    return wallet ? wallet.currency : "-"
+  }
+
+  return (
+    <LayoutWithSidebar>
+      <div className="max-w-6xl mx-auto p-6">
+        <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
+
+        <div className="flex flex-wrap gap-4 mb-6 items-center">
+          <div className="relative w-full md:w-1/3">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Cari deskripsi..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
+          />
+        </div>
+
+        {filtered.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-300">Tidak ada transaksi ditemukan.</p>
+        ) : (
+          <div className="grid gap-4">
+            {filtered.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-md transition border-l-4 "
+                style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    {item.type === "income" ? "📥 Income" : "📤 Outcome"} • {getWalletName(item.wallet)} ({getWalletCurrency(item.wallet)})
+                  </span>
+                  <span
+                    className={`text-sm font-semibold ${item.type === "income" ? "text-green-600" : "text-red-500"}`}
+                  >
+                    {item.type === "income" ? "+" : "-"} Rp {item.amount.toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-100">
+                  {item.description}
+                  {item.editHistory && item.editHistory.length > 0 && (
+                    <span className="text-xs text-blue-500 ml-2">(edited)</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID")}
+                </div>
+                {item.editHistory && item.editHistory.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded">
+                    <p className="font-semibold mb-1">Histori Perubahan:</p>
+                    <ul className="list-disc ml-5 space-y-1">
+                      {item.editHistory.map((log, i) => (
+                        <li key={i}>
+                          {new Date(log.editedAt?.toDate?.() ?? log.editedAt).toLocaleString("id-ID")}: {log.description} - Rp {log.amount.toLocaleString("id-ID")}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </LayoutWithSidebar>
+  )
+}
+
+export default HistoryPage

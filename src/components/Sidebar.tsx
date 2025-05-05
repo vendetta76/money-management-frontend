@@ -63,7 +63,7 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="bg-white dark:bg-gray-900 border-r dark:border-gray-800 min-h-screen p-4 w-64 flex flex-col justify-between sticky top-0 h-screen overflow-y-auto z-50">
+    <aside className="bg-white dark:bg-gray-900 border-r dark:border-gray-800 min-h-screen p-4 w-60 md:w-64 flex flex-col justify-between sticky top-0 h-screen overflow-y-auto z-50">
       <div>
         <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-6">MoniQ</h1>
         <div className="flex flex-col items-center text-center mb-6">

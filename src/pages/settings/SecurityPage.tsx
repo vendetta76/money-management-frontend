@@ -81,7 +81,7 @@ const SecurityPage = () => {
 
   return (
     <LayoutWithSidebar>
-      <div className="p-6 max-w-xl mx-auto">
+      <div className="p-4 md:p-6 max-w-xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">🔐 Keamanan</h1>
 
         <div className="mb-6">

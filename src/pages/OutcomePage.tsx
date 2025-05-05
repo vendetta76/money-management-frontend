@@ -198,7 +198,7 @@ const OutcomePage = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white shadow rounded-xl p-6 mb-6 max-w-xl">
+        <form onSubmit={handleSubmit} className="bg-white shadow rounded-xl p-6 mb-6 max-w-xl w-full">
           <div className="mb-4">
             <label className="block mb-1 text-sm font-medium">Pilih Dompet</label>
             <select
@@ -280,7 +280,7 @@ const OutcomePage = () => {
           {outcomes.length === 0 ? (
             <p className="text-gray-500">Belum ada data pengeluaran.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto w-full">
               <table className="min-w-full bg-white border rounded-xl shadow">
                 <thead>
                   <tr className="bg-gray-100 text-sm text-left">

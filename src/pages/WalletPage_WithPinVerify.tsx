@@ -51,7 +51,7 @@ const WalletPageWithPinVerify = () => {
   if (!verified) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-6 rounded-xl shadow max-w-sm w-full text-center">
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow max-w-sm w-full text-center">
           <h2 className="text-xl font-bold mb-4">🔒 Verifikasi PIN</h2>
           <input
             type="password"
@@ -59,12 +59,12 @@ const WalletPageWithPinVerify = () => {
             onChange={(e) => setEnteredPin(e.target.value)}
             placeholder="Masukkan PIN Akses"
             maxLength={6}
-            className="w-full px-4 py-2 border rounded-lg bg-gray-100 mb-3 text-center"
+            className="w-full px-3 py-2 border rounded-lg bg-gray-100 mb-3 text-center text-sm"
           />
           {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
           <button
             onClick={handleSubmit}
-            className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+            className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
           >
             Verifikasi
           </button>

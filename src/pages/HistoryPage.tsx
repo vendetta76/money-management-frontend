@@ -109,11 +109,11 @@ const HistoryPage = () => {
 
   return (
     <LayoutWithSidebar>
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-4 md:p-6">
         <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
 
         <div className="flex flex-wrap gap-4 mb-6 items-center">
-          <div className="relative w-full md:w-1/3">
+          <div className="relative w-full sm:w-1/2 md:w-1/3">
             <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
               type="text"
@@ -127,7 +127,7 @@ const HistoryPage = () => {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
+            className="w-full sm:w-auto px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
           />
         </div>
 

@@ -155,7 +155,7 @@ const WalletPage = () => {
 
   return (
     <LayoutWithSidebar>
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Manajemen Wallet</h1>
           <button
@@ -216,7 +216,7 @@ const WalletPage = () => {
         {wallets.length === 0 ? (
           <p className="text-gray-500">Belum ada wallet ditambahkan.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {wallets.map((wallet) => (
               <div
                 key={wallet.id}
@@ -247,7 +247,7 @@ const WalletPage = () => {
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
             <form
               onSubmit={handleSubmit}
-              className="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm relative"
+              className="bg-white shadow-xl rounded-xl p-4 md:p-6 w-full max-w-sm relative"
             >
               <button
                 type="button"

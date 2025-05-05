@@ -129,7 +129,7 @@ const ProfilePage = () => {
 
   return (
     <LayoutWithSidebar>
-      <div className="p-6 max-w-2xl mx-auto">
+      <div className="p-4 md:p-6 max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">👤 Profil Saya</h1>
 
         <div className="flex items-center justify-between mb-4">
@@ -164,7 +164,7 @@ const ProfilePage = () => {
               <button
                 onClick={uploadCroppedImage}
                 disabled={loading}
-                className="mt-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                className="mt-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
               >
                 {loading ? "Mengunggah..." : "Upload Avatar"}
               </button>
@@ -190,7 +190,7 @@ const ProfilePage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
           >
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </button>
