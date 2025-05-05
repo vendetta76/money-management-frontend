@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import LayoutShell from "../layouts/LayoutShell"
@@ -97,88 +96,89 @@ const DashboardPage = () => {
   }))
 
   return (
-  <LayoutShell>
-    <main className="w-full max-w-7xl px-4 md:px-6 mx-auto">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-2">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-purple-700">Dashboard</h1>
-          <p className="text-sm text-gray-500">Selamat datang kembali, {user?.email}</p>
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-sm font-semibold text-gray-600 mb-2">Filter Mata Uang</label>
-        <select
-          value={selectedCurrency}
-          onChange={(e) => setSelectedCurrency(e.target.value)}
-          className="w-full md:w-auto px-4 py-2 border rounded-lg bg-white shadow"
-        >
-          <option value="all">Semua</option>
-          {allCurrencies.map((cur) => (
-            <option key={cur} value={cur}>{cur}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-4 md:p-6 rounded-xl shadow">
-          <h2 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Wallet (Pie)</h2>
-          <div className="w-full h-48 md:h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
-                  {pieData.map((_, i) => (
-                    <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+    <LayoutShell>
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 max-w-screen-2xl mx-auto">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-2">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-purple-700">Dashboard</h1>
+            <p className="text-sm text-gray-500">Selamat datang kembali, {user?.email}</p>
           </div>
         </div>
 
-        <div className="bg-white p-4 md:p-6 rounded-xl shadow">
-          <h2 className="text-sm font-semibold text-gray-500 mb-4">
-            Total Saldo {selectedCurrency === "all" ? "(Semua)" : selectedCurrency}
-          </h2>
-          <div className="w-full h-48 md:h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[{ name: selectedCurrency.toUpperCase(), value: total }]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value">
-                  <Cell fill="#6366F1" />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-600 mb-2">Filter Mata Uang</label>
+          <select
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value)}
+            className="w-full md:w-auto px-4 py-2 border rounded-lg bg-white shadow"
+          >
+            <option value="all">Semua</option>
+            {allCurrencies.map((cur) => (
+              <option key={cur} value={cur}>{cur}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white p-4 md:p-6 rounded-xl shadow">
+            <h2 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Wallet (Pie)</h2>
+            <div className="w-full h-48 md:h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
+                    {pieData.map((_, i) => (
+                      <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 md:p-6 rounded-xl shadow">
+            <h2 className="text-sm font-semibold text-gray-500 mb-4">
+              Total Saldo {selectedCurrency === "all" ? "(Semua)" : selectedCurrency}
+            </h2>
+            <div className="w-full h-48 md:h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={[{ name: selectedCurrency.toUpperCase(), value: total }]}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value">
+                    <Cell fill="#6366F1" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow mt-6">
-        <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
-        <ul className="space-y-4">
-          {sortedTx.map((tx) => (
-            <li key={tx.id} className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0">
-              <div>
-                <p className="font-medium">{tx.description}</p>
-                <p className="text-xs text-gray-400">
-                  {tx.createdAt?.toDate
-                    ? format(new Date(tx.createdAt.toDate()), "dd MMM yyyy, HH:mm", { locale: localeID })
-                    : "-"}
-                </p>
-              </div>
-              <span className={`text-sm font-semibold ${tx.type === "income" ? "text-green-500" : "text-red-500"}`}>
-                {tx.type === "income" ? "+" : "-"} Rp {tx.amount.toLocaleString("id-ID")}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </main>
-  </LayoutShell>
-) }
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow mt-6">
+          <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
+          <ul className="space-y-4">
+            {sortedTx.map((tx) => (
+              <li key={tx.id} className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0">
+                <div>
+                  <p className="font-medium">{tx.description}</p>
+                  <p className="text-xs text-gray-400">
+                    {tx.createdAt?.toDate
+                      ? format(new Date(tx.createdAt.toDate()), "dd MMM yyyy, HH:mm", { locale: localeID })
+                      : "-"}
+                  </p>
+                </div>
+                <span className={`text-sm font-semibold ${tx.type === "income" ? "text-green-500" : "text-red-500"}`}>
+                  {tx.type === "income" ? "+" : "-"} Rp {tx.amount.toLocaleString("id-ID")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </main>
+    </LayoutShell>
+  )
+}
 
 export default DashboardPage
