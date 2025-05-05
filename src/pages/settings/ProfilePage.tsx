@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
 import { db } from '../../lib/firebaseClient'
 import { useAuth } from '../../context/AuthContext'
 import LayoutWithSidebar from '../../layouts/LayoutWithSidebar'
@@ -41,36 +42,48 @@ const ProfilePage = () => {
     if (!cropperRef.current) return
     const cropper = cropperRef.current.cropper
     const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 })
-
     const blob = await new Promise<Blob>((resolve) =>
       canvas.toBlob(resolve, "image/jpeg", 0.9)
     )
 
-    const signRes = await fetch("https://moniq-api.onrender.com/api/cloudinary/cloudinary-sign", {
-      method: "POST"
-    })
+    try {
+      const token = await getAuth().currentUser?.getIdToken()
 
-    const { signature, timestamp, apiKey, cloudName } = await signRes.json()
+      const signRes = await fetch("https://moniq-api.onrender.com/api/cloudinary/cloudinary-sign", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
 
-    const formData = new FormData()
-    formData.append("file", blob!)
-    formData.append("api_key", apiKey)
-    formData.append("timestamp", timestamp)
-    formData.append("signature", signature)
-    formData.append("upload_preset", "Userphoto")
-    formData.append("folder", folder)
+      const { signature, timestamp, apiKey, cloudName, folder, uploadPreset } = await signRes.json()
 
-    setLoading(true)
-    const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: "POST",
-      body: formData
-    })
+      const formData = new FormData()
+      formData.append("file", blob!)
+      formData.append("api_key", apiKey)
+      formData.append("timestamp", timestamp)
+      formData.append("signature", signature)
+      formData.append("upload_preset", uploadPreset)
+      formData.append("folder", folder)
 
-    const data = await cloudRes.json()
-    if (data.secure_url) {
-      setAvatar(data.secure_url)
-toast.success("✅ Avatar berhasil diunggah!")
-      setPreviewImage("")
+      setLoading(true)
+      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: "POST",
+        body: formData
+      })
+
+      const data = await cloudRes.json()
+      if (data.secure_url) {
+        setAvatar(data.secure_url)
+        toast.success("✅ Avatar berhasil diunggah!")
+        setPreviewImage("")
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("❌ Gagal mengunggah avatar.")
+    } finally {
+      setLoading(false)
     }
   }
 
