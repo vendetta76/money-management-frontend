@@ -61,6 +61,26 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
 
       <div>
         <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[#00d97e] via-[#a2f300] to-[#00c2ff] bg-clip-text text-transparent mb-6">
+<div className="flex flex-col items-center text-center mb-6 mt-2">
+  <img
+    src={photoURL || "/default-avatar.png"}
+    alt="Avatar"
+    className="w-14 h-14 rounded-full object-cover mb-1"
+  />
+  <p className="text-sm font-semibold text-gray-800 dark:text-white">
+    {name || "User"}
+  </p>
+  <span className={`text-xs ${
+    role === "admin"
+      ? "text-red-500"
+      : role === "premium"
+      ? "text-yellow-500"
+      : "text-gray-500"
+  }`}>
+    {role === "admin" ? "👑 Admin" : role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
+  </span>
+</div>
+
           MoniQ
         </h1>
 

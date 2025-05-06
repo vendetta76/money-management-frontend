@@ -17,7 +17,7 @@ const RegisterPage = () => {
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [fullName, setFullName] = useState("")
+  const [name: fullName, setFullName] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
@@ -33,7 +33,7 @@ const RegisterPage = () => {
 
       // ✅ Tambahkan data lengkap ke Firestore
       await setDoc(doc(db, "users", user.uid), {
-        fullName,
+        name: fullName,
         email,
         createdAt: serverTimestamp(),
         role: "Regular",
