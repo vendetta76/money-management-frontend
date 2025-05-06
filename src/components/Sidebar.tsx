@@ -7,9 +7,9 @@ import { useAuth } from "../context/AuthContext"
 import { doc, onSnapshot } from "firebase/firestore"
 import { db } from "../lib/firebaseClient"
 import { toast } from "react-hot-toast"
+import ThemeSelect from "../components/ThemeSelect"
 
 const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark")
   const [isTransactionOpen, setIsTransactionOpen] = useState(true)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isAboutOpen, setIsAboutOpen] = useState(false)
@@ -19,11 +19,6 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode)
-    localStorage.setItem("theme", darkMode ? "dark" : "light")
-  }, [darkMode])
 
   useEffect(() => {
     if (!user?.uid) return
@@ -190,6 +185,9 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
           <LogOutIcon size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
           Logout
         </button>
+
+        {/* 🎨 Theme Selector */}
+        <ThemeSelect />
       </div>
     </aside>
   )
