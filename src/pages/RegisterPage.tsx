@@ -9,7 +9,7 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore"
 import { auth, db } from "../lib/firebaseClient"
 import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn"
 import BackButton from "../components/BackButton"
-import { logActivity } from "../utils/logActivity" // ✅ Logging helper
+import { logActivity } from "../utils/logActivity"
 
 const RegisterPage = () => {
   useRedirectIfLoggedIn()
@@ -17,7 +17,7 @@ const RegisterPage = () => {
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [name: fullName, setFullName] = useState("")
+  const [fullName, setFullName] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
@@ -31,7 +31,6 @@ const RegisterPage = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       const user = userCredential.user
 
-      // ✅ Tambahkan data lengkap ke Firestore
       await setDoc(doc(db, "users", user.uid), {
         name: fullName,
         email,
@@ -41,14 +40,11 @@ const RegisterPage = () => {
         currency: "IDR",
       })
 
-      // ✅ Log aktivitas registrasi
       await logActivity(email, "register")
 
-      // ✅ Kirim verifikasi email & logout sementara
       await sendEmailVerification(user)
       await signOut(auth)
 
-      // ✅ Simpan credential sementara (dienkripsi ringan)
       sessionStorage.setItem("moniq_temp_email", btoa(email))
       sessionStorage.setItem("moniq_temp_password", btoa(password))
 
