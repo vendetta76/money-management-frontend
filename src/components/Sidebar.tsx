@@ -60,9 +60,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
       p-4 flex flex-col justify-between overflow-y-auto`}>
 
       <div>
-        <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[#00d97e] via-[#a2f300] to-[#00c2ff] bg-clip-text text-transparent mb-4">
-  MoniQ
-</h1>
+        <h1 className="text-2xl font-extrabold text-center text-green-500 mb-4">MoniQ</h1>
 
 <div className="flex flex-col items-center text-center mb-6 mt-2">
   <img
