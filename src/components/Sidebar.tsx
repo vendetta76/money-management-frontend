@@ -60,7 +60,9 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
       p-4 flex flex-col justify-between overflow-y-auto`}>
 
       <div>
-        <h1 className="text-2xl font-extrabold text-center text-green-500 mb-4">MoniQ</h1>
+      <h1 className="text-2xl font-extrabold text-center text-green-500 mb-4">
+  MoniQ
+</h1>
 
 <div className="flex flex-col items-center text-center mb-6 mt-2">
   <img
@@ -81,8 +83,9 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
     {role === "admin" ? "👑 Admin" : role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
   </span>
 </div>
-          MoniQ
-        </h1>
+
+
+        
 
         <nav className="space-y-2">
           <NavLink to="/dashboard" className={({ isActive }) =>
