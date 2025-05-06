@@ -1,12 +1,13 @@
-
 import { useEffect, useState } from "react"
 import { useAuth } from "../context/AuthContext"
 import { doc, getDoc } from "firebase/firestore"
 import { db } from "../lib/firebaseClient"
 import WalletPageContent from "./WalletPage"
+import { useNavigate } from "react-router-dom"
 
 const WalletPageWithPinVerify = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [verified, setVerified] = useState(false)
   const [enteredPin, setEnteredPin] = useState("")
   const [storedPin, setStoredPin] = useState("")
@@ -57,16 +58,25 @@ const WalletPageWithPinVerify = () => {
             type="password"
             value={enteredPin}
             onChange={(e) => setEnteredPin(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
             placeholder="Masukkan PIN Akses"
             maxLength={6}
+            disabled={loading}
             className="w-full px-3 py-2 border rounded-lg bg-gray-100 mb-3 text-center text-sm"
           />
           {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
           <button
             onClick={handleSubmit}
+            disabled={loading}
             className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
           >
-            Verifikasi
+            {loading ? "Memverifikasi..." : "Verifikasi"}
+          </button>
+          <button
+            onClick={() => navigate("/settings/security")}
+            className="mt-3 text-sm text-gray-500 hover:underline"
+          >
+            Lupa PIN?
           </button>
         </div>
       </div>

@@ -140,9 +140,12 @@ const ProfilePage = () => {
           )}
         </div>
 
-        <div className="mb-6 text-sm text-gray-600">
+        <div className="mb-6 text-sm text-gray-600 space-y-1">
           <p><strong>Role:</strong> {userMeta?.role || "Regular"}</p>
           <p><strong>Status:</strong> {userMeta?.premiumEndDate ? "Premium" : "Regular"}</p>
+          <p><strong>Login terakhir:</strong> {user?.metadata?.lastSignInTime
+            ? new Date(user.metadata.lastSignInTime).toLocaleString("id-ID")
+            : "Tidak tersedia"}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
