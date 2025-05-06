@@ -1,4 +1,3 @@
-
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
@@ -28,9 +27,17 @@ export const useBlockLandingIfLoggedIn = () => {
           </button>
         </div>
       ), {
-        duration: 8000,
+        duration: 5000,
         id: "block-landing-warning",
       })
+
+      // ✅ Tambahkan fallback auto-redirect
+      const timeout = setTimeout(() => {
+        navigate("/dashboard")
+        toast.dismiss("block-landing-warning")
+      }, 5000)
+
+      return () => clearTimeout(timeout)
     }
   }, [user, loading, navigate])
 }
