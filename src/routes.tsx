@@ -34,6 +34,9 @@ import AboutPage from './pages/about/AboutPage'
 import PrivacyPolicyPage from './pages/about/PrivacyPolicyPage'
 import TermsAndConditionsPage from './pages/about/TermsAndConditionsPage'
 
+// Upgrade Page ✅
+import UpgradePage from './pages/upgrade/UpgradePage'
+
 const routes: RouteObject[] = [
   {
     path: '/',
@@ -98,6 +101,12 @@ const routes: RouteObject[] = [
   {
     path: '/about/terms-and-conditions',
     element: <PrivateRoute><TermsAndConditionsPage /></PrivateRoute>,
+  },
+
+  // ✅ Upgrade Page
+  {
+    path: '/upgrade',
+    element: <PrivateRoute><UpgradePage /></PrivateRoute>,
   },
 
   {

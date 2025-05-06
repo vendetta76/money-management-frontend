@@ -133,72 +133,71 @@ const SecurityPage = () => {
           />
         </div>
 
-        {isPremium && (
-          <form className="space-y-4 mb-10" onSubmit={handleSetPin}>
-            <h2 className="text-lg font-semibold">Ganti PIN Akses</h2>
-            <p className="text-sm text-gray-500 mb-2">
-              PIN ini berfungsi sebagai mekanisme proteksi tambahan untuk memastikan hanya Anda yang dapat mengakses halaman <strong>Wallet</strong>.
-            </p>
+        <form className="space-y-4 mb-10" onSubmit={handleSetPin}>
+          <h2 className="text-lg font-semibold">Ganti PIN Akses</h2>
+          <p className="text-sm text-yellow-600 flex items-center gap-2 mb-2">
+            🔒 Fitur PIN hanya tersedia untuk pengguna <strong>Premium</strong>.
+          </p>
 
-            {storedPin && (
-              <div>
-                <label className="block text-sm font-medium mb-1">PIN Lama</label>
-                <input
-                  type="password"
-                  value={currentPin}
-                  onChange={(e) => setCurrentPin(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg bg-gray-100"
-                  placeholder="PIN saat ini"
-                />
-              </div>
-            )}
+          {storedPin && (
             <div>
-              <label className="block text-sm font-medium mb-1">PIN Baru</label>
+              <label className="block text-sm font-medium mb-1">PIN Lama</label>
               <input
                 type="password"
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
+                disabled={!isPremium}
+                value={currentPin}
+                onChange={(e) => setCurrentPin(e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg bg-gray-100"
-                placeholder="4–6 digit"
+                placeholder="PIN saat ini"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Konfirmasi PIN</label>
-              <input
-                type="password"
-                value={confirmPin}
-                onChange={(e) => setConfirmPin(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg bg-gray-100"
-                placeholder="Ulangi PIN"
-              />
-            </div>
-
-            <div className="flex justify-between items-center">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                {loading ? "Menyimpan..." : storedPin ? "Ubah PIN" : "Setel PIN"}
-              </button>
-              {storedPin && (
-                <button
-                  type="button"
-                  onClick={handleResetPin}
-                  className="text-sm text-gray-500 hover:underline"
-                >
-                  Lupa PIN? Hapus PIN
-                </button>
-              )}
-            </div>
-          </form>
-        )}
-
-        {!isPremium && (
-          <div className="mb-10 text-sm text-gray-500 italic">
-            ✨ Fitur PIN hanya tersedia untuk pengguna <strong>Premium</strong>.
+          )}
+          <div>
+            <label className="block text-sm font-medium mb-1">PIN Baru</label>
+            <input
+              type="password"
+              disabled={!isPremium}
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100"
+              placeholder="4–6 digit"
+            />
           </div>
-        )}
+          <div>
+            <label className="block text-sm font-medium mb-1">Konfirmasi PIN</label>
+            <input
+              type="password"
+              disabled={!isPremium}
+              value={confirmPin}
+              onChange={(e) => setConfirmPin(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100"
+              placeholder="Ulangi PIN"
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {success && <p className="text-sm text-green-600">{success}</p>}
+
+          <div className="flex justify-between items-center">
+            <button
+              type="submit"
+              disabled={loading || !isPremium}
+              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+            >
+              {loading ? "Menyimpan..." : storedPin ? "Ubah PIN" : "Setel PIN"}
+            </button>
+            {storedPin && (
+              <button
+                type="button"
+                disabled={!isPremium}
+                onClick={handleResetPin}
+                className="text-sm text-gray-500 hover:underline"
+              >
+                Lupa PIN? Hapus PIN
+              </button>
+            )}
+          </div>
+        </form>
 
         <form className="space-y-4" onSubmit={handleChangePassword}>
           <h2 className="text-lg font-semibold">Ganti Password</h2>
