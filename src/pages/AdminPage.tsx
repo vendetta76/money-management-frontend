@@ -63,19 +63,19 @@ const AdminPage = () => {
     <div className="flex">
       <AdminSidebar isOpen={true} />
       <main className="flex-1 md:ml-64 p-6">
-        <h1 className="dark:text-white font-bold mb-4 text-2xl text-purple-700">Admin Panel 👑</h1>
+        <h1 className="font-bold mb-4 text-2xl text-purple-700">Admin Panel 👑</h1>
 
         <div className="mb-4">
           <label className="block font-medium mb-1">Cari User via Email</label>
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border px-3 py-2 rounded shadow w-full"
+            className="border dark:border-gray-700 px-3 py-2 rounded shadow w-full"
             placeholder="contoh@email.com"
           />
           <button
             onClick={handleSearch}
-            className="bg-blue-600 dark:bg-gray-900 hover:bg-blue-700 mt-2 px-4 py-2 rounded text-white"
+            className="bg-blue-600 hover:bg-blue-700 mt-2 px-4 py-2 rounded text-white"
             disabled={loading}
           >
             Cari User
@@ -89,7 +89,7 @@ const AdminPage = () => {
               <select
                 value={userData.role}
                 onChange={(e) => updateField("role", e.target.value)}
-                className="border px-3 py-2 rounded w-full"
+                className="border dark:border-gray-700 px-3 py-2 rounded w-full"
               >
                 <option value="user">User</option>
                 <option value="premium">Premium</option>
@@ -102,7 +102,7 @@ const AdminPage = () => {
                 type="date"
                 value={userData.premiumStartDate || ""}
                 onChange={(e) => updateField("premiumStartDate", e.target.value)}
-                className="border px-3 py-2 rounded w-full"
+                className="border dark:border-gray-700 px-3 py-2 rounded w-full"
               />
             </div>
 
@@ -112,13 +112,13 @@ const AdminPage = () => {
                 type="date"
                 value={userData.premiumEndDate || ""}
                 onChange={(e) => updateField("premiumEndDate", e.target.value)}
-                className="border px-3 py-2 rounded w-full"
+                className="border dark:border-gray-700 px-3 py-2 rounded w-full"
               />
             </div>
 
             <button
               onClick={handleUpdate}
-              className="bg-green-600 dark:bg-gray-900 hover:bg-green-700 px-4 py-2 rounded text-white"
+              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white"
               disabled={loading}
             >
               Simpan Perubahan

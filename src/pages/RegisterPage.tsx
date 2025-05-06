@@ -62,11 +62,11 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br dark:bg-gray-900 flex from-purple-600 items-center justify-center min-h-screen p-4 to-indigo-700">
+    <div className="bg-gradient-to-br flex from-purple-600 items-center justify-center min-h-screen p-4 to-indigo-700">
       <div className="bg-white dark:bg-gray-900 max-w-md p-8 rounded-xl shadow-lg w-full">
         <BackButton />
 
-        <h1 className="dark:text-white font-bold mb-6 text-3xl text-center text-purple-700">Daftar Akun</h1>
+        <h1 className="font-bold mb-6 text-3xl text-center text-purple-700">Daftar Akun</h1>
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
@@ -77,7 +77,7 @@ const RegisterPage = () => {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
-              className="border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
             />
           </div>
 
@@ -89,7 +89,7 @@ const RegisterPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
             />
           </div>
 
@@ -101,19 +101,19 @@ const RegisterPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
             />
           </div>
 
-          {error && <p className="dark:text-white text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading || redirecting}
-            className="bg-purple-600 dark:bg-gray-900 disabled:opacity-50 flex hover:bg-purple-700 items-center justify-center py-2 rounded text-white transition w-full"
+            className="bg-purple-600 disabled:opacity-50 flex hover:bg-purple-700 items-center justify-center py-2 rounded text-white transition w-full"
           >
             {redirecting ? (
-              <div className="animate-spin border-2 border-t-transparent border-white h-5 rounded-full w-5"></div>
+              <div className="animate-spin border-2 border-t-transparent border-white dark:border-gray-700 h-5 rounded-full w-5"></div>
             ) : loading ? (
               "Mendaftarkan..."
             ) : (
@@ -124,7 +124,7 @@ const RegisterPage = () => {
 
         <p className="dark:text-white mt-4 text-center text-gray-600 text-sm">
           Sudah punya akun?{" "}
-          <a href="/login" className="dark:text-white hover:underline text-purple-600">
+          <a href="/login" className="hover:underline text-purple-600">
             Masuk di sini
           </a>
         </p>

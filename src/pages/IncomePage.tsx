@@ -173,17 +173,17 @@ const IncomePage = () => {
   return (
     <LayoutShell>
       <main className="2xl:px-20 max-w-screen-2xl md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-12">
-        <h1 className="dark:text-white font-bold mb-6 text-2xl">{editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}</h1>
+        <h1 className="font-bold mb-6 text-2xl">{editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}</h1>
 
         {success && (
-          <div className="bg-green-100 border border-green-300 dark:bg-gray-900 dark:text-white mb-4 p-3 rounded-lg text-green-700">
+          <div className="bg-green-100 border border-green-300 dark:border-gray-700 mb-4 p-3 rounded-lg text-green-700">
             ✅ {editingId ? "Pemasukan berhasil diperbarui!" : "Pemasukan berhasil disimpan!"}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 max-w-xl mb-6 p-6 rounded-xl shadow w-full">
           <div className="mb-4">
-            <label className="block dark:text-white font-medium mb-1 text-sm">Pilih Dompet</label>
+            <label className="block font-medium mb-1 text-sm">Pilih Dompet</label>
             <select
               name="wallet"
               value={form.wallet}
@@ -197,11 +197,11 @@ const IncomePage = () => {
                 </option>
               ))}
             </select>
-            {errors.wallet && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.wallet}</p>}
+            {errors.wallet && <p className="mt-1 text-red-500 text-sm">{errors.wallet}</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block dark:text-white font-medium mb-1 text-sm">Deskripsi</label>
+            <label className="block font-medium mb-1 text-sm">Deskripsi</label>
             <input
               name="description"
               value={form.description}
@@ -210,11 +210,11 @@ const IncomePage = () => {
               placeholder="Tulis deskripsi"
               className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.description && "border-red-500"}`}
             />
-            {errors.description && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.description}</p>}
+            {errors.description && <p className="mt-1 text-red-500 text-sm">{errors.description}</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block dark:text-white font-medium mb-1 text-sm">Nominal</label>
+            <label className="block font-medium mb-1 text-sm">Nominal</label>
             <input
               name="amount"
               value={form.amount}
@@ -223,18 +223,18 @@ const IncomePage = () => {
               placeholder="0.00"
               className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.amount && "border-red-500"}`}
             />
-            {errors.amount && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.amount}</p>}
+            {errors.amount && <p className="mt-1 text-red-500 text-sm">{errors.amount}</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block dark:text-white font-medium mb-1 text-sm">Mata Uang</label>
+            <label className="block font-medium mb-1 text-sm">Mata Uang</label>
             <input
               type="text"
               value={form.currency}
               disabled
-              className="bg-gray-200 border dark:bg-gray-900 dark:text-white px-4 py-2 rounded-lg text-gray-700 w-full"
+              className="bg-gray-200 border dark:border-gray-700 dark:text-white px-4 py-2 rounded-lg text-gray-700 w-full"
             />
-            {errors.currency && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.currency}</p>}
+            {errors.currency && <p className="mt-1 text-red-500 text-sm">{errors.currency}</p>}
           </div>
 
           <div className="flex justify-between">
@@ -253,7 +253,7 @@ const IncomePage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 dark:bg-gray-900 disabled:opacity-50 hover:bg-blue-700 px-6 py-2 rounded-lg text-white"
+              className="bg-blue-600 disabled:opacity-50 hover:bg-blue-700 px-6 py-2 rounded-lg text-white"
             >
               {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
             </button>
@@ -261,44 +261,44 @@ const IncomePage = () => {
         </form>
 
         <div className="mt-8">
-          <h2 className="dark:text-white font-semibold mb-4 text-xl">Transaksi Terbaru</h2>
+          <h2 className="font-semibold mb-4 text-xl">Transaksi Terbaru</h2>
           {incomes.length === 0 ? (
             <p className="dark:text-white text-gray-500">Belum ada data pemasukan.</p>
           ) : (
             <div className="overflow-x-auto w-full">
-              <table className="bg-white border dark:bg-gray-900 min-w-full rounded-xl shadow">
+              <table className="bg-white border dark:bg-gray-900 dark:border-gray-700 min-w-full rounded-xl shadow">
                 <thead>
-                  <tr className="bg-gray-100 dark:bg-gray-900 dark:text-white text-left text-sm">
-                    <th className="border-b px-4 py-2">Dompet</th>
-                    <th className="border-b px-4 py-2">Deskripsi</th>
-                    <th className="border-b px-4 py-2">Nominal</th>
-                    <th className="border-b px-4 py-2">Mata Uang</th>
-                    <th className="border-b px-4 py-2">Tanggal</th>
-                    <th className="border-b px-4 py-2">Aksi</th>
+                  <tr className="bg-gray-100 text-left text-sm">
+                    <th className="border-b dark:border-gray-700 px-4 py-2">Dompet</th>
+                    <th className="border-b dark:border-gray-700 px-4 py-2">Deskripsi</th>
+                    <th className="border-b dark:border-gray-700 px-4 py-2">Nominal</th>
+                    <th className="border-b dark:border-gray-700 px-4 py-2">Mata Uang</th>
+                    <th className="border-b dark:border-gray-700 px-4 py-2">Tanggal</th>
+                    <th className="border-b dark:border-gray-700 px-4 py-2">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {incomes.map((entry) => (
-                    <tr key={entry.id} className="dark:text-white text-sm">
-                      <td className="border-b px-4 py-2">{wallets.find(w => w.id === entry.wallet)?.name || entry.wallet}</td>
-                      <td className="border-b px-4 py-2">{entry.description}</td>
-                      <td className="border-b px-4 py-2">{entry.amount.toLocaleString()}</td>
-                      <td className="border-b px-4 py-2">{entry.currency}</td>
-                      <td className="border-b px-4 py-2">
+                    <tr key={entry.id} className="text-sm">
+                      <td className="border-b dark:border-gray-700 px-4 py-2">{wallets.find(w => w.id === entry.wallet)?.name || entry.wallet}</td>
+                      <td className="border-b dark:border-gray-700 px-4 py-2">{entry.description}</td>
+                      <td className="border-b dark:border-gray-700 px-4 py-2">{entry.amount.toLocaleString()}</td>
+                      <td className="border-b dark:border-gray-700 px-4 py-2">{entry.currency}</td>
+                      <td className="border-b dark:border-gray-700 px-4 py-2">
                         {entry.createdAt?.toDate
                           ? new Date(entry.createdAt.toDate()).toLocaleString()
                           : "-"}
                       </td>
-                      <td className="border-b px-4 py-2 space-x-2">
+                      <td className="border-b dark:border-gray-700 px-4 py-2 space-x-2">
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="dark:text-white hover:underline text-blue-600 text-xs"
+                          className="hover:underline text-blue-600 text-xs"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(entry.id!, entry.amount, entry.wallet)}
-                          className="dark:text-white hover:underline text-red-600 text-xs"
+                          className="hover:underline text-red-600 text-xs"
                         >
                           Hapus
                         </button>

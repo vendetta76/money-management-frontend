@@ -157,21 +157,21 @@ const WalletPage = () => {
     <LayoutShell>
       <main className="2xl:px-16 max-w-2xl md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-10">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="dark:text-white font-bold text-2xl">Manajemen Wallet</h1>
+          <h1 className="font-bold text-2xl">Manajemen Wallet</h1>
           <button
             onClick={() => {
               setForm({ name: "", balance: "0", currency: "USD" })
               setEditingId(null)
               setShowForm(true)
             }}
-            className="bg-blue-600 dark:bg-gray-900 dark:text-white flex gap-2 hover:bg-blue-700 items-center px-3 py-1.5 rounded text-sm text-white"
+            className="bg-blue-600 flex gap-2 hover:bg-blue-700 items-center px-3 py-1.5 rounded text-sm text-white"
           >
             <Plus size={16} /> Tambah Wallet
           </button>
         </div>
 
         {success && (
-          <div className="bg-green-100 border border-green-300 dark:bg-gray-900 dark:text-white mb-4 p-3 rounded-lg text-green-700">
+          <div className="bg-green-100 border border-green-300 dark:border-gray-700 mb-4 p-3 rounded-lg text-green-700">
             ✅ {success}
           </div>
         )}
@@ -183,7 +183,7 @@ const WalletPage = () => {
               total > 0 && (
                 <div
                   key={currency}
-                  className="bg-white border dark:bg-gray-900 dark:text-white font-medium px-5 py-4 rounded-xl shadow text-gray-800 text-sm"
+                  className="bg-white border dark:bg-gray-900 dark:border-gray-700 dark:text-white font-medium px-5 py-4 rounded-xl shadow text-gray-800 text-sm"
                 >
                   <div className="flex items-center justify-between">
                     <span>Total {currency}</span>
@@ -204,7 +204,7 @@ const WalletPage = () => {
         </div>
 
         <div className="flex items-center justify-between mb-2">
-          <h2 className="dark:text-white font-semibold text-lg">Daftar Wallet</h2>
+          <h2 className="font-semibold text-lg">Daftar Wallet</h2>
           <button
             onClick={() => setShowBalance(!showBalance)}
             className="dark:text-white flex gap-1 hover:text-gray-800 items-center text-gray-600 text-sm"
@@ -220,16 +220,16 @@ const WalletPage = () => {
             {wallets.map((wallet) => (
               <div
                 key={wallet.id}
-                className="bg-gradient-to-br dark:bg-gray-900 flex flex-col from-purple-600 h-32 justify-between p-5 rounded-2xl shadow text-white to-indigo-600"
+                className="bg-gradient-to-br flex flex-col from-purple-600 h-32 justify-between p-5 rounded-2xl shadow text-white to-indigo-600"
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="dark:text-white font-medium text-sm">{wallet.name}</h3>
+                  <h3 className="font-medium text-sm">{wallet.name}</h3>
                   <Settings
                     className="cursor-pointer h-5 hover:opacity-100 opacity-80 w-5"
                     onClick={() => handleEdit(wallet)}
                   />
                 </div>
-                <div className="dark:text-white font-bold text-2xl">
+                <div className="font-bold text-2xl">
                   {showBalance
                     ? new Intl.NumberFormat("id-ID", {
                         style: "currency",
@@ -244,7 +244,7 @@ const WalletPage = () => {
         )}
 
         {showForm && (
-          <div className="bg-black bg-opacity-30 dark:bg-gray-900 fixed flex inset-0 items-center justify-center z-50">
+          <div className="bg-black bg-opacity-30 fixed flex inset-0 items-center justify-center z-50">
             <form
               onSubmit={handleSubmit}
               className="bg-white dark:bg-gray-900 max-w-sm md:p-6 p-4 relative rounded-xl shadow-xl w-full"
@@ -259,10 +259,10 @@ const WalletPage = () => {
               >
                 <X size={20} />
               </button>
-              <h2 className="dark:text-white font-semibold mb-4 text-lg">{editingId ? "Edit Wallet" : "Tambah Wallet"}</h2>
+              <h2 className="font-semibold mb-4 text-lg">{editingId ? "Edit Wallet" : "Tambah Wallet"}</h2>
 
               <div className="mb-4">
-                <label className="block dark:text-white font-medium mb-1 text-sm">Nama Wallet</label>
+                <label className="block font-medium mb-1 text-sm">Nama Wallet</label>
                 <input
                   type="text"
                   name="name"
@@ -270,11 +270,11 @@ const WalletPage = () => {
                   onChange={handleChange}
                   className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.name && "border-red-500"}`}
                 />
-                {errors.name && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.name}</p>}
+                {errors.name && <p className="mt-1 text-red-500 text-sm">{errors.name}</p>}
               </div>
 
               <div className="mb-4">
-                <label className="block dark:text-white font-medium mb-1 text-sm">Mata Uang</label>
+                <label className="block font-medium mb-1 text-sm">Mata Uang</label>
                 <Select
                   name="currency"
                   value={currencyOptions.find(opt => opt.value === form.currency)}
@@ -286,7 +286,7 @@ const WalletPage = () => {
                   placeholder="Pilih mata uang..."
                   isSearchable
                 />
-                {errors.currency && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.currency}</p>}
+                {errors.currency && <p className="mt-1 text-red-500 text-sm">{errors.currency}</p>}
               </div>
 
               <div className="flex items-center justify-between">
@@ -294,14 +294,14 @@ const WalletPage = () => {
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="dark:text-white hover:underline text-red-600 text-sm"
+                    className="hover:underline text-red-600 text-sm"
                   >
                     Hapus Wallet
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="bg-blue-600 dark:bg-gray-900 hover:bg-blue-700 px-5 py-2 rounded-lg text-white"
+                  className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg text-white"
                 >
                   {editingId ? "Simpan Perubahan" : "Tambah"}
                 </button>

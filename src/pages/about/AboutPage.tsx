@@ -5,7 +5,7 @@ const AboutPage = () => {
   return (
     <LayoutShell>
       <main className="2xl:px-20 max-w-screen-md md:ml-64 md:px-8 mx-auto px-4 py-10 sm:px-6 xl:px-12">
-        <h1 className="dark:text-white font-bold mb-6 text-3xl">Tentang Moniq</h1>
+        <h1 className="font-bold mb-6 text-3xl">Tentang Moniq</h1>
 
         <section className="dark:text-white leading-relaxed space-y-5 text-gray-700 text-sm">
           <p>
@@ -17,7 +17,7 @@ const AboutPage = () => {
             Kami percaya bahwa setiap orang berhak memiliki kendali atas keuangannya sendiri, dan Moniq hadir sebagai asisten keuangan pribadi yang dapat diandalkan, tanpa risiko, tanpa tekanan, dan 100% berbasis simulasi.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">Fitur Utama Moniq</h2>
+          <h2 className="font-semibold text-lg">Fitur Utama Moniq</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Pencatatan pemasukan dan pengeluaran harian</li>
             <li>Histori transaksi lengkap dan transparan</li>
@@ -26,18 +26,18 @@ const AboutPage = () => {
             <li>Dashboard finansial sederhana dan informatif</li>
           </ul>
 
-          <h2 className="dark:text-white font-semibold text-lg">Tidak Menggunakan Uang Asli</h2>
+          <h2 className="font-semibold text-lg">Tidak Menggunakan Uang Asli</h2>
           <p>
             Seluruh fitur Moniq bersifat simulatif dan tidak melibatkan transaksi uang sungguhan. Kami tidak menyimpan, menerima, maupun mengirim uang dalam bentuk apa pun.
             Tujuan utama Moniq adalah memberikan pengalaman edukatif dalam mengelola keuangan pribadi.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">Tim Pengembang</h2>
+          <h2 className="font-semibold text-lg">Tim Pengembang</h2>
           <p>
             Moniq dikembangkan oleh tim independen dengan semangat membangun solusi keuangan berbasis teknologi yang aman, praktis, dan mudah digunakan oleh siapa pun.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">Hubungi Kami</h2>
+          <h2 className="font-semibold text-lg">Hubungi Kami</h2>
           <p>
             Jika Anda memiliki pertanyaan, masukan, atau ingin berkolaborasi, silakan hubungi kami melalui email resmi atau halaman kontak di dalam aplikasi.
           </p>

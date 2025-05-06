@@ -24,16 +24,16 @@ const EditProfilePage = () => {
 
   return (
     <div className="p-4">
-      <h1 className="dark:text-white font-bold mb-4 text-2xl">Edit Profile</h1>
+      <h1 className="font-bold mb-4 text-2xl">Edit Profile</h1>
       <input
-        className="border mb-4 px-3 py-2 rounded w-full"
+        className="border dark:border-gray-700 mb-4 px-3 py-2 rounded w-full"
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Full Name"
       />
       <button
-        className="bg-blue-600 dark:bg-gray-900 px-4 py-2 rounded text-white"
+        className="bg-blue-600 px-4 py-2 rounded text-white"
         onClick={handleUpdate}
       >
         Save

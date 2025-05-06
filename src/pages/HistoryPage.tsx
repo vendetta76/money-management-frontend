@@ -109,7 +109,7 @@ const HistoryPage = () => {
   return (
     <LayoutShell>
       <main className="2xl:px-20 max-w-screen-2xl md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-12">
-        <h1 className="dark:text-purple-300 dark:text-white font-bold mb-4 text-2xl text-purple-700">📜 Riwayat Transaksi</h1>
+        <h1 className="dark:text-purple-300 font-bold mb-4 text-2xl text-purple-700">📜 Riwayat Transaksi</h1>
 
         <div className="flex flex-wrap gap-4 items-center mb-6">
           <div className="md:w-1/3 relative sm:w-1/2 w-full">
@@ -119,14 +119,14 @@ const HistoryPage = () => {
               placeholder="Cari deskripsi..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border dark:bg-gray-800 dark:text-white pl-10 pr-3 py-2 rounded-lg w-full"
+              className="border dark:bg-gray-800 dark:border-gray-700 dark:text-white pl-10 pr-3 py-2 rounded-lg w-full"
             />
           </div>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="border dark:bg-gray-800 dark:text-white px-4 py-2 rounded-lg sm:w-auto w-full"
+            className="border dark:bg-gray-800 dark:border-gray-700 dark:text-white px-4 py-2 rounded-lg sm:w-auto w-full"
           />
         </div>
 
@@ -137,7 +137,7 @@ const HistoryPage = () => {
             {filtered.map((item) => (
               <div
                 key={item.id}
-                className="bg-white border-l-4 dark:bg-gray-800 dark:bg-gray-900 hover:shadow-md p-4 rounded-xl shadow transition"
+                className="bg-white border-l-4 dark:bg-gray-800 dark:bg-gray-900 dark:border-gray-700 hover:shadow-md p-4 rounded-xl shadow transition"
                 style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -153,7 +153,7 @@ const HistoryPage = () => {
                 <div className="dark:text-gray-100 dark:text-white text-gray-700 text-sm">
                   {item.description}
                   {item.editHistory && item.editHistory.length > 0 && (
-                    <span className="dark:text-white ml-2 text-blue-500 text-xs">(edited)</span>
+                    <span className="ml-2 text-blue-500 text-xs">(edited)</span>
                   )}
                 </div>
                 <div className="dark:text-white mt-1 text-gray-400 text-xs">

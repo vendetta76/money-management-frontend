@@ -121,68 +121,68 @@ const SecurityPage = () => {
   return (
     <LayoutShell>
       <main className="2xl:px-20 max-w-screen-md md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-12">
-        <h1 className="dark:text-white font-bold mb-6 text-2xl">🔐 Keamanan</h1>
+        <h1 className="font-bold mb-6 text-2xl">🔐 Keamanan</h1>
 
         <div className="mb-6">
-          <label className="block dark:text-white font-medium mb-1 text-sm">Email</label>
+          <label className="block font-medium mb-1 text-sm">Email</label>
           <input
             type="email"
             disabled
             value={email}
-            className="bg-gray-200 border dark:bg-gray-900 dark:text-white px-4 py-2 rounded-lg text-gray-600 w-full"
+            className="bg-gray-200 border dark:border-gray-700 dark:text-white px-4 py-2 rounded-lg text-gray-600 w-full"
           />
         </div>
 
         <form className="mb-10 space-y-4" onSubmit={handleSetPin}>
-          <h2 className="dark:text-white font-semibold text-lg">Ganti PIN Akses</h2>
-          <p className="dark:text-white flex gap-2 items-center mb-2 text-sm text-yellow-600">
+          <h2 className="font-semibold text-lg">Ganti PIN Akses</h2>
+          <p className="flex gap-2 items-center mb-2 text-sm text-yellow-600">
             🔒 Fitur PIN hanya tersedia untuk pengguna <strong>Premium</strong>.
           </p>
 
           {storedPin && (
             <div>
-              <label className="block dark:text-white font-medium mb-1 text-sm">PIN Lama</label>
+              <label className="block font-medium mb-1 text-sm">PIN Lama</label>
               <input
                 type="password"
                 disabled={!isPremium}
                 value={currentPin}
                 onChange={(e) => setCurrentPin(e.target.value)}
-                className="bg-gray-100 border dark:bg-gray-900 px-4 py-2 rounded-lg w-full"
+                className="bg-gray-100 border dark:border-gray-700 px-4 py-2 rounded-lg w-full"
                 placeholder="PIN saat ini"
               />
             </div>
           )}
           <div>
-            <label className="block dark:text-white font-medium mb-1 text-sm">PIN Baru</label>
+            <label className="block font-medium mb-1 text-sm">PIN Baru</label>
             <input
               type="password"
               disabled={!isPremium}
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              className="bg-gray-100 border dark:bg-gray-900 px-4 py-2 rounded-lg w-full"
+              className="bg-gray-100 border dark:border-gray-700 px-4 py-2 rounded-lg w-full"
               placeholder="4–6 digit"
             />
           </div>
           <div>
-            <label className="block dark:text-white font-medium mb-1 text-sm">Konfirmasi PIN</label>
+            <label className="block font-medium mb-1 text-sm">Konfirmasi PIN</label>
             <input
               type="password"
               disabled={!isPremium}
               value={confirmPin}
               onChange={(e) => setConfirmPin(e.target.value)}
-              className="bg-gray-100 border dark:bg-gray-900 px-4 py-2 rounded-lg w-full"
+              className="bg-gray-100 border dark:border-gray-700 px-4 py-2 rounded-lg w-full"
               placeholder="Ulangi PIN"
             />
           </div>
 
-          {error && <p className="dark:text-white text-red-600 text-sm">{error}</p>}
-          {success && <p className="dark:text-white text-green-600 text-sm">{success}</p>}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">{success}</p>}
 
           <div className="flex items-center justify-between">
             <button
               type="submit"
               disabled={loading || !isPremium}
-              className="bg-red-600 dark:bg-gray-900 disabled:opacity-50 hover:bg-red-700 px-6 py-2 rounded-lg text-white"
+              className="bg-red-600 disabled:opacity-50 hover:bg-red-700 px-6 py-2 rounded-lg text-white"
             >
               {loading ? "Menyimpan..." : storedPin ? "Ubah PIN" : "Setel PIN"}
             </button>
@@ -200,48 +200,48 @@ const SecurityPage = () => {
         </form>
 
         <form className="space-y-4" onSubmit={handleChangePassword}>
-          <h2 className="dark:text-white font-semibold text-lg">Ganti Password</h2>
+          <h2 className="font-semibold text-lg">Ganti Password</h2>
 
           <div>
-            <label className="block dark:text-white font-medium mb-1 text-sm">Password Lama</label>
+            <label className="block font-medium mb-1 text-sm">Password Lama</label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="bg-gray-100 border dark:bg-gray-900 px-4 py-2 rounded-lg w-full"
+              className="bg-gray-100 border dark:border-gray-700 px-4 py-2 rounded-lg w-full"
               placeholder="Password lama"
             />
           </div>
 
           <div>
-            <label className="block dark:text-white font-medium mb-1 text-sm">Password Baru</label>
+            <label className="block font-medium mb-1 text-sm">Password Baru</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="bg-gray-100 border dark:bg-gray-900 px-4 py-2 rounded-lg w-full"
+              className="bg-gray-100 border dark:border-gray-700 px-4 py-2 rounded-lg w-full"
               placeholder="Minimal 6 karakter"
             />
           </div>
 
           <div>
-            <label className="block dark:text-white font-medium mb-1 text-sm">Konfirmasi Password Baru</label>
+            <label className="block font-medium mb-1 text-sm">Konfirmasi Password Baru</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="bg-gray-100 border dark:bg-gray-900 px-4 py-2 rounded-lg w-full"
+              className="bg-gray-100 border dark:border-gray-700 px-4 py-2 rounded-lg w-full"
               placeholder="Ulangi password"
             />
           </div>
 
-          {error && <p className="dark:text-white text-red-600 text-sm">{error}</p>}
-          {success && <p className="dark:text-white text-green-600 text-sm">{success}</p>}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">{success}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 dark:bg-gray-900 disabled:opacity-50 hover:bg-blue-700 px-6 py-2 rounded-lg text-white"
+            className="bg-blue-600 disabled:opacity-50 hover:bg-blue-700 px-6 py-2 rounded-lg text-white"
           >
             {loading ? "Menyimpan..." : "Ubah Password"}
           </button>

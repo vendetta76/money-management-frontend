@@ -5,7 +5,7 @@ const TermsAndConditionsPage = () => {
   return (
     <LayoutShell>
       <main className="2xl:px-20 max-w-screen-md md:ml-64 md:px-8 mx-auto px-4 py-10 sm:px-6 xl:px-12">
-        <h1 className="dark:text-white font-bold mb-6 text-3xl">Syarat dan Ketentuan</h1>
+        <h1 className="font-bold mb-6 text-3xl">Syarat dan Ketentuan</h1>
 
         <section className="dark:text-white leading-relaxed space-y-5 text-gray-700 text-sm">
           <p>
@@ -13,49 +13,49 @@ const TermsAndConditionsPage = () => {
             Jika Anda tidak menyetujui salah satu bagian dari syarat ini, mohon untuk tidak menggunakan layanan Moniq.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">1. Deskripsi Layanan</h2>
+          <h2 className="font-semibold text-lg">1. Deskripsi Layanan</h2>
           <p>
             Moniq adalah aplikasi pencatat dan pengelola keuangan pribadi berbasis simulasi.
             Aplikasi ini tidak menyediakan layanan keuangan nyata dan tidak melibatkan uang asli dalam bentuk apa pun.
             Semua data transaksi, saldo, dan pengeluaran di dalam aplikasi hanya bersifat simulatif dan digunakan untuk tujuan edukatif serta perencanaan pribadi.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">2. Kepemilikan Akun</h2>
+          <h2 className="font-semibold text-lg">2. Kepemilikan Akun</h2>
           <p>
             Pengguna bertanggung jawab penuh atas informasi akun mereka termasuk alamat email, PIN, dan aktivitas yang dilakukan melalui akun tersebut.
             Moniq tidak bertanggung jawab atas penyalahgunaan akun oleh pihak ketiga akibat kelalaian pengguna.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">3. Batasan Tanggung Jawab</h2>
+          <h2 className="font-semibold text-lg">3. Batasan Tanggung Jawab</h2>
           <p>
             Moniq tidak bertanggung jawab atas keputusan keuangan yang diambil berdasarkan data atau simulasi yang tersedia dalam aplikasi.
             Kami tidak menjamin keakuratan hasil simulasi dan tidak memberikan nasihat keuangan profesional.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">4. Penggunaan yang Dilarang</h2>
+          <h2 className="font-semibold text-lg">4. Penggunaan yang Dilarang</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Menggunakan aplikasi untuk tindakan penipuan atau kegiatan ilegal.</li>
             <li>Menyalin, memodifikasi, atau mendistribusikan konten aplikasi tanpa izin.</li>
             <li>Mengganggu sistem keamanan atau mencoba mengakses data pengguna lain.</li>
           </ul>
 
-          <h2 className="dark:text-white font-semibold text-lg">5. Hak Pengembang</h2>
+          <h2 className="font-semibold text-lg">5. Hak Pengembang</h2>
           <p>
             Pengembang Moniq berhak untuk mengubah, menangguhkan, atau menghentikan sebagian atau seluruh fitur aplikasi tanpa pemberitahuan sebelumnya.
             Perubahan terhadap syarat ini akan diinformasikan melalui halaman resmi aplikasi.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">6. Pengakhiran Akses</h2>
+          <h2 className="font-semibold text-lg">6. Pengakhiran Akses</h2>
           <p>
             Moniq berhak menangguhkan atau menghapus akses pengguna yang terbukti melanggar ketentuan, membahayakan sistem, atau menyalahgunakan layanan.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">7. Hukum yang Berlaku</h2>
+          <h2 className="font-semibold text-lg">7. Hukum yang Berlaku</h2>
           <p>
             Syarat dan Ketentuan ini tunduk pada hukum yang berlaku di wilayah hukum tempat pengembang aplikasi beroperasi.
           </p>
 
-          <h2 className="dark:text-white font-semibold text-lg">8. Kontak</h2>
+          <h2 className="font-semibold text-lg">8. Kontak</h2>
           <p>
             Untuk pertanyaan lebih lanjut mengenai Syarat dan Ketentuan ini, silakan hubungi tim pengembang melalui email resmi atau halaman kontak Moniq.
           </p>

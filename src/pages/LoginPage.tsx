@@ -66,11 +66,11 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br dark:bg-gray-900 flex from-blue-500 items-center justify-center min-h-screen p-4 to-purple-700">
+    <div className="bg-gradient-to-br flex from-blue-500 items-center justify-center min-h-screen p-4 to-purple-700">
       <div className="bg-white dark:bg-gray-900 max-w-md p-8 rounded-xl shadow-xl w-full">
         <BackButton />
 
-        <h1 className="dark:text-white font-bold mb-6 text-3xl text-center text-purple-700">Login ke MoniQ</h1>
+        <h1 className="font-bold mb-6 text-3xl text-center text-purple-700">Login ke MoniQ</h1>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -81,7 +81,7 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
             />
           </div>
 
@@ -93,17 +93,17 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
             />
           </div>
 
-          {error && <p className="dark:text-white text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           {unverifiedUser && (
             <button
               type="button"
               onClick={handleResendVerification}
-              className="block dark:text-white hover:underline mt-2 text-purple-600 text-sm"
+              className="block hover:underline mt-2 text-purple-600 text-sm"
             >
               Kirim ulang email verifikasi
             </button>
@@ -112,7 +112,7 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-purple-600 dark:bg-gray-900 disabled:opacity-50 hover:bg-purple-700 py-2 rounded text-white transition w-full"
+            className="bg-purple-600 disabled:opacity-50 hover:bg-purple-700 py-2 rounded text-white transition w-full"
           >
             {loading ? "Loading..." : "Login"}
           </button>
@@ -121,12 +121,12 @@ const LoginPage = () => {
         <div className="dark:text-white mt-4 space-y-2 text-center text-gray-600 text-sm">
           <p>
             Belum punya akun?{" "}
-            <a href="/register" className="dark:text-white hover:underline text-purple-600">
+            <a href="/register" className="hover:underline text-purple-600">
               Daftar sekarang
             </a>
           </p>
           <p>
-            <a href="/forgot-password" className="dark:text-white hover:underline text-purple-600">
+            <a href="/forgot-password" className="hover:underline text-purple-600">
               Lupa password?
             </a>
           </p>

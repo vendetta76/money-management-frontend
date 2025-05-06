@@ -100,7 +100,7 @@ const DashboardPage = () => {
       <main className="2xl:px-20 max-w-screen-2xl md:px-8 min-h-screen mx-auto px-4 sm:px-6 w-full xl:px-12">
         <div className="flex flex-col gap-2 mb-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="dark:text-purple-300 dark:text-white font-bold md:text-3xl text-2xl text-purple-700">Dashboard</h1>
+            <h1 className="dark:text-purple-300 font-bold md:text-3xl text-2xl text-purple-700">Dashboard</h1>
             <p className="dark:text-gray-300 dark:text-white text-gray-500 text-sm">
               Selamat datang kembali, {user?.email}
             </p>
@@ -112,7 +112,7 @@ const DashboardPage = () => {
           <select
             value={selectedCurrency}
             onChange={(e) => setSelectedCurrency(e.target.value)}
-            className="bg-white border dark:bg-gray-800 dark:bg-gray-900 dark:text-white md:w-auto px-4 py-2 rounded-lg shadow w-full"
+            className="bg-white border dark:bg-gray-800 dark:bg-gray-900 dark:border-gray-700 dark:text-white md:w-auto px-4 py-2 rounded-lg shadow w-full"
           >
             <option value="all">Semua</option>
             {allCurrencies.map((cur) => (
@@ -162,7 +162,7 @@ const DashboardPage = () => {
           <h3 className="dark:text-gray-300 dark:text-white font-semibold mb-4 text-gray-500 text-sm">Transaksi Terbaru</h3>
           <ul className="space-y-4">
             {sortedTx.map((tx) => (
-              <li key={tx.id} className="dark:text-white flex flex-col gap-2 items-start justify-between sm:flex-row sm:gap-0 text-sm">
+              <li key={tx.id} className="flex flex-col gap-2 items-start justify-between sm:flex-row sm:gap-0 text-sm">
                 <div>
                   <p className="font-medium">{tx.description}</p>
                   <p className="dark:text-gray-300 dark:text-white text-gray-400 text-xs">

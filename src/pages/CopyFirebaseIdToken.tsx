@@ -25,10 +25,10 @@ const CopyFirebaseIdToken = () => {
 
   return (
     <div className="max-w-xl mx-auto p-6">
-      <h2 className="dark:text-white font-bold mb-4 text-xl">📋 Salin Firebase ID Token</h2>
+      <h2 className="font-bold mb-4 text-xl">📋 Salin Firebase ID Token</h2>
       <button
         onClick={handleCopy}
-        className="bg-blue-600 dark:bg-gray-900 hover:bg-blue-700 px-6 py-2 rounded-lg text-white"
+        className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white"
       >
         Copy Token
       </button>
@@ -38,7 +38,7 @@ const CopyFirebaseIdToken = () => {
           value={token}
           readOnly
           rows={6}
-          className="bg-gray-100 border dark:bg-gray-900 dark:text-white mt-4 p-2 rounded text-xs w-full"
+          className="bg-gray-100 border dark:border-gray-700 mt-4 p-2 rounded text-xs w-full"
         />
       )}
     </div>

@@ -35,14 +35,14 @@ const LoginPage = () => {
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="dark:text-white font-bold mb-4 text-2xl">Login</h1>
+      <h1 className="font-bold mb-4 text-2xl">Login</h1>
       <form onSubmit={handleLogin} className="space-y-4">
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
+          className="border dark:border-gray-700 px-3 py-2 rounded w-full"
           required
         />
         <input
@@ -50,13 +50,13 @@ const LoginPage = () => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
+          className="border dark:border-gray-700 px-3 py-2 rounded w-full"
           required
         />
-        {error && <p className="dark:text-white text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
         <button
           type="submit"
-          className="bg-blue-600 dark:bg-gray-900 py-2 rounded text-white w-full"
+          className="bg-blue-600 py-2 rounded text-white w-full"
           disabled={loading}
         >
           {loading ? 'Logging in...' : 'Login'}
