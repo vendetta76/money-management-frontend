@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
 import { db } from "../../lib/firebaseClient"
 import { useAuth } from "../../context/AuthContext"
 import LayoutShell from "../../layouts/LayoutShell"
@@ -11,6 +12,11 @@ const SecurityPage = () => {
   const [confirmPin, setConfirmPin] = useState("")
   const [currentPin, setCurrentPin] = useState("")
   const [storedPin, setStoredPin] = useState("")
+
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
@@ -78,6 +84,38 @@ const SecurityPage = () => {
     }
   }
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setSuccess("")
+
+    if (newPassword.length < 6) {
+      setError("Password baru harus minimal 6 karakter.")
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("Konfirmasi password tidak cocok.")
+      return
+    }
+
+    try {
+      setLoading(true)
+      const credential = EmailAuthProvider.credential(user!.email!, currentPassword)
+      await reauthenticateWithCredential(user!, credential)
+      await updatePassword(user!, newPassword)
+      setSuccess("✅ Password berhasil diperbarui!")
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (err) {
+      console.error(err)
+      setError("❌ Gagal memperbarui password. Pastikan password lama benar.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <LayoutShell>
       <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-md mx-auto">
@@ -93,7 +131,10 @@ const SecurityPage = () => {
           />
         </div>
 
-        <form className="space-y-4" onSubmit={handleSetPin}>
+        {/* --- Form PIN --- */}
+        <form className="space-y-4 mb-10" onSubmit={handleSetPin}>
+          <h2 className="text-lg font-semibold">Ganti PIN Akses</h2>
+
           {storedPin && (
             <div>
               <label className="block text-sm font-medium mb-1">PIN Lama</label>
@@ -127,9 +168,6 @@ const SecurityPage = () => {
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {success && <p className="text-sm text-green-600">{success}</p>}
-
           <div className="flex justify-between items-center">
             <button
               type="submit"
@@ -148,6 +186,55 @@ const SecurityPage = () => {
               </button>
             )}
           </div>
+        </form>
+
+        {/* --- Form Password --- */}
+        <form className="space-y-4" onSubmit={handleChangePassword}>
+          <h2 className="text-lg font-semibold">Ganti Password</h2>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Password Lama</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100"
+              placeholder="Password lama"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Password Baru</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100"
+              placeholder="Minimal 6 karakter"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Konfirmasi Password Baru</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg bg-gray-100"
+              placeholder="Ulangi password"
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {success && <p className="text-sm text-green-600">{success}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Menyimpan..." : "Ubah Password"}
+          </button>
         </form>
       </main>
     </LayoutShell>
