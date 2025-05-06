@@ -109,3 +109,20 @@ html.warm select {
 html.warm .text-accent {
   color: #00c2ff;
 }
+
+
+/* ✅ Override: Pastikan teks original theme tetap gelap dan jelas */
+html.original aside,
+html.original aside * {
+  color: #002d2d !important;
+}
+
+html.original aside .group:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+html.original select,
+html.original .text-sm,
+html.original .text-xs {
+  color: #002d2d !important;
+}
