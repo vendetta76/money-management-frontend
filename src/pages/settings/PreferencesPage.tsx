@@ -11,19 +11,19 @@ const PreferencesPage = () => {
 
   return (
     <LayoutShell>
-      <main className="2xl:px-20 max-w-screen-md md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-12">
-        <h1 className="font-bold mb-4 text-2xl">⚙️ Preferensi</h1>
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4  max-w-screen-md mx-auto">
+        <h1 className="text-2xl font-bold mb-4">⚙️ Preferensi</h1>
         <div className="flex items-center justify-between mb-4">
-          <span className="dark:text-gray-200 dark:text-white font-medium text-gray-700 text-sm">Mode Gelap</span>
-          <label className="cursor-pointer inline-flex items-center relative">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Mode Gelap</span>
+          <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              className="peer sr-only"
+              className="sr-only peer"
               checked={darkMode}
               onChange={() => setDarkMode(!darkMode)}
             />
-            <div className="bg-gray-200 dark:bg-gray-700 duration-300 h-5 peer peer-checked:bg-purple-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 relative rounded-full transition w-9">
-              <span className="absolute bg-white dark:bg-gray-900 duration-300 h-3 left-1 peer-checked:translate-x-4 rounded-full top-1 transition-transform w-3" />
+            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer dark:bg-gray-700 peer-checked:bg-purple-600 relative transition duration-300">
+              <span className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-4" />
             </div>
           </label>
         </div>

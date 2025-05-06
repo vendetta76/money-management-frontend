@@ -108,40 +108,40 @@ const HistoryPage = () => {
 
   return (
     <LayoutShell>
-      <main className="2xl:px-20 max-w-screen-2xl md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-12">
-        <h1 className="dark:text-purple-300 font-bold mb-4 text-2xl text-purple-700">📜 Riwayat Transaksi</h1>
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4  max-w-screen-2xl mx-auto">
+        <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
 
-        <div className="flex flex-wrap gap-4 items-center mb-6">
-          <div className="md:w-1/3 relative sm:w-1/2 w-full">
-            <Search className="absolute dark:text-white left-3 text-gray-400 top-2.5" size={16} />
+        <div className="flex flex-wrap gap-4 mb-6 items-center">
+          <div className="relative w-full sm:w-1/2 md:w-1/3">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Cari deskripsi..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border dark:bg-gray-800 dark:border-gray-700 dark:text-white pl-10 pr-3 py-2 rounded-lg w-full"
+              className="w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
             />
           </div>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="border dark:bg-gray-800 dark:border-gray-700 dark:text-white px-4 py-2 rounded-lg sm:w-auto w-full"
+            className="w-full sm:w-auto px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
           />
         </div>
 
         {filtered.length === 0 ? (
-          <p className="dark:text-gray-300 dark:text-white text-gray-500 text-sm">Tidak ada transaksi ditemukan.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300">Tidak ada transaksi ditemukan.</p>
         ) : (
-          <div className="gap-4 grid">
+          <div className="grid gap-4">
             {filtered.map((item) => (
               <div
                 key={item.id}
-                className="bg-white border-l-4 dark:bg-gray-800 dark:bg-gray-900 dark:border-gray-700 hover:shadow-md p-4 rounded-xl shadow transition"
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-md transition border-l-4"
                 style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="dark:text-gray-300 dark:text-white font-semibold text-gray-600 text-sm">
+                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
                     {item.type === "income" ? "📥 Income" : "📤 Outcome"} • {getWalletName(item.wallet)} ({getWalletCurrency(item.wallet)})
                   </span>
                   <span
@@ -150,17 +150,17 @@ const HistoryPage = () => {
                     {item.type === "income" ? "+" : "-"} Rp {item.amount.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <div className="dark:text-gray-100 dark:text-white text-gray-700 text-sm">
+                <div className="text-sm text-gray-700 dark:text-gray-100">
                   {item.description}
                   {item.editHistory && item.editHistory.length > 0 && (
-                    <span className="ml-2 text-blue-500 text-xs">(edited)</span>
+                    <span className="text-xs text-blue-500 ml-2">(edited)</span>
                   )}
                 </div>
-                <div className="dark:text-white mt-1 text-gray-400 text-xs">
+                <div className="text-xs text-gray-400 mt-1">
                   {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID")}
                 </div>
                 {item.editHistory && item.editHistory.length > 0 && (
-                  <div className="bg-gray-50 dark:bg-gray-900 dark:text-gray-400 dark:text-white mt-2 p-2 rounded text-gray-500 text-xs">
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded">
                     <p className="font-semibold mb-1">Histori Perubahan:</p>
                     <ul className="list-disc ml-5 space-y-1">
                       {item.editHistory.map((log, i) => (

@@ -33,30 +33,30 @@ const AdminDashboardPage = () => {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       
 
       <main className="flex-1 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="dark:text-white font-bold text-2xl text-gray-800">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
             Admin Dashboard
           </h1>
           <button
             onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded text-white"
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
           >
             Logout
           </button>
         </div>
 
-        <div className="gap-4 grid grid-cols-1 mb-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <StatCard title="User Data" value="500" icon={DollarSign} />
           <StatCard title="System Logs" value="300" icon={ShoppingCart} />
           <StatCard title="Active Admins" value="12" icon={Eye} />
         </div>
 
-        <div className="bg-white dark:bg-gray-800 dark:bg-gray-900 p-4 rounded shadow">
-          <h2 className="dark:text-white font-semibold mb-4 text-gray-800 text-xl">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
             Overview
           </h2>
           <ResponsiveContainer width="100%" height={300}>
