@@ -1,8 +1,10 @@
 import { useState } from "react"
 import Sidebar from "../components/Sidebar"
+import { useTheme } from "../hooks/useThemeAdvanced" // ✅ Tambahan penting
 
 const LayoutShell = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { theme } = useTheme() // ✅ Trigger useEffect global
 
   return (
     <div className="flex relative min-h-screen bg-gray-50 dark:bg-gray-900">
