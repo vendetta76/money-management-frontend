@@ -32,7 +32,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
       const data = snapshot.data()
       if (data.avatar) setPhotoURL(data.avatar)
       if (data.name) setName(data.name)
-      if (data.role) setRole(data.role)
+      if (data.role) setRole(data.role.toLowerCase()) // ✅ lowercase for consistency
       setLoading(false)
     }, (error) => {
       console.error("🔥 Firestore error:", error)
@@ -132,50 +132,6 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
             <Clock size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
             History
           </NavLink>
-
-          {/* Settings */}
-          <div>
-            <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
-              <span className="flex items-center gap-2">
-                <ChevronDown className={`w-4 h-4 transition-transform ${isSettingsOpen ? "rotate-180" : ""}`} /> Settings
-              </span>
-            </button>
-            {isSettingsOpen && (
-              <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/settings/profile" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  👤 Profile
-                </NavLink>
-                <NavLink to="/settings/security" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  🔐 Security
-                </NavLink>
-                <NavLink to="/settings/preferences" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  ⚙️ Preferences
-                </NavLink>
-              </div>
-            )}
-          </div>
-
-          {/* About MoniQ */}
-          <div>
-            <button onClick={() => setIsAboutOpen(!isAboutOpen)} className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
-              <span className="flex items-center gap-2">
-                <ChevronDown className={`w-4 h-4 transition-transform ${isAboutOpen ? "rotate-180" : ""}`} /> About MoniQ
-              </span>
-            </button>
-            {isAboutOpen && (
-              <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/about" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  📘 Tentang
-                </NavLink>
-                <NavLink to="/about/privacy-policy" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  📜 Kebijakan Privasi
-                </NavLink>
-                <NavLink to="/about/terms-and-conditions" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  📄 Syarat & Ketentuan
-                </NavLink>
-              </div>
-            )}
-          </div>
         </nav>
       </div>
 
