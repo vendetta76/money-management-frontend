@@ -64,28 +64,6 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
           MoniQ
         </h1>
 
-        <div className="flex flex-col items-center text-center mb-6">
-          {loading ? (
-            <>
-              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse mb-2" />
-              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1" />
-              <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-            </>
-          ) : (
-            <>
-              <img
-                src={photoURL || "https://res.cloudinary.com/dvbn6oqlp/image/upload/v1746252421/Default_pfp_zoecp6.webp"}
-                className="w-16 h-16 rounded-full object-cover mb-2"
-                alt="Avatar"
-              />
-              <p className="text-sm font-semibold text-gray-700 dark:text-white">{name || "User"}</p>
-              <span className="text-xs text-gray-500 dark:text-gray-300">
-                {role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
-              </span>
-            </>
-          )}
-        </div>
-
         <nav className="space-y-2">
           <NavLink to="/dashboard" className={({ isActive }) =>
             `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
@@ -191,19 +169,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
       {/* Bottom Section */}
       <div className="mt-6 space-y-3">
         {/* Dark Mode Toggle */}
-        <div className="w-full px-3 py-2 flex items-center justify-between text-sm font-medium text-gray-600 dark:text-gray-300">
-          <span className="flex items-center gap-2 transition-all duration-300 ease-in-out">
-            {darkMode ? "🌙" : "🌞"} Dark Mode
-          </span>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={darkMode}
-              onChange={() => setDarkMode(!darkMode)}
-              className="sr-only peer"
-            />
-            <div className="w-9 h-5 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer-checked:bg-purple-600 transition-colors duration-300 ease-in-out"></div>
-            <div className="absolute left-1 top-0.5 bg-white w-4 h-4 rounded-full transition-all duration-300 ease-in-out peer-checked:translate-x-4 shadow-sm"></div>
+        <div className="absolute left-1 top-0.5 bg-white w-4 h-4 rounded-full transition-all duration-300 ease-in-out peer-checked:translate-x-4 shadow-sm"></div>
           </label>
         </div>
 
