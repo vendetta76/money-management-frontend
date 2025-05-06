@@ -29,20 +29,20 @@ const ResetPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+    <div className="bg-white dark:bg-gray-900 flex items-center justify-center min-h-screen px-4">
       <form
         onSubmit={handleResetPassword}
-        className="max-w-md w-full bg-gray-50 shadow-md rounded-lg p-6 space-y-4"
+        className="bg-gray-50 dark:bg-gray-900 max-w-md p-6 rounded-lg shadow-md space-y-4 w-full"
       >
-        <h2 className="text-xl font-bold text-center">Reset Password</h2>
+        <h2 className="dark:text-white font-bold text-center text-xl">Reset Password</h2>
 
-        {error && <div className="text-red-500 text-sm">{error}</div>}
-        {success && <div className="text-green-600 text-sm">{success}</div>}
+        {error && <div className="dark:text-white text-red-500 text-sm">{error}</div>}
+        {success && <div className="dark:text-white text-green-600 text-sm">{success}</div>}
 
         <input
           type="password"
           placeholder="Password Baru"
-          className="w-full px-4 py-2 border rounded"
+          className="border px-4 py-2 rounded w-full"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -50,7 +50,7 @@ const ResetPassword: React.FC = () => {
 
         <button
           type="submit"
-          className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded"
+          className="bg-purple-600 dark:bg-gray-900 font-semibold hover:bg-purple-700 py-2 rounded text-white w-full"
           disabled={loading}
         >
           {loading ? 'Mengubah...' : 'Ubah Password'}

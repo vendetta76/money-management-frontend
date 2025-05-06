@@ -97,22 +97,22 @@ const DashboardPage = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 max-w-screen-2xl mx-auto">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-2">
+      <main className="2xl:px-20 max-w-screen-2xl md:px-8 min-h-screen mx-auto px-4 sm:px-6 w-full xl:px-12">
+        <div className="flex flex-col gap-2 mb-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-purple-700 dark:text-purple-300">Dashboard</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-300">
+            <h1 className="dark:text-purple-300 dark:text-white font-bold md:text-3xl text-2xl text-purple-700">Dashboard</h1>
+            <p className="dark:text-gray-300 dark:text-white text-gray-500 text-sm">
               Selamat datang kembali, {user?.email}
             </p>
           </div>
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-600 dark:text-gray-200 mb-2">Filter Mata Uang</label>
+          <label className="block dark:text-gray-200 dark:text-white font-semibold mb-2 text-gray-600 text-sm">Filter Mata Uang</label>
           <select
             value={selectedCurrency}
             onChange={(e) => setSelectedCurrency(e.target.value)}
-            className="w-full md:w-auto px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white shadow"
+            className="bg-white border dark:bg-gray-800 dark:bg-gray-900 dark:text-white md:w-auto px-4 py-2 rounded-lg shadow w-full"
           >
             <option value="all">Semua</option>
             {allCurrencies.map((cur) => (
@@ -121,10 +121,10 @@ const DashboardPage = () => {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white dark:bg-gray-800 dark:text-white p-4 md:p-6 rounded-xl shadow">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-300 mb-4">Distribusi Wallet (Pie)</h2>
-            <div className="w-full h-48 md:h-64">
+        <div className="gap-6 grid grid-cols-1 mb-6 sm:grid-cols-2">
+          <div className="bg-white dark:bg-gray-800 dark:bg-gray-900 dark:text-white md:p-6 p-4 rounded-xl shadow">
+            <h2 className="dark:text-gray-300 dark:text-white font-semibold mb-4 text-gray-500 text-sm">Distribusi Wallet (Pie)</h2>
+            <div className="h-48 md:h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
@@ -138,11 +138,11 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 dark:text-white p-4 md:p-6 rounded-xl shadow">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-300 mb-4">
+          <div className="bg-white dark:bg-gray-800 dark:bg-gray-900 dark:text-white md:p-6 p-4 rounded-xl shadow">
+            <h2 className="dark:text-gray-300 dark:text-white font-semibold mb-4 text-gray-500 text-sm">
               Total Saldo {selectedCurrency === "all" ? "(Semua)" : selectedCurrency}
             </h2>
-            <div className="w-full h-48 md:h-64">
+            <div className="h-48 md:h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={[{ name: selectedCurrency.toUpperCase(), value: total }]}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -158,14 +158,14 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-4 md:p-6 rounded-xl shadow mt-6">
-          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-300 mb-4">Transaksi Terbaru</h3>
+        <div className="bg-white dark:bg-gray-800 dark:bg-gray-900 dark:text-white md:p-6 mt-6 p-4 rounded-xl shadow">
+          <h3 className="dark:text-gray-300 dark:text-white font-semibold mb-4 text-gray-500 text-sm">Transaksi Terbaru</h3>
           <ul className="space-y-4">
             {sortedTx.map((tx) => (
-              <li key={tx.id} className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0">
+              <li key={tx.id} className="dark:text-white flex flex-col gap-2 items-start justify-between sm:flex-row sm:gap-0 text-sm">
                 <div>
                   <p className="font-medium">{tx.description}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-300">
+                  <p className="dark:text-gray-300 dark:text-white text-gray-400 text-xs">
                     {tx.createdAt?.toDate
                       ? format(new Date(tx.createdAt.toDate()), "dd MMM yyyy, HH:mm", { locale: localeID })
                       : "-"}

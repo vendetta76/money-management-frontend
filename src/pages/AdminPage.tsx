@@ -62,20 +62,20 @@ const AdminPage = () => {
   return (
     <div className="flex">
       <AdminSidebar isOpen={true} />
-      <main className="md:ml-64 flex-1 p-6">
-        <h1 className="text-2xl font-bold mb-4 text-purple-700">Admin Panel 👑</h1>
+      <main className="flex-1 md:ml-64 p-6">
+        <h1 className="dark:text-white font-bold mb-4 text-2xl text-purple-700">Admin Panel 👑</h1>
 
         <div className="mb-4">
           <label className="block font-medium mb-1">Cari User via Email</label>
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border px-3 py-2 rounded shadow"
+            className="border px-3 py-2 rounded shadow w-full"
             placeholder="contoh@email.com"
           />
           <button
             onClick={handleSearch}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="bg-blue-600 dark:bg-gray-900 hover:bg-blue-700 mt-2 px-4 py-2 rounded text-white"
             disabled={loading}
           >
             Cari User
@@ -83,7 +83,7 @@ const AdminPage = () => {
         </div>
 
         {userData && (
-          <div className="bg-white dark:bg-gray-800 rounded shadow p-4 space-y-4 border dark:border-gray-700">
+          <div className="bg-white border dark:bg-gray-800 dark:bg-gray-900 dark:border-gray-700 p-4 rounded shadow space-y-4">
             <div>
               <label className="block font-medium">Role</label>
               <select
@@ -118,7 +118,7 @@ const AdminPage = () => {
 
             <button
               onClick={handleUpdate}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              className="bg-green-600 dark:bg-gray-900 hover:bg-green-700 px-4 py-2 rounded text-white"
               disabled={loading}
             >
               Simpan Perubahan
@@ -126,7 +126,7 @@ const AdminPage = () => {
           </div>
         )}
 
-        {status && <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">{status}</p>}
+        {status && <p className="dark:text-gray-300 dark:text-white mt-4 text-gray-600 text-sm">{status}</p>}
       </main>
     </div>
   )

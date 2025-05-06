@@ -109,27 +109,27 @@ const ProfilePage = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6 text-purple-700 flex items-center gap-2">👤 Profil Saya</h1>
+      <main className="2xl:px-20 max-w-screen-md md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-12">
+        <h1 className="dark:text-white flex font-bold gap-2 items-center mb-6 text-2xl text-purple-700">👤 Profil Saya</h1>
 
-        <div className="mb-6 text-center">
-          <div className="relative w-fit mx-auto mb-4">
+        <div className="dark:text-white mb-6 text-center">
+          <div className="mb-4 mx-auto relative w-fit">
             <img
               src={(avatar?.replace("/upload/", "/upload/f_auto/")) || "/default-avatar.png"}
               alt="Avatar"
-              className="w-28 h-28 rounded-full object-cover border shadow"
+              className="border h-28 object-cover rounded-full shadow w-28"
             />
             {previewImage && (
-              <span className="absolute top-0 right-0 bg-purple-600 text-white text-xs px-2 py-1 rounded-full shadow">
+              <span className="absolute bg-purple-600 dark:bg-gray-900 dark:text-white px-2 py-1 right-0 rounded-full shadow text-white text-xs top-0">
                 Preview
               </span>
             )}
           </div>
 
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col gap-2 items-center">
             <label
               htmlFor="avatarInput"
-              className="cursor-pointer inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition duration-200"
+              className="bg-purple-600 cursor-pointer dark:bg-gray-900 dark:text-white duration-200 font-medium hover:bg-purple-700 inline-block px-4 py-2 rounded-lg shadow text-sm text-white transition"
             >
               Pilih Foto
             </label>
@@ -155,7 +155,7 @@ const ProfilePage = () => {
               <button
                 onClick={uploadCroppedImage}
                 disabled={loading}
-                className="mt-3 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 text-sm transition duration-200"
+                className="bg-purple-600 dark:bg-gray-900 dark:text-white duration-200 hover:bg-purple-700 mt-3 px-6 py-2 rounded-lg text-sm text-white transition"
               >
                 {loading ? "Mengunggah..." : "Unggah Avatar"}
               </button>
@@ -163,7 +163,7 @@ const ProfilePage = () => {
           )}
         </div>
 
-        <div className="mb-6 text-sm text-gray-600 space-y-1">
+        <div className="dark:text-white mb-6 space-y-1 text-gray-600 text-sm">
           <p><strong>Status:</strong> {userMeta?.role || "Regular"}</p>
           <p><strong>Login terakhir:</strong> {user?.metadata?.lastSignInTime
             ? new Date(user.metadata.lastSignInTime).toLocaleString("id-ID")
@@ -172,18 +172,18 @@ const ProfilePage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
+            <label className="block dark:text-white font-medium mb-1 text-sm">Nama Lengkap</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none"
+              className="bg-gray-100 border dark:bg-gray-900 focus:outline-none px-4 py-2 rounded-lg w-full"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50"
+            className="bg-blue-600 dark:bg-gray-900 disabled:opacity-50 font-semibold hover:bg-blue-700 py-2 rounded-lg text-white w-full"
           >
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </button>

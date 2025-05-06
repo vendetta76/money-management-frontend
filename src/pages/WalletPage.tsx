@@ -155,35 +155,35 @@ const WalletPage = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-10 2xl:px-16 pt-4 md:ml-64 max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Manajemen Wallet</h1>
+      <main className="2xl:px-16 max-w-2xl md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-10">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="dark:text-white font-bold text-2xl">Manajemen Wallet</h1>
           <button
             onClick={() => {
               setForm({ name: "", balance: "0", currency: "USD" })
               setEditingId(null)
               setShowForm(true)
             }}
-            className="flex items-center gap-2 text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700"
+            className="bg-blue-600 dark:bg-gray-900 dark:text-white flex gap-2 hover:bg-blue-700 items-center px-3 py-1.5 rounded text-sm text-white"
           >
             <Plus size={16} /> Tambah Wallet
           </button>
         </div>
 
         {success && (
-          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg border border-green-300">
+          <div className="bg-green-100 border border-green-300 dark:bg-gray-900 dark:text-white mb-4 p-3 rounded-lg text-green-700">
             ✅ {success}
           </div>
         )}
 
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Total Saldo per Mata Uang</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <h2 className="dark:text-white font-semibold mb-3 text-gray-800 text-lg">Total Saldo per Mata Uang</h2>
+          <div className="gap-4 grid grid-cols-1 sm:grid-cols-2">
             {Object.entries(totalsByCurrency).map(([currency, total]) => (
               total > 0 && (
                 <div
                   key={currency}
-                  className="bg-white border rounded-xl px-5 py-4 shadow text-sm font-medium text-gray-800"
+                  className="bg-white border dark:bg-gray-900 dark:text-white font-medium px-5 py-4 rounded-xl shadow text-gray-800 text-sm"
                 >
                   <div className="flex items-center justify-between">
                     <span>Total {currency}</span>
@@ -203,33 +203,33 @@ const WalletPage = () => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-lg font-semibold">Daftar Wallet</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="dark:text-white font-semibold text-lg">Daftar Wallet</h2>
           <button
             onClick={() => setShowBalance(!showBalance)}
-            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+            className="dark:text-white flex gap-1 hover:text-gray-800 items-center text-gray-600 text-sm"
           >
             {showBalance ? <Eye size={16} /> : <EyeOff size={16} />} {showBalance ? "Sembunyikan" : "Tampilkan"} Saldo
           </button>
         </div>
 
         {wallets.length === 0 ? (
-          <p className="text-gray-500">Belum ada wallet ditambahkan.</p>
+          <p className="dark:text-white text-gray-500">Belum ada wallet ditambahkan.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="gap-4 grid grid-cols-1 sm:grid-cols-2">
             {wallets.map((wallet) => (
               <div
                 key={wallet.id}
-                className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-2xl shadow h-32 flex flex-col justify-between"
+                className="bg-gradient-to-br dark:bg-gray-900 flex flex-col from-purple-600 h-32 justify-between p-5 rounded-2xl shadow text-white to-indigo-600"
               >
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-medium">{wallet.name}</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="dark:text-white font-medium text-sm">{wallet.name}</h3>
                   <Settings
-                    className="w-5 h-5 opacity-80 hover:opacity-100 cursor-pointer"
+                    className="cursor-pointer h-5 hover:opacity-100 opacity-80 w-5"
                     onClick={() => handleEdit(wallet)}
                   />
                 </div>
-                <div className="text-2xl font-bold">
+                <div className="dark:text-white font-bold text-2xl">
                   {showBalance
                     ? new Intl.NumberFormat("id-ID", {
                         style: "currency",
@@ -244,10 +244,10 @@ const WalletPage = () => {
         )}
 
         {showForm && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+          <div className="bg-black bg-opacity-30 dark:bg-gray-900 fixed flex inset-0 items-center justify-center z-50">
             <form
               onSubmit={handleSubmit}
-              className="bg-white shadow-xl rounded-xl p-4 md:p-6 w-full max-w-sm relative"
+              className="bg-white dark:bg-gray-900 max-w-sm md:p-6 p-4 relative rounded-xl shadow-xl w-full"
             >
               <button
                 type="button"
@@ -255,14 +255,14 @@ const WalletPage = () => {
                   setShowForm(false)
                   setEditingId(null)
                 }}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                className="absolute dark:text-white hover:text-gray-600 right-4 text-gray-400 top-4"
               >
                 <X size={20} />
               </button>
-              <h2 className="text-lg font-semibold mb-4">{editingId ? "Edit Wallet" : "Tambah Wallet"}</h2>
+              <h2 className="dark:text-white font-semibold mb-4 text-lg">{editingId ? "Edit Wallet" : "Tambah Wallet"}</h2>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Nama Wallet</label>
+                <label className="block dark:text-white font-medium mb-1 text-sm">Nama Wallet</label>
                 <input
                   type="text"
                   name="name"
@@ -270,11 +270,11 @@ const WalletPage = () => {
                   onChange={handleChange}
                   className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.name && "border-red-500"}`}
                 />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                {errors.name && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.name}</p>}
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Mata Uang</label>
+                <label className="block dark:text-white font-medium mb-1 text-sm">Mata Uang</label>
                 <Select
                   name="currency"
                   value={currencyOptions.find(opt => opt.value === form.currency)}
@@ -286,22 +286,22 @@ const WalletPage = () => {
                   placeholder="Pilih mata uang..."
                   isSearchable
                 />
-                {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+                {errors.currency && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.currency}</p>}
               </div>
 
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 {editingId && (
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="text-red-600 hover:underline text-sm"
+                    className="dark:text-white hover:underline text-red-600 text-sm"
                   >
                     Hapus Wallet
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
+                  className="bg-blue-600 dark:bg-gray-900 hover:bg-blue-700 px-5 py-2 rounded-lg text-white"
                 >
                   {editingId ? "Simpan Perubahan" : "Tambah"}
                 </button>

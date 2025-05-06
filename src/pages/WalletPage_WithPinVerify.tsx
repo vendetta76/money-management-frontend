@@ -46,14 +46,14 @@ const WalletPageWithPinVerify = () => {
     }
   }
 
-  if (loading) return <div className="p-6 text-center">Loading...</div>
+  if (loading) return <div className="dark:text-white p-6 text-center">Loading...</div>
   if (!storedPin) return <WalletPageContent />
 
   if (!verified) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="w-full max-w-sm px-4 py-6 md:p-6 rounded-xl shadow bg-white text-center">
-          <h2 className="text-xl font-bold mb-4">🔒 Verifikasi PIN</h2>
+      <div className="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen">
+        <div className="bg-white dark:bg-gray-900 dark:text-white max-w-sm md:p-6 px-4 py-6 rounded-xl shadow text-center w-full">
+          <h2 className="dark:text-white font-bold mb-4 text-xl">🔒 Verifikasi PIN</h2>
           <input
             type="password"
             value={enteredPin}
@@ -62,19 +62,19 @@ const WalletPageWithPinVerify = () => {
             placeholder="Masukkan PIN Akses"
             maxLength={6}
             disabled={loading}
-            className="w-full px-3 py-2 border rounded-lg bg-gray-100 mb-3 text-center text-sm"
+            className="bg-gray-100 border dark:bg-gray-900 dark:text-white mb-3 px-3 py-2 rounded-lg text-center text-sm w-full"
           />
-          {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+          {error && <p className="dark:text-white mb-2 text-red-600 text-sm">{error}</p>}
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
+            className="bg-purple-600 dark:bg-gray-900 dark:text-white hover:bg-purple-700 px-4 py-2 rounded-lg text-sm text-white w-full"
           >
             {loading ? "Memverifikasi..." : "Verifikasi"}
           </button>
           <button
             onClick={() => navigate("/settings/security")}
-            className="mt-3 text-sm text-gray-500 hover:underline"
+            className="dark:text-white hover:underline mt-3 text-gray-500 text-sm"
           >
             Lupa PIN?
           </button>

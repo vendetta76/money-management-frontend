@@ -172,18 +172,18 @@ const IncomePage = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 md:ml-64 pt-4 max-w-screen-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">{editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}</h1>
+      <main className="2xl:px-20 max-w-screen-2xl md:ml-64 md:px-8 min-h-screen mx-auto pt-4 px-4 sm:px-6 w-full xl:px-12">
+        <h1 className="dark:text-white font-bold mb-6 text-2xl">{editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}</h1>
 
         {success && (
-          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg border border-green-300">
+          <div className="bg-green-100 border border-green-300 dark:bg-gray-900 dark:text-white mb-4 p-3 rounded-lg text-green-700">
             ✅ {editingId ? "Pemasukan berhasil diperbarui!" : "Pemasukan berhasil disimpan!"}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white shadow rounded-xl p-6 mb-6 max-w-xl w-full">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 max-w-xl mb-6 p-6 rounded-xl shadow w-full">
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Pilih Dompet</label>
+            <label className="block dark:text-white font-medium mb-1 text-sm">Pilih Dompet</label>
             <select
               name="wallet"
               value={form.wallet}
@@ -197,11 +197,11 @@ const IncomePage = () => {
                 </option>
               ))}
             </select>
-            {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
+            {errors.wallet && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.wallet}</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Deskripsi</label>
+            <label className="block dark:text-white font-medium mb-1 text-sm">Deskripsi</label>
             <input
               name="description"
               value={form.description}
@@ -210,11 +210,11 @@ const IncomePage = () => {
               placeholder="Tulis deskripsi"
               className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.description && "border-red-500"}`}
             />
-            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+            {errors.description && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.description}</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Nominal</label>
+            <label className="block dark:text-white font-medium mb-1 text-sm">Nominal</label>
             <input
               name="amount"
               value={form.amount}
@@ -223,18 +223,18 @@ const IncomePage = () => {
               placeholder="0.00"
               className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.amount && "border-red-500"}`}
             />
-            {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
+            {errors.amount && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.amount}</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1 text-sm font-medium">Mata Uang</label>
+            <label className="block dark:text-white font-medium mb-1 text-sm">Mata Uang</label>
             <input
               type="text"
               value={form.currency}
               disabled
-              className="w-full px-4 py-2 border rounded-lg bg-gray-200 text-gray-700"
+              className="bg-gray-200 border dark:bg-gray-900 dark:text-white px-4 py-2 rounded-lg text-gray-700 w-full"
             />
-            {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+            {errors.currency && <p className="dark:text-white mt-1 text-red-500 text-sm">{errors.currency}</p>}
           </div>
 
           <div className="flex justify-between">
@@ -245,7 +245,7 @@ const IncomePage = () => {
                   setForm({ wallet: "", description: "", amount: "", currency: "" })
                   setEditingId(null)
                 }}
-                className="text-sm text-gray-500 hover:underline"
+                className="dark:text-white hover:underline text-gray-500 text-sm"
               >
                 Batal Edit
               </button>
@@ -253,7 +253,7 @@ const IncomePage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="bg-blue-600 dark:bg-gray-900 disabled:opacity-50 hover:bg-blue-700 px-6 py-2 rounded-lg text-white"
             >
               {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
             </button>
@@ -261,44 +261,44 @@ const IncomePage = () => {
         </form>
 
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Transaksi Terbaru</h2>
+          <h2 className="dark:text-white font-semibold mb-4 text-xl">Transaksi Terbaru</h2>
           {incomes.length === 0 ? (
-            <p className="text-gray-500">Belum ada data pemasukan.</p>
+            <p className="dark:text-white text-gray-500">Belum ada data pemasukan.</p>
           ) : (
             <div className="overflow-x-auto w-full">
-              <table className="min-w-full bg-white border rounded-xl shadow">
+              <table className="bg-white border dark:bg-gray-900 min-w-full rounded-xl shadow">
                 <thead>
-                  <tr className="bg-gray-100 text-sm text-left">
-                    <th className="px-4 py-2 border-b">Dompet</th>
-                    <th className="px-4 py-2 border-b">Deskripsi</th>
-                    <th className="px-4 py-2 border-b">Nominal</th>
-                    <th className="px-4 py-2 border-b">Mata Uang</th>
-                    <th className="px-4 py-2 border-b">Tanggal</th>
-                    <th className="px-4 py-2 border-b">Aksi</th>
+                  <tr className="bg-gray-100 dark:bg-gray-900 dark:text-white text-left text-sm">
+                    <th className="border-b px-4 py-2">Dompet</th>
+                    <th className="border-b px-4 py-2">Deskripsi</th>
+                    <th className="border-b px-4 py-2">Nominal</th>
+                    <th className="border-b px-4 py-2">Mata Uang</th>
+                    <th className="border-b px-4 py-2">Tanggal</th>
+                    <th className="border-b px-4 py-2">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {incomes.map((entry) => (
-                    <tr key={entry.id} className="text-sm">
-                      <td className="px-4 py-2 border-b">{wallets.find(w => w.id === entry.wallet)?.name || entry.wallet}</td>
-                      <td className="px-4 py-2 border-b">{entry.description}</td>
-                      <td className="px-4 py-2 border-b">{entry.amount.toLocaleString()}</td>
-                      <td className="px-4 py-2 border-b">{entry.currency}</td>
-                      <td className="px-4 py-2 border-b">
+                    <tr key={entry.id} className="dark:text-white text-sm">
+                      <td className="border-b px-4 py-2">{wallets.find(w => w.id === entry.wallet)?.name || entry.wallet}</td>
+                      <td className="border-b px-4 py-2">{entry.description}</td>
+                      <td className="border-b px-4 py-2">{entry.amount.toLocaleString()}</td>
+                      <td className="border-b px-4 py-2">{entry.currency}</td>
+                      <td className="border-b px-4 py-2">
                         {entry.createdAt?.toDate
                           ? new Date(entry.createdAt.toDate()).toLocaleString()
                           : "-"}
                       </td>
-                      <td className="px-4 py-2 border-b space-x-2">
+                      <td className="border-b px-4 py-2 space-x-2">
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="text-blue-600 text-xs hover:underline"
+                          className="dark:text-white hover:underline text-blue-600 text-xs"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(entry.id!, entry.amount, entry.wallet)}
-                          className="text-red-600 text-xs hover:underline"
+                          className="dark:text-white hover:underline text-red-600 text-xs"
                         >
                           Hapus
                         </button>

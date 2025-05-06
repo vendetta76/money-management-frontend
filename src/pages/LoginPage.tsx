@@ -66,44 +66,44 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-700 p-4">
-      <div className="bg-white w-full max-w-md p-8 rounded-xl shadow-xl">
+    <div className="bg-gradient-to-br dark:bg-gray-900 flex from-blue-500 items-center justify-center min-h-screen p-4 to-purple-700">
+      <div className="bg-white dark:bg-gray-900 max-w-md p-8 rounded-xl shadow-xl w-full">
         <BackButton />
 
-        <h1 className="text-3xl font-bold text-center text-purple-700 mb-6">Login ke MoniQ</h1>
+        <h1 className="dark:text-white font-bold mb-6 text-3xl text-center text-purple-700">Login ke MoniQ</h1>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="email" className="block dark:text-white font-medium text-gray-700 text-sm">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+            <label htmlFor="password" className="block dark:text-white font-medium text-gray-700 text-sm">Password</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
             />
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="dark:text-white text-red-500 text-sm">{error}</p>}
 
           {unverifiedUser && (
             <button
               type="button"
               onClick={handleResendVerification}
-              className="text-sm text-purple-600 hover:underline mt-2 block"
+              className="block dark:text-white hover:underline mt-2 text-purple-600 text-sm"
             >
               Kirim ulang email verifikasi
             </button>
@@ -112,21 +112,21 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50"
+            className="bg-purple-600 dark:bg-gray-900 disabled:opacity-50 hover:bg-purple-700 py-2 rounded text-white transition w-full"
           >
             {loading ? "Loading..." : "Login"}
           </button>
         </form>
 
-        <div className="text-center text-sm text-gray-600 mt-4 space-y-2">
+        <div className="dark:text-white mt-4 space-y-2 text-center text-gray-600 text-sm">
           <p>
             Belum punya akun?{" "}
-            <a href="/register" className="text-purple-600 hover:underline">
+            <a href="/register" className="dark:text-white hover:underline text-purple-600">
               Daftar sekarang
             </a>
           </p>
           <p>
-            <a href="/forgot-password" className="text-purple-600 hover:underline">
+            <a href="/forgot-password" className="dark:text-white hover:underline text-purple-600">
               Lupa password?
             </a>
           </p>
