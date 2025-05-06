@@ -49,7 +49,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
 
   return (
     <aside className={`fixed top-0 left-0 h-screen w-60 md:w-64 z-50
-      bg-white dark:bg-gradient-to-b dark:from-[#00c2ff] dark:to-[#00d97e]
+      bg-white dark:bg-gray-900
       border-r dark:border-transparent transform transition-transform duration-300
       ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
       p-4 flex flex-col justify-between overflow-y-auto`}>

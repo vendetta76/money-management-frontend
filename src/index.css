@@ -1,3 +1,39 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 🌈 Theme: Original MoniQ */
+html.original body {
+  background-color: #f0fdf4;
+  color: #00c2ff;
+}
+
+html.original header,
+html.original aside,
+html.original main,
+html.original .card {
+  background: linear-gradient(to bottom, #00c2ff, #00d97e);
+  color: white;
+}
+
+html.original aside a,
+html.original aside span,
+html.original aside p,
+html.original aside .text-xs,
+html.original aside .text-sm {
+  color: #f0faff;
+}
+
+html.original aside .group:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+html.original .btn-primary {
+  background: linear-gradient(to right, #00d97e, #00c2ff);
+  color: white;
+}
+
+html.original .text-accent {
+  color: #00d97e;
+}
