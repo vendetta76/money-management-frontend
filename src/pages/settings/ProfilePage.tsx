@@ -113,12 +113,35 @@ const ProfilePage = () => {
         <h1 className="text-2xl font-bold mb-6 text-purple-700 flex items-center gap-2">👤 Profil Saya</h1>
 
         <div className="mb-6 text-center">
-          <img
-            src={(avatar?.replace("/upload/", "/upload/f_auto/")) || "/default-avatar.png"}
-            alt="Avatar"
-            className="w-28 h-28 rounded-full mx-auto mb-2 object-cover border"
-          />
-          <input type="file" accept="image/*" onChange={handleImageChange} />
+          <div className="relative w-fit mx-auto mb-4">
+            <img
+              src={(avatar?.replace("/upload/", "/upload/f_auto/")) || "/default-avatar.png"}
+              alt="Avatar"
+              className="w-28 h-28 rounded-full object-cover border shadow"
+            />
+            {previewImage && (
+              <span className="absolute top-0 right-0 bg-purple-600 text-white text-xs px-2 py-1 rounded-full shadow">
+                Preview
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <label
+              htmlFor="avatarInput"
+              className="cursor-pointer inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition duration-200"
+            >
+              Pilih Foto
+            </label>
+            <input
+              id="avatarInput"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+          </div>
+
           {previewImage && (
             <div className="mt-4">
               <Cropper
@@ -132,17 +155,16 @@ const ProfilePage = () => {
               <button
                 onClick={uploadCroppedImage}
                 disabled={loading}
-                className="mt-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
+                className="mt-3 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 text-sm transition duration-200"
               >
-                {loading ? "Mengunggah..." : "Upload Avatar"}
+                {loading ? "Mengunggah..." : "Unggah Avatar"}
               </button>
             </div>
           )}
         </div>
 
         <div className="mb-6 text-sm text-gray-600 space-y-1">
-          <p><strong>Role:</strong> {userMeta?.role || "Regular"}</p>
-          <p><strong>Status:</strong> {userMeta?.premiumEndDate ? "Premium" : "Regular"}</p>
+          <p><strong>Status:</strong> {userMeta?.role || "Regular"}</p>
           <p><strong>Login terakhir:</strong> {user?.metadata?.lastSignInTime
             ? new Date(user.metadata.lastSignInTime).toLocaleString("id-ID")
             : "Tidak tersedia"}</p>
