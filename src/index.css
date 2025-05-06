@@ -3,57 +3,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 🌿 Theme: Original MoniQ - Eye Friendly, Clear Text */
-
+/* ================================
+   ORIGINAL THEME (Vibrant Gradient)
+================================= */
 html.original body {
-  background-color: #e6fef7;
+  background-color: #f0fdf4;
   color: #1a1a1a;
 }
 
-/* Konten utama */
-html.original main,
-html.original h1,
-html.original h2,
-html.original h3,
-html.original p,
-html.original ul,
-html.original li,
-html.original label {
-  color: #1a1a1a !important;
-}
-
-/* Sidebar branding */
 html.original aside {
-  background: linear-gradient(to bottom, #b4f0eb, #7ee6d3);
-  color: #1a1a1a;
-  border-right: 1px solid #c5f3ea;
+  background: linear-gradient(to bottom, #00c2ff, #00d97e);
+  color: white;
 }
 
 html.original aside h1 {
-  color: #004d40;
-  font-weight: 800;
-  font-size: 1.5rem;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+  color: white;
 }
 
-html.original aside img {
-  border: 2px solid #ffffff80;
-}
-
-/* Sidebar teks */
 html.original aside a,
 html.original aside span,
 html.original aside p,
 html.original aside .text-xs,
 html.original aside .text-sm {
-  color: #111;
+  color: #e0faff;
 }
 
 html.original aside .group:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Tombol & dropdown */
 html.original .btn-primary {
   background: linear-gradient(to right, #00d97e, #00c2ff);
   color: white;
@@ -66,5 +44,68 @@ html.original select {
 }
 
 html.original .text-accent {
+  color: #00c2ff;
+}
+
+
+/* ================================
+   WARM THEME (Eye-Friendly)
+================================= */
+html.warm body {
+  background-color: #f3fdfc;
+  color: #2c3e50;
+}
+
+html.warm main,
+html.warm h1,
+html.warm h2,
+html.warm h3,
+html.warm p,
+html.warm ul,
+html.warm li,
+html.warm label {
+  color: #2c3e50 !important;
+}
+
+html.warm aside {
+  background: linear-gradient(to bottom, #e0fdfa, #c4f7eb);
+  color: #2c3e50;
+  border-right: 1px solid #d1f0e7;
+}
+
+html.warm aside h1 {
+  color: #117a65;
+  font-weight: 800;
+  font-size: 1.5rem;
+}
+
+html.warm aside img {
+  border: 2px solid #e0f7f1;
+}
+
+html.warm aside a,
+html.warm aside span,
+html.warm aside p,
+html.warm aside .text-xs,
+html.warm aside .text-sm {
+  color: #2c3e50;
+}
+
+html.warm aside .group:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+html.warm .btn-primary {
+  background: linear-gradient(to right, #5dd39e, #6decb9);
+  color: white;
+}
+
+html.warm select {
+  background-color: #ffffff;
+  color: #2c3e50;
+  border: 1px solid #c5e2dc;
+}
+
+html.warm .text-accent {
   color: #00c2ff;
 }
