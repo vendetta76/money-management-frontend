@@ -60,32 +60,27 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
       p-4 flex flex-col justify-between overflow-y-auto`}>
 
       <div>
-      <h1 className="text-2xl font-extrabold text-center text-green-500 mb-4">
-  MoniQ
-</h1>
+        <h1 className="text-2xl font-extrabold text-center text-green-500 mb-4">MoniQ</h1>
 
-<div className="flex flex-col items-center text-center mb-6 mt-2">
-  <img
-    src={photoURL || "/default-avatar.png"}
-    alt="Avatar"
-    className="w-14 h-14 rounded-full object-cover mb-1"
-  />
-  <p className="text-sm font-semibold text-gray-800 dark:text-white">
-    {name || "User"}
-  </p>
-  <span className={`text-xs ${
-    role === "admin"
-      ? "text-red-500"
-      : role === "premium"
-      ? "text-yellow-500"
-      : "text-gray-500"
-  }`}>
-    {role === "admin" ? "👑 Admin" : role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
-  </span>
-</div>
-
-
-        
+        <div className="flex flex-col items-center text-center mb-6 mt-2">
+          <img
+            src={(photoURL?.replace("/upload/", "/upload/f_auto/")) || "/default-avatar.png"}
+            alt="Avatar"
+            className="w-14 h-14 rounded-full object-cover mb-1"
+          />
+          <p className="text-sm font-semibold text-gray-800 dark:text-white">
+            {name || "User"}
+          </p>
+          <span className={`text-xs ${
+            role === "admin"
+              ? "text-red-500"
+              : role === "premium"
+              ? "text-yellow-500"
+              : "text-gray-500"
+          }`}>
+            {role === "admin" ? "👑 Admin" : role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
+          </span>
+        </div>
 
         <nav className="space-y-2">
           <NavLink to="/dashboard" className={({ isActive }) =>
@@ -94,7 +89,8 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
                 ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
                 : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"
             }`}>
-            <Home size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> Dashboard
+            <Home size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
+            Dashboard
           </NavLink>
 
           <NavLink to="/wallet" className={({ isActive }) =>
@@ -103,7 +99,8 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
                 ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
                 : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"
             }`}>
-            <Wallet size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> Wallet
+            <Wallet size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
+            Wallet
           </NavLink>
 
           {/* Transaction */}
@@ -116,12 +113,10 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
             </button>
             {isTransactionOpen && (
               <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/income" className={({ isActive }) =>
-                  `block py-1 text-sm transition-all ${isActive ? "text-[#00c2ff] font-semibold" : "text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"}`}>
+                <NavLink to="/income" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline">
                   <PiggyBank size={16} className="inline mr-1" /> Income
                 </NavLink>
-                <NavLink to="/outcome" className={({ isActive }) =>
-                  `block py-1 text-sm transition-all ${isActive ? "text-[#00c2ff] font-semibold" : "text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"}`}>
+                <NavLink to="/outcome" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline">
                   <Receipt size={16} className="inline mr-1" /> Outcome
                 </NavLink>
               </div>
@@ -134,7 +129,8 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
                 ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
                 : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"
             }`}>
-            <Clock size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" /> History
+            <Clock size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
+            History
           </NavLink>
 
           {/* Settings */}
@@ -146,16 +142,13 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
             </button>
             {isSettingsOpen && (
               <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/settings/profile" className={({ isActive }) =>
-                  `block py-1 text-sm ${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
+                <NavLink to="/settings/profile" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
                   👤 Profile
                 </NavLink>
-                <NavLink to="/settings/security" className={({ isActive }) =>
-                  `block py-1 text-sm ${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
+                <NavLink to="/settings/security" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
                   🔐 Security
                 </NavLink>
-                <NavLink to="/settings/preferences" className={({ isActive }) =>
-                  `block py-1 text-sm ${isActive ? "text-purple-600" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
+                <NavLink to="/settings/preferences" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
                   ⚙️ Preferences
                 </NavLink>
               </div>
@@ -171,16 +164,13 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
             </button>
             {isAboutOpen && (
               <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/about" className={({ isActive }) =>
-                  `block py-1 text-sm ${isActive ? "text-purple-600 font-medium" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
+                <NavLink to="/about" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
                   📘 Tentang
                 </NavLink>
-                <NavLink to="/about/privacy-policy" className={({ isActive }) =>
-                  `block py-1 text-sm ${isActive ? "text-purple-600 font-medium" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
+                <NavLink to="/about/privacy-policy" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
                   📜 Kebijakan Privasi
                 </NavLink>
-                <NavLink to="/about/terms-and-conditions" className={({ isActive }) =>
-                  `block py-1 text-sm ${isActive ? "text-purple-600 font-medium" : "text-gray-600 dark:text-gray-300 hover:text-purple-500"}`}>
+                <NavLink to="/about/terms-and-conditions" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
                   📄 Syarat & Ketentuan
                 </NavLink>
               </div>
@@ -203,4 +193,4 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
   )
 }
 
-export default Sidebar;
+export default Sidebar

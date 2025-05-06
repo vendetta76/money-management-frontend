@@ -42,7 +42,7 @@ const ProfilePage = () => {
     const cropper = cropperRef.current.cropper
     const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 })
     const blob = await new Promise<Blob>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", 0.9)
+      canvas.toBlob(resolve, "image/webp", 0.8)
     )
 
     try {
@@ -114,7 +114,7 @@ const ProfilePage = () => {
 
         <div className="mb-6 text-center">
           <img
-            src={avatar || "/default-avatar.png"}
+            src={(avatar?.replace("/upload/", "/upload/f_auto/")) || "/default-avatar.png"}
             alt="Avatar"
             className="w-28 h-28 rounded-full mx-auto mb-2 object-cover border"
           />
