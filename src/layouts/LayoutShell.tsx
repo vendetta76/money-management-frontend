@@ -32,7 +32,7 @@ const LayoutShell = ({ children }: { children: React.ReactNode }) => {
         </header>
 
         {/* Konten utama, offset dari sidebar */}
-        <main className="w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4">
+        <main className="w-full px-4 md:px-6 xl:px-8 2xl:px-10 pt-4">
           {children}
         </main>
       </div>
