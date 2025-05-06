@@ -16,10 +16,12 @@ const ThemeSelect = () => {
         onChange={(e) => setThemeMode(e.target.value)}
         className="w-full text-sm rounded px-2 py-1 border border-gray-300 dark:bg-gray-700 dark:text-white appearance-none transition duration-300 ease-in-out focus:ring-2 focus:ring-[#00d97e] focus:outline-none"
       >
-        <option value="system">🖥️ Default (System)</option>
-        <option value="light">🌞 Light</option>
-        <option value="dark">🌙 Dark</option>
-        <option value="original">🍃 Original MoniQ</option>
+          <option value="system">🖥️ Default</option>
+          <option value="light">🌞 Light</option>
+          <option value="dark">🌙 Dark</option>
+          <option value="original">🍃 Original</option>
+          <option value="warm">🌿 Warm (Eye-Friendly)</option>
+
       </select>
     </div>
   )
