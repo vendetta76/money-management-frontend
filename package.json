@@ -11,6 +11,7 @@
     "axios": "^1.5.0",
     "date-fns": "^4.1.0",
     "firebase": "^11.6.1",
+    "framer-motion": "^12.10.0",
     "lucide-react": "^0.503.0",
     "react": "^18.2.0",
     "react-cropper": "^2.3.3",
