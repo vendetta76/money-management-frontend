@@ -30,7 +30,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
     const unsub = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
       if (!snapshot.exists()) return
       const data = snapshot.data()
-      if (data.photoURL) setPhotoURL(data.photoURL)
+      if (data.avatar) setPhotoURL(data.avatar)
       if (data.name) setName(data.name)
       if (data.role) setRole(data.role)
       setLoading(false)
@@ -60,7 +60,10 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
       p-4 flex flex-col justify-between overflow-y-auto`}>
 
       <div>
-        <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[#00d97e] via-[#a2f300] to-[#00c2ff] bg-clip-text text-transparent mb-6">
+        <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[#00d97e] via-[#a2f300] to-[#00c2ff] bg-clip-text text-transparent mb-4">
+  MoniQ
+</h1>
+
 <div className="flex flex-col items-center text-center mb-6 mt-2">
   <img
     src={photoURL || "/default-avatar.png"}
@@ -80,7 +83,6 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
     {role === "admin" ? "👑 Admin" : role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
   </span>
 </div>
-
           MoniQ
         </h1>
 
