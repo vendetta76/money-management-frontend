@@ -29,6 +29,11 @@ import PreferencesPage from './pages/settings/PreferencesPage'
 // Developer Utility
 import CopyFirebaseIdToken from './pages/CopyFirebaseIdToken'
 
+// About MoniQ Pages ✅
+import AboutPage from './pages/about/AboutPage'
+import PrivacyPolicyPage from './pages/about/PrivacyPolicyPage'
+import TermsAndConditionsPage from './pages/about/TermsAndConditionsPage'
+
 const routes: RouteObject[] = [
   {
     path: '/',
@@ -80,6 +85,21 @@ const routes: RouteObject[] = [
     path: '/settings/preferences',
     element: <PrivateRoute><PreferencesPage /></PrivateRoute>,
   },
+
+  // ✅ About MoniQ Routes
+  {
+    path: '/about',
+    element: <PrivateRoute><AboutPage /></PrivateRoute>,
+  },
+  {
+    path: '/about/privacy-policy',
+    element: <PrivateRoute><PrivacyPolicyPage /></PrivateRoute>,
+  },
+  {
+    path: '/about/terms-and-conditions',
+    element: <PrivateRoute><TermsAndConditionsPage /></PrivateRoute>,
+  },
+
   {
     path: '/admin',
     element: <PrivateRoute requiredRole="Admin"><AdminPage /></PrivateRoute>,
