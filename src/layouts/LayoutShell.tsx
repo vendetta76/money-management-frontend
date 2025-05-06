@@ -20,7 +20,7 @@ const LayoutShell = ({ children }: { children: React.ReactNode }) => {
       )}
 
       {/* Header mobile */}
-      <div className="flex-1 md:ml-64 transition-all duration-300">
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? "ml-60" : "md:ml-64"}`}>
         <header className="md:hidden p-4 flex justify-between items-center shadow bg-white dark:bg-gray-800 sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(true)} className="text-gray-700">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
