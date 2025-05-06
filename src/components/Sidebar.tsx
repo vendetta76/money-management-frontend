@@ -64,28 +64,6 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) 
           MoniQ
         </h1>
 
-        <div className="flex flex-col items-center text-center mb-6">
-          {loading ? (
-            <>
-              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse mb-2" />
-              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1" />
-              <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-            </>
-          ) : (
-            <>
-              <img
-                src={photoURL || "https://res.cloudinary.com/dvbn6oqlp/image/upload/v1746252421/Default_pfp_zoecp6.webp"}
-                className="w-16 h-16 rounded-full object-cover mb-2"
-                alt="Avatar"
-              />
-              <p className="text-sm font-semibold text-gray-700 dark:text-white">{name || "User"}</p>
-              <span className="text-xs text-gray-500 dark:text-gray-300">
-                {role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
-              </span>
-            </>
-          )}
-        </div>
-
         <nav className="space-y-2">
           <NavLink to="/dashboard" className={({ isActive }) =>
             `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
