@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class', // ✅ Wajib agar <html class="dark"> aktif
   content: [
     "./index.html",
     "./src/**/*.{js,jsx,ts,tsx}"
