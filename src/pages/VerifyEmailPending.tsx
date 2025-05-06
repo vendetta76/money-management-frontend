@@ -77,10 +77,10 @@ const VerifyEmailPending = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br flex from-yellow-200 items-center justify-center min-h-screen p-4 to-orange-300">
-      <div className="bg-white dark:bg-gray-900 max-w-md p-6 rounded-xl shadow-xl space-y-4 text-center w-full">
-        <h1 className="font-bold text-2xl text-yellow-700">Verifikasi Email Diperlukan</h1>
-        <p className="dark:text-white text-gray-700 text-sm">
+    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-200 to-orange-300 p-4">
+      <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl shadow-xl text-center space-y-4">
+        <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold text-yellow-700">Verifikasi Email Diperlukan</h1>
+        <p className="dark:text-white dark:bg-gray-900 text-sm text-gray-700">
           Kami telah mengirimkan link verifikasi ke <strong>{email}</strong>.
           Silakan buka email kamu dan klik link tersebut.
         </p>
@@ -88,13 +88,13 @@ const VerifyEmailPending = () => {
         <button
           onClick={handleResend}
           disabled={loading}
-          className="bg-yellow-500 disabled:opacity-50 hover:bg-yellow-600 px-4 py-2 rounded text-white transition"
+          className="dark:text-white dark:bg-gray-900 bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded transition disabled:opacity-50"
         >
           {loading ? "Mengirim ulang..." : "Kirim Ulang Email Verifikasi"}
         </button>
 
-        {message && <p className="text-green-600 text-sm">{message}</p>}
-        {verified && <p className="font-semibold text-green-700 text-sm">Email terverifikasi. Mengarahkan ke dashboard...</p>}
+        {message && <p className="dark:text-white dark:bg-gray-900 text-sm text-green-600">{message}</p>}
+        {verified && <p className="dark:text-white dark:bg-gray-900 text-sm text-green-700 font-semibold">Email terverifikasi. Mengarahkan ke dashboard...</p>}
       </div>
     </div>
   )

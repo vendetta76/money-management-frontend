@@ -25,36 +25,36 @@ const ForgotPasswordPage = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br flex from-purple-600 items-center justify-center min-h-screen p-4 to-indigo-700">
-      <div className="bg-white dark:bg-gray-900 max-w-md p-8 rounded-xl shadow-lg w-full">
-        <h1 className="font-bold mb-6 text-2xl text-center text-purple-700">Lupa Password</h1>
-        <form onSubmit={handleReset} className="space-y-4">
+    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-4">
+      <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 w-full max-w-md p-8 rounded-xl shadow-lg">
+        <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold text-center text-purple-700 mb-6">Lupa Password</h1>
+        <form onSubmit={handleReset} className="dark:text-white dark:bg-gray-900 space-y-4">
           <div>
-            <label htmlFor="email" className="block dark:text-white font-medium text-gray-700 text-sm">Email</label>
+            <label htmlFor="email" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
-          {message && <p className="text-green-600 text-sm">{message}</p>}
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {message && <p className="dark:text-white dark:bg-gray-900 text-green-600 text-sm">{message}</p>}
+          {error && <p className="dark:text-white dark:bg-gray-900 text-red-500 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-purple-600 disabled:opacity-50 hover:bg-purple-700 py-2 rounded text-white transition w-full"
+            className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50"
           >
             {loading ? "Mengirim..." : "Kirim Link Reset"}
           </button>
         </form>
-        <p className="dark:text-white mt-4 text-center text-gray-600 text-sm">
+        <p className="dark:text-white dark:bg-gray-900 text-center text-sm text-gray-600 dark:text-gray-300 mt-4">
           Ingat password?{" "}
-          <a href="/login" className="hover:underline text-purple-600">
+          <a href="/login" className="dark:text-white dark:bg-gray-900 text-purple-600 hover:underline">
             Kembali ke login
           </a>
         </p>

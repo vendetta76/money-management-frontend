@@ -24,21 +24,21 @@ const CopyFirebaseIdToken = () => {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h2 className="font-bold mb-4 text-xl">📋 Salin Firebase ID Token</h2>
+    <div className="dark:text-white dark:bg-gray-900 p-6 max-w-xl mx-auto">
+      <h2 className="dark:text-white dark:bg-gray-900 text-xl font-bold mb-4">📋 Salin Firebase ID Token</h2>
       <button
         onClick={handleCopy}
-        className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-white"
+        className="dark:text-white dark:bg-gray-900 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
       >
         Copy Token
       </button>
-      <p className="dark:text-white mt-4 text-gray-600 text-sm">{status}</p>
+      <p className="dark:text-white dark:bg-gray-900 mt-4 text-sm text-gray-600 dark:text-gray-300">{status}</p>
       {token && (
         <textarea
           value={token}
           readOnly
           rows={6}
-          className="bg-gray-100 border dark:border-gray-700 mt-4 p-2 rounded text-xs w-full"
+          className="dark:text-white dark:bg-gray-900 mt-4 w-full text-xs p-2 border rounded bg-gray-100"
         />
       )}
     </div>

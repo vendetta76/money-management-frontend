@@ -23,17 +23,17 @@ const EditProfilePage = () => {
   }
 
   return (
-    <div className="p-4">
-      <h1 className="font-bold mb-4 text-2xl">Edit Profile</h1>
+    <div className="dark:text-white dark:bg-gray-900 p-4">
+      <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold mb-4">Edit Profile</h1>
       <input
-        className="border dark:border-gray-700 mb-4 px-3 py-2 rounded w-full"
+        className="dark:text-white dark:bg-gray-900 border px-3 py-2 rounded w-full mb-4"
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Full Name"
       />
       <button
-        className="bg-blue-600 px-4 py-2 rounded text-white"
+        className="dark:text-white dark:bg-gray-900 px-4 py-2 bg-blue-600 text-white rounded"
         onClick={handleUpdate}
       >
         Save

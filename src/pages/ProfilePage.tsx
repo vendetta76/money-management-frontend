@@ -8,11 +8,11 @@ const ProfilePage = () => {
   if (!user) return null
 
   return (
-    <div className="p-4">
-      <h1 className="font-bold mb-4 text-2xl">Profile</h1>
+    <div className="dark:text-white dark:bg-gray-900 p-4">
+      <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold mb-4">Profile</h1>
       <p><strong>Email:</strong> {user.email}</p>
       <button
-        className="bg-red-500 mt-4 px-4 py-2 rounded text-white"
+        className="dark:text-white dark:bg-gray-900 mt-4 px-4 py-2 bg-red-500 text-white rounded"
         onClick={async () => {
           await signOut()
           navigate('/login')

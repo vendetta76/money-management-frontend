@@ -43,29 +43,29 @@ const ResetPinPage = () => {
   }
 
   return (
-    <div className="bg-gray-100 flex items-center justify-center min-h-screen px-4">
-      <div className="bg-white dark:bg-gray-900 max-w-sm p-6 rounded-xl shadow w-full">
-        <h1 className="font-bold mb-4 text-center text-purple-700 text-xl">🔐 Atur Ulang PIN</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 p-6 rounded-xl shadow max-w-sm w-full">
+        <h1 className="dark:text-white dark:bg-gray-900 text-xl font-bold mb-4 text-center text-purple-700">🔐 Atur Ulang PIN</h1>
+        <form onSubmit={handleSubmit} className="dark:text-white dark:bg-gray-900 space-y-4">
           <input
             type="password"
             placeholder="PIN Baru"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
-            className="bg-gray-100 border dark:border-gray-700 px-4 py-2 rounded w-full"
+            className="dark:text-white dark:bg-gray-900 w-full px-4 py-2 border rounded bg-gray-100"
           />
           <input
             type="password"
             placeholder="Konfirmasi PIN"
             value={confirmPin}
             onChange={(e) => setConfirmPin(e.target.value)}
-            className="bg-gray-100 border dark:border-gray-700 px-4 py-2 rounded w-full"
+            className="dark:text-white dark:bg-gray-900 w-full px-4 py-2 border rounded bg-gray-100"
           />
-          {error && <p className="text-red-600 text-sm">{error}</p>}
+          {error && <p className="dark:text-white dark:bg-gray-900 text-sm text-red-600">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="bg-purple-600 font-semibold hover:bg-purple-700 py-2 rounded text-white w-full"
+            className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded"
           >
             {loading ? "Memproses..." : "Reset PIN"}
           </button>

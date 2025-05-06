@@ -37,19 +37,19 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="bg-gradient-to-br flex from-purple-600 items-center justify-center min-h-screen p-4 to-indigo-700">
-      <div className="animate-fade-in bg-white dark:bg-gray-900 max-w-md p-6 rounded-xl shadow-lg space-y-6 w-full">
-        <h2 className="font-bold text-2xl text-center text-purple-700">Reset Password</h2>
+    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-4">
+      <div className="dark:text-white dark:bg-gray-900 max-w-md w-full space-y-6 bg-white dark:bg-gray-900 p-6 rounded-xl shadow-lg animate-fade-in">
+        <h2 className="dark:text-white dark:bg-gray-900 text-2xl font-bold text-center text-purple-700">Reset Password</h2>
         <input
           type="password"
           placeholder="Password Baru"
-          className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 p-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <button
           onClick={handleResetPassword}
-          className="bg-green-500 disabled:opacity-50 hover:bg-green-600 p-2 rounded text-white transition w-full"
+          className="dark:text-white dark:bg-gray-900 w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded transition disabled:opacity-50"
           disabled={loading}
         >
           {loading ? "Memproses..." : "Ganti Password"}

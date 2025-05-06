@@ -17,25 +17,25 @@ export default function ResetPasswordRequestPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="bg-white dark:bg-gray-900 max-w-md p-6 rounded shadow space-y-6 w-full">
-        <h2 className="font-bold text-2xl text-center">Reset Password</h2>
+    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center">
+      <div className="dark:text-white dark:bg-gray-900 max-w-md w-full space-y-6 bg-white dark:bg-gray-900 p-6 rounded shadow">
+        <h2 className="dark:text-white dark:bg-gray-900 text-2xl font-bold text-center">Reset Password</h2>
         <input
           type="email"
           placeholder="Masukkan email kamu"
-          className="border dark:border-gray-700 p-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full border p-2 rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <button
           onClick={handleReset}
-          className="bg-blue-500 hover:bg-blue-600 p-2 rounded text-white w-full"
+          className="dark:text-white dark:bg-gray-900 w-full bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
         >
           Kirim Link Reset
         </button>
 
-        {message && <p className="text-green-600 text-sm">{message}</p>}
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {message && <p className="dark:text-white dark:bg-gray-900 text-green-600 text-sm">{message}</p>}
+        {error && <p className="dark:text-white dark:bg-gray-900 text-red-600 text-sm">{error}</p>}
       </div>
     </div>
   )

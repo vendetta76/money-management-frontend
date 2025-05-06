@@ -38,15 +38,15 @@ const Register = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h1 className="font-bold mb-4 text-2xl">Register</h1>
-      <form onSubmit={handleRegister} className="space-y-4">
+    <div className="dark:text-white dark:bg-gray-900 p-4 max-w-md mx-auto">
+      <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold mb-4">Register</h1>
+      <form onSubmit={handleRegister} className="dark:text-white dark:bg-gray-900 space-y-4">
         <input
           type="text"
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className="border dark:border-gray-700 px-3 py-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full px-3 py-2 border rounded"
           required
         />
         <input
@@ -54,7 +54,7 @@ const Register = () => {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border dark:border-gray-700 px-3 py-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full px-3 py-2 border rounded"
           required
         />
         <input
@@ -62,14 +62,14 @@ const Register = () => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border dark:border-gray-700 px-3 py-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full px-3 py-2 border rounded"
           required
         />
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        {success && <p className="text-green-600 text-sm">{success}</p>}
+        {error && <p className="dark:text-white dark:bg-gray-900 text-red-500 text-sm">{error}</p>}
+        {success && <p className="dark:text-white dark:bg-gray-900 text-green-600 text-sm">{success}</p>}
         <button
           type="submit"
-          className="bg-purple-600 py-2 rounded text-white w-full"
+          className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 text-white py-2 rounded"
           disabled={loading}
         >
           {loading ? 'Registering...' : 'Register'}

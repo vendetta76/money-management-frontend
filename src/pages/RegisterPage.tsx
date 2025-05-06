@@ -62,58 +62,58 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br flex from-purple-600 items-center justify-center min-h-screen p-4 to-indigo-700">
-      <div className="bg-white dark:bg-gray-900 max-w-md p-8 rounded-xl shadow-lg w-full">
+    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-4">
+      <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 w-full max-w-md p-8 rounded-xl shadow-lg">
         <BackButton />
 
-        <h1 className="font-bold mb-6 text-3xl text-center text-purple-700">Daftar Akun</h1>
+        <h1 className="dark:text-white dark:bg-gray-900 text-3xl font-bold text-center text-purple-700 mb-6">Daftar Akun</h1>
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleRegister} className="dark:text-white dark:bg-gray-900 space-y-4">
           <div>
-            <label htmlFor="name" className="block dark:text-white font-medium text-gray-700 text-sm">Nama Lengkap</label>
+            <label htmlFor="name" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Nama Lengkap</label>
             <input
               id="name"
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
-              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block dark:text-white font-medium text-gray-700 text-sm">Email</label>
+            <label htmlFor="email" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block dark:text-white font-medium text-gray-700 text-sm">Password</label>
+            <label htmlFor="password" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Password</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-1 px-4 py-2 rounded w-full"
+              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="dark:text-white dark:bg-gray-900 text-red-500 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading || redirecting}
-            className="bg-purple-600 disabled:opacity-50 flex hover:bg-purple-700 items-center justify-center py-2 rounded text-white transition w-full"
+            className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50 flex justify-center items-center"
           >
             {redirecting ? (
-              <div className="animate-spin border-2 border-t-transparent border-white dark:border-gray-700 h-5 rounded-full w-5"></div>
+              <div className="dark:text-white dark:bg-gray-900 animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
             ) : loading ? (
               "Mendaftarkan..."
             ) : (
@@ -122,9 +122,9 @@ const RegisterPage = () => {
           </button>
         </form>
 
-        <p className="dark:text-white mt-4 text-center text-gray-600 text-sm">
+        <p className="dark:text-white dark:bg-gray-900 text-center text-sm text-gray-600 dark:text-gray-300 mt-4">
           Sudah punya akun?{" "}
-          <a href="/login" className="hover:underline text-purple-600">
+          <a href="/login" className="dark:text-white dark:bg-gray-900 text-purple-600 hover:underline">
             Masuk di sini
           </a>
         </p>

@@ -108,40 +108,40 @@ const HistoryPage = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4  max-w-screen-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
+      <main className="dark:text-white dark:bg-gray-900 min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-2xl mx-auto">
+        <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
 
-        <div className="flex flex-wrap gap-4 mb-6 items-center">
-          <div className="relative w-full sm:w-1/2 md:w-1/3">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+        <div className="dark:text-white dark:bg-gray-900 flex flex-wrap gap-4 mb-6 items-center">
+          <div className="dark:text-white dark:bg-gray-900 relative w-full sm:w-1/2 md:w-1/3">
+            <Search className="dark:text-white dark:bg-gray-900 absolute left-3 top-2.5 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Cari deskripsi..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
+              className="dark:text-white dark:bg-gray-900 w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
             />
           </div>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
+            className="dark:text-white dark:bg-gray-900 w-full sm:w-auto px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
           />
         </div>
 
         {filtered.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-300">Tidak ada transaksi ditemukan.</p>
+          <p className="dark:text-white dark:bg-gray-900 text-sm text-gray-500 dark:text-gray-300 dark:text-gray-300">Tidak ada transaksi ditemukan.</p>
         ) : (
-          <div className="grid gap-4">
+          <div className="dark:text-white dark:bg-gray-900 grid gap-4">
             {filtered.map((item) => (
               <div
                 key={item.id}
-                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-md transition border-l-4"
+                className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-md transition border-l-4"
                 style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                <div className="dark:text-white dark:bg-gray-900 flex items-center justify-between mb-2">
+                  <span className="dark:text-white dark:bg-gray-900 text-sm font-semibold text-gray-600 dark:text-gray-300 dark:text-gray-300">
                     {item.type === "income" ? "📥 Income" : "📤 Outcome"} • {getWalletName(item.wallet)} ({getWalletCurrency(item.wallet)})
                   </span>
                   <span
@@ -150,19 +150,19 @@ const HistoryPage = () => {
                     {item.type === "income" ? "+" : "-"} Rp {item.amount.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <div className="text-sm text-gray-700 dark:text-gray-100">
+                <div className="dark:text-white dark:bg-gray-900 text-sm text-gray-700 dark:text-gray-100">
                   {item.description}
                   {item.editHistory && item.editHistory.length > 0 && (
-                    <span className="text-xs text-blue-500 ml-2">(edited)</span>
+                    <span className="dark:text-white dark:bg-gray-900 text-xs text-blue-500 ml-2">(edited)</span>
                   )}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="dark:text-white dark:bg-gray-900 text-xs text-gray-400 mt-1">
                   {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID")}
                 </div>
                 {item.editHistory && item.editHistory.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded">
-                    <p className="font-semibold mb-1">Histori Perubahan:</p>
-                    <ul className="list-disc ml-5 space-y-1">
+                  <div className="dark:text-white dark:bg-gray-900 mt-2 text-xs text-gray-500 dark:text-gray-300 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded">
+                    <p className="dark:text-white dark:bg-gray-900 font-semibold mb-1">Histori Perubahan:</p>
+                    <ul className="dark:text-white dark:bg-gray-900 list-disc ml-5 space-y-1">
                       {item.editHistory.map((log, i) => (
                         <li key={i}>
                           {new Date(log.editedAt?.toDate?.() ?? log.editedAt).toLocaleString("id-ID")}: {log.description} - Rp {log.amount.toLocaleString("id-ID")}

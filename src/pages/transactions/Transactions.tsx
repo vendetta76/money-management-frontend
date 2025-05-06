@@ -26,11 +26,11 @@ export default function Transactions() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 max-w-xl mx-auto p-6 rounded-lg shadow">
-      <h1 className="font-bold mb-4 text-2xl">📝 Tambah Transaksi</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="dark:text-white dark:bg-gray-900 p-6 max-w-xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow">
+      <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold mb-4">📝 Tambah Transaksi</h1>
+      <form onSubmit={handleSubmit} className="dark:text-white dark:bg-gray-900 space-y-4">
         <select
-          className="border dark:border-gray-700 p-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full border p-2 rounded"
           value={form.type}
           onChange={(e) => setForm({ ...form, type: e.target.value })}
         >
@@ -41,7 +41,7 @@ export default function Transactions() {
         <input
   type="text"
   placeholder="Nominal"
-  className="border dark:border-gray-700 p-2 rounded w-full"
+  className="dark:text-white dark:bg-gray-900 w-full border p-2 rounded"
   value={new Intl.NumberFormat("id-ID").format(form.amount || 0)}
   onChange={(e) => {
     const onlyDigits = e.target.value.replace(/\D/g, ""); // Hapus semua non-digit
@@ -51,7 +51,7 @@ export default function Transactions() {
 />
 
         <select
-          className="border dark:border-gray-700 p-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full border p-2 rounded"
           value={form.currency}
           onChange={(e) => setForm({ ...form, currency: e.target.value })}
         >
@@ -62,7 +62,7 @@ export default function Transactions() {
         <input
           type="text"
           placeholder="Deskripsi"
-          className="border dark:border-gray-700 p-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full border p-2 rounded"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           required
@@ -70,7 +70,7 @@ export default function Transactions() {
 
         <button
           type="submit"
-          className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white"
+          className="dark:text-white dark:bg-gray-900 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
         >
           Simpan
         </button>

@@ -109,27 +109,27 @@ const ProfilePage = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4  max-w-screen-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6 text-purple-700 flex items-center gap-2">👤 Profil Saya</h1>
+      <main className="dark:text-white dark:bg-gray-900 min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-md mx-auto">
+        <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold mb-6 text-purple-700 flex items-center gap-2">👤 Profil Saya</h1>
 
-        <div className="mb-6 text-center">
-          <div className="relative w-fit mx-auto mb-4">
+        <div className="dark:text-white dark:bg-gray-900 mb-6 text-center">
+          <div className="dark:text-white dark:bg-gray-900 relative w-fit mx-auto mb-4">
             <img
               src={(avatar?.replace("/upload/", "/upload/f_auto/")) || "/default-avatar.png"}
               alt="Avatar"
-              className="w-28 h-28 rounded-full object-cover border shadow"
+              className="dark:text-white dark:bg-gray-900 w-28 h-28 rounded-full object-cover border shadow"
             />
             {previewImage && (
-              <span className="absolute top-0 right-0 bg-purple-600 text-white text-xs px-2 py-1 rounded-full shadow">
+              <span className="dark:text-white dark:bg-gray-900 absolute top-0 right-0 bg-purple-600 text-white text-xs px-2 py-1 rounded-full shadow">
                 Preview
               </span>
             )}
           </div>
 
-          <div className="flex flex-col items-center gap-2">
+          <div className="dark:text-white dark:bg-gray-900 flex flex-col items-center gap-2">
             <label
               htmlFor="avatarInput"
-              className="cursor-pointer inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition duration-200"
+              className="dark:text-white dark:bg-gray-900 cursor-pointer inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition duration-200"
             >
               Pilih Foto
             </label>
@@ -138,12 +138,12 @@ const ProfilePage = () => {
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="hidden"
+              className="dark:text-white dark:bg-gray-900 hidden"
             />
           </div>
 
           {previewImage && (
-            <div className="mt-4">
+            <div className="dark:text-white dark:bg-gray-900 mt-4">
               <Cropper
                 src={previewImage}
                 style={{ height: 300, width: "100%" }}
@@ -155,7 +155,7 @@ const ProfilePage = () => {
               <button
                 onClick={uploadCroppedImage}
                 disabled={loading}
-                className="mt-3 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 text-sm transition duration-200"
+                className="dark:text-white dark:bg-gray-900 mt-3 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 text-sm transition duration-200"
               >
                 {loading ? "Mengunggah..." : "Unggah Avatar"}
               </button>
@@ -163,27 +163,27 @@ const ProfilePage = () => {
           )}
         </div>
 
-        <div className="mb-6 text-sm text-gray-600 space-y-1">
+        <div className="dark:text-white dark:bg-gray-900 mb-6 text-sm text-gray-600 dark:text-gray-300 space-y-1">
           <p><strong>Status:</strong> {userMeta?.role || "Regular"}</p>
           <p><strong>Login terakhir:</strong> {user?.metadata?.lastSignInTime
             ? new Date(user.metadata.lastSignInTime).toLocaleString("id-ID")
             : "Tidak tersedia"}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="dark:text-white dark:bg-gray-900 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
+            <label className="dark:text-white dark:bg-gray-900 block text-sm font-medium mb-1">Nama Lengkap</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none"
+              className="dark:text-white dark:bg-gray-900 w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50"
+            className="dark:text-white dark:bg-gray-900 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50"
           >
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </button>

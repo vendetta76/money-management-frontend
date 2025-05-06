@@ -29,20 +29,20 @@ const ResetPassword: React.FC = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 flex items-center justify-center min-h-screen px-4">
+    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 px-4">
       <form
         onSubmit={handleResetPassword}
-        className="bg-gray-50 max-w-md p-6 rounded-lg shadow-md space-y-4 w-full"
+        className="dark:text-white dark:bg-gray-900 max-w-md w-full bg-gray-50 shadow-md rounded-lg p-6 space-y-4"
       >
-        <h2 className="font-bold text-center text-xl">Reset Password</h2>
+        <h2 className="dark:text-white dark:bg-gray-900 text-xl font-bold text-center">Reset Password</h2>
 
-        {error && <div className="text-red-500 text-sm">{error}</div>}
-        {success && <div className="text-green-600 text-sm">{success}</div>}
+        {error && <div className="dark:text-white dark:bg-gray-900 text-red-500 text-sm">{error}</div>}
+        {success && <div className="dark:text-white dark:bg-gray-900 text-green-600 text-sm">{success}</div>}
 
         <input
           type="password"
           placeholder="Password Baru"
-          className="border dark:border-gray-700 px-4 py-2 rounded w-full"
+          className="dark:text-white dark:bg-gray-900 w-full px-4 py-2 border rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -50,7 +50,7 @@ const ResetPassword: React.FC = () => {
 
         <button
           type="submit"
-          className="bg-purple-600 font-semibold hover:bg-purple-700 py-2 rounded text-white w-full"
+          className="dark:text-white dark:bg-gray-900 w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded"
           disabled={loading}
         >
           {loading ? 'Mengubah...' : 'Ubah Password'}

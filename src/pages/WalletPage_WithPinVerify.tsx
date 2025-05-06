@@ -46,14 +46,14 @@ const WalletPageWithPinVerify = () => {
     }
   }
 
-  if (loading) return <div className="p-6 text-center">Loading...</div>
+  if (loading) return <div className="dark:text-white dark:bg-gray-900 p-6 text-center">Loading...</div>
   if (!storedPin) return <WalletPageContent />
 
   if (!verified) {
     return (
-      <div className="bg-gray-100 flex items-center justify-center min-h-screen">
-        <div className="bg-white dark:bg-gray-900 max-w-sm md:p-6 px-4 py-6 rounded-xl shadow text-center w-full">
-          <h2 className="font-bold mb-4 text-xl">🔒 Verifikasi PIN</h2>
+      <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="dark:text-white dark:bg-gray-900 w-full max-w-sm px-4 py-6 md:p-6 rounded-xl shadow bg-white dark:bg-gray-900 text-center">
+          <h2 className="dark:text-white dark:bg-gray-900 text-xl font-bold mb-4">🔒 Verifikasi PIN</h2>
           <input
             type="password"
             value={enteredPin}
@@ -62,19 +62,19 @@ const WalletPageWithPinVerify = () => {
             placeholder="Masukkan PIN Akses"
             maxLength={6}
             disabled={loading}
-            className="bg-gray-100 border dark:border-gray-700 mb-3 px-3 py-2 rounded-lg text-center text-sm w-full"
+            className="dark:text-white dark:bg-gray-900 w-full px-3 py-2 border rounded-lg bg-gray-100 mb-3 text-center text-sm"
           />
-          {error && <p className="mb-2 text-red-600 text-sm">{error}</p>}
+          {error && <p className="dark:text-white dark:bg-gray-900 text-red-600 text-sm mb-2">{error}</p>}
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm text-white w-full"
+            className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
           >
             {loading ? "Memverifikasi..." : "Verifikasi"}
           </button>
           <button
             onClick={() => navigate("/settings/security")}
-            className="dark:text-white hover:underline mt-3 text-gray-500 text-sm"
+            className="dark:text-white dark:bg-gray-900 mt-3 text-sm text-gray-500 dark:text-gray-300 hover:underline"
           >
             Lupa PIN?
           </button>
