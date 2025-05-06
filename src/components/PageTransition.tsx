@@ -1,7 +1,6 @@
 // components/PageTransition.tsx
 import { motion, AnimatePresence } from "framer-motion"
 import { useLocation } from "react-router-dom"
-import catCoin from "../assets/kucing-cuan.png" // ganti sesuai lokasi file kamu
 
 const PageTransition = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation()
@@ -18,7 +17,7 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
       >
         {/* Animasi maskot lompat */}
         <motion.img
-          src={catCoin}
+          src="/assets/kucing-cuan.png"
           alt="Maskot Kucing Cuan"
           initial={{ x: -100, y: 0, rotate: -10, opacity: 0 }}
           animate={{
