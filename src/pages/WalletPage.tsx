@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
-import { maxWalletPerRole } from "../utils/walletLimit";
 import LayoutShell from "../layouts/LayoutShell";
 import {
   collection,
-  addDoc,
   updateDoc,
   deleteDoc,
   doc,
@@ -15,7 +13,7 @@ import {
   serverTimestamp,
   setDoc
 } from "firebase/firestore";
-import { Settings, Plus, X, Eye, EyeOff } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import Select from "react-select";
 
 interface WalletEntry {
@@ -43,13 +41,13 @@ const currencyOptions = [
 ];
 
 export default function WalletPage() {
-  const { user, userMeta } = useAuth();
+  const { user } = useAuth();
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [name, setName] = useState("");
   const [balance, setBalance] = useState(0);
   const [currency, setCurrency] = useState("IDR");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const maxWallets = maxWalletPerRole(userMeta?.role);
+  const maxWallets = 99; // 🔓 Batas dilepaskan, semua user bisa buat hingga 99 wallet
 
   useEffect(() => {
     if (!user) return;
@@ -71,7 +69,7 @@ export default function WalletPage() {
     if (!user) return;
 
     if (!editingId && wallets.length >= maxWallets) {
-      alert(`🚫 Batas wallet tercapai. ${userMeta?.role === "premium" ? "Premium" : "Regular"} hanya bisa membuat maksimal ${maxWallets} wallet.`);
+      alert(`🚫 Batas wallet tercapai. Maksimum ${maxWallets} wallet.`);
       return;
     }
 
@@ -97,7 +95,7 @@ export default function WalletPage() {
       setBalance(0);
       setCurrency("IDR");
       setEditingId(null);
-    } catch (error) {
+    } catch {
       alert("❌ Gagal menyimpan wallet.");
     }
   };
