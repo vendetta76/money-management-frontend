@@ -1,63 +1,90 @@
 // src/pages/settings/PreferencesPage.tsx
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import LayoutShell from '../../layouts/LayoutShell'
 import { toast } from 'react-hot-toast'
+import { usePreferences } from '../../context/PreferencesContext'
 
 const PreferencesPage: React.FC = () => {
-  // Load stored values or defaults
-  const [pinTimeout, setPinTimeout] = useState<number>(() => {
-    const val = localStorage.getItem('pinTimeout')
-    return val ? Number(val) : 5 * 60 * 1000
-  })
-  const [logoutTimeout, setLogoutTimeout] = useState<number>(() => {
-    const val = localStorage.getItem('logoutTimeout')
-    return val ? Number(val) : 0
-  })
+  const { preferences, setPreferences } = usePreferences()
 
-  // Pending values in form
-  const [pendingPinTimeout, setPendingPinTimeout] = useState<number>(pinTimeout)
-  const [pendingLogoutTimeout, setPendingLogoutTimeout] = useState<number>(logoutTimeout)
+  // Inisialisasi dari localStorage ke Context
+  useEffect(() => {
+    const pinVal = localStorage.getItem('pinTimeout')
+    const logoutVal = localStorage.getItem('logoutTimeout')
+    setPreferences({
+      ...preferences,
+      requirePinOnIdle: pinVal !== null,
+      pinIdleTimeoutMs: pinVal ? Number(pinVal) : preferences.pinIdleTimeoutMs,
+      logoutTimeoutMs: logoutVal ? Number(logoutVal) : preferences.logoutTimeoutMs,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  // Track if unapplied changes exist
-  const [applied, setApplied] = useState<boolean>(true)
+  // State pending form
+  const [requirePinOnIdle, setRequirePinOnIdle] = useState<boolean>(preferences.requirePinOnIdle)
+  const [pendingPinTimeout, setPendingPinTimeout] = useState<number>(preferences.pinIdleTimeoutMs)
+  const [pendingLogoutTimeout, setPendingLogoutTimeout] = useState<number>(preferences.logoutTimeoutMs)
+
+  // Cek apakah ada perubahan yang belum diterapkan
+  const [applied, setApplied] = useState(true)
   useEffect(() => {
     setApplied(
-      pendingPinTimeout === pinTimeout &&
-      pendingLogoutTimeout === logoutTimeout
+      requirePinOnIdle === preferences.requirePinOnIdle &&
+      pendingPinTimeout === preferences.pinIdleTimeoutMs &&
+      pendingLogoutTimeout === preferences.logoutTimeoutMs
     )
-  }, [pendingPinTimeout, pendingLogoutTimeout, pinTimeout, logoutTimeout])
+  }, [requirePinOnIdle, pendingPinTimeout, pendingLogoutTimeout, preferences])
 
   const handleApply = () => {
-    localStorage.setItem('pinTimeout', pendingPinTimeout.toString())
+    localStorage.setItem('pinTimeout', requirePinOnIdle ? pendingPinTimeout.toString() : '0')
     localStorage.setItem('logoutTimeout', pendingLogoutTimeout.toString())
-    setPinTimeout(pendingPinTimeout)
-    setLogoutTimeout(pendingLogoutTimeout)
+    setPreferences({
+      ...preferences,
+      requirePinOnIdle,
+      pinIdleTimeoutMs: pendingPinTimeout,
+      logoutTimeoutMs: pendingLogoutTimeout,
+    })
     setApplied(true)
     toast.success('Preferensi berhasil diterapkan')
   }
 
   return (
     <LayoutShell>
-      <main className="min-h-screen px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 pt-4 max-w-screen-md mx-auto">
+      <main className="px-4 py-6 max-w-screen-md mx-auto">
         <h1 className="text-2xl font-bold mb-6">⚙️ Preferensi</h1>
 
-        {/* Durasi Verifikasi PIN */}
+        {/* Toggle PIN on Idle */}
         <div className="flex items-center justify-between mb-4">
-          <span>Durasi Verifikasi PIN</span>
-          <select
-            value={pendingPinTimeout}
-            onChange={e => setPendingPinTimeout(Number(e.target.value))}
-            className="border rounded px-3 py-1"
-          >
-            <option value={0}>Off</option>
-            <option value={5 * 60 * 1000}>5 menit</option>
-            <option value={10 * 60 * 1000}>10 menit</option>
-            <option value={15 * 60 * 1000}>15 menit</option>
-            <option value={30 * 60 * 1000}>30 menit</option>
-          </select>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={requirePinOnIdle}
+              onChange={e => setRequirePinOnIdle(e.target.checked)}
+              className="mr-2"
+            />
+            Minta PIN lagi setelah idle
+          </label>
         </div>
 
-        {/* Durasi Logout Otomatis */}
+        {/* Timeout PIN */}
+        {requirePinOnIdle && (
+          <div className="flex items-center justify-between mb-4">
+            <span>Timeout PIN</span>
+            <select
+              value={pendingPinTimeout}
+              onChange={e => setPendingPinTimeout(Number(e.target.value))}
+              className="border rounded px-3 py-1"
+            >
+              <option value={0}>0 (Off)</option>
+              <option value={5 * 60 * 1000}>5 menit</option>
+              <option value={10 * 60 * 1000}>10 menit</option>
+              <option value={15 * 60 * 1000}>15 menit</option>
+              <option value={30 * 60 * 1000}>30 menit</option>
+            </select>
+          </div>
+        )}
+
+        {/* Logout Timeout */}
         <div className="flex items-center justify-between mb-6">
           <span>Durasi Logout Otomatis</span>
           <select

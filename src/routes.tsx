@@ -1,7 +1,9 @@
 // src/routes.tsx
+import React from 'react'
 import { RouteObject } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
 import PageTransition from './components/PageTransition'
+import PinProtect from './components/PinProtect'
 
 // Auth & Utility
 import LoginPage from './pages/LoginPage'
@@ -17,7 +19,7 @@ import ResetPinPage from './pages/ResetPinPage'
 
 // Core Pages
 import DashboardPage from './pages/DashboardPage'
-import WalletPage_WithPinVerify from './pages/WalletPage_WithPinVerify'
+import WalletPage from './pages/WalletPage'           // use plain WalletPage + PinProtect
 import IncomePage from './pages/IncomePage'
 import OutcomePage from './pages/OutcomePage'
 import HistoryPage from './pages/HistoryPage'
@@ -67,7 +69,9 @@ const routes: RouteObject[] = [
     element: (
       <PrivateRoute>
         <PageTransition>
-          <WalletPage_WithPinVerify />
+          <PinProtect>
+            <WalletPage />
+          </PinProtect>
         </PageTransition>
       </PrivateRoute>
     ),
