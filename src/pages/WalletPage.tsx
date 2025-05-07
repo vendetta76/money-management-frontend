@@ -101,7 +101,7 @@ const WalletPage: React.FC = () => {
 
   const handleEdit = (w: WalletEntry) => {
     setForm({ name: w.name, balance: '0', currency: w.currency })
-    setEditingId(w.id!) 
+    setEditingId(w.id!)
     setShowForm(true)
   }
 
@@ -116,6 +116,7 @@ const WalletPage: React.FC = () => {
   return (
     <LayoutShell>
       <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto">
+        {/* Total Saldo */}
         <h2 className="text-lg font-semibold mb-2">Total Saldo per Mata Uang</h2>
 
         <div className="flex items-center justify-between mb-4">
@@ -179,6 +180,7 @@ const WalletPage: React.FC = () => {
           </div>
         )}
 
+        {/* Form Tambah/Edit */}
         {showForm && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
             <form
