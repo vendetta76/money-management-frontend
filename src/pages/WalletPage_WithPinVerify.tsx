@@ -1,20 +1,23 @@
 // src/pages/WalletPage_WithPinVerify.tsx
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState } from 'react'
 import { getDoc, doc } from 'firebase/firestore'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../lib/firebaseClient'
 import WalletPage from './WalletPage'
 import LayoutShell from '../layouts/LayoutShell'
+import { usePreferences } from '../context/PreferencesContext'
 
 const WalletPage_WithPinVerify: React.FC = () => {
   const { user } = useAuth()
+  const { requirePinOnIdle, pinIdleTimeoutMs } = usePreferences()
+
   const [storedPin, setStoredPin] = useState<string>('')
   const [enteredPin, setEnteredPin] = useState<string>('')
-  const [verified, setVerified] = useState<boolean>(false)
+  const [verified, setVerified] = useState<boolean>(!requirePinOnIdle)
   const [loadingPin, setLoadingPin] = useState<boolean>(true)
   const [pinError, setPinError] = useState<string>('')
 
-  // Ambil PIN user
+  // Ambil PIN user dari Firestore
   useEffect(() => {
     const fetchPin = async () => {
       if (!user?.uid) {
@@ -28,19 +31,14 @@ const WalletPage_WithPinVerify: React.FC = () => {
     fetchPin()
   }, [user])
 
-  // Baca durasi dari Preferences
-  const sessionTimeout = useMemo<number>(() => {
-    const v = localStorage.getItem('sessionTimeout')
-    return v ? Number(v) : 5 * 60 * 1000
-  }, [])
-
-  // Cek validitas sesi
+  // Cek sesi sebelumnya jika idle‐PIN diaktifkan
   useEffect(() => {
+    if (!requirePinOnIdle) return
     const at = Number(localStorage.getItem('walletPinVerifiedAt'))
-    if (at && Date.now() - at < sessionTimeout) {
+    if (at && Date.now() - at < pinIdleTimeoutMs) {
       setVerified(true)
     }
-  }, [sessionTimeout])
+  }, [requirePinOnIdle, pinIdleTimeoutMs])
 
   const handlePinSubmit = () => {
     if (enteredPin === storedPin) {
@@ -49,10 +47,11 @@ const WalletPage_WithPinVerify: React.FC = () => {
       setPinError('')
     } else {
       setPinError('PIN salah. Coba lagi.')
+      setEnteredPin('')
     }
   }
 
-  // Loading
+  // Loading state
   if (loadingPin) {
     return (
       <LayoutShell>
@@ -60,9 +59,13 @@ const WalletPage_WithPinVerify: React.FC = () => {
       </LayoutShell>
     )
   }
-  // Jika belum set PIN, lewati
-  if (!storedPin) return <WalletPage />
-  // Jika belum verifikasi
+
+  // Jika user belum punya PIN, langsung ke WalletPage
+  if (!storedPin || !requirePinOnIdle) {
+    return <WalletPage />
+  }
+
+  // Jika belum verifikasi, tampilkan form PIN
   if (!verified) {
     return (
       <LayoutShell>
@@ -76,12 +79,14 @@ const WalletPage_WithPinVerify: React.FC = () => {
               placeholder="PIN Akses"
               maxLength={6}
               onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()}
-              className="w-full mb-3 px-4 py-2 border rounded"
+              className="w-full mb-3 px-4 py-2 border rounded text-center"
+              autoFocus
             />
             {pinError && <p className="text-red-500 mb-3">{pinError}</p>}
             <button
               onClick={handlePinSubmit}
-              className="w-full bg-purple-600 text-white py-2 rounded"
+              className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+              disabled={enteredPin.length !== 6}
             >
               Verifikasi
             </button>
@@ -91,7 +96,7 @@ const WalletPage_WithPinVerify: React.FC = () => {
     )
   }
 
-  // Setelah verifikasi
+  // Setelah berhasil verifikasi
   return <WalletPage />
 }
 
