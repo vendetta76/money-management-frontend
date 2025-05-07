@@ -11,6 +11,10 @@ import VerifyEmailPending from './pages/VerifyEmailPending'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import LandingPage from './pages/LandingPage'
 
+// PIN Reset Pages
+import ForgotPinPage from './pages/ForgotPinPage'
+import ResetPinPage from './pages/ResetPinPage'
+
 // Core Pages
 import DashboardPage from './pages/DashboardPage'
 import WalletPageWithPinVerify from './pages/WalletPage_WithPinVerify'
@@ -43,6 +47,10 @@ const routes: RouteObject[] = [
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/verify-email-pending', element: <VerifyEmailPending /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
+
+  // PIN reset flow
+  { path: '/forgot-pin', element: <ForgotPinPage /> },
+  { path: '/reset-pin', element: <ResetPinPage /> },
 
   {
     path: '/dashboard',

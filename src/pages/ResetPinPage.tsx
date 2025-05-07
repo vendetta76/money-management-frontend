@@ -1,78 +1,72 @@
-import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import toast from "react-hot-toast"
+// src/pages/ResetPinPage.tsx
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import LayoutShell from '../layouts/LayoutShell';
 
-const ResetPinPage = () => {
-  const { token } = useParams()
-  const navigate = useNavigate()
-  const [pin, setPin] = useState("")
-  const [confirmPin, setConfirmPin] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+const ResetPinPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') || '';
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (pin !== confirmPin) {
-      setError("PIN tidak cocok.")
-      return
+      setMessage('PIN tidak cocok.');
+      return;
     }
-    if (pin.length < 4 || pin.length > 6) {
-      setError("PIN harus 4–6 digit.")
-      return
-    }
-
+    setLoading(true);
     try {
-      setLoading(true)
-      const res = await fetch("https://money-management-backend-f6dg.onrender.com/api/reset-pin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, pin })
-      })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.message || "Reset PIN gagal")
-
-      toast.success("✅ PIN berhasil diatur ulang")
-      navigate("/login")
+      await axios.post('/api/reset-pin', { token, newPin: pin });
+      setMessage('PIN berhasil di-reset! Redirect ke Wallet…');
+      setTimeout(() => navigate('/wallet'), 1500);
     } catch (err: any) {
-      console.error(err)
-      toast.error(err.message || "Terjadi kesalahan")
-    } finally {
-      setLoading(false)
+      setMessage(err.response?.data?.message || 'Gagal reset PIN.');
     }
-  }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (!token) {
+      setMessage('Token tidak ditemukan di URL.');
+    }
+  }, [token]);
 
   return (
-    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 p-6 rounded-xl shadow max-w-sm w-full">
-        <h1 className="dark:text-white dark:bg-gray-900 text-xl font-bold mb-4 text-center text-purple-700">🔐 Atur Ulang PIN</h1>
-        <form onSubmit={handleSubmit} className="dark:text-white dark:bg-gray-900 space-y-4">
+    <LayoutShell>
+      <main className="p-6 max-w-md mx-auto">
+        <h1 className="text-2xl font-bold mb-4">🔄 Reset PIN</h1>
+        <form onSubmit={handleReset}>
           <input
             type="password"
-            placeholder="PIN Baru"
+            placeholder="PIN baru (4–6 digit)"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
-            className="dark:text-white dark:bg-gray-900 w-full px-4 py-2 border rounded bg-gray-100"
+            className="block w-full mb-3 border rounded px-4 py-2"
           />
           <input
             type="password"
-            placeholder="Konfirmasi PIN"
+            placeholder="Ulangi PIN"
             value={confirmPin}
             onChange={(e) => setConfirmPin(e.target.value)}
-            className="dark:text-white dark:bg-gray-900 w-full px-4 py-2 border rounded bg-gray-100"
+            className="block w-full mb-4 border rounded px-4 py-2"
           />
-          {error && <p className="dark:text-white dark:bg-gray-900 text-sm text-red-600">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded"
+            className="bg-green-600 text-white px-6 py-2 rounded-lg w-full"
           >
-            {loading ? "Memproses..." : "Reset PIN"}
+            {loading ? 'Memproses...' : 'Reset PIN'}
           </button>
         </form>
-      </div>
-    </div>
-  )
-}
+        {message && <p className="mt-4 text-center">{message}</p>}
+      </main>
+    </LayoutShell>
+  );
+};
 
-export default ResetPinPage
+export default ResetPinPage;
