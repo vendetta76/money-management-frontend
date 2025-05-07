@@ -17,7 +17,7 @@ import ResetPinPage from './pages/ResetPinPage'
 
 // Core Pages
 import DashboardPage from './pages/DashboardPage'
-import WalletPageWithPinVerify from './pages/WalletPage_WithPinVerify'
+import WalletPage_WithPinVerify from './pages/WalletPage_WithPinVerify'
 import IncomePage from './pages/IncomePage'
 import OutcomePage from './pages/OutcomePage'
 import HistoryPage from './pages/HistoryPage'
@@ -67,7 +67,7 @@ const routes: RouteObject[] = [
     element: (
       <PrivateRoute>
         <PageTransition>
-          <WalletPageWithPinVerify />
+          <WalletPage_WithPinVerify />
         </PageTransition>
       </PrivateRoute>
     ),
