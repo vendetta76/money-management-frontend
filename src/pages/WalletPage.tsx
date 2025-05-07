@@ -14,7 +14,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { db } from '../lib/firebaseClient'
 import LayoutShell from '../layouts/LayoutShell'
-import { Plus, X, Eye, EyeOff, Settings } from 'lucide-react'
+import { Plus, X, Eye, EyeOff, Settings, Lock } from 'lucide-react'
 import Select from 'react-select'
 
 interface WalletEntry {
@@ -101,7 +101,7 @@ const WalletPage: React.FC = () => {
 
   const handleEdit = (w: WalletEntry) => {
     setForm({ name: w.name, balance: '0', currency: w.currency })
-    setEditingId(w.id!) 
+    setEditingId(w.id!)
     setShowForm(true)
   }
 
@@ -115,11 +115,11 @@ const WalletPage: React.FC = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen px-4 py-6 max-w-2xl mx-auto">
-        {/* Totals */}
+      <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto">
+        {/* Total saldo per mata uang */}
         <div className="mb-6">
           <h2 className="font-semibold mb-3">Total Saldo per Mata Uang</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {Object.entries(totalsByCurrency).map(
               ([curr, tot]) =>
                 tot > 0 && (
@@ -142,32 +142,41 @@ const WalletPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Header */}
+        {/* Header dan kontrol */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">Daftar Wallet</h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setShowBalance(!showBalance)}
-              className="flex items-center gap-1 text-sm"
+              className="text-sm flex items-center gap-1"
             >
               {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
               {showBalance ? 'Sembunyikan Saldo' : 'Tampilkan Saldo'}
             </button>
             <button
+              onClick={() => {
+                localStorage.removeItem('walletPinVerifiedAt')
+                window.location.reload()
+              }}
+              className="text-sm flex items-center gap-1 text-red-500 hover:text-red-600"
+            >
+              <Lock size={16} />
+              Kunci
+            </button>
+            <button
               onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-2 bg-gradient-to-br from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow hover:brightness-110 transition"
             >
-              <Plus size={18} />
-              Tambah Wallet
+              <Plus size={18} /> Tambah Wallet
             </button>
           </div>
         </div>
 
-        {/* Wallet list */}
+        {/* Daftar Wallet */}
         {wallets.length === 0 ? (
           <p>Belum ada wallet.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
             {wallets.map((w) => (
               <div
                 key={w.id}
@@ -200,9 +209,9 @@ const WalletPage: React.FC = () => {
           </div>
         )}
 
-        {/* Form */}
+        {/* Form Tambah/Edit Wallet */}
         {showForm && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
             <form
               onSubmit={handleSubmit}
               className="bg-white p-6 rounded-xl max-w-sm w-full relative"
@@ -224,35 +233,20 @@ const WalletPage: React.FC = () => {
                 <input
                   name="name"
                   value={form.name}
-                  onChange={(e) =>
-                    setForm({ ...form, name: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Nama Wallet"
                   className="w-full px-4 py-2 border rounded"
                 />
-                {errors.name && (
-                  <p className="text-red-500 text-sm">{errors.name}</p>
-                )}
+                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
               </div>
               <div className="mb-4">
                 <Select
                   options={currencyOptions}
-                  value={currencyOptions.find(
-                    (o) => o.value === form.currency
-                  )}
-                  onChange={(sel) =>
-                    setForm({
-                      ...form,
-                      currency: sel?.value || '',
-                    })
-                  }
+                  value={currencyOptions.find((o) => o.value === form.currency)}
+                  onChange={(sel) => setForm({ ...form, currency: sel?.value || '' })}
                   placeholder="Pilih mata uang"
                 />
-                {errors.currency && (
-                  <p className="text-red-500 text-sm">
-                    {errors.currency}
-                  </p>
-                )}
+                {errors.currency && <p className="text-red-500 text-sm">{errors.currency}</p>}
               </div>
               <div className="flex justify-between items-center">
                 {editingId && (
@@ -276,4 +270,4 @@ const WalletPage: React.FC = () => {
   )
 }
 
-export default WalletPage
+export default WalletPage;
