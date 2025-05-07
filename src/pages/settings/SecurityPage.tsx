@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import LayoutShell from "../../layouts/LayoutShell";
 
 const SecurityPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -112,16 +114,23 @@ const SecurityPage = () => {
 
         <div className="mb-8">
           <h2 className="font-semibold mb-2">Ganti PIN Akses</h2>
-
           {pin ? (
             <>
               <p className="mb-2">PIN saat ini telah disetel.</p>
-              <button
-                onClick={() => setShowModal(true)}
-                className="bg-red-500 text-white px-4 py-2 rounded w-full sm:w-auto"
-              >
-                Hapus PIN
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="bg-red-500 text-white px-4 py-2 rounded w-full sm:w-auto"
+                >
+                  Hapus PIN
+                </button>
+                <button
+                  onClick={() => navigate('/forgot-pin')}
+                  className="bg-yellow-500 text-white px-4 py-2 rounded w-full sm:w-auto"
+                >
+                  Reset PIN
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -154,7 +163,7 @@ const SecurityPage = () => {
                     console.error(error);
                   }
                 }}
-                className="bg-red-400 text-white px-4 py-2 rounded w-full sm:w-auto"
+                className="bg-green-500 text-white px-4 py-2 rounded w-full sm:w-auto"
               >
                 Setel PIN
               </button>
