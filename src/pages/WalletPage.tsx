@@ -101,7 +101,7 @@ const WalletPage: React.FC = () => {
 
   const handleEdit = (w: WalletEntry) => {
     setForm({ name: w.name, balance: '0', currency: w.currency })
-    setEditingId(w.id!)
+    setEditingId(w.id!) 
     setShowForm(true)
   }
 
@@ -116,36 +116,11 @@ const WalletPage: React.FC = () => {
   return (
     <LayoutShell>
       <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto">
-        {/* Total saldo per mata uang */}
-        <div className="mb-6">
-          <h2 className="font-semibold mb-3">Total Saldo per Mata Uang</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {Object.entries(totalsByCurrency).map(
-              ([curr, tot]) =>
-                tot > 0 && (
-                  <div key={curr} className="p-4 bg-white rounded-xl shadow">
-                    <div className="flex justify-between">
-                      <span>Total {curr}</span>
-                      <span>
-                        {showBalance
-                          ? new Intl.NumberFormat('id-ID', {
-                              style: 'currency',
-                              currency: curr,
-                              maximumFractionDigits: 0,
-                            }).format(tot)
-                          : '••••••'}
-                      </span>
-                    </div>
-                  </div>
-                )
-            )}
-          </div>
-        </div>
+        <h2 className="text-lg font-semibold mb-2">Total Saldo per Mata Uang</h2>
 
-        {/* Header dan kontrol */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">Daftar Wallet</h2>
-          <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Daftar Wallet</h2>
+          <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowBalance(!showBalance)}
               className="text-sm flex items-center gap-1"
@@ -156,7 +131,7 @@ const WalletPage: React.FC = () => {
             <button
               onClick={() => {
                 localStorage.removeItem('walletPinVerifiedAt')
-                window.location.reload()
+                window.location.href = '/wallet'
               }}
               className="text-sm flex items-center gap-1 text-red-500 hover:text-red-600"
             >
@@ -165,43 +140,38 @@ const WalletPage: React.FC = () => {
             </button>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-br from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow hover:brightness-110 transition"
+              className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
             >
-              <Plus size={18} /> Tambah Wallet
+              <Plus size={16} /> Tambah Wallet
             </button>
           </div>
         </div>
 
-        {/* Daftar Wallet */}
-        {wallets.length === 0 ? (
-          <p>Belum ada wallet.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            {wallets.map((w) => (
-              <div
-                key={w.id}
-                className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-xl flex flex-col justify-between"
-              >
-                <div className="flex justify-between">
-                  <h3>{w.name}</h3>
-                  <Settings
-                    onClick={() => handleEdit(w)}
-                    className="cursor-pointer"
-                  />
-                </div>
-                <div className="text-2xl font-bold">
-                  {showBalance
-                    ? new Intl.NumberFormat('id-ID', {
-                        style: 'currency',
-                        currency: w.currency,
-                        maximumFractionDigits: 0,
-                      }).format(w.balance)
-                    : '••••••'}
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          {wallets.map((w) => (
+            <div
+              key={w.id}
+              className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-xl flex flex-col justify-between"
+            >
+              <div className="flex justify-between">
+                <h3>{w.name}</h3>
+                <Settings
+                  onClick={() => handleEdit(w)}
+                  className="cursor-pointer"
+                />
               </div>
-            ))}
-          </div>
-        )}
+              <div className="text-2xl font-bold">
+                {showBalance
+                  ? new Intl.NumberFormat('id-ID', {
+                      style: 'currency',
+                      currency: w.currency,
+                      maximumFractionDigits: 0,
+                    }).format(w.balance)
+                  : '••••••'}
+              </div>
+            </div>
+          ))}
+        </div>
 
         {success && (
           <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">
@@ -209,7 +179,6 @@ const WalletPage: React.FC = () => {
           </div>
         )}
 
-        {/* Form Tambah/Edit Wallet */}
         {showForm && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
             <form
@@ -233,20 +202,35 @@ const WalletPage: React.FC = () => {
                 <input
                   name="name"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, name: e.target.value })
+                  }
                   placeholder="Nama Wallet"
                   className="w-full px-4 py-2 border rounded"
                 />
-                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                {errors.name && (
+                  <p className="text-red-500 text-sm">{errors.name}</p>
+                )}
               </div>
               <div className="mb-4">
                 <Select
                   options={currencyOptions}
-                  value={currencyOptions.find((o) => o.value === form.currency)}
-                  onChange={(sel) => setForm({ ...form, currency: sel?.value || '' })}
+                  value={currencyOptions.find(
+                    (o) => o.value === form.currency
+                  )}
+                  onChange={(sel) =>
+                    setForm({
+                      ...form,
+                      currency: sel?.value || '',
+                    })
+                  }
                   placeholder="Pilih mata uang"
                 />
-                {errors.currency && <p className="text-red-500 text-sm">{errors.currency}</p>}
+                {errors.currency && (
+                  <p className="text-red-500 text-sm">
+                    {errors.currency}
+                  </p>
+                )}
               </div>
               <div className="flex justify-between items-center">
                 {editingId && (
@@ -270,4 +254,4 @@ const WalletPage: React.FC = () => {
   )
 }
 
-export default WalletPage;
+export default WalletPage
