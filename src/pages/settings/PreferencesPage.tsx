@@ -7,7 +7,6 @@ import { usePreferences } from '../../context/PreferencesContext'
 const PreferencesPage: React.FC = () => {
   const { preferences, setPreferences } = usePreferences()
 
-  // Inisialisasi dari localStorage ke Context
   useEffect(() => {
     const pinVal = localStorage.getItem('pinTimeout')
     const logoutVal = localStorage.getItem('logoutTimeout')
@@ -20,12 +19,10 @@ const PreferencesPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // State pending form
   const [requirePinOnIdle, setRequirePinOnIdle] = useState<boolean>(preferences.requirePinOnIdle)
   const [pendingPinTimeout, setPendingPinTimeout] = useState<number>(preferences.pinIdleTimeoutMs)
   const [pendingLogoutTimeout, setPendingLogoutTimeout] = useState<number>(preferences.logoutTimeoutMs)
 
-  // Cek apakah ada perubahan yang belum diterapkan
   const [applied, setApplied] = useState(true)
   useEffect(() => {
     setApplied(
@@ -53,7 +50,6 @@ const PreferencesPage: React.FC = () => {
       <main className="px-4 py-6 max-w-screen-md mx-auto">
         <h1 className="text-2xl font-bold mb-6">⚙️ Preferensi</h1>
 
-        {/* Toggle PIN on Idle */}
         <div className="flex items-center justify-between mb-4">
           <label className="flex items-center">
             <input
@@ -66,7 +62,6 @@ const PreferencesPage: React.FC = () => {
           </label>
         </div>
 
-        {/* Timeout PIN */}
         {requirePinOnIdle && (
           <div className="flex items-center justify-between mb-4">
             <span>Timeout PIN</span>
@@ -84,7 +79,6 @@ const PreferencesPage: React.FC = () => {
           </div>
         )}
 
-        {/* Logout Timeout */}
         <div className="flex items-center justify-between mb-6">
           <span>Durasi Logout Otomatis</span>
           <select
@@ -100,7 +94,6 @@ const PreferencesPage: React.FC = () => {
           </select>
         </div>
 
-        {/* Tombol Apply */}
         <div className="flex justify-end">
           <button
             onClick={handleApply}
