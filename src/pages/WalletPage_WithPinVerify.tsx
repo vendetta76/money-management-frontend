@@ -13,7 +13,7 @@ const WalletPage_WithPinVerify: React.FC = () => {
 
   const [storedPin, setStoredPin] = useState<string>('')
   const [enteredPin, setEnteredPin] = useState<string>('')
-  const [verified, setVerified] = useState<boolean>(!requirePinOnIdle)
+  const [verified, setVerified] = useState<boolean>(false)
   const [loadingPin, setLoadingPin] = useState<boolean>(true)
   const [pinError, setPinError] = useState<string>('')
 
@@ -31,14 +31,13 @@ const WalletPage_WithPinVerify: React.FC = () => {
     fetchPin()
   }, [user])
 
-  // Cek sesi sebelumnya jika idle‐PIN diaktifkan
+  // Cek sesi sebelumnya
   useEffect(() => {
-    if (!requirePinOnIdle) return
     const at = Number(localStorage.getItem('walletPinVerifiedAt'))
     if (at && Date.now() - at < pinIdleTimeoutMs) {
       setVerified(true)
     }
-  }, [requirePinOnIdle, pinIdleTimeoutMs])
+  }, [pinIdleTimeoutMs])
 
   const handlePinSubmit = () => {
     if (enteredPin === storedPin) {
@@ -51,7 +50,6 @@ const WalletPage_WithPinVerify: React.FC = () => {
     }
   }
 
-  // Loading state
   if (loadingPin) {
     return (
       <LayoutShell>
@@ -60,12 +58,11 @@ const WalletPage_WithPinVerify: React.FC = () => {
     )
   }
 
-  // Jika user belum punya PIN, langsung ke WalletPage
-  if (!storedPin || !requirePinOnIdle) {
+  // ⚠️ FIXED: Jangan bypass kalau requirePinOnIdle = false, cukup cek storedPin
+  if (!storedPin) {
     return <WalletPage />
   }
 
-  // Jika belum verifikasi, tampilkan form PIN
   if (!verified) {
     return (
       <LayoutShell>
@@ -96,7 +93,6 @@ const WalletPage_WithPinVerify: React.FC = () => {
     )
   }
 
-  // Setelah berhasil verifikasi
   return <WalletPage />
 }
 
