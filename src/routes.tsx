@@ -1,4 +1,4 @@
-
+// src/routes.tsx
 import { RouteObject } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
 import PageTransition from './components/PageTransition'
@@ -28,22 +28,16 @@ import SettingsProfile from './pages/settings/ProfilePage'
 import SecurityPage from './pages/settings/SecurityPage'
 import PreferencesPage from './pages/settings/PreferencesPage'
 
-// Developer Utility
-import CopyFirebaseIdToken from './pages/CopyFirebaseIdToken'
-
-// About MoniQ Pages ✅
+// About MoniQ Pages ✨
 import AboutPage from './pages/about/AboutPage'
 import PrivacyPolicyPage from './pages/about/PrivacyPolicyPage'
 import TermsAndConditionsPage from './pages/about/TermsAndConditionsPage'
 
-// Upgrade Page ✅
+// Upgrade Page ✨
 import UpgradePage from './pages/upgrade/UpgradePage'
 
 const routes: RouteObject[] = [
-  {
-    path: '/',
-    element: <LandingPage />,
-  },
+  { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
@@ -52,82 +46,162 @@ const routes: RouteObject[] = [
 
   {
     path: '/dashboard',
-    element: <PrivateRoute><PageTransition><DashboardPage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <DashboardPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/wallet',
-    element: <PrivateRoute><PageTransition><WalletPageWithPinVerify /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <WalletPageWithPinVerify />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/income',
-    element: <PrivateRoute><PageTransition><IncomePage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <IncomePage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/outcome',
-    element: <PrivateRoute><PageTransition><OutcomePage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <OutcomePage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/history',
-    element: <PrivateRoute><PageTransition><HistoryPage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <HistoryPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
+    path: '/admin',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <AdminPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+
+  // Profile
+  {
     path: '/profile',
-    element: <PrivateRoute><PageTransition><ProfilePage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <ProfilePage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/profile/edit',
-    element: <PrivateRoute><PageTransition><EditProfilePage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <EditProfilePage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
+
+  // Settings
   {
     path: '/settings/profile',
-    element: <PrivateRoute><PageTransition><SettingsProfile /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <SettingsProfile />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/settings/security',
-    element: <PrivateRoute><PageTransition><SecurityPage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <SecurityPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/settings/preferences',
-    element: <PrivateRoute><PageTransition><PreferencesPage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <PreferencesPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
 
-  // ✅ About MoniQ Routes
+  // About MoniQ
   {
     path: '/about',
-    element: <PrivateRoute><PageTransition><AboutPage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <AboutPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/about/privacy-policy',
-    element: <PrivateRoute><PageTransition><PrivacyPolicyPage /></PageTransition></PrivateRoute>,
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <PrivacyPolicyPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
   },
   {
     path: '/about/terms-and-conditions',
-    element: <PrivateRoute><PageTransition><TermsAndConditionsPage /></PageTransition></PrivateRoute>,
-  },
-
-  // ✅ Upgrade Page
-  {
-    path: '/upgrade',
-    element: <PrivateRoute><PageTransition><UpgradePage /></PageTransition></PrivateRoute>,
-  },
-
-  {
-    path: '/admin',
-    element: <PrivateRoute requiredRole="Admin"><PageTransition><AdminPage /></PageTransition></PrivateRoute>,
-  },
-  {
-    path: '/dev/token',
-    element: <PrivateRoute><PageTransition><CopyFirebaseIdToken /></PageTransition></PrivateRoute>,
-  },
-  {
-    path: '/unauthorized',
     element: (
-      <div className="p-6 text-center text-red-600 text-xl">
-        🚫 Akses ditolak: kamu tidak memiliki izin untuk halaman ini.
-      </div>
+      <PrivateRoute>
+        <PageTransition>
+          <TermsAndConditionsPage />
+        </PageTransition>
+      </PrivateRoute>
     ),
   },
-  { path: '*', element: <LandingPage /> },
+
+  // Upgrade
+  {
+    path: '/upgrade',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <UpgradePage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
 ]
 
 export default routes

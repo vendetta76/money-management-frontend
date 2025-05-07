@@ -3,14 +3,14 @@ import { AuthProvider } from './context/AuthContext'
 import routes from './routes'
 import { Toaster } from 'react-hot-toast'
 import AutoLogoutWrapper from './components/AutoLogoutWrapper'
-import { useTheme } from './hooks/useThemeAdvanced' // ✅ Tambahkan
+import { useTheme } from './hooks/useThemeAdvanced' // ✅ Trigger global theme (dark/original/system/light)
 
 function AppRoutes() {
   return useRoutes(routes)
 }
 
 function App() {
-  useTheme() // ✅ Trigger global theme (dark/original/system/light)
+  useTheme() // ✅ Apply global theme
 
   return (
     <AuthProvider>

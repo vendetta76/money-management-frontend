@@ -112,9 +112,6 @@ const SecurityPage = () => {
 
         <div className="mb-8">
           <h2 className="font-semibold mb-2">Ganti PIN Akses</h2>
-          <p className="text-sm text-yellow-600 font-medium mb-2">
-            🔐 Fitur PIN hanya tersedia untuk pengguna <strong>Premium</strong>.
-          </p>
 
           {pin ? (
             <>
