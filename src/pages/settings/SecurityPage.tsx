@@ -38,10 +38,10 @@ const SecurityPage = () => {
 
   const handleResetPassword = async () => {
     try {
-      const res = await fetch("/api/request-password-reset", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/request-password-reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }), // ✅ Kirim email sebagai body ke backend
+        body: JSON.stringify({ email }),
       });
       if (res.ok) {
         alert("Email reset password telah dikirim.");
@@ -54,7 +54,6 @@ const SecurityPage = () => {
       alert("Terjadi kesalahan.");
     }
   };
-  
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
