@@ -31,6 +31,19 @@ const currencyOptions = [
   { value: 'JPY', label: 'JPY' },
   { value: 'IDR', label: 'IDR' },
   { value: 'MYR', label: 'MYR' },
+  { value: 'SGD', label: 'SGD' },
+  { value: 'THB', label: 'THB' },
+  { value: 'KRW', label: 'KRW' },
+  { value: 'CNY', label: 'CNY' },
+  { value: 'AUD', label: 'AUD' },
+  { value: 'CAD', label: 'CAD' },
+  { value: 'CHF', label: 'CHF' },
+  { value: 'GBP', label: 'GBP' },
+  { value: 'PHP', label: 'PHP' },
+  { value: 'VND', label: 'VND' },
+  { value: 'INR', label: 'INR' },
+  { value: 'HKD', label: 'HKD' },
+  { value: 'NZD', label: 'NZD' }
 ]
 
 const WalletPage: React.FC = () => {
