@@ -1,9 +1,10 @@
 // src/components/PrivateRoute.tsx
+
 import React, { ReactNode, useEffect, useState, useCallback } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { usePreferences } from "../context/PreferencesContext"
-import { auth } from "../firebase"           // sesuaikan path jika perlu
+import { auth } from "../firebaseClient"      // import dari firebaseClient.ts
 import { signOut } from "firebase/auth"
 
 interface PrivateRouteProps {
@@ -36,6 +37,7 @@ const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
     return () => events.forEach(evt => window.removeEventListener(evt, registerActivity))
   }, [logoutTimeoutMs, user, registerActivity])
 
+  // auto-logout when idle
   useEffect(() => {
     if (logoutTimeoutMs <= 0 || !user) return
     const interval = setInterval(() => {
