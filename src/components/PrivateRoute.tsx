@@ -4,7 +4,7 @@ import React, { ReactNode, useEffect, useState, useCallback } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { usePreferences } from "../context/PreferencesContext"
-import { auth } from "../firebaseClient"      // import dari firebaseClient.ts
+import { auth } from "../lib/firebaseClient"      // import dari src/lib/firebaseClient.ts
 import { signOut } from "firebase/auth"
 
 interface PrivateRouteProps {
