@@ -1,40 +1,44 @@
-import { useEffect, ReactNode, useRef } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
+import React, { useEffect } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
-interface Props {
-  children: ReactNode
-}
-
-const AutoLogoutWrapper = ({ children }: Props) => {
-  const { user, signOut } = useAuth()
+const AutoLogoutWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { logout } = useAuth()
   const navigate = useNavigate()
-  const timeoutRef = useRef<number | null>(null)
 
-  const resetTimer = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    // 10 menit = 600.000 ms
-    timeoutRef.current = window.setTimeout(async () => {
-      if (user) {
-        await signOut()
-        navigate("/login")
-      }
-    }, 600000)
-  }
+  // Baca timeout (ms) dari Preferences; default 0 = off
+  const sessionTimeout = Number(localStorage.getItem('sessionTimeout')) || 0
 
   useEffect(() => {
-    if (user) {
-      const events = ["mousemove", "keydown", "click", "scroll", "touchstart"]
-      events.forEach((event) => window.addEventListener(event, resetTimer))
+    // Jika timeout <= 0, skip auto-logout
+    if (sessionTimeout <= 0) return
 
-      resetTimer()
-
-      return () => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current)
-        events.forEach((event) => window.removeEventListener(event, resetTimer))
-      }
+    let timer: ReturnType<typeof setTimeout>
+    const resetTimer = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        logout()
+        navigate('/login')
+      }, sessionTimeout)
     }
-  }, [user])
+
+    const events: Array<keyof WindowEventMap> = [
+      'mousemove',
+      'keydown',
+      'click',
+      'scroll',
+      'touchstart',
+    ]
+    events.forEach((ev) => window.addEventListener(ev, resetTimer))
+
+    // Mulai timer
+    resetTimer()
+
+    return () => {
+      clearTimeout(timer)
+      events.forEach((ev) => window.removeEventListener(ev, resetTimer))
+    }
+  }, [sessionTimeout, logout, navigate])
 
   return <>{children}</>
 }
