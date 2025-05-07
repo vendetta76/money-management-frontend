@@ -1,89 +1,96 @@
-import { useEffect, useState } from "react"
-import { useAuth } from "../context/AuthContext"
-import { doc, getDoc } from "firebase/firestore"
-import { db } from "../lib/firebaseClient"
-import WalletPageContent from "./WalletPage"
-import { useNavigate } from "react-router-dom"
+// src/pages/WalletPage_WithPinVerify.tsx
+import React, { useEffect, useState, useMemo } from 'react';
+import { getDoc, doc } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
+import { db } from '../lib/firebaseClient';
+import WalletPage from './WalletPage';
 
-const WalletPageWithPinVerify = () => {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const [verified, setVerified] = useState(false)
-  const [enteredPin, setEnteredPin] = useState("")
-  const [storedPin, setStoredPin] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+const WalletPage_WithPinVerify: React.FC = () => {
+  const { user } = useAuth();
+  const [storedPin, setStoredPin] = useState<string>('');
+  const [enteredPin, setEnteredPin] = useState<string>('');
+  const [verified, setVerified] = useState<boolean>(false);
+  const [loadingPin, setLoadingPin] = useState<boolean>(true);
+  const [pinError, setPinError] = useState<string>('');
 
+  // Ambil PIN user
   useEffect(() => {
     const fetchPin = async () => {
-      if (!user?.uid) return
-      const snap = await getDoc(doc(db, "users", user.uid))
-      if (snap.exists()) {
-        const data = snap.data()
-        setStoredPin(data.accessPin || "")
+      if (!user?.uid) {
+        setLoadingPin(false);
+        return;
       }
-      setLoading(false)
-    }
-    fetchPin()
-  }, [user])
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        setStoredPin(data.pin || '');
+      }
+      setLoadingPin(false);
+    };
+    fetchPin();
+  }, [user]);
 
+  // Baca timeout dari Preferences (localStorage)
+  const sessionTimeout = useMemo<number>(() => {
+    const val = localStorage.getItem('sessionTimeout');
+    return val ? Number(val) : 5 * 60 * 1000;
+  }, []);
+
+  // Periksa apakah masih dalam window verifikasi
   useEffect(() => {
-    const verifiedAt = Number(sessionStorage.getItem("walletPinVerifiedAt"))
-    const now = Date.now()
-    const maxSession = 5 * 60 * 1000 // 5 menit
-
-    if (verifiedAt && now - verifiedAt < maxSession) {
-      setVerified(true)
+    const at = Number(localStorage.getItem('walletPinVerifiedAt'));
+    if (at && Date.now() - at < sessionTimeout) {
+      setVerified(true);
     }
-  }, [])
+  }, [sessionTimeout]);
 
-  const handleSubmit = () => {
+  const handlePinSubmit = () => {
     if (enteredPin === storedPin) {
-      sessionStorage.setItem("walletPinVerifiedAt", Date.now().toString())
-      setVerified(true)
+      localStorage.setItem('walletPinVerifiedAt', Date.now().toString());
+      setVerified(true);
+      setPinError('');
     } else {
-      setError("PIN salah. Coba lagi.")
+      setPinError('PIN salah. Coba lagi.');
     }
+  };
+
+  // Loading
+  if (loadingPin) {
+    return <div className="p-6 text-center">Loading PIN...</div>;
   }
-
-  if (loading) return <div className="dark:text-white dark:bg-gray-900 p-6 text-center">Loading...</div>
-  if (!storedPin) return <WalletPageContent />
-
+  // Kalau belum set PIN, langsung tampil Wallet
+  if (!storedPin) {
+    return <WalletPage />;
+  }
+  // Belum verifikasi
   if (!verified) {
     return (
-      <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="dark:text-white dark:bg-gray-900 w-full max-w-sm px-4 py-6 md:p-6 rounded-xl shadow bg-white dark:bg-gray-900 text-center">
-          <h2 className="dark:text-white dark:bg-gray-900 text-xl font-bold mb-4">🔒 Verifikasi PIN</h2>
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="p-6 bg-white rounded shadow-md w-full max-w-sm">
+          <h2 className="text-xl font-semibold mb-4">🔒 Masukkan PIN</h2>
           <input
             type="password"
             value={enteredPin}
             onChange={(e) => setEnteredPin(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder="Masukkan PIN Akses"
+            placeholder="PIN Akses"
             maxLength={6}
-            disabled={loading}
-            className="dark:text-white dark:bg-gray-900 w-full px-3 py-2 border rounded-lg bg-gray-100 mb-3 text-center text-sm"
+            className="w-full mb-3 px-4 py-2 border rounded"
+            onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()}
           />
-          {error && <p className="dark:text-white dark:bg-gray-900 text-red-600 text-sm mb-2">{error}</p>}
+          {pinError && <p className="text-red-500 mb-3">{pinError}</p>}
           <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
+            onClick={handlePinSubmit}
+            className="w-full bg-purple-600 text-white py-2 rounded"
           >
-            {loading ? "Memverifikasi..." : "Verifikasi"}
-          </button>
-          <button
-            onClick={() => navigate("/settings/security")}
-            className="dark:text-white dark:bg-gray-900 mt-3 text-sm text-gray-500 dark:text-gray-300 hover:underline"
-          >
-            Lupa PIN?
+            Verifikasi
           </button>
         </div>
       </div>
-    )
+    );
   }
 
-  return <WalletPageContent />
-}
+  // Setelah verifikasi, render WalletPage
+  return <WalletPage />;
+};
 
-export default WalletPageWithPinVerify
+export default WalletPage_WithPinVerify;

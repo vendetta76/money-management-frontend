@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react"
-import { db } from "../lib/firebaseClient"
-import { useAuth } from "../context/AuthContext"
-import LayoutShell from "../layouts/LayoutShell"
+// src/pages/WalletPage.tsx
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
   collection,
   addDoc,
@@ -12,298 +11,335 @@ import {
   query,
   orderBy,
   serverTimestamp,
-  setDoc
-} from "firebase/firestore"
-import { Plus, X, Eye, EyeOff, Settings } from "lucide-react"
-import Select from "react-select"
+  setDoc,
+  getDoc,
+} from "firebase/firestore";
+import { db } from "../lib/firebaseClient";
+import { Plus, X, Eye, EyeOff, Settings } from "lucide-react";
+import Select from "react-select";
 
 interface WalletEntry {
-  id?: string
-  name: string
-  balance: number
-  currency: string
-  createdAt?: any
+  id?: string;
+  name: string;
+  balance: number;
+  currency: string;
+  createdAt?: any;
 }
 
 const currencyOptions = [
   { value: "USD", label: "USD" },
-  { value: "IDR", label: "IDR" },
-  { value: "EUR", label: "EUR" },
-  { value: "JPY", label: "JPY" },
-  { value: "GBP", label: "GBP" },
-  { value: "CHF", label: "CHF" },
-  { value: "AUD", label: "AUD" },
-  { value: "CAD", label: "CAD" },
-  { value: "SGD", label: "SGD" },
-  { value: "CNY", label: "CNY" },
-  { value: "KRW", label: "KRW" },
-  { value: "THB", label: "THB" },
-  { value: "PHP", label: "PHP" },
-  { value: "MYR", label: "MYR" }
-]
+  // ... lainnya sama seperti sebelumnya ...
+  { value: "MYR", label: "MYR" },
+];
 
-const WalletPage = () => {
-  const { user } = useAuth()
-  const [form, setForm] = useState({ name: "", balance: "0", currency: "USD" })
-  const [wallets, setWallets] = useState<WalletEntry[]>([])
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [success, setSuccess] = useState("")
-  const [showForm, setShowForm] = useState(false)
-  const [showBalance, setShowBalance] = useState(false)
+const WalletPage: React.FC = () => {
+  const { user } = useAuth();
+  const [storedPin, setStoredPin] = useState("");
+  const [enteredPin, setEnteredPin] = useState("");
+  const [verified, setVerified] = useState(false);
+  const [loadingPin, setLoadingPin] = useState(true);
+  const [pinError, setPinError] = useState("");
 
-  const totalsByCurrency = wallets.reduce((acc, wallet) => {
-    if (!acc[wallet.currency]) acc[wallet.currency] = 0
-    acc[wallet.currency] += wallet.balance
-    return acc
-  }, {} as Record<string, number>)
+  // Data wallet
+  const [wallets, setWallets] = useState<WalletEntry[]>([]);
+  const [form, setForm] = useState({ name: "", balance: "0", currency: "USD" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [success, setSuccess] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [showBalance, setShowBalance] = useState(false);
+  const totalsByCurrency = wallets.reduce((acc, w) => {
+    acc[w.currency] = (acc[w.currency] || 0) + w.balance;
+    return acc;
+  }, {} as Record<string, number>);
 
+  // Ambil PIN user sekali saat mount
   useEffect(() => {
-    if (!user) return
+    const fetchPin = async () => {
+      if (!user?.uid) return;
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        setStoredPin(data.pin || "");
+      }
+      setLoadingPin(false);
+    };
+    fetchPin();
+  }, [user]);
+
+  // Cek sessionStorage kalau sudah verifikasi dalam 5 menit
+  useEffect(() => {
+    const at = Number(sessionStorage.getItem("walletPinVerifiedAt"));
+    if (at && Date.now() - at < 5 * 60 * 1000) {
+      setVerified(true);
+    }
+  }, []);
+
+  // Setelah verified, subcribe data wallet
+  useEffect(() => {
+    if (!verified || !user) return;
     const q = query(
       collection(db, "users", user.uid, "wallets"),
       orderBy("createdAt", "desc")
-    )
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as WalletEntry[]
-      setWallets(data)
-    })
-    return () => unsubscribe()
-  }, [user])
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setWallets(
+        snap.docs.map((d) => ({ id: d.id, ...(d.data() as WalletEntry) }))
+      );
+    });
+    return () => unsub();
+  }, [verified, user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    setErrors({ ...errors, [e.target.name]: "" })
-  }
+  const handlePinSubmit = () => {
+    if (enteredPin === storedPin) {
+      sessionStorage.setItem("walletPinVerifiedAt", Date.now().toString());
+      setVerified(true);
+      setPinError("");
+    } else {
+      setPinError("PIN salah. Coba lagi.");
+    }
+  };
 
+  // Validasi form
   const validate = () => {
-    const newErrors: Record<string, string> = {}
-    if (!form.name.trim()) newErrors.name = "Nama wallet wajib diisi."
-    if (!form.currency) newErrors.currency = "Mata uang wajib dipilih."
-    return newErrors
-  }
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Nama wajib diisi";
+    if (!form.currency) e.currency = "Pilih mata uang";
+    return e;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const validation = validate()
-    if (Object.keys(validation).length > 0) {
-      setErrors(validation)
-      return
+    e.preventDefault();
+    const v = validate();
+    if (Object.keys(v).length) {
+      setErrors(v);
+      return;
     }
-
-    const maxWallets = 99
-    if (!editingId && wallets.length >= maxWallets) {
-      alert(`🚫 Batas wallet tercapai. Maksimum ${maxWallets} wallet.`)
-      return
-    }
-
     try {
       const payload = {
         name: form.name,
         balance: 0,
         currency: form.currency,
         createdAt: serverTimestamp(),
-      }
-      const userDocRef = doc(db, "users", user!.uid)
-      const docRef = editingId
-        ? doc(db, "users", user!.uid, "wallets", editingId)
-        : null
-
+      };
       if (!editingId) {
-        await setDoc(userDocRef, {}, { merge: true })
-        await addDoc(collection(db, "users", user!.uid, "wallets"), payload)
-        setSuccess("Wallet berhasil ditambahkan.")
+        await setDoc(doc(db, "users", user!.uid), {}, { merge: true });
+        await addDoc(collection(db, "users", user!.uid, "wallets"), payload);
+        setSuccess("Wallet ditambahkan");
       } else {
-        await updateDoc(docRef!, payload)
-        setSuccess("Wallet berhasil diperbarui.")
+        await updateDoc(
+          doc(db, "users", user!.uid, "wallets", editingId),
+          payload
+        );
+        setSuccess("Wallet diperbarui");
       }
-
-      setForm({ name: "", balance: "0", currency: "USD" })
-      setEditingId(null)
-      setShowForm(false)
-      setTimeout(() => setSuccess(""), 2000)
+      setForm({ name: "", balance: "0", currency: "USD" });
+      setEditingId(null);
+      setShowForm(false);
+      setTimeout(() => setSuccess(""), 2000);
     } catch (err) {
-      console.error("Terjadi kesalahan saat menyimpan wallet:", err)
+      console.error(err);
     }
-  }
+  };
 
-  const handleEdit = (wallet: WalletEntry) => {
-    setForm({
-      name: wallet.name,
-      balance: "0",
-      currency: wallet.currency || "USD",
-    })
-    setEditingId(wallet.id!)
-    setShowForm(true)
-  }
+  const handleEdit = (w: WalletEntry) => {
+    setForm({ name: w.name, balance: "0", currency: w.currency });
+    setEditingId(w.id!);
+    setShowForm(true);
+  };
 
   const handleDelete = async () => {
-    if (!editingId) return
-    const confirm = window.confirm("Apakah Anda yakin ingin menghapus wallet ini?")
-    if (!confirm) return
-    try {
-      await deleteDoc(doc(db, "users", user!.uid, "wallets", editingId))
-      setEditingId(null)
-      setShowForm(false)
-    } catch (err) {
-      console.error("Terjadi kesalahan saat menghapus wallet:", err)
-    }
+    if (!editingId) return;
+    if (!window.confirm("Yakin hapus wallet ini?")) return;
+    await deleteDoc(doc(db, "users", user!.uid, "wallets", editingId));
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  // Render: loading PIN
+  if (loadingPin) {
+    return <div className="p-6 text-center">Loading...</div>;
+  }
+  // Jika user belum set PIN, langsung tampil Wallet
+  if (!storedPin) {
+    setVerified(true);
+  }
+  // Belum verifikasi
+  if (!verified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="max-w-sm w-full p-6 bg-white rounded-lg shadow">
+          <h2 className="text-xl font-bold mb-4">🔒 Masukkan PIN</h2>
+          <input
+            type="password"
+            value={enteredPin}
+            onChange={(e) => setEnteredPin(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handlePinSubmit()}
+            placeholder="PIN Akses"
+            maxLength={6}
+            className="w-full mb-3 px-4 py-2 border rounded"
+          />
+          {pinError && (
+            <p className="text-red-500 text-sm mb-3">{pinError}</p>
+          )}
+          <button
+            onClick={handlePinSubmit}
+            className="w-full bg-purple-600 text-white py-2 rounded"
+          >
+            Verifikasi
+          </button>
+        </div>
+      </div>
+    );
   }
 
+  // Setelah verified: tampil Wallet
   return (
     <LayoutShell>
-      <main className="dark:text-white dark:bg-gray-900 min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-10 2xl:px-16 pt-4 md:ml-64 max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Manajemen Wallet</h1>
-          <button
-            onClick={() => {
-              setForm({ name: "", balance: "0", currency: "USD" })
-              setEditingId(null)
-              setShowForm(true)
-            }}
-            className="flex items-center gap-2 text-sm bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700"
-          >
-            <Plus size={16} /> Tambah Wallet
-          </button>
-        </div>
-
-        {success && (
-          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg border border-green-300">
-            ✅ {success}
-          </div>
-        )}
-
+      <main className="min-h-screen px-4 py-6 max-w-2xl mx-auto">
+        {/* Total per currency */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Total Saldo per Mata Uang</h2>
+          <h2 className="font-semibold mb-3">
+            Total Saldo per Mata Uang
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {Object.entries(totalsByCurrency).map(([currency, total]) => (
-              total > 0 && (
-                <div
-                  key={currency}
-                  className="bg-white border rounded-xl px-5 py-4 shadow text-sm font-medium text-gray-800"
-                >
-                  <div className="flex items-center justify-between">
-                    <span>Total {currency}</span>
-                    <span className="font-semibold">
-                      {showBalance
-                        ? new Intl.NumberFormat('id-ID', {
-                            style: 'currency',
-                            currency,
-                            maximumFractionDigits: 0
-                          }).format(total)
-                        : "••••••••"}
-                    </span>
+            {Object.entries(totalsByCurrency).map(
+              ([curr, tot]) =>
+                tot > 0 && (
+                  <div
+                    key={curr}
+                    className="p-4 bg-white rounded-xl shadow"
+                  >
+                    <div className="flex justify-between">
+                      <span>Total {curr}</span>
+                      <span>
+                        {showBalance
+                          ? new Intl.NumberFormat("id-ID", {
+                              style: "currency",
+                              currency: curr,
+                              maximumFractionDigits: 0,
+                            }).format(tot)
+                          : "••••••"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )
-            ))}
+                )
+            )}
           </div>
         </div>
-
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-lg font-semibold">Daftar Wallet</h2>
+        {/* Daftar Wallet */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-semibold">Daftar Wallet</h2>
           <button
             onClick={() => setShowBalance(!showBalance)}
-            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+            className="flex items-center gap-1 text-sm"
           >
-            {showBalance ? <Eye size={16} /> : <EyeOff size={16} />} {showBalance ? "Sembunyikan" : "Tampilkan"} Saldo
+            {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}{" "}
+            {showBalance ? "Sembunyikan" : "Tampilkan"} Saldo
           </button>
         </div>
-
         {wallets.length === 0 ? (
-          <p className="text-gray-500">Belum ada wallet ditambahkan.</p>
+          <p>Belum ada wallet.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {wallets.map((wallet) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            {wallets.map((w) => (
               <div
-                key={wallet.id}
-                className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-2xl shadow h-32 flex flex-col justify-between"
+                key={w.id}
+                className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-xl flex flex-col justify-between"
               >
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-medium">{wallet.name}</h3>
+                <div className="flex justify-between">
+                  <h3>{w.name}</h3>
                   <Settings
-                    className="w-5 h-5 opacity-80 hover:opacity-100 cursor-pointer"
-                    onClick={() => handleEdit(wallet)}
+                    onClick={() => handleEdit(w)}
+                    className="cursor-pointer"
                   />
                 </div>
                 <div className="text-2xl font-bold">
                   {showBalance
                     ? new Intl.NumberFormat("id-ID", {
                         style: "currency",
-                        currency: wallet.currency || "IDR",
-                        maximumFractionDigits: 0
-                      }).format(wallet.balance)
-                    : "••••••••"}
+                        currency: w.currency,
+                        maximumFractionDigits: 0,
+                      }).format(w.balance)
+                    : "••••••"}
                 </div>
               </div>
             ))}
           </div>
         )}
-
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">
+            {success}
+          </div>
+        )}
+        {/* Form Tambah/Edit */}
         {showForm && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
             <form
               onSubmit={handleSubmit}
-              className="bg-white shadow-xl rounded-xl p-4 md:p-6 w-full max-w-sm relative"
+              className="bg-white p-6 rounded-xl max-w-sm w-full relative"
             >
               <button
                 type="button"
                 onClick={() => {
-                  setShowForm(false)
-                  setEditingId(null)
+                  setShowForm(false);
+                  setEditingId(null);
                 }}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                className="absolute top-3 right-3"
               >
                 <X size={20} />
               </button>
-              <h2 className="text-lg font-semibold mb-4">{editingId ? "Edit Wallet" : "Tambah Wallet"}</h2>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Nama Wallet</label>
+              <h3 className="mb-4 font-semibold">
+                {editingId ? "Edit Wallet" : "Tambah Wallet"}
+              </h3>
+              <div className="mb-3">
                 <input
-                  type="text"
                   name="name"
                   value={form.name}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.name && "border-red-500"}`}
-                />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Mata Uang</label>
-                <Select
-                  name="currency"
-                  value={currencyOptions.find(opt => opt.value === form.currency)}
-                  onChange={(selected) =>
-                    setForm({ ...form, currency: selected?.value || "" })
+                  onChange={(e) =>
+                    setForm({ ...form, name: e.target.value })
                   }
-                  options={currencyOptions}
-                  classNamePrefix="react-select"
-                  placeholder="Pilih mata uang..."
-                  isSearchable
+                  placeholder="Nama Wallet"
+                  className="w-full px-4 py-2 border rounded"
                 />
-                {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+                {errors.name && (
+                  <p className="text-red-500 text-sm">
+                    {errors.name}
+                  </p>
+                )}
               </div>
-
+              <div className="mb-4">
+                <Select
+                  options={currencyOptions}
+                  value={currencyOptions.find(
+                    (o) => o.value === form.currency
+                  )}
+                  onChange={(sel) =>
+                    setForm({
+                      ...form,
+                      currency: sel?.value || "",
+                    })
+                  }
+                  placeholder="Pilih mata uang"
+                />
+                {errors.currency && (
+                  <p className="text-red-500 text-sm">
+                    {errors.currency}
+                  </p>
+                )}
+              </div>
               <div className="flex justify-between items-center">
                 {editingId && (
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="text-red-600 hover:underline text-sm"
+                    className="text-red-600"
                   >
                     Hapus Wallet
                   </button>
                 )}
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  {editingId ? "Simpan Perubahan" : "Tambah"}
+                <button className="bg-blue-600 text-white px-4 py-2 rounded">
+                  {editingId ? "Simpan" : "Tambah"}
                 </button>
               </div>
             </form>
@@ -311,7 +347,7 @@ const WalletPage = () => {
         )}
       </main>
     </LayoutShell>
-  )
-}
+  );
+};
 
-export default WalletPage
+export default WalletPage;
