@@ -10,6 +10,7 @@ const SecurityPage = () => {
   const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
+  const [showModal, setShowModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -74,11 +75,29 @@ const SecurityPage = () => {
     setLoading(false);
   };
 
+  const handleDeletePin = async () => {
+    if (!user) return;
+    if (confirmPin !== pin) {
+      alert("PIN tidak cocok");
+      return;
+    }
+    try {
+      await updateDoc(doc(db, "users", user.uid), { pin: "" });
+      alert("PIN berhasil dihapus");
+      setPin("");
+      setConfirmPin("");
+      setShowModal(false);
+    } catch (error) {
+      alert("Gagal menghapus PIN");
+      console.error(error);
+    }
+  };
+
   return (
     <LayoutShell>
-      <main className="p-6">
+      <main className="p-4 sm:p-6 max-w-xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">🔒 Keamanan</h1>
-        
+
         <div className="mb-6">
           <label className="block font-medium mb-1">Email</label>
           <input
@@ -99,19 +118,8 @@ const SecurityPage = () => {
             <>
               <p className="mb-2">PIN saat ini telah disetel.</p>
               <button
-                onClick={async () => {
-                  if (!user) return;
-                  try {
-                    await updateDoc(doc(db, "users", user.uid), { pin: "" });
-                    alert("PIN berhasil dihapus");
-                    setPin("");
-                    setConfirmPin("");
-                  } catch (error) {
-                    alert("Gagal menghapus PIN");
-                    console.error(error);
-                  }
-                }}
-                className="bg-red-500 text-white px-4 py-2 rounded"
+                onClick={() => setShowModal(true)}
+                className="bg-red-500 text-white px-4 py-2 rounded w-full sm:w-auto"
               >
                 Hapus PIN
               </button>
@@ -147,7 +155,7 @@ const SecurityPage = () => {
                     console.error(error);
                   }
                 }}
-                className="bg-red-400 text-white px-4 py-2 rounded"
+                className="bg-red-400 text-white px-4 py-2 rounded w-full sm:w-auto"
               >
                 Setel PIN
               </button>
@@ -181,7 +189,7 @@ const SecurityPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="dark:text-white dark:bg-gray-900 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 w-full sm:w-auto"
           >
             {loading ? "Menyimpan..." : "Ubah Password"}
           </button>
@@ -190,12 +198,41 @@ const SecurityPage = () => {
             <button
               onClick={handleResetPassword}
               type="button"
-              className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto"
             >
               Reset Password via Email
             </button>
           </div>
         </form>
+
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-sm">
+              <h3 className="text-lg font-semibold mb-4">Konfirmasi Hapus PIN</h3>
+              <input
+                type="password"
+                placeholder="Masukkan PIN untuk konfirmasi"
+                className="w-full mb-4 border rounded px-4 py-2"
+                value={confirmPin}
+                onChange={(e) => setConfirmPin(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="bg-gray-300 px-4 py-2 rounded"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleDeletePin}
+                  className="bg-red-600 text-white px-4 py-2 rounded"
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </LayoutShell>
   );

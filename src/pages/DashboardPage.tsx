@@ -102,7 +102,7 @@ const DashboardPage = () => {
           <div>
             <h1 className="dark:text-white dark:bg-gray-900 text-2xl md:text-3xl font-bold text-purple-700 dark:text-purple-300">Dashboard</h1>
             <p className="dark:text-white dark:bg-gray-900 text-sm text-gray-500 dark:text-gray-300 dark:text-gray-300">
-              Selamat datang kembali, {user?.email}
+              Selamat datang kembali, {user?.User}
             </p>
           </div>
         </div>
