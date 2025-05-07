@@ -48,7 +48,6 @@ const WalletPage: React.FC = () => {
     return acc
   }, {} as Record<string, number>)
 
-  // Subscribe wallet data
   useEffect(() => {
     if (!user) return
     const q = query(
@@ -102,7 +101,7 @@ const WalletPage: React.FC = () => {
 
   const handleEdit = (w: WalletEntry) => {
     setForm({ name: w.name, balance: '0', currency: w.currency })
-    setEditingId(w.id!)
+    setEditingId(w.id!) 
     setShowForm(true)
   }
 
@@ -143,16 +142,24 @@ const WalletPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Header + toggle */}
+        {/* Header + toggle + add */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">Daftar Wallet</h2>
-          <button
-            onClick={() => setShowBalance(!showBalance)}
-            className="flex items-center gap-1 text-sm"
-          >
-            {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}{' '}
-            {showBalance ? 'Sembunyikan' : 'Tampilkan'} Saldo
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="flex items-center gap-1 text-sm"
+            >
+              {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} 
+              {showBalance ? 'Sembunyikan Saldo' : 'Tampilkan Saldo'}
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-1 text-sm"
+            >
+              <Plus size={16} /> Tambah Wallet
+            </button>
+          </div>
         </div>
 
         {/* List */}
@@ -186,6 +193,7 @@ const WalletPage: React.FC = () => {
           </div>
         )}
 
+        {/* Success message */}
         {success && (
           <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">
             {success}
