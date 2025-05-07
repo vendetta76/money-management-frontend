@@ -41,17 +41,20 @@ const SecurityPage = () => {
       const res = await fetch("/api/request-password-reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }), // ✅ Kirim email sebagai body ke backend
       });
       if (res.ok) {
         alert("Email reset password telah dikirim.");
       } else {
-        alert("Gagal mengirim email reset password.");
+        const err = await res.json();
+        alert("Gagal mengirim email reset password: " + err.message);
       }
     } catch (error) {
       console.error("Reset error:", error);
       alert("Terjadi kesalahan.");
     }
   };
+  
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
