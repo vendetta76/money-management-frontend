@@ -30,7 +30,7 @@ interface WalletEntry {
 const WalletPage: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { locked, unlock, lock } = usePinLock()
+  const { locked, unlock, lock, pin } = usePinLock()
   const [pinLockVisible, setPinLockVisible] = useState(true)
   const [enteredPin, setEnteredPin] = useState("")
   const [wallets, setWallets] = useState<WalletEntry[]>([])
@@ -42,39 +42,25 @@ const WalletPage: React.FC = () => {
   const [showBalance, setShowBalance] = useState(false)
 
   useEffect(() => {
-    if (!locked) {
-      setPinLockVisible(false)
-    }
+    if (!locked) setPinLockVisible(false)
   }, [locked])
 
   const handleUnlock = () => {
     const ok = unlock(enteredPin)
-    if (ok) {
-      setPinLockVisible(false)
-    } else {
-      alert("PIN salah!")
-    }
+    if (ok) setPinLockVisible(false)
+    else alert("PIN salah!")
   }
 
   const currencyOptions = [
-    { value: 'USD', label: 'USD' },
-    { value: 'EUR', label: 'EUR' },
-    { value: 'JPY', label: 'JPY' },
-    { value: 'IDR', label: 'IDR' },
-    { value: 'MYR', label: 'MYR' },
-    { value: 'SGD', label: 'SGD' },
-    { value: 'THB', label: 'THB' },
-    { value: 'KRW', label: 'KRW' },
-    { value: 'CNY', label: 'CNY' },
-    { value: 'AUD', label: 'AUD' },
-    { value: 'CAD', label: 'CAD' },
-    { value: 'CHF', label: 'CHF' },
-    { value: 'GBP', label: 'GBP' },
-    { value: 'PHP', label: 'PHP' },
-    { value: 'VND', label: 'VND' },
-    { value: 'INR', label: 'INR' },
-    { value: 'HKD', label: 'HKD' },
-    { value: 'NZD', label: 'NZD' }
+    { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' },
+    { value: 'JPY', label: 'JPY' }, { value: 'IDR', label: 'IDR' },
+    { value: 'MYR', label: 'MYR' }, { value: 'SGD', label: 'SGD' },
+    { value: 'THB', label: 'THB' }, { value: 'KRW', label: 'KRW' },
+    { value: 'CNY', label: 'CNY' }, { value: 'AUD', label: 'AUD' },
+    { value: 'CAD', label: 'CAD' }, { value: 'CHF', label: 'CHF' },
+    { value: 'GBP', label: 'GBP' }, { value: 'PHP', label: 'PHP' },
+    { value: 'VND', label: 'VND' }, { value: 'INR', label: 'INR' },
+    { value: 'HKD', label: 'HKD' }, { value: 'NZD', label: 'NZD' }
   ]
 
   const totalsByCurrency = wallets.reduce((acc, w) => {
@@ -305,7 +291,13 @@ const WalletPage: React.FC = () => {
       )}
 
       <button
-        onClick={() => setPinLockVisible(true)}
+        onClick={() => {
+          if (!pin) {
+            alert("PIN belum diset. Silakan atur PIN terlebih dahulu di halaman Security.");
+          } else {
+            setPinLockVisible(true);
+          }
+        }}
         className="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 z-40"
         title="Kunci Dompet"
       >
