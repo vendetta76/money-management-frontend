@@ -64,26 +64,6 @@ const WalletPage: React.FC = () => {
   }, {} as Record<string, number>)
 
   useEffect(() => {
-    const updateLastAccess = () => {
-      localStorage.setItem('lastWalletAccess', Date.now().toString())
-    }
-
-    updateLastAccess()
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        updateLastAccess()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibility)
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility)
-    }
-  }, [])
-
-  useEffect(() => {
     if (!user) return
     const q = query(
       collection(db, 'users', user.uid, 'wallets'),
@@ -147,14 +127,6 @@ const WalletPage: React.FC = () => {
     setEditingId(null)
     setShowForm(false)
   }
-
-  const handleLock = () => {
-    localStorage.removeItem('walletPinVerifiedAt');
-    localStorage.removeItem('lastWalletAccess');
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
-  }  
 
   return (
     <LayoutShell>

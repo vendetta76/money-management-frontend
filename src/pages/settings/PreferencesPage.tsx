@@ -7,38 +7,17 @@ import { usePreferences } from '../../context/PreferencesContext'
 const PreferencesPage: React.FC = () => {
   const { preferences, setPreferences } = usePreferences()
 
-  useEffect(() => {
-    const pinVal = localStorage.getItem('pinTimeout')
-    const logoutVal = localStorage.getItem('logoutTimeout')
-    setPreferences({
-      ...preferences,
-      requirePinOnIdle: pinVal !== null,
-      pinIdleTimeoutMs: pinVal ? Number(pinVal) : preferences.pinIdleTimeoutMs,
-      logoutTimeoutMs: logoutVal ? Number(logoutVal) : preferences.logoutTimeoutMs,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const [requirePinOnIdle, setRequirePinOnIdle] = useState<boolean>(preferences.requirePinOnIdle)
-  const [pendingPinTimeout, setPendingPinTimeout] = useState<number>(preferences.pinIdleTimeoutMs)
   const [pendingLogoutTimeout, setPendingLogoutTimeout] = useState<number>(preferences.logoutTimeoutMs)
-
   const [applied, setApplied] = useState(true)
+
   useEffect(() => {
-    setApplied(
-      requirePinOnIdle === preferences.requirePinOnIdle &&
-      pendingPinTimeout === preferences.pinIdleTimeoutMs &&
-      pendingLogoutTimeout === preferences.logoutTimeoutMs
-    )
-  }, [requirePinOnIdle, pendingPinTimeout, pendingLogoutTimeout, preferences])
+    setApplied(pendingLogoutTimeout === preferences.logoutTimeoutMs)
+  }, [pendingLogoutTimeout, preferences])
 
   const handleApply = () => {
-    localStorage.setItem('pinTimeout', requirePinOnIdle ? pendingPinTimeout.toString() : '0')
     localStorage.setItem('logoutTimeout', pendingLogoutTimeout.toString())
     setPreferences({
       ...preferences,
-      requirePinOnIdle,
-      pinIdleTimeoutMs: pendingPinTimeout,
       logoutTimeoutMs: pendingLogoutTimeout,
     })
     setApplied(true)
@@ -49,35 +28,6 @@ const PreferencesPage: React.FC = () => {
     <LayoutShell>
       <main className="px-4 py-6 max-w-screen-md mx-auto">
         <h1 className="text-2xl font-bold mb-6">⚙️ Preferensi</h1>
-
-        <div className="flex items-center justify-between mb-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={requirePinOnIdle}
-              onChange={e => setRequirePinOnIdle(e.target.checked)}
-              className="mr-2"
-            />
-            Minta PIN lagi setelah idle
-          </label>
-        </div>
-
-        {requirePinOnIdle && (
-          <div className="flex items-center justify-between mb-4">
-            <span>Timeout PIN</span>
-            <select
-              value={pendingPinTimeout}
-              onChange={e => setPendingPinTimeout(Number(e.target.value))}
-              className="border rounded px-3 py-1"
-            >
-              <option value={0}>0 (Off)</option>
-              <option value={5 * 60 * 1000}>5 menit</option>
-              <option value={10 * 60 * 1000}>10 menit</option>
-              <option value={15 * 60 * 1000}>15 menit</option>
-              <option value={30 * 60 * 1000}>30 menit</option>
-            </select>
-          </div>
-        )}
 
         <div className="flex items-center justify-between mb-6">
           <span>Durasi Logout Otomatis</span>
@@ -112,4 +62,4 @@ const PreferencesPage: React.FC = () => {
   )
 }
 
-export default PreferencesPage
+export default PreferencesPage;
