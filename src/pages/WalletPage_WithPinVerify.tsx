@@ -31,10 +31,16 @@ const WalletPage_WithPinVerify: React.FC = () => {
     fetchPin()
   }, [user])
 
-  // Cek sesi sebelumnya
+  // Validasi sesi aktif dan PIN
   useEffect(() => {
-    const at = Number(localStorage.getItem('walletPinVerifiedAt'))
-    if (at && Date.now() - at < pinIdleTimeoutMs) {
+    const pinVerifiedAt = Number(localStorage.getItem('walletPinVerifiedAt'))
+    const walletSession = Number(localStorage.getItem('lastWalletAccess'))
+    const now = Date.now()
+
+    const sessionValid = walletSession && now - walletSession < pinIdleTimeoutMs
+    const pinValid = pinVerifiedAt && now - pinVerifiedAt < pinIdleTimeoutMs
+
+    if (sessionValid || pinValid) {
       setVerified(true)
     }
   }, [pinIdleTimeoutMs])
@@ -58,7 +64,6 @@ const WalletPage_WithPinVerify: React.FC = () => {
     )
   }
 
-  // ⚠️ FIXED: Jangan bypass kalau requirePinOnIdle = false, cukup cek storedPin
   if (!storedPin) {
     return <WalletPage />
   }
@@ -66,24 +71,20 @@ const WalletPage_WithPinVerify: React.FC = () => {
   if (!verified) {
     return (
       <LayoutShell>
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-          <div className="p-6 bg-white rounded shadow-md w-full max-w-sm">
-            <h2 className="text-xl font-semibold mb-4">🔒 Masukkan PIN</h2>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-4 text-center">Masukkan PIN</h2>
             <input
               type="password"
               value={enteredPin}
               onChange={(e) => setEnteredPin(e.target.value)}
-              placeholder="PIN Akses"
-              maxLength={6}
-              onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()}
-              className="w-full mb-3 px-4 py-2 border rounded text-center"
-              autoFocus
+              className="w-full px-4 py-2 border rounded mb-2"
+              placeholder="PIN"
             />
-            {pinError && <p className="text-red-500 mb-3">{pinError}</p>}
+            {pinError && <p className="text-red-500 text-sm mb-2">{pinError}</p>}
             <button
               onClick={handlePinSubmit}
-              className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 disabled:opacity-50"
-              disabled={enteredPin.length !== 6}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
             >
               Verifikasi
             </button>

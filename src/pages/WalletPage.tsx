@@ -16,6 +16,7 @@ import { db } from '../lib/firebaseClient'
 import LayoutShell from '../layouts/LayoutShell'
 import { Plus, X, Eye, EyeOff, Settings, Lock } from 'lucide-react'
 import Select from 'react-select'
+import { useNavigate } from 'react-router-dom'
 
 interface WalletEntry {
   id?: string
@@ -47,6 +48,7 @@ const currencyOptions = [
 ]
 
 const WalletPage: React.FC = () => {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [wallets, setWallets] = useState<WalletEntry[]>([])
   const [form, setForm] = useState({ name: '', balance: '0', currency: 'USD' })
@@ -126,16 +128,25 @@ const WalletPage: React.FC = () => {
     setShowForm(false)
   }
 
+  const handleLock = () => {
+    localStorage.removeItem('walletPinVerifiedAt')
+    localStorage.removeItem('lastWalletAccess')
+    setTimeout(() => {
+      navigate('/wallet')
+    }, 100)
+  }
+
   return (
     <LayoutShell>
       <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto">
+        {/* Total Saldo */}
         <div className="mb-6">
           <h2 className="text-xl font-bold mb-4">💰 Total Saldo per Mata Uang</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Object.entries(totalsByCurrency).map(([currency, total]) => (
               <div
                 key={currency}
-                className="bg-white shadow-md rounded-lg p-4 border-t-4 border-indigo-500 hover:shadow-xl transition-transform transform hover:scale-105"
+                className="bg-white shadow-md rounded-lg p-4 border-t-4 border-indigo-500 hover:shadow-lg transition"
               >
                 <div className="text-sm text-gray-500 font-medium mb-1">{currency}</div>
                 <div className="text-xl font-bold text-gray-900 tracking-tight">
@@ -157,24 +168,21 @@ const WalletPage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowBalance(!showBalance)}
-              className="text-sm flex items-center gap-1 hover:text-blue-600 transition"
+              className="text-sm flex items-center gap-1"
             >
               {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
               {showBalance ? 'Sembunyikan Saldo' : 'Tampilkan Saldo'}
             </button>
             <button
-              onClick={() => {
-                localStorage.removeItem('walletPinVerifiedAt')
-                window.location.href = '/wallet'
-              }}
-              className="text-sm flex items-center gap-1 text-red-500 hover:text-red-600 transition"
+              onClick={handleLock}
+              className="text-sm flex items-center gap-1 text-red-500 hover:text-red-600"
             >
               <Lock size={16} />
               Kunci
             </button>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-transform transform hover:scale-105"
+              className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
             >
               <Plus size={16} /> Tambah Wallet
             </button>
@@ -185,16 +193,16 @@ const WalletPage: React.FC = () => {
           {wallets.map((w) => (
             <div
               key={w.id}
-              className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-xl flex flex-col justify-between shadow-lg hover:shadow-2xl transition-transform transform hover:scale-105"
+              className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-xl flex flex-col justify-between"
             >
               <div className="flex justify-between">
-                <h3 className="text-lg font-semibold truncate" title={w.name}>{w.name}</h3>
+                <h3>{w.name}</h3>
                 <Settings
                   onClick={() => handleEdit(w)}
-                  className="cursor-pointer hover:scale-110 transition-transform"
+                  className="cursor-pointer"
                 />
               </div>
-              <div className="text-2xl font-bold mt-3">
+              <div className="text-2xl font-bold">
                 {showBalance
                   ? new Intl.NumberFormat('id-ID', {
                       style: 'currency',
@@ -208,16 +216,17 @@ const WalletPage: React.FC = () => {
         </div>
 
         {success && (
-          <div className="mb-4 p-3 bg-green-100 text-green-800 rounded transition-opacity duration-500 ease-in-out">
+          <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">
             {success}
           </div>
         )}
 
+        {/* Form Tambah/Edit */}
         {showForm && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 backdrop-blur-sm">
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
             <form
               onSubmit={handleSubmit}
-              className="bg-white p-6 rounded-xl max-w-sm w-full relative shadow-lg animate-fade-in"
+              className="bg-white p-6 rounded-xl max-w-sm w-full relative"
             >
               <button
                 type="button"
@@ -225,7 +234,7 @@ const WalletPage: React.FC = () => {
                   setShowForm(false)
                   setEditingId(null)
                 }}
-                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                className="absolute top-3 right-3"
               >
                 <X size={20} />
               </button>
@@ -240,10 +249,10 @@ const WalletPage: React.FC = () => {
                     setForm({ ...form, name: e.target.value })
                   }
                   placeholder="Nama Wallet"
-                  className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                  className="w-full px-4 py-2 border rounded"
                 />
                 {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                  <p className="text-red-500 text-sm">{errors.name}</p>
                 )}
               </div>
               <div className="mb-4">
@@ -261,7 +270,7 @@ const WalletPage: React.FC = () => {
                   placeholder="Pilih mata uang"
                 />
                 {errors.currency && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-red-500 text-sm">
                     {errors.currency}
                   </p>
                 )}
@@ -271,12 +280,12 @@ const WalletPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="text-red-600 hover:underline"
+                    className="text-red-600"
                   >
                     Hapus Wallet
                   </button>
                 )}
-                <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                <button className="bg-blue-600 text-white px-4 py-2 rounded">
                   {editingId ? 'Simpan' : 'Tambah'}
                 </button>
               </div>
