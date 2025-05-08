@@ -17,9 +17,7 @@ import LayoutShell from '../layouts/LayoutShell'
 import { Plus, X, Eye, EyeOff, Settings, Lock } from 'lucide-react'
 import Select from 'react-select'
 import { useNavigate } from 'react-router-dom'
-import withPinProtection from '../hoc/withPinProtection'
 import { usePinLock } from '../context/PinLockContext'
-import PinModal from '../components/PinModal'
 
 interface WalletEntry {
   id?: string
@@ -50,7 +48,8 @@ const WalletPage: React.FC = () => {
   }, [locked])
 
   const handleUnlock = () => {
-    if (unlock(enteredPin)) {
+    const ok = unlock(enteredPin)
+    if (ok) {
       setPinLockVisible(false)
     } else {
       alert("PIN salah!")
@@ -145,15 +144,165 @@ const WalletPage: React.FC = () => {
   return (
     <LayoutShell>
       <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto">
-        {/* ... semua UI saldo & wallet tetap ... */}
+        {/* Total Saldo */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold mb-4">💰 Total Saldo per Mata Uang</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Object.entries(totalsByCurrency).map(([currency, total]) => (
+              <div
+                key={currency}
+                className="bg-white shadow-md rounded-lg p-4 border-t-4 border-indigo-500 hover:shadow-lg transition"
+              >
+                <div className="text-sm text-gray-500 font-medium mb-1">{currency}</div>
+                <div className="text-xl font-bold text-gray-900 tracking-tight">
+                  {showBalance
+                    ? new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency,
+                        maximumFractionDigits: 0,
+                      }).format(total)
+                    : '••••••'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Daftar Wallet</h2>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="text-sm flex items-center gap-1"
+            >
+              {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showBalance ? 'Sembunyikan Saldo' : 'Tampilkan Saldo'}
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+            >
+              <Plus size={16} /> Tambah Wallet
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          {wallets.map((w) => (
+            <div
+              key={w.id}
+              className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-xl flex flex-col justify-between"
+            >
+              <div className="flex justify-between">
+                <h3>{w.name}</h3>
+                <Settings
+                  onClick={() => handleEdit(w)}
+                  className="cursor-pointer"
+                />
+              </div>
+              <div className="text-2xl font-bold">
+                {showBalance
+                  ? new Intl.NumberFormat('id-ID', {
+                      style: 'currency',
+                      currency: w.currency,
+                      maximumFractionDigits: 0,
+                    }).format(w.balance)
+                  : '••••••'}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">
+            {success}
+          </div>
+        )}
+
+        {/* Form Tambah/Edit */}
+        {showForm && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white p-6 rounded-xl max-w-sm w-full relative"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false)
+                  setEditingId(null)
+                }}
+                className="absolute top-3 right-3"
+              >
+                <X size={20} />
+              </button>
+              <h3 className="mb-4 font-semibold">
+                {editingId ? 'Edit Wallet' : 'Tambah Wallet'}
+              </h3>
+              <div className="mb-3">
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Nama Wallet"
+                  className="w-full px-4 py-2 border rounded"
+                />
+                {errors.name && (
+                  <p className="text-red-500 text-sm">{errors.name}</p>
+                )}
+              </div>
+              <div className="mb-4">
+                <Select
+                  options={currencyOptions}
+                  value={currencyOptions.find((o) => o.value === form.currency)}
+                  onChange={(sel) =>
+                    setForm({ ...form, currency: sel?.value || '' })
+                  }
+                  placeholder="Pilih mata uang"
+                />
+                {errors.currency && (
+                  <p className="text-red-500 text-sm">{errors.currency}</p>
+                )}
+              </div>
+              <div className="flex justify-between items-center">
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="text-red-600"
+                  >
+                    Hapus Wallet
+                  </button>
+                )}
+                <button className="bg-blue-600 text-white px-4 py-2 rounded">
+                  {editingId ? 'Simpan' : 'Tambah'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </main>
 
-      <PinModal
-        visible={pinLockVisible}
-        enteredPin={enteredPin}
-        setEnteredPin={setEnteredPin}
-        onUnlock={handleUnlock}
-      />
+      {pinLockVisible && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
+            <h2 className="text-xl font-bold mb-4">Masukkan PIN</h2>
+            <input
+              type="password"
+              className="border rounded w-full px-3 py-2 mb-4"
+              value={enteredPin}
+              onChange={(e) => setEnteredPin(e.target.value)}
+              placeholder="PIN"
+            />
+            <button
+              onClick={handleUnlock}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+            >
+              Buka Kunci
+            </button>
+          </div>
+        </div>
+      )}
 
       <button
         onClick={() => setPinLockVisible(true)}
@@ -166,4 +315,4 @@ const WalletPage: React.FC = () => {
   )
 }
 
-export default withPinProtection(WalletPage)
+export default WalletPage
