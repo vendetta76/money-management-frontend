@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
 import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { db, auth } from "../../lib/firebaseClient";
+import { auth } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
+import { usePinLock } from "../../context/PinLockContext";
 import LayoutShell from "../../layouts/LayoutShell";
 
 const SecurityPage: React.FC = () => {
@@ -15,45 +15,21 @@ const SecurityPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
-  const [pin, setPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
-  const [showModal, setShowModal] = useState(false);
-
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loadingPwd, setLoadingPwd] = useState(false);
 
+  // PIN related state
+  const [newPin, setNewPin] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [resetPinVal, setResetPinVal] = useState("");
+
+  const { pin, setPin, resetPin, removePin } = usePinLock();
+
   useEffect(() => {
     if (user?.email) setEmail(user.email);
   }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    getDoc(doc(db, "users", user.uid)).then((snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data.pin) setPin(data.pin);
-      }
-    });
-  }, [user]);
-
-  const handleDeletePin = async () => {
-    if (confirmPin !== pin) {
-      alert("PIN tidak cocok");
-      return;
-    }
-    try {
-      await updateDoc(doc(db, "users", user!.uid), { pin: "" });
-      alert("PIN berhasil dihapus");
-      setPin("");
-      setConfirmPin("");
-      setShowModal(false);
-    } catch (err) {
-      console.error(err);
-      alert("Gagal menghapus PIN");
-    }
-  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,147 +53,127 @@ const SecurityPage: React.FC = () => {
     setLoadingPwd(false);
   };
 
+  const handleResetPin = async () => {
+    try {
+      const cred = EmailAuthProvider.credential(user?.email!, authPassword);
+      await reauthenticateWithCredential(user!, cred);
+      if (resetPinVal.length < 4) return alert("PIN minimal 4 digit");
+      resetPin(resetPinVal);
+      setResetPinVal("");
+      alert("PIN berhasil di-reset!");
+    } catch (err: any) {
+      alert("Gagal autentikasi: " + err.message);
+    }
+  };
+
   return (
     <LayoutShell>
-      <main className="p-4 sm:p-6 max-w-xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">🔒 Keamanan</h1>
-
-        {/* Email */}
-        <div className="mb-6">
-          <label className="block font-medium mb-1">Email</label>
-          <input
-            type="text"
-            value={email}
-            disabled
-            className="w-full bg-gray-100 dark:bg-gray-800 border rounded px-4 py-2"
-          />
-        </div>
-
-        {/* Ganti PIN Akses */}
-        <div className="mb-8">
-          <h2 className="font-semibold mb-2">Ganti PIN Akses</h2>
-          {pin ? (
-            <>
-              <p className="mb-2">PIN saat ini telah disetel.</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="bg-red-500 text-white px-4 py-2 rounded flex-1"
-                >
-                  Hapus PIN
-                </button>
-                <button
-                  onClick={() => navigate("/forgot-pin")}
-                  className="bg-yellow-500 text-black px-4 py-2 rounded flex-1"
-                >
-                  Reset PIN
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <input
-                type="password"
-                placeholder="4–6 digit"
-                className="block w-full mb-2 border rounded px-4 py-2"
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-              />
-              <input
-                type="password"
-                placeholder="Ulangi PIN"
-                className="block w-full mb-2 border rounded px-4 py-2"
-                value={confirmPin}
-                onChange={(e) => setConfirmPin(e.target.value)}
-              />
-              <button
-                onClick={async () => {
-                  if (!user) return;
-                  if (pin !== confirmPin) {
-                    alert("PIN tidak cocok");
-                    return;
-                  }
-                  try {
-                    await updateDoc(doc(db, "users", user.uid), { pin });
-                    alert("PIN berhasil disimpan");
-                  } catch (err) {
-                    console.error(err);
-                    alert("Gagal menyimpan PIN");
-                  }
-                }}
-                className="bg-green-500 text-white px-4 py-2 rounded w-full"
-              >
-                Setel PIN
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Form Hapus PIN Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-sm">
-              <h3 className="text-lg font-semibold mb-4">
-                Konfirmasi Hapus PIN
-              </h3>
-              <input
-                type="password"
-                placeholder="Masukkan PIN untuk konfirmasi"
-                className="w-full mb-4 border rounded px-4 py-2"
-                value={confirmPin}
-                onChange={(e) => setConfirmPin(e.target.value)}
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="bg-gray-300 px-4 py-2 rounded"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleDeletePin}
-                  className="bg-red-600 text-white px-4 py-2 rounded"
-                >
-                  Hapus
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="max-w-xl mx-auto py-10 px-4">
+        <h1 className="text-2xl font-bold mb-6">Keamanan Akun</h1>
 
         {/* Ganti Password */}
-        <form onSubmit={handlePasswordChange} className="space-y-3">
-          <h2 className="font-semibold mb-2">Ganti Password</h2>
+        <form onSubmit={handlePasswordChange} className="mb-8">
+          <h2 className="text-lg font-semibold mb-2">🔐 Ganti Password</h2>
           <input
             type="password"
-            placeholder="Password lama"
-            className="block w-full border rounded px-4 py-2"
+            placeholder="Password Sekarang"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
+            className="border w-full px-3 py-2 mb-2 rounded"
           />
           <input
             type="password"
-            placeholder="Minimal 6 karakter"
-            className="block w-full border rounded px-4 py-2"
+            placeholder="Password Baru"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
+            className="border w-full px-3 py-2 mb-2 rounded"
           />
           <input
             type="password"
-            placeholder="Ulangi password"
-            className="block w-full border rounded px-4 py-2"
+            placeholder="Konfirmasi Password Baru"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            className="border w-full px-3 py-2 mb-4 rounded"
           />
           <button
             type="submit"
             disabled={loadingPwd}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg w-full"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            {loadingPwd ? "Menyimpan..." : "Ubah Password"}
+            Simpan Password
           </button>
         </form>
-      </main>
+
+        {/* Atur PIN Baru */}
+        {!pin && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-2">🔒 Atur PIN Baru</h2>
+            <input
+              type="password"
+              placeholder="PIN baru"
+              value={newPin}
+              onChange={(e) => setNewPin(e.target.value)}
+              className="border w-full px-3 py-2 mb-2 rounded"
+            />
+            <button
+              onClick={() => {
+                if (newPin.length < 4) return alert("PIN minimal 4 digit");
+                setPin(newPin);
+                setNewPin("");
+                alert("PIN berhasil disimpan!");
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Simpan PIN
+            </button>
+          </div>
+        )}
+
+        {/* Reset PIN */}
+        {pin && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-2">🔁 Reset PIN (dengan Password)</h2>
+            <input
+              type="password"
+              placeholder="Password Akun"
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              className="border w-full px-3 py-2 mb-2 rounded"
+            />
+            <input
+              type="password"
+              placeholder="PIN baru"
+              value={resetPinVal}
+              onChange={(e) => setResetPinVal(e.target.value)}
+              className="border w-full px-3 py-2 mb-2 rounded"
+            />
+            <button
+              onClick={handleResetPin}
+              className="bg-yellow-500 text-white px-4 py-2 rounded"
+            >
+              Reset PIN
+            </button>
+          </div>
+        )}
+
+        {/* Hapus PIN */}
+        {pin && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-2">🗑️ Hapus PIN</h2>
+            <button
+              onClick={() => {
+                if (window.confirm("Yakin ingin menghapus PIN?")) {
+                  removePin();
+                  alert("PIN berhasil dihapus.");
+                }
+              }}
+              className="bg-red-600 text-white px-4 py-2 rounded"
+            >
+              Hapus PIN
+            </button>
+          </div>
+        )}
+      </div>
     </LayoutShell>
   );
 };

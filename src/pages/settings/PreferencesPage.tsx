@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import LayoutShell from '../../layouts/LayoutShell'
 import { toast } from 'react-hot-toast'
+import { usePinLock } from '../../context/PinLockContext';
 
 const PreferencesPage: React.FC = () => {
+  const { autoLockMinutes, setAutoLockMinutes } = usePinLock();
   const initialTimeout = Number(localStorage.getItem('logoutTimeout')) || 0
   const [pendingLogoutTimeout, setPendingLogoutTimeout] = useState<number>(initialTimeout)
   const [applied, setApplied] = useState(true)
@@ -36,6 +38,23 @@ const PreferencesPage: React.FC = () => {
             <option value={30 * 60 * 1000}>30 menit</option>
           </select>
         </div>
+
+        <div className="flex items-center justify-between mb-6">
+          <span>Durasi Auto-Lock PIN</span>
+          <select
+            value={autoLockMinutes}
+            onChange={(e) => setAutoLockMinutes(Number(e.target.value))}
+            className="border rounded px-3 py-1"
+          >
+            <option value={0}>Off</option>
+            <option value={1}>1 menit</option>
+            <option value={5}>5 menit</option>
+            <option value={10}>10 menit</option>
+            <option value={15}>15 menit</option>
+            <option value={30}>30 menit</option>
+          </select>
+        </div>
+
 
         <div className="flex justify-end">
           <button

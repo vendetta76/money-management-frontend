@@ -17,6 +17,7 @@ import LayoutShell from '../layouts/LayoutShell'
 import { Plus, X, Eye, EyeOff, Settings, Lock } from 'lucide-react'
 import Select from 'react-select'
 import { useNavigate } from 'react-router-dom'
+import withPinProtection from '../hoc/withPinProtection'
 
 interface WalletEntry {
   id?: string
@@ -25,6 +26,28 @@ interface WalletEntry {
   currency: string
   createdAt?: any
 }
+
+
+  const { locked, unlock, lock } = usePinLock();
+  const [pinLockVisible, setPinLockVisible] = useState(true);
+  const [enteredPin, setEnteredPin] = useState("");
+
+  useEffect(() => {
+    if (!locked)
+    if (!savedPin) {
+      setPinLockVisible(false); // jika tidak ada PIN, langsung buka
+    }
+  }, []);
+
+  const handleUnlock = () => {
+    if (!locked)
+    if (unlock(enteredPin)) {
+      setPinLockVisible(false);
+    } else {
+      alert("PIN salah!");
+    }
+  };
+
 
 const currencyOptions = [
   { value: 'USD', label: 'USD' },
@@ -278,8 +301,39 @@ const WalletPage: React.FC = () => {
           </div>
         )}
       </main>
-    </LayoutShell>
+    
+  {pinLockVisible && (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
+        <h2 className="text-xl font-bold mb-4">Masukkan PIN</h2>
+        <input
+          type="password"
+          className="border rounded w-full px-3 py-2 mb-4"
+          value={enteredPin}
+          onChange={(e) => setEnteredPin(e.target.value)}
+          placeholder="PIN"
+        />
+        <button
+          onClick={handleUnlock}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+        >
+          Buka Kunci
+        </button>
+      </div>
+    </div>
+  )}
+
+
+        <button
+          onClick={() => setPinLockVisible(true)}
+          className="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 z-40"
+          title="Kunci Dompet"
+        >
+          <Lock />
+        </button>
+
+</LayoutShell>
   )
 }
 
-export default WalletPage
+export default withPinProtection(WalletPage)
