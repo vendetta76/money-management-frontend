@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React from "react";
 
 interface PinModalProps {
   visible: boolean;
@@ -10,6 +11,16 @@ interface PinModalProps {
 const PinModal: React.FC<PinModalProps> = ({ visible, enteredPin, setEnteredPin, onUnlock }) => {
   if (!visible) return null;
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("[PinModal] User mengetik PIN:", e.target.value);
+    setEnteredPin(e.target.value);
+  };
+
+  const handleUnlockClick = () => {
+    console.log("[PinModal] Tombol buka diklik dengan PIN:", enteredPin);
+    onUnlock();
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
       <div className="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
@@ -18,11 +29,11 @@ const PinModal: React.FC<PinModalProps> = ({ visible, enteredPin, setEnteredPin,
           type="password"
           className="border rounded w-full px-3 py-2 mb-4"
           value={enteredPin}
-          onChange={(e) => setEnteredPin(e.target.value)}
+          onChange={handleInputChange}
           placeholder="PIN"
         />
         <button
-          onClick={onUnlock}
+          onClick={handleUnlockClick}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
         >
           Buka Kunci

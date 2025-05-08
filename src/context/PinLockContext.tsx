@@ -33,33 +33,48 @@ export const PinLockProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem("walletPin", newPin);
     setPinState(newPin);
     setLocked(true);
+    console.log("[PinLock] PIN disimpan dan terkunci.");
   };
 
   const resetPin = (newPin: string) => {
     localStorage.setItem("walletPin", newPin);
     setPinState(newPin);
     setLocked(false);
+    console.log("[PinLock] PIN di-reset dan halaman terbuka.");
   };
 
   const removePin = () => {
     localStorage.removeItem("walletPin");
     setPinState(null);
     setLocked(false);
+    console.log("[PinLock] PIN dihapus.");
   };
 
-  const lock = () => setLocked(true);
+  const lock = () => {
+    setLocked(true);
+    console.log("[PinLock] Halaman dikunci.");
+  };
 
   const unlock = (enteredPin: string) => {
-    if (enteredPin === pin) {
+    const savedPin = localStorage.getItem("walletPin");
+    console.log("[PinLock] Attempt unlock:");
+    console.log("Entered PIN:", enteredPin);
+    console.log("Saved PIN:", savedPin);
+
+    if (enteredPin === savedPin) {
       setLocked(false);
+      console.log("[PinLock] PIN benar, halaman dibuka.");
       return true;
     }
+
+    console.warn("[PinLock] PIN salah.");
     return false;
   };
 
   const setAutoLockMinutes = (minutes: number) => {
     localStorage.setItem("pinAutoLockMinutes", String(minutes));
     setAutoLockMinutesState(minutes);
+    console.log("[PinLock] Auto-lock diset ke", minutes, "menit.");
   };
 
   return (
