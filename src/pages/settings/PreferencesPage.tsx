@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react'
 import LayoutShell from '../../layouts/LayoutShell'
 import { toast } from 'react-hot-toast'
@@ -14,6 +15,10 @@ const PreferencesPage: React.FC = () => {
   }, [pendingLogoutTimeout, initialTimeout])
 
   const handleApply = () => {
+    if (isNaN(pendingLogoutTimeout)) {
+      toast.error("Waktu logout tidak valid");
+      return;
+    }
     localStorage.setItem('logoutTimeout', pendingLogoutTimeout.toString())
     setApplied(true)
     toast.success('Preferensi berhasil diterapkan')
@@ -32,10 +37,10 @@ const PreferencesPage: React.FC = () => {
             className="border rounded px-3 py-1"
           >
             <option value={0}>Off</option>
-            <option value={5 * 60 * 1000}>5 menit</option>
-            <option value={10 * 60 * 1000}>10 menit</option>
-            <option value={15 * 60 * 1000}>15 menit</option>
-            <option value={30 * 60 * 1000}>30 menit</option>
+            <option value={300000}>5 menit</option>
+            <option value={600000}>10 menit</option>
+            <option value={900000}>15 menit</option>
+            <option value={1800000}>30 menit</option>
           </select>
         </div>
 
@@ -54,7 +59,6 @@ const PreferencesPage: React.FC = () => {
             <option value={30}>30 menit</option>
           </select>
         </div>
-
 
         <div className="flex justify-end">
           <button
