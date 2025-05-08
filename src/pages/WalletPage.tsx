@@ -25,6 +25,8 @@ interface WalletEntry {
   balance: number;
   currency: string;
   createdAt?: any;
+  colorStyle?: "solid" | "gradient"; // New field for color style
+  colorValue?: string | { start: string; end: string }; // New field for color value
 }
 
 const WalletPage: React.FC = () => {
@@ -34,7 +36,13 @@ const WalletPage: React.FC = () => {
   const [pinLockVisible, setPinLockVisible] = useState(true);
   const [enteredPin, setEnteredPin] = useState("");
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
-  const [form, setForm] = useState({ name: "", balance: "0", currency: "USD" });
+  const [form, setForm] = useState({
+    name: "",
+    balance: "0",
+    currency: "USD",
+    colorStyle: "gradient" as "solid" | "gradient",
+    colorValue: { start: "#9333ea", end: "#4f46e5" }, // Default gradient
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState("");
@@ -77,6 +85,11 @@ const WalletPage: React.FC = () => {
     { value: "NZD", label: "NZD" },
   ];
 
+  const colorStyleOptions = [
+    { value: "solid", label: "Solid" },
+    { value: "gradient", label: "Gradient" },
+  ];
+
   const totalsByCurrency = wallets.reduce((acc, w) => {
     acc[w.currency] = (acc[w.currency] || 0) + w.balance;
     return acc;
@@ -113,6 +126,10 @@ const WalletPage: React.FC = () => {
         balance: 0,
         currency: form.currency,
         createdAt: serverTimestamp(),
+        colorStyle: form.colorStyle,
+        colorValue: form.colorStyle === "solid"
+          ? (form.colorValue as string)
+          : (form.colorValue as { start: string; end: string }),
       };
       if (!editingId) {
         await addDoc(collection(db, "users", user!.uid, "wallets"), payload);
@@ -124,7 +141,13 @@ const WalletPage: React.FC = () => {
         );
         toast.success("Wallet diperbarui");
       }
-      setForm({ name: "", balance: "0", currency: "USD" });
+      setForm({
+        name: "",
+        balance: "0",
+        currency: "USD",
+        colorStyle: "gradient",
+        colorValue: { start: "#9333ea", end: "#4f46e5" },
+      });
       setEditingId(null);
       setShowForm(false);
     } catch (err) {
@@ -134,7 +157,13 @@ const WalletPage: React.FC = () => {
   };
 
   const handleEdit = (w: WalletEntry) => {
-    setForm({ name: w.name, balance: "0", currency: w.currency });
+    setForm({
+      name: w.name,
+      balance: "0",
+      currency: w.currency,
+      colorStyle: w.colorStyle || "gradient",
+      colorValue: w.colorValue || { start: "#9333ea", end: "#4f46e5" },
+    });
     setEditingId(w.id!);
     setShowForm(true);
   };
@@ -202,11 +231,18 @@ const WalletPage: React.FC = () => {
           {wallets.map((w) => (
             <div
               key={w.id}
-              className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-2xl flex flex-col justify-between relative transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:ring-2 hover:ring-white/30">
+              className="p-5 rounded-2xl flex flex-col justify-between relative transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:ring-2 hover:ring-white/30 text-white"
+              style={
+                w.colorStyle === "solid"
+                  ? { backgroundColor: w.colorValue as string }
+                  : {
+                      background: `linear-gradient(to bottom right, ${(w.colorValue as { start: string; end: string }).start}, ${(w.colorValue as { start: string; end: string }).end})`,
+                    }
+              }
+            >
               <button
                 onClick={() => handleEdit(w)}
-                className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 p-1 rounded-md 
-  transition backdrop-blur-sm ring-1 ring-white/20 transition"
+                className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 p-1 rounded-md transition backdrop-blur-sm ring-1 ring-white/20"
                 title={`Edit ${w.name}`}
               >
                 <SquarePen size={16} />
@@ -280,6 +316,103 @@ const WalletPage: React.FC = () => {
                 {errors.currency && (
                   <p className="text-red-500 text-sm">{errors.currency}</p>
                 )}
+              </div>
+              {/* Color Style Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">
+                  Pilih Gaya Warna
+                </label>
+                <Select
+                  options={colorStyleOptions}
+                  value={colorStyleOptions.find((o) => o.value === form.colorStyle)}
+                  onChange={(sel) =>
+                    setForm({
+                      ...form,
+                      colorStyle: sel?.value as "solid" | "gradient",
+                      colorValue:
+                        sel?.value === "solid"
+                          ? "#9333ea" // Default solid color
+                          : { start: "#9333ea", end: "#4f46e5" }, // Default gradient
+                    })
+                  }
+                  placeholder="Pilih gaya warna"
+                />
+              </div>
+              {/* Color Inputs */}
+              <div className="mb-4">
+                {form.colorStyle === "solid" ? (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Pilih Warna
+                    </label>
+                    <input
+                      type="color"
+                      value={form.colorValue as string}
+                      onChange={(e) =>
+                        setForm({ ...form, colorValue: e.target.value })
+                      }
+                      className="w-full h-10 border rounded"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Pilih Warna Gradient
+                    </label>
+                    <div className="flex space-x-2">
+                      <div>
+                        <label className="text-sm">Warna Awal</label>
+                        <input
+                          type="color"
+                          value={(form.colorValue as { start: string; end: string }).start}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              colorValue: {
+                                ...(form.colorValue as { start: string; end: string }),
+                                start: e.target.value,
+                              },
+                            })
+                          }
+                          className="w-full h-10 border rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm">Warna Akhir</label>
+                        <input
+                          type="color"
+                          value={(form.colorValue as { start: string; end: string }).end}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              colorValue: {
+                                ...(form.colorValue as { start: string; end: string }),
+                                end: e.target.value,
+                              },
+                            })
+                          }
+                          className="w-full h-10 border rounded"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Color Preview */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">
+                  Pratinjau Warna
+                </label>
+                <div
+                  className="w-full h-12 rounded border"
+                  style={
+                    form.colorStyle === "solid"
+                      ? { backgroundColor: form.colorValue as string }
+                      : {
+                          background: `linear-gradient(to bottom right, ${(form.colorValue as { start: string; end: string }).start}, ${(form.colorValue as { start: string; end: string }).end})`,
+                        }
+                  }
+                />
               </div>
               <div className="flex justify-between items-center">
                 {editingId && (
