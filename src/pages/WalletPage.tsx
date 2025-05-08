@@ -64,7 +64,23 @@ const WalletPage: React.FC = () => {
   }, {} as Record<string, number>)
 
   useEffect(() => {
-    localStorage.setItem('lastWalletAccess', Date.now().toString())
+    const updateLastAccess = () => {
+      localStorage.setItem('lastWalletAccess', Date.now().toString())
+    }
+
+    updateLastAccess()
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        updateLastAccess()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [])
 
   useEffect(() => {
@@ -138,7 +154,7 @@ const WalletPage: React.FC = () => {
     setTimeout(() => {
       window.location.reload();
     }, 100);
-  }
+  }  
 
   return (
     <LayoutShell>
