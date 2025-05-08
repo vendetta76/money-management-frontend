@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 import {
   collection,
   addDoc,
@@ -10,91 +9,103 @@ import {
   query,
   orderBy,
   serverTimestamp,
-} from 'firebase/firestore'
-import { useAuth } from '../context/AuthContext'
-import { db } from '../lib/firebaseClient'
-import LayoutShell from '../layouts/LayoutShell'
-import { Plus, X, Eye, EyeOff, Settings, Lock } from 'lucide-react'
-import Select from 'react-select'
-import { useNavigate } from 'react-router-dom'
-import { usePinLock } from '../context/PinLockContext'
-import { toast } from 'react-hot-toast'
+} from "firebase/firestore";
+import { useAuth } from "../context/AuthContext";
+import { db } from "../lib/firebaseClient";
+import LayoutShell from "../layouts/LayoutShell";
+import { Plus, X, Eye, EyeOff, Settings, Lock } from "lucide-react";
+import Select from "react-select";
+import { useNavigate } from "react-router-dom";
+import { usePinLock } from "../context/PinLockContext";
+import { toast } from "react-hot-toast";
 
 interface WalletEntry {
-  id?: string
-  name: string
-  balance: number
-  currency: string
-  createdAt?: any
+  id?: string;
+  name: string;
+  balance: number;
+  currency: string;
+  createdAt?: any;
 }
 
 const WalletPage: React.FC = () => {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const { locked, unlock, lock, pin } = usePinLock()
-  const [pinLockVisible, setPinLockVisible] = useState(true)
-  const [enteredPin, setEnteredPin] = useState("")
-  const [wallets, setWallets] = useState<WalletEntry[]>([])
-  const [form, setForm] = useState({ name: '', balance: '0', currency: 'USD' })
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [success, setSuccess] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [showBalance, setShowBalance] = useState(false)
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { locked, unlock, lock, pin } = usePinLock();
+  const [pinLockVisible, setPinLockVisible] = useState(true);
+  const [enteredPin, setEnteredPin] = useState("");
+  const [wallets, setWallets] = useState<WalletEntry[]>([]);
+  const [form, setForm] = useState({ name: "", balance: "0", currency: "USD" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [success, setSuccess] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [showBalance, setShowBalance] = useState(false);
 
   useEffect(() => {
-    if (!locked) setPinLockVisible(false)
-  }, [locked])
+    if (!locked) setPinLockVisible(false);
+  }, [locked]);
 
   const handleUnlock = () => {
-    const ok = unlock(enteredPin)
+    const ok = unlock(enteredPin);
     if (ok) {
-      setEnteredPin("")
-      setPinLockVisible(false)
-      toast.success("PIN berhasil dibuka!")
+      setEnteredPin("");
+      setPinLockVisible(false);
+      toast.success("PIN berhasil dibuka!");
     } else {
-      toast.error("PIN salah!")
+      toast.error("PIN salah!");
     }
-  }
+  };
 
   const currencyOptions = [
-    { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' },
-    { value: 'JPY', label: 'JPY' }, { value: 'IDR', label: 'IDR' },
-    { value: 'MYR', label: 'MYR' }, { value: 'SGD', label: 'SGD' },
-    { value: 'THB', label: 'THB' }, { value: 'KRW', label: 'KRW' },
-    { value: 'CNY', label: 'CNY' }, { value: 'AUD', label: 'AUD' },
-    { value: 'CAD', label: 'CAD' }, { value: 'CHF', label: 'CHF' },
-    { value: 'GBP', label: 'GBP' }, { value: 'PHP', label: 'PHP' },
-    { value: 'VND', label: 'VND' }, { value: 'INR', label: 'INR' },
-    { value: 'HKD', label: 'HKD' }, { value: 'NZD', label: 'NZD' }
-  ]
+    { value: "USD", label: "USD" },
+    { value: "EUR", label: "EUR" },
+    { value: "JPY", label: "JPY" },
+    { value: "IDR", label: "IDR" },
+    { value: "MYR", label: "MYR" },
+    { value: "SGD", label: "SGD" },
+    { value: "THB", label: "THB" },
+    { value: "KRW", label: "KRW" },
+    { value: "CNY", label: "CNY" },
+    { value: "AUD", label: "AUD" },
+    { value: "CAD", label: "CAD" },
+    { value: "CHF", label: "CHF" },
+    { value: "GBP", label: "GBP" },
+    { value: "PHP", label: "PHP" },
+    { value: "VND", label: "VND" },
+    { value: "INR", label: "INR" },
+    { value: "HKD", label: "HKD" },
+    { value: "NZD", label: "NZD" },
+  ];
 
   const totalsByCurrency = wallets.reduce((acc, w) => {
-    acc[w.currency] = (acc[w.currency] || 0) + w.balance
-    return acc
-  }, {} as Record<string, number>)
+    acc[w.currency] = (acc[w.currency] || 0) + w.balance;
+    return acc;
+  }, {} as Record<string, number>);
 
   useEffect(() => {
-    if (!user) return
-    const q = query(collection(db, 'users', user.uid, 'wallets'), orderBy('createdAt', 'desc'))
+    if (!user) return;
+    const q = query(
+      collection(db, "users", user.uid, "wallets"),
+      orderBy("createdAt", "desc")
+    );
     return onSnapshot(q, (snap) => {
-      setWallets(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })))
-    })
-  }, [user])
+      setWallets(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+    });
+  }, [user]);
 
   const validate = () => {
-    const e: Record<string, string> = {}
-    if (!form.name.trim()) e.name = 'Nama wajib diisi'
-    if (!form.currency) e.currency = 'Pilih mata uang'
-    return e
-  }
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Nama wajib diisi";
+    if (!form.currency) e.currency = "Pilih mata uang";
+    return e;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const v = validate()
+    e.preventDefault();
+    const v = validate();
     if (Object.keys(v).length) {
-      setErrors(v)
-      return
+      setErrors(v);
+      return;
     }
     try {
       const payload = {
@@ -102,59 +113,66 @@ const WalletPage: React.FC = () => {
         balance: 0,
         currency: form.currency,
         createdAt: serverTimestamp(),
-      }
+      };
       if (!editingId) {
-        await addDoc(collection(db, 'users', user!.uid, 'wallets'), payload)
-        toast.success("Wallet ditambahkan")
+        await addDoc(collection(db, "users", user!.uid, "wallets"), payload);
+        toast.success("Wallet ditambahkan");
       } else {
-        await updateDoc(doc(db, 'users', user!.uid, 'wallets', editingId), payload)
-        toast.success("Wallet diperbarui")
+        await updateDoc(
+          doc(db, "users", user!.uid, "wallets", editingId),
+          payload
+        );
+        toast.success("Wallet diperbarui");
       }
-      setForm({ name: '', balance: '0', currency: 'USD' })
-      setEditingId(null)
-      setShowForm(false)
+      setForm({ name: "", balance: "0", currency: "USD" });
+      setEditingId(null);
+      setShowForm(false);
     } catch (err) {
-      toast.error("Terjadi kesalahan saat menyimpan.")
-      console.error(err)
+      toast.error("Terjadi kesalahan saat menyimpan.");
+      console.error(err);
     }
-  }
+  };
 
   const handleEdit = (w: WalletEntry) => {
-    setForm({ name: w.name, balance: '0', currency: w.currency })
-    setEditingId(w.id!)
-    setShowForm(true)
-  }
+    setForm({ name: w.name, balance: "0", currency: w.currency });
+    setEditingId(w.id!);
+    setShowForm(true);
+  };
 
   const handleDelete = async () => {
-    if (!editingId) return
-    if (!window.confirm('Yakin hapus wallet ini?')) return
-    await deleteDoc(doc(db, 'users', user!.uid, 'wallets', editingId))
-    setEditingId(null)
-    setShowForm(false)
-    toast.success("Wallet dihapus")
-  }
+    if (!editingId) return;
+    if (!window.confirm("Yakin hapus wallet ini?")) return;
+    await deleteDoc(doc(db, "users", user!.uid, "wallets", editingId));
+    setEditingId(null);
+    setShowForm(false);
+    toast.success("Wallet dihapus");
+  };
 
   return (
     <LayoutShell>
       <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto transition-all duration-300">
         {/* Total Saldo */}
         <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4">💰 Total Saldo per Mata Uang</h2>
+          <h2 className="text-xl font-bold mb-4">
+            💰 Total Saldo per Mata Uang
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Object.entries(totalsByCurrency).map(([currency, total]) => (
               <div
                 key={currency}
                 className="bg-white shadow-md rounded-lg p-4 border-t-4 border-indigo-500 hover:shadow-lg transition"
               >
-                <div className="text-sm text-gray-500 font-medium mb-1">{currency}</div>
+                <div className="text-sm text-gray-500 font-medium mb-1">
+                  {currency}
+                </div>
                 <div className="text-xl font-bold text-gray-900 tracking-tight">
                   {showBalance
-                    ? new Intl.NumberFormat('id-ID', {
-                        style: 'currency',
+                    ? new Intl.NumberFormat("id-ID", {
+                        style: "currency",
                         currency,
                         maximumFractionDigits: 0,
                       }).format(total)
-                    : '••••••'}
+                    : "••••••"}
                 </div>
               </div>
             ))}
@@ -169,7 +187,7 @@ const WalletPage: React.FC = () => {
               className="text-sm flex items-center gap-1"
             >
               {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
-              {showBalance ? 'Sembunyikan Saldo' : 'Tampilkan Saldo'}
+              {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
             </button>
             <button
               onClick={() => setShowForm(true)}
@@ -184,23 +202,27 @@ const WalletPage: React.FC = () => {
           {wallets.map((w) => (
             <div
               key={w.id}
-              className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-xl flex flex-col justify-between"
+              className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white  p-5 rounded-2xl flex flex-col justify-between  transition-transform duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-2xl hover:ring-2 hover:ring-white/30
+"
             >
-              <div className="flex justify-between">
+              <div className="text-lg font-semibold truncate">
                 <h3>{w.name}</h3>
                 <Settings
                   onClick={() => handleEdit(w)}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-white/20 p-1 rounded-full transition"
                 />
               </div>
-              <div className="text-2xl font-bold">
+              <div
+                className="text-2xl font-bold mt-2 transition-all duration-300"
+                title={`Saldo ${w.name}`}
+              >
                 {showBalance
-                  ? new Intl.NumberFormat('id-ID', {
-                      style: 'currency',
+                  ? new Intl.NumberFormat("id-ID", {
+                      style: "currency",
                       currency: w.currency,
                       maximumFractionDigits: 0,
                     }).format(w.balance)
-                  : '••••••'}
+                  : "••••••"}
               </div>
             </div>
           ))}
@@ -222,15 +244,15 @@ const WalletPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setShowForm(false)
-                  setEditingId(null)
+                  setShowForm(false);
+                  setEditingId(null);
                 }}
                 className="absolute top-3 right-3"
               >
                 <X size={20} />
               </button>
               <h3 className="mb-4 font-semibold">
-                {editingId ? 'Edit Wallet' : 'Tambah Wallet'}
+                {editingId ? "Edit Wallet" : "Tambah Wallet"}
               </h3>
               <div className="mb-3">
                 <input
@@ -249,7 +271,7 @@ const WalletPage: React.FC = () => {
                   options={currencyOptions}
                   value={currencyOptions.find((o) => o.value === form.currency)}
                   onChange={(sel) =>
-                    setForm({ ...form, currency: sel?.value || '' })
+                    setForm({ ...form, currency: sel?.value || "" })
                   }
                   placeholder="Pilih mata uang"
                 />
@@ -268,7 +290,7 @@ const WalletPage: React.FC = () => {
                   </button>
                 )}
                 <button className="bg-blue-600 text-white px-4 py-2 rounded">
-                  {editingId ? 'Simpan' : 'Tambah'}
+                  {editingId ? "Simpan" : "Tambah"}
                 </button>
               </div>
             </form>
@@ -300,7 +322,9 @@ const WalletPage: React.FC = () => {
       <button
         onClick={() => {
           if (!pin) {
-            toast.error("PIN belum diset. Silakan atur PIN terlebih dahulu di halaman Security.");
+            toast.error(
+              "PIN belum diset. Silakan atur PIN terlebih dahulu di halaman Security."
+            );
           } else {
             setEnteredPin("");
             setPinLockVisible(true);
@@ -312,7 +336,7 @@ const WalletPage: React.FC = () => {
         <Lock />
       </button>
     </LayoutShell>
-  )
-}
+  );
+};
 
-export default WalletPage
+export default WalletPage;
