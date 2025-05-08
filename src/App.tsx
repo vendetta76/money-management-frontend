@@ -2,7 +2,6 @@
 import React from 'react'
 import { BrowserRouter as Router, useRoutes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
-import { PreferencesProvider } from './context/PreferencesContext'
 import routes from './routes'
 import { Toaster } from 'react-hot-toast'
 import AutoLogoutWrapper from './components/AutoLogoutWrapper'
@@ -16,8 +15,7 @@ function App() {
   useTheme() // ✅ Apply global theme
 
   return (
-    <PreferencesProvider>
-      <AuthProvider>
+    <AuthProvider>
         <Router>
           <Toaster position="top-center" reverseOrder={false} />
           <AutoLogoutWrapper>
@@ -25,8 +23,7 @@ function App() {
           </AutoLogoutWrapper>
         </Router>
       </AuthProvider>
-    </PreferencesProvider>
-  )
+    )
 }
 
 export default App
