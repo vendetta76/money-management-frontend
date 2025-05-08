@@ -18,6 +18,7 @@ import { Plus, X, Eye, EyeOff, Settings, Lock } from 'lucide-react'
 import Select from 'react-select'
 import { useNavigate } from 'react-router-dom'
 import { usePinLock } from '../context/PinLockContext'
+import { toast } from 'react-hot-toast'
 
 interface WalletEntry {
   id?: string
@@ -47,8 +48,13 @@ const WalletPage: React.FC = () => {
 
   const handleUnlock = () => {
     const ok = unlock(enteredPin)
-    if (ok) setPinLockVisible(false)
-    else alert("PIN salah!")
+    if (ok) {
+      setEnteredPin("")
+      setPinLockVisible(false)
+      toast.success("PIN berhasil dibuka!")
+    } else {
+      toast.error("PIN salah!")
+    }
   }
 
   const currencyOptions = [
@@ -99,16 +105,16 @@ const WalletPage: React.FC = () => {
       }
       if (!editingId) {
         await addDoc(collection(db, 'users', user!.uid, 'wallets'), payload)
-        setSuccess('Wallet ditambahkan')
+        toast.success("Wallet ditambahkan")
       } else {
         await updateDoc(doc(db, 'users', user!.uid, 'wallets', editingId), payload)
-        setSuccess('Wallet diperbarui')
+        toast.success("Wallet diperbarui")
       }
       setForm({ name: '', balance: '0', currency: 'USD' })
       setEditingId(null)
       setShowForm(false)
-      setTimeout(() => setSuccess(''), 2000)
     } catch (err) {
+      toast.error("Terjadi kesalahan saat menyimpan.")
       console.error(err)
     }
   }
@@ -125,11 +131,12 @@ const WalletPage: React.FC = () => {
     await deleteDoc(doc(db, 'users', user!.uid, 'wallets', editingId))
     setEditingId(null)
     setShowForm(false)
+    toast.success("Wallet dihapus")
   }
 
   return (
     <LayoutShell>
-      <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto">
+      <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto transition-all duration-300">
         {/* Total Saldo */}
         <div className="mb-6">
           <h2 className="text-xl font-bold mb-4">💰 Total Saldo per Mata Uang</h2>
@@ -270,19 +277,19 @@ const WalletPage: React.FC = () => {
       </main>
 
       {pinLockVisible && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 transition-all">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-80 text-center animate-fade-in">
             <h2 className="text-xl font-bold mb-4">Masukkan PIN</h2>
             <input
               type="password"
-              className="border rounded w-full px-3 py-2 mb-4"
+              className="border rounded w-full px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={enteredPin}
               onChange={(e) => setEnteredPin(e.target.value)}
               placeholder="PIN"
             />
             <button
               onClick={handleUnlock}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full transition-all"
             >
               Buka Kunci
             </button>
@@ -293,13 +300,13 @@ const WalletPage: React.FC = () => {
       <button
         onClick={() => {
           if (!pin) {
-            alert("PIN belum diset. Silakan atur PIN terlebih dahulu di halaman Security.");
+            toast.error("PIN belum diset. Silakan atur PIN terlebih dahulu di halaman Security.");
           } else {
             setEnteredPin("");
             setPinLockVisible(true);
           }
         }}
-        className="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 z-40"
+        className="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 z-40 transition"
         title="Kunci Dompet"
       >
         <Lock />
