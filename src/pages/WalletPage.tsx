@@ -166,13 +166,6 @@ const WalletPage: React.FC = () => {
               {showBalance ? 'Sembunyikan Saldo' : 'Tampilkan Saldo'}
             </button>
             <button
-              onClick={handleLock}
-              className="text-sm flex items-center gap-1 text-red-500 hover:text-red-600"
-            >
-              <Lock size={16} />
-              Kunci
-            </button>
-            <button
               onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
             >
