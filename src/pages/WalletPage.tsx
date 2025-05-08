@@ -25,8 +25,8 @@ interface WalletEntry {
   balance: number;
   currency: string;
   createdAt?: any;
-  colorStyle?: "solid" | "gradient"; // New field for color style
-  colorValue?: string | { start: string; end: string }; // New field for color value
+  colorStyle: "solid" | "gradient";
+  colorValue: string | { start: string; end: string };
 }
 
 const WalletPage: React.FC = () => {
@@ -102,7 +102,20 @@ const WalletPage: React.FC = () => {
       orderBy("createdAt", "desc")
     );
     return onSnapshot(q, (snap) => {
-      setWallets(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+      setWallets(
+        snap.docs.map((d) => {
+          const data = d.data() as WalletEntry;
+          return {
+            id: d.id,
+            name: data.name,
+            balance: data.balance,
+            currency: data.currency,
+            createdAt: data.createdAt,
+            colorStyle: data.colorStyle || "gradient",
+            colorValue: data.colorValue || { start: "#9333ea", end: "#4f46e5" },
+          };
+        })
+      );
     });
   }, [user]);
 
@@ -228,42 +241,46 @@ const WalletPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          {wallets.map((w) => (
-            <div
-              key={w.id}
-              className="p-5 rounded-2xl flex flex-col justify-between relative transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:ring-2 hover:ring-white/30 text-white"
-              style={
-                w.colorStyle === "solid"
-                  ? { backgroundColor: w.colorValue as string }
-                  : {
-                      background: `linear-gradient(to bottom right, ${(w.colorValue as { start: string; end: string }).start}, ${(w.colorValue as { start: string; end: string }).end})`,
-                    }
-              }
-            >
-              <button
-                onClick={() => handleEdit(w)}
-                className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 p-1 rounded-md transition backdrop-blur-sm ring-1 ring-white/20"
-                title={`Edit ${w.name}`}
-              >
-                <SquarePen size={16} />
-              </button>
+          {wallets.map((w) => {
+            const defaultStyle = { backgroundColor: "#9333ea" };
+            const cardStyle =
+              w.colorStyle === "solid"
+                ? { backgroundColor: typeof w.colorValue === "string" ? w.colorValue : "#9333ea" }
+                : w.colorValue && typeof w.colorValue === "object" && "start" in w.colorValue && "end" in w.colorValue
+                ? {
+                    background: `linear-gradient(to bottom right, ${w.colorValue.start}, ${w.colorValue.end})`,
+                  }
+                : defaultStyle;
 
-              <h3 className="text-lg font-semibold truncate">{w.name}</h3>
-
+            return (
               <div
-                className="text-2xl font-bold mt-2 transition-all duration-300"
-                title={`Saldo ${w.name}`}
+                key={w.id}
+                className="p-5 rounded-2xl flex flex-col justify-between relative transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:ring-2 hover:ring-white/30 text-white"
+                style={cardStyle}
               >
-                {showBalance
-                  ? new Intl.NumberFormat("id-ID", {
-                      style: "currency",
-                      currency: w.currency,
-                      maximumFractionDigits: 0,
-                    }).format(w.balance)
-                  : "••••••"}
+                <button
+                  onClick={() => handleEdit(w)}
+                  className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 p-1 rounded-md transition backdrop-blur-sm ring-1 ring-white/20"
+                  title={`Edit ${w.name}`}
+                >
+                  <SquarePen size={16} />
+                </button>
+                <h3 className="text-lg font-semibold truncate">{w.name}</h3>
+                <div
+                  className="text-2xl font-bold mt-2 transition-all duration-300"
+                  title={`Saldo ${w.name}`}
+                >
+                  {showBalance
+                    ? new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: w.currency,
+                        maximumFractionDigits: 0,
+                      }).format(w.balance)
+                    : "••••••"}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {success && (
@@ -331,8 +348,8 @@ const WalletPage: React.FC = () => {
                       colorStyle: sel?.value as "solid" | "gradient",
                       colorValue:
                         sel?.value === "solid"
-                          ? "#9333ea" // Default solid color
-                          : { start: "#9333ea", end: "#4f46e5" }, // Default gradient
+                          ? "#9333ea"
+                          : { start: "#9333ea", end: "#4f46e5" },
                     })
                   }
                   placeholder="Pilih gaya warna"
