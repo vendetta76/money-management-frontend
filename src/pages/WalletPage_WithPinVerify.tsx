@@ -48,6 +48,7 @@ const WalletPage_WithPinVerify: React.FC = () => {
   const handlePinSubmit = () => {
     if (enteredPin === storedPin) {
       localStorage.setItem('walletPinVerifiedAt', Date.now().toString())
+      localStorage.setItem('lastWalletAccess', Date.now().toString()) // ✅ PATCH HERE
       setVerified(true)
       setPinError('')
     } else {
