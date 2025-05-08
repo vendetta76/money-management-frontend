@@ -1,28 +1,26 @@
-// src/components/PrivateRoute.tsx
 
 import React, { ReactNode, useEffect, useState, useCallback } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import { usePreferences } from "../context/PreferencesContext"
-import { auth } from "../lib/firebaseClient"      // import dari src/lib/firebaseClient.ts
+import { auth } from "../lib/firebaseClient"
 import { signOut } from "firebase/auth"
 
 interface PrivateRouteProps {
   children: ReactNode
-  requiredRole?: string // "Admin", "Regular", "Premium" (opsional)
+  requiredRole?: string
 }
 
 const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
   const { user, loading, userMeta } = useAuth()
-  const { logoutTimeoutMs } = usePreferences()
   const location = useLocation()
+  const logoutTimeoutMs = 10 * 60 * 1000 // 10 menit auto logout (bisa diubah)
 
-  // reload user metadata on mount
+  // Reload user metadata on mount
   useEffect(() => {
     if (user) user.reload()
   }, [user])
 
-  // track last activity for auto-logout
+  // Track user activity
   const [lastActivity, setLastActivity] = useState(Date.now())
   const registerActivity = useCallback(() => {
     if (logoutTimeoutMs > 0) {
@@ -32,12 +30,11 @@ const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
 
   useEffect(() => {
     if (logoutTimeoutMs <= 0 || !user) return
-    const events = ["mousemove","mousedown","keydown","touchstart","scroll"]
+    const events = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"]
     events.forEach(evt => window.addEventListener(evt, registerActivity))
     return () => events.forEach(evt => window.removeEventListener(evt, registerActivity))
   }, [logoutTimeoutMs, user, registerActivity])
 
-  // auto-logout when idle
   useEffect(() => {
     if (logoutTimeoutMs <= 0 || !user) return
     const interval = setInterval(() => {
