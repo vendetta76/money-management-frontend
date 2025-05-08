@@ -201,34 +201,32 @@ const WalletPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {wallets.map((w) => (
             <div
-            key={w.id}
-            className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-2xl flex flex-col justify-between relative transition-transform duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-2xl hover:ring-2 hover:ring-white/30"
-          >
-<button
-  onClick={() => handleEdit(w)}
-  className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 p-1 rounded-md transition"
-  title={`Edit ${w.name}`}
->
-  <SquarePen size={16} />
-</button>
+              key={w.id}
+              className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white p-5 rounded-2xl flex flex-col justify-between relative transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:ring-2 hover:ring-white/30">
+              <button
+                onClick={() => handleEdit(w)}
+                className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 p-1 rounded-md 
+  transition backdrop-blur-sm ring-1 ring-white/20 transition"
+                title={`Edit ${w.name}`}
+              >
+                <SquarePen size={16} />
+              </button>
 
-          
-            <h3 className="text-lg font-semibold truncate">{w.name}</h3>
-          
-            <div
-              className="text-2xl font-bold mt-2 transition-all duration-300"
-              title={`Saldo ${w.name}`}
-            >
-              {showBalance
-                ? new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: w.currency,
-                    maximumFractionDigits: 0,
-                  }).format(w.balance)
-                : '••••••'}
+              <h3 className="text-lg font-semibold truncate">{w.name}</h3>
+
+              <div
+                className="text-2xl font-bold mt-2 transition-all duration-300"
+                title={`Saldo ${w.name}`}
+              >
+                {showBalance
+                  ? new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: w.currency,
+                      maximumFractionDigits: 0,
+                    }).format(w.balance)
+                  : "••••••"}
+              </div>
             </div>
-          </div>
-          
           ))}
         </div>
 
