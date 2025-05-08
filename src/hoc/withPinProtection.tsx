@@ -1,10 +1,13 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { usePinLock } from "@/context/PinLockContext";
+import PinModal from "@/components/PinModal";
 
 const withPinProtection = (Component: React.FC) => {
   const ProtectedComponent = () => {
-    const { locked, lock } = usePinLock();
+    const { locked, unlock, lock } = usePinLock();
+    const [enteredPin, setEnteredPin] = useState("");
+    const [pinLockVisible, setPinLockVisible] = useState(false);
 
     useEffect(() => {
       const events = ["mousemove", "keydown", "scroll", "touchstart"];
@@ -16,6 +19,7 @@ const withPinProtection = (Component: React.FC) => {
         if (autoLock > 0) {
           timeout = setTimeout(() => {
             lock();
+            setPinLockVisible(true);
           }, autoLock * 60 * 1000);
         }
       };
@@ -34,18 +38,32 @@ const withPinProtection = (Component: React.FC) => {
       };
     }, [lock]);
 
-    if (locked) {
-      return (
-        <div className="flex items-center justify-center h-screen bg-gray-100">
-          <div className="bg-white p-6 rounded shadow-md w-80 text-center">
-            <h2 className="text-xl font-bold mb-4">🔒 Halaman Terkunci</h2>
-            <p>Silakan buka Wallet terlebih dahulu untuk autentikasi ulang.</p>
-          </div>
-        </div>
-      );
-    }
+    useEffect(() => {
+      if (locked) {
+        setPinLockVisible(true);
+      }
+    }, [locked]);
 
-    return <Component />;
+    const handleUnlock = () => {
+      const result = unlock(enteredPin);
+      console.log("[HOC] Unlock attempt:", enteredPin, "=>", result);
+      if (result) {
+        setEnteredPin("");
+        setPinLockVisible(false);
+      }
+    };
+
+    return (
+      <>
+        <Component />
+        <PinModal
+          visible={pinLockVisible}
+          enteredPin={enteredPin}
+          setEnteredPin={setEnteredPin}
+          onUnlock={handleUnlock}
+        />
+      </>
+    );
   };
 
   return ProtectedComponent;
