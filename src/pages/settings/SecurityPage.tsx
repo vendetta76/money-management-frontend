@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   updatePassword,
@@ -54,6 +55,11 @@ const SecurityPage: React.FC = () => {
   };
 
   const handleResetPin = async () => {
+    if (!authPassword) {
+      alert("Mohon isi Password Akun terlebih dahulu.");
+      return;
+    }
+
     try {
       const cred = EmailAuthProvider.credential(user?.email!, authPassword);
       await reauthenticateWithCredential(user!, cred);
@@ -139,6 +145,7 @@ const SecurityPage: React.FC = () => {
               value={authPassword}
               onChange={(e) => setAuthPassword(e.target.value)}
               className="border w-full px-3 py-2 mb-2 rounded"
+              required
             />
             <input
               type="password"
