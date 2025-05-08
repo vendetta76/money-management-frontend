@@ -15,7 +15,7 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 import LayoutShell from "../layouts/LayoutShell";
-import { Loader2 } from "lucide-react";
+import { Pencil, Trash, Loader2 } from "lucide-react";
 
 interface OutcomeEntry {
   id?: string;
@@ -75,9 +75,7 @@ const OutcomePage = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === "amount") {
-      // Remove any non-numeric characters except for the decimal point
       const rawValue = value.replace(/[^0-9]/g, "");
-      // Format with thousand separators
       const formattedValue = rawValue
         ? parseInt(rawValue).toLocaleString("id-ID")
         : "";
@@ -197,20 +195,30 @@ const OutcomePage = () => {
     });
   };
 
+  const formatAmount = (amount: number, currency: string) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency,
+    }).format(amount);
+  };
+
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 md:ml-64 pt-4 max-w-screen-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6 text-red-600 dark:text-red-400">
-          📤 {editingId ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 max-w-screen-2xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          {editingId ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
         </h1>
 
         {success && (
           <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 rounded-lg border border-green-300 dark:border-green-700 animate-in fade-in duration-300">
-            ✅ {editingId ? "Pengeluaran berhasil diperbarui!" : "Pengeluaran berhasil disimpan!"}
+            ✅ {editingId ? "Pengeluaran diperbarui!" : "Pengeluaran disimpan!"}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 shadow rounded-xl p-6 mb-6 max-w-xl w-full">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white dark:bg-gray-900 shadow rounded-xl p-6 mb-6 max-w-xl w-full"
+        >
           <div className="mb-4">
             <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">
               Pilih Dompet
@@ -331,77 +339,57 @@ const OutcomePage = () => {
           </div>
         </form>
 
-        <div className="mt-8">
+        <div className="mt-10">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-            Transaksi Pengeluaran
+            Transaksi Terbaru
           </h2>
           {outcomes.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">
               Belum ada data pengeluaran.
             </p>
           ) : (
-            <div className="overflow-x-auto w-full">
-              <table className="min-w-full bg-white dark:bg-gray-800 border rounded-xl shadow">
-                <thead>
-                  <tr className="bg-gray-100 dark:bg-gray-700 text-sm text-left">
-                    <th className="px-4 py-2 border-b text-gray-700 dark:text-gray-200">
-                      Dompet
-                    </th>
-                    <th className="px-4 py-2 border-b text-gray-700 dark:text-gray-200">
-                      Deskripsi
-                    </th>
-                    <th className="px-4 py-2 border-b text-gray-700 dark:text-gray-200">
-                      Nominal
-                    </th>
-                    <th className="px-4 py-2 border-b text-gray-700 dark:text-gray-200">
-                      Mata Uang
-                    </th>
-                    <th className="px-4 py-2 border-b text-gray-700 dark:text-gray-200">
-                      Tanggal
-                    </th>
-                    <th className="px-4 py-2 border-b text-gray-700 dark:text-gray-200">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {outcomes.map((entry) => (
-                    <tr key={entry.id} className="text-sm">
-                      <td className="px-4 py-2 border-b text-gray-800 dark:text-gray-200">
-                        {wallets.find((w) => w.id === entry.wallet)?.name || entry.wallet}
-                      </td>
-                      <td className="px-4 py-2 border-b text-gray-800 dark:text-gray-200">
-                        {entry.description}
-                      </td>
-                      <td className="px-4 py-2 border-b text-gray-800 dark:text-gray-200">
-                        {entry.amount.toLocaleString("id-ID")}
-                      </td>
-                      <td className="px-4 py-2 border-b text-gray-800 dark:text-gray-200">
-                        {entry.currency}
-                      </td>
-                      <td className="px-4 py-2 border-b text-gray-800 dark:text-gray-200">
-                        {entry.createdAt?.toDate
-                          ? new Date(entry.createdAt.toDate()).toLocaleString()
-                          : "-"}
-                      </td>
-                      <td className="px-4 py-2 border-b space-x-2">
-                        <button
-                          onClick={() => handleEdit(entry)}
-                          className="text-blue-600 dark:text-blue-400 text-xs hover:underline"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(entry.id!, entry.amount, entry.wallet)}
-                          className="text-red-600 dark:text-red-400 text-xs hover:underline"
-                        >
-                          Hapus
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {outcomes.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                >
+                  <div className="text-sm">
+                    <div className="font-semibold text-gray-800 dark:text-white">
+                      {entry.createdAt?.toDate
+                        ? new Date(entry.createdAt.toDate()).toLocaleString()
+                        : "-"}
+                    </div>
+                    <div className="text-gray-500 dark:text-gray-400">
+                      {wallets.find((w) => w.id === entry.wallet)?.name ||
+                        entry.wallet}{" "}
+                      · {entry.currency}
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {formatAmount(entry.amount, entry.currency)}
+                    </div>
+                    <div className="text-gray-600 dark:text-gray-300 text-xs">
+                      {entry.description}
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(entry)}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleDelete(entry.id!, entry.amount, entry.wallet)
+                      }
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                    >
+                      <Trash size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
