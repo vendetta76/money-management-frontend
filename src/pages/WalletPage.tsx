@@ -134,8 +134,7 @@ const WalletPage: React.FC = () => {
   setTimeout(() => {
     window.location.reload()
   }, 100)
-}, 
-  }
+},
 
   return (
     <LayoutShell>
