@@ -189,8 +189,87 @@ const IncomePage = () => {
           </div>
         )}
 
-        {/* Form tetap sama */}
+        {/* FORM PEMASUKAN */}
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 shadow rounded-xl p-6 mb-6 max-w-xl w-full">
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Pilih Dompet</label>
+            <select
+              name="wallet"
+              value={form.wallet}
+              onChange={handleWalletChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.wallet && "border-red-500"}`}
+            >
+              <option value="">-- Pilih Dompet --</option>
+              {wallets.map((wallet) => (
+                <option key={wallet.id} value={wallet.id}>
+                  {wallet.name}
+                </option>
+              ))}
+            </select>
+            {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
+          </div>
 
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Deskripsi</label>
+            <input
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              type="text"
+              placeholder="Tulis deskripsi"
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.description && "border-red-500"}`}
+            />
+            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Nominal</label>
+            <input
+              name="amount"
+              value={form.amount}
+              onChange={handleChange}
+              type="number"
+              placeholder="0.00"
+              className={`w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none ${errors.amount && "border-red-500"}`}
+            />
+            {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-1 text-sm font-medium">Mata Uang</label>
+            <input
+              type="text"
+              value={form.currency}
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-200 text-gray-700"
+            />
+            {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+          </div>
+
+          <div className="flex justify-between">
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({ wallet: "", description: "", amount: "", currency: "" });
+                  setEditingId(null);
+                }}
+                className="text-sm text-gray-500 hover:underline"
+              >
+                Batal Edit
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
+            </button>
+          </div>
+        </form>
+
+        {/* TRANSAKSI TERBARU */}
         <div className="mt-10">
           <h2 className="text-xl font-semibold mb-4">Transaksi Terbaru</h2>
           {incomes.length === 0 ? (
