@@ -133,13 +133,11 @@ const WalletPage: React.FC = () => {
   }
 
   const handleLock = () => {
-  localStorage.removeItem('walletPinVerifiedAt');
-  localStorage.removeItem('lastWalletAccess');
-  setTimeout(() => {
-    window.location.reload();
-  }, 100);
-}, 100)
-}, 100)
+    localStorage.removeItem('walletPinVerifiedAt');
+    localStorage.removeItem('lastWalletAccess');
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   }
 
   return (
