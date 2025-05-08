@@ -295,6 +295,7 @@ const WalletPage: React.FC = () => {
           if (!pin) {
             alert("PIN belum diset. Silakan atur PIN terlebih dahulu di halaman Security.");
           } else {
+            setEnteredPin("");
             setPinLockVisible(true);
           }
         }}
