@@ -1,25 +1,18 @@
-// src/pages/settings/PreferencesPage.tsx
 import React, { useState, useEffect } from 'react'
 import LayoutShell from '../../layouts/LayoutShell'
 import { toast } from 'react-hot-toast'
-import { usePreferences } from '../../context/PreferencesContext'
 
 const PreferencesPage: React.FC = () => {
-  const { preferences, setPreferences } = usePreferences()
-
-  const [pendingLogoutTimeout, setPendingLogoutTimeout] = useState<number>(preferences.logoutTimeoutMs)
+  const initialTimeout = Number(localStorage.getItem('logoutTimeout')) || 0
+  const [pendingLogoutTimeout, setPendingLogoutTimeout] = useState<number>(initialTimeout)
   const [applied, setApplied] = useState(true)
 
   useEffect(() => {
-    setApplied(pendingLogoutTimeout === preferences.logoutTimeoutMs)
-  }, [pendingLogoutTimeout, preferences])
+    setApplied(pendingLogoutTimeout === initialTimeout)
+  }, [pendingLogoutTimeout, initialTimeout])
 
   const handleApply = () => {
     localStorage.setItem('logoutTimeout', pendingLogoutTimeout.toString())
-    setPreferences({
-      ...preferences,
-      logoutTimeoutMs: pendingLogoutTimeout,
-    })
     setApplied(true)
     toast.success('Preferensi berhasil diterapkan')
   }
@@ -62,4 +55,4 @@ const PreferencesPage: React.FC = () => {
   )
 }
 
-export default PreferencesPage;
+export default PreferencesPage
