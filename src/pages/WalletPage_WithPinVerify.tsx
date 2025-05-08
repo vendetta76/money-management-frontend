@@ -8,6 +8,9 @@ import LayoutShell from '../layouts/LayoutShell'
 import { usePreferences } from '../context/PreferencesContext'
 
 const WalletPage_WithPinVerify: React.FC = () => {
+  if (!pinIdleTimeoutMs || !requirePinOnIdle) {
+    return <LayoutShell><div className="p-6 text-center">Loading preference…</div></LayoutShell>
+  }
   const { user } = useAuth()
   const { requirePinOnIdle, pinIdleTimeoutMs } = usePreferences()
 
@@ -40,6 +43,7 @@ const WalletPage_WithPinVerify: React.FC = () => {
     const sessionValid = walletSession && now - walletSession < pinIdleTimeoutMs
     const pinValid = pinVerifiedAt && now - pinVerifiedAt < pinIdleTimeoutMs
 
+    console.log({ sessionValid, pinValid, pinIdleTimeoutMs })
     if (sessionValid || pinValid) {
       setVerified(true)
     }
