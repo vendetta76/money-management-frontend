@@ -64,6 +64,10 @@ const WalletPage: React.FC = () => {
   }, {} as Record<string, number>)
 
   useEffect(() => {
+    localStorage.setItem('lastWalletAccess', Date.now().toString())
+  }, [])
+
+  useEffect(() => {
     if (!user) return
     const q = query(
       collection(db, 'users', user.uid, 'wallets'),
@@ -129,12 +133,14 @@ const WalletPage: React.FC = () => {
   }
 
   const handleLock = () => {
-    localStorage.removeItem('walletPinVerifiedAt');
-    localStorage.removeItem('lastWalletAccess');
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
-  }  
+  localStorage.removeItem('walletPinVerifiedAt');
+  localStorage.removeItem('lastWalletAccess');
+  setTimeout(() => {
+    window.location.reload();
+  }, 100);
+}, 100)
+}, 100)
+  }
 
   return (
     <LayoutShell>
