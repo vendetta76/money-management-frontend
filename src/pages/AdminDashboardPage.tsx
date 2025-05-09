@@ -31,6 +31,12 @@ const AdminDashboardPage = () => {
     if (role?.toLowerCase() !== 'admin') navigate('/403');
   }, [role, navigate]);
 
+  useEffect(() => {
+    if (role?.toLowerCase() === 'admin') {
+      fetchUsers();
+    }
+  }, []);
+
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
