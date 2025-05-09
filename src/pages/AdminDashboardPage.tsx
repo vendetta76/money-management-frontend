@@ -24,16 +24,11 @@ const AdminDashboardPage = () => {
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role'); // or get from user context
+  const role = localStorage.getItem('role');
 
   useEffect(() => {
     if (role?.toLowerCase() !== 'admin') navigate('/403');
   }, [role, navigate]);
-  {loading ? (
-    <p className="text-gray-500">Loading...</p>
-  ) : (
-    // existing table or logs
-  )}
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -87,7 +82,9 @@ const AdminDashboardPage = () => {
         <button onClick={() => setActiveTab('logs')} className={`px-4 py-2 ${activeTab === 'logs' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>Activity Logs</button>
       </div>
 
-      {activeTab === 'users' && (
+      {loading ? (
+        <p className="text-gray-500">Loading...</p>
+      ) : activeTab === 'users' ? (
         <table className="w-full border">
           <thead>
             <tr className="bg-gray-200">
@@ -121,9 +118,7 @@ const AdminDashboardPage = () => {
             ))}
           </tbody>
         </table>
-      )}
-
-      {activeTab === 'logs' && (
+      ) : (
         <div>
           <h2 className="text-xl font-semibold mb-2">Activity Logs</h2>
           <ul className="space-y-2">
