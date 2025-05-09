@@ -36,7 +36,7 @@ interface WalletEntry {
 const HistoryPage = () => {
   const { user } = useAuth()
   const [search, setSearch] = useState("")
-  const [selectedDate, setSelectedDate] = useState("")
+  const [selectedDateRange, setSelectedDateRange] = useState("all")
   const [selectedType, setSelectedType] = useState("all")
   const [selectedWallet, setSelectedWallet] = useState("all")
   const [history, setHistory] = useState<HistoryEntry[]>([])
@@ -90,13 +90,41 @@ const HistoryPage = () => {
     }
   }, [user])
 
+  const isInSelectedDateRange = (date: Date) => {
+    const now = new Date()
+    const itemDate = new Date(date)
+
+    if (selectedDateRange === "today") {
+      return itemDate.toDateString() === now.toDateString()
+    }
+
+    if (selectedDateRange === "yesterday") {
+      const yesterday = new Date()
+      yesterday.setDate(now.getDate() - 1)
+      return itemDate.toDateString() === yesterday.toDateString()
+    }
+
+    if (selectedDateRange === "last7") {
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(now.getDate() - 7)
+      return itemDate >= sevenDaysAgo && itemDate <= now
+    }
+
+    if (selectedDateRange === "thisMonth") {
+      return (
+        itemDate.getMonth() === now.getMonth() &&
+        itemDate.getFullYear() === now.getFullYear()
+      )
+    }
+
+    return true
+  }
+
   const filtered = history.filter((item) => {
     const matchType = selectedType === "all" || item.type === selectedType
     const matchWallet = selectedWallet === "all" || item.wallet === selectedWallet
     const matchSearch = item.description.toLowerCase().includes(search.toLowerCase())
-    const matchDate = selectedDate
-      ? new Date(item.createdAt?.toDate?.() ?? item.createdAt).toISOString().split("T")[0] === selectedDate
-      : true
+    const matchDate = isInSelectedDateRange(new Date(item.createdAt?.toDate?.() ?? item.createdAt))
     return matchType && matchWallet && matchSearch && matchDate
   })
 
@@ -112,30 +140,25 @@ const HistoryPage = () => {
 
   return (
     <LayoutShell>
-      <main className="dark:text-white dark:bg-gray-900 min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 md:ml-64 max-w-screen-2xl mx-auto">
-        <h1 className="dark:text-white dark:bg-gray-900 text-2xl font-bold text-purple-700 dark:text-purple-300 mb-4">📜 Riwayat Transaksi</h1>
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-6 max-w-screen-2xl mx-auto bg-white dark:bg-gray-900 dark:text-white">
+        <h1 className="text-2xl sm:text-3xl font-bold text-purple-700 dark:text-purple-300 mb-6">📜 Riwayat Transaksi</h1>
 
-        <div className="dark:text-white dark:bg-gray-900 flex flex-wrap gap-4 mb-6 items-center">
-          <div className="dark:text-white dark:bg-gray-900 relative w-full sm:w-1/2 md:w-1/3">
-            <Search className="dark:text-white dark:bg-gray-900 absolute left-3 top-2.5 text-gray-400" size={16} />
-            <input
-              type="text"
-              placeholder="Cari deskripsi..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="dark:text-white dark:bg-gray-900 w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
-            />
-          </div>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="dark:text-white dark:bg-gray-900 w-full sm:w-auto px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <select
+            value={selectedDateRange}
+            onChange={(e) => setSelectedDateRange(e.target.value)}
+            className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+          >
+            <option value="all">Semua Tanggal</option>
+            <option value="today">Hari Ini</option>
+            <option value="yesterday">Kemarin</option>
+            <option value="last7">7 Hari Terakhir</option>
+            <option value="thisMonth">Bulan Ini</option>
+          </select>
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white"
+            className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
           >
             <option value="all">Semua Jenis</option>
             <option value="income">Income</option>
@@ -144,48 +167,62 @@ const HistoryPage = () => {
           <select
             value={selectedWallet}
             onChange={(e) => setSelectedWallet(e.target.value)}
-            className="px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white"
+            className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
           >
             <option value="all">Semua Dompet</option>
             {wallets.map((w) => (
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
           </select>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-300" size={18} />
+            <input
+              type="text"
+              placeholder="Cari deskripsi..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+            />
+          </div>
         </div>
 
         {filtered.length === 0 ? (
-          <p className="dark:text-white dark:bg-gray-900 text-sm text-gray-500 dark:text-gray-300 dark:text-gray-300">Tidak ada transaksi ditemukan.</p>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-300 text-center py-8">Tidak ada transaksi ditemukan.</p>
         ) : (
-          <div className="dark:text-white dark:bg-gray-900 grid gap-4">
+          <div className="grid gap-4">
             {filtered.map((item) => (
               <div
                 key={item.id}
-                className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-md transition border-l-4"
+                className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-xl shadow-md hover:shadow-lg transition-all border-l-4"
                 style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
               >
-                <div className="dark:text-white dark:bg-gray-900 flex items-center justify-between mb-2">
-                  <span className="dark:text-white dark:bg-gray-900 text-sm font-semibold text-gray-600 dark:text-gray-300 dark:text-gray-300">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+                  <span className="text-sm sm:text-base font-semibold text-gray-600 dark:text-gray-300">
                     {item.type === "income" ? "📥 Income" : "📤 Outcome"} • {getWalletName(item.wallet)} ({getWalletCurrency(item.wallet)})
                   </span>
                   <span
-                    className={`text-sm font-semibold ${item.type === "income" ? "text-green-600" : "text-red-500"}`}
+                    className={`text-sm sm:text-base font-semibold ${item.type === "income" ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
                   >
                     {item.type === "income" ? "+" : "-"} Rp {item.amount.toLocaleString("id-ID")}
                   </span>
                 </div>
-                <div className="dark:text-white dark:bg-gray-900 text-sm text-gray-700 dark:text-gray-100">
+                <div className="text-sm text-gray-700 dark:text-gray-100">
                   {item.description}
                   {item.editHistory && item.editHistory.length > 0 && (
-                    <span className="dark:text-white dark:bg-gray-900 text-xs text-blue-500 ml-2">(edited)</span>
+                    <span className="text-xs text-blue-500 dark:text-blue-400 ml-2">(edited)</span>
                   )}
                 </div>
-                <div className="dark:text-white dark:bg-gray-900 text-xs text-gray-400 mt-1">
-                  {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID")}
+                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                  })}
                 </div>
                 {item.editHistory && item.editHistory.length > 0 && (
-                  <div className="dark:text-white dark:bg-gray-900 mt-2 text-xs text-gray-500 dark:text-gray-300 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-2 rounded">
-                    <p className="dark:text-white dark:bg-gray-900 font-semibold mb-1">Histori Perubahan:</p>
-                    <ul className="dark:text-white dark:bg-gray-900 list-disc ml-5 space-y-1">
+                  <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                    <p className="font-semibold mb-2">Histori Perubahan:</p>
+                    <ul className="list-disc ml-5 space-y-1.5">
                       {item.editHistory.map((log, i) => (
                         <li key={i}>
                           {new Date(log.editedAt?.toDate?.() ?? log.editedAt).toLocaleString("id-ID")}: {log.description} - Rp {log.amount.toLocaleString("id-ID")}
