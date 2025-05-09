@@ -38,7 +38,7 @@ const AdminDashboardPage = () => {
       const res = await axios.get('/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(res.data);
+      setUsers(Array.isArray(res.data) ? res.data : []);
     } catch (err: any) {
       console.error('❌ Gagal load user:', err);
       setError('Gagal memuat data pengguna.');
@@ -54,7 +54,7 @@ const AdminDashboardPage = () => {
       const res = await axios.get('/api/logs', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setLogs(res.data);
+      setLogs(Array.isArray(res.data) ? res.data : []);
     } catch (err: any) {
       console.error('❌ Gagal load log:', err);
       setError('Gagal memuat log aktivitas.');
@@ -115,7 +115,7 @@ const AdminDashboardPage = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {Array.isArray(users) ? users.map((user) => (
               <tr key={user._id} className="text-center border-t">
                 <td className="p-2">{user.email}</td>
                 <td className="p-2">{user.role}</td>
@@ -135,14 +135,14 @@ const AdminDashboardPage = () => {
                   </button>
                 </td>
               </tr>
-            ))}
+            )) : null}
           </tbody>
         </table>
       ) : (
         <div>
           <h2 className="text-xl font-semibold mb-2">Activity Logs</h2>
           <ul className="space-y-2">
-            {logs.map((log, idx) => (
+            {Array.isArray(logs) ? logs.map((log, idx) => (
               <li key={idx} className="border p-2">
                 <div><b>UID:</b> {log.uid}</div>
                 <div><b>Action:</b> {log.action}</div>
@@ -151,7 +151,7 @@ const AdminDashboardPage = () => {
                   <div><b>Meta:</b> {JSON.stringify(log.meta)}</div>
                 )}
               </li>
-            ))}
+            )) : null}
           </ul>
         </div>
       )}
