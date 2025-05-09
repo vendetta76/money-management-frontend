@@ -37,6 +37,8 @@ const HistoryPage = () => {
   const { user } = useAuth()
   const [search, setSearch] = useState("")
   const [selectedDate, setSelectedDate] = useState("")
+  const [selectedType, setSelectedType] = useState("all")
+  const [selectedWallet, setSelectedWallet] = useState("all")
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [wallets, setWallets] = useState<WalletEntry[]>([])
 
@@ -89,11 +91,13 @@ const HistoryPage = () => {
   }, [user])
 
   const filtered = history.filter((item) => {
+    const matchType = selectedType === "all" || item.type === selectedType
+    const matchWallet = selectedWallet === "all" || item.wallet === selectedWallet
     const matchSearch = item.description.toLowerCase().includes(search.toLowerCase())
     const matchDate = selectedDate
       ? new Date(item.createdAt?.toDate?.() ?? item.createdAt).toISOString().split("T")[0] === selectedDate
       : true
-    return matchSearch && matchDate
+    return matchType && matchWallet && matchSearch && matchDate
   })
 
   const getWalletName = (walletId: string) => {
@@ -128,6 +132,25 @@ const HistoryPage = () => {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="dark:text-white dark:bg-gray-900 w-full sm:w-auto px-4 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
           />
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            className="px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white"
+          >
+            <option value="all">Semua Jenis</option>
+            <option value="income">Income</option>
+            <option value="outcome">Outcome</option>
+          </select>
+          <select
+            value={selectedWallet}
+            onChange={(e) => setSelectedWallet(e.target.value)}
+            className="px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white"
+          >
+            <option value="all">Semua Dompet</option>
+            {wallets.map((w) => (
+              <option key={w.id} value={w.id}>{w.name}</option>
+            ))}
+          </select>
         </div>
 
         {filtered.length === 0 ? (
