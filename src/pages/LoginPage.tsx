@@ -39,12 +39,23 @@ const LoginPage = () => {
       const userDocSnap = await getDoc(userDocRef)
       const userData = userDocSnap.data()
 
+      // ✅ Simpan token & role ke localStorage
+      const token = await signedInUser.getIdToken()
+      localStorage.setItem("token", token)
+      localStorage.setItem("role", userData?.role || '')
+      localStorage.setItem("user", JSON.stringify({
+        uid: signedInUser.uid,
+        email: signedInUser.email,
+        role: userData?.role
+      }))
+
+      // ✅ Redirect sesuai role
       if (userData?.role === "Admin") {
         navigate("/admin")
       } else if (userData?.role === "Regular" || userData?.role === "Premium") {
         navigate("/dashboard")
       } else {
-        navigate("/") // fallback untuk role yang tidak dikenal
+        navigate("/") // fallback
       }
 
     } catch (err: any) {
@@ -70,40 +81,40 @@ const LoginPage = () => {
       <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 w-full max-w-md p-8 rounded-xl shadow-xl">
         <BackButton />
 
-        <h1 className="dark:text-white dark:bg-gray-900 text-3xl font-bold text-center text-purple-700 mb-6">Login ke MoniQ</h1>
+        <h1 className="dark:text-white text-3xl font-bold text-center text-purple-700 mb-6">Login ke MoniQ</h1>
 
-        <form onSubmit={handleLogin} className="dark:text-white dark:bg-gray-900 space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-white">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-white">Password</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-white"
             />
           </div>
 
-          {error && <p className="dark:text-white dark:bg-gray-900 text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
           {unverifiedUser && (
             <button
               type="button"
               onClick={handleResendVerification}
-              className="dark:text-white dark:bg-gray-900 text-sm text-purple-600 hover:underline mt-2 block"
+              className="text-sm text-purple-600 hover:underline mt-2 block"
             >
               Kirim ulang email verifikasi
             </button>
@@ -112,21 +123,21 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50"
+            className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50"
           >
             {loading ? "Loading..." : "Login"}
           </button>
         </form>
 
-        <div className="dark:text-white dark:bg-gray-900 text-center text-sm text-gray-600 dark:text-gray-300 mt-4 space-y-2">
+        <div className="text-center text-sm text-gray-600 dark:text-gray-300 mt-4 space-y-2">
           <p>
             Belum punya akun?{" "}
-            <a href="/register" className="dark:text-white dark:bg-gray-900 text-purple-600 hover:underline">
+            <a href="/register" className="text-purple-600 hover:underline">
               Daftar sekarang
             </a>
           </p>
           <p>
-            <a href="/forgot-password" className="dark:text-white dark:bg-gray-900 text-purple-600 hover:underline">
+            <a href="/forgot-password" className="text-purple-600 hover:underline">
               Lupa password?
             </a>
           </p>

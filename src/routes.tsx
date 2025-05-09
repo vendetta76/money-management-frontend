@@ -18,11 +18,11 @@ import ResetPinPage from './pages/ResetPinPage'
 
 // Core Pages
 import DashboardPage from './pages/DashboardPage'
-import WalletPage from './pages/WalletPage'   // ← use this
+import WalletPage from './pages/WalletPage'
 import IncomePage from './pages/IncomePage'
 import OutcomePage from './pages/OutcomePage'
 import HistoryPage from './pages/HistoryPage'
-import AdminPage from './pages/AdminPage'
+import AdminDashboardPage from './pages/AdminDashboardPage' // ✅ GANTI INI
 
 // Profile
 import ProfilePage from './pages/ProfilePage'
@@ -106,9 +106,9 @@ const routes: RouteObject[] = [
   {
     path: '/admin',
     element: (
-      <PrivateRoute>
+      <PrivateRoute requiredRole="Admin">
         <PageTransition>
-          <AdminPage />
+          <AdminDashboardPage />
         </PageTransition>
       </PrivateRoute>
     ),
