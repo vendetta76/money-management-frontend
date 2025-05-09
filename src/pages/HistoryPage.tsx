@@ -37,6 +37,7 @@ const HistoryPage = () => {
   const { user } = useAuth()
   const [search, setSearch] = useState("")
   const [selectedDateRange, setSelectedDateRange] = useState("all")
+  const [customDate, setCustomDate] = useState("")
   const [selectedType, setSelectedType] = useState("all")
   const [selectedWallet, setSelectedWallet] = useState("all")
   const [history, setHistory] = useState<HistoryEntry[]>([])
@@ -117,6 +118,11 @@ const HistoryPage = () => {
       )
     }
 
+    if (selectedDateRange === "custom") {
+      return customDate &&
+        itemDate.toISOString().split("T")[0] === customDate
+    }
+
     return true
   }
 
@@ -144,17 +150,28 @@ const HistoryPage = () => {
         <h1 className="text-2xl sm:text-3xl font-bold text-purple-700 dark:text-purple-300 mb-6">📜 Riwayat Transaksi</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <select
-            value={selectedDateRange}
-            onChange={(e) => setSelectedDateRange(e.target.value)}
-            className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-          >
-            <option value="all">Semua Tanggal</option>
-            <option value="today">Hari Ini</option>
-            <option value="yesterday">Kemarin</option>
-            <option value="last7">7 Hari Terakhir</option>
-            <option value="thisMonth">Bulan Ini</option>
-          </select>
+          <div className="flex gap-2 items-center flex-wrap">
+            <select
+              value={selectedDateRange}
+              onChange={(e) => setSelectedDateRange(e.target.value)}
+              className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+            >
+              <option value="all">Semua Tanggal</option>
+              <option value="today">Hari Ini</option>
+              <option value="yesterday">Kemarin</option>
+              <option value="last7">7 Hari Terakhir</option>
+              <option value="thisMonth">Bulan Ini</option>
+              <option value="custom">📆 Tanggal Khusus</option>
+            </select>
+            {selectedDateRange === "custom" && (
+              <input
+                type="date"
+                value={customDate}
+                onChange={(e) => setCustomDate(e.target.value)}
+                className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+              />
+            )}
+          </div>
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
