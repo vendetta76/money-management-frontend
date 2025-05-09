@@ -49,13 +49,14 @@ const LoginPage = () => {
         role: userData?.role
       }))
 
-      // ✅ Redirect sesuai role
-      if (userData?.role === "Admin") {
+      // ✅ Redirect sesuai role (dengan standar lowercase)
+      const role = userData?.role?.toLowerCase()
+      if (role === "admin") {
         navigate("/admin")
-      } else if (userData?.role === "Regular" || userData?.role === "Premium") {
+      } else if (role === "regular" || role === "premium") {
         navigate("/dashboard")
       } else {
-        navigate("/") // fallback
+        navigate("/")
       }
 
     } catch (err: any) {
