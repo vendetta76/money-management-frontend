@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useEffect, useState, useCallback } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
@@ -45,10 +44,12 @@ const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
     return () => clearInterval(interval)
   }, [logoutTimeoutMs, lastActivity, user])
 
-  if (loading) return <div>Loading...</div>
+  if (loading || !userMeta) return <div>Loading...</div>
+
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
+
   if (!user.emailVerified && location.pathname !== "/verify-email-pending") {
     return (
       <Navigate
@@ -58,8 +59,9 @@ const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
       />
     )
   }
-  if (requiredRole && userMeta?.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />
+
+  if (requiredRole && userMeta?.role?.toLowerCase() !== requiredRole.toLowerCase()) {
+    return <Navigate to="/403" replace />
   }
 
   return <>{children}</>
