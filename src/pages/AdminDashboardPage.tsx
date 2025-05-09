@@ -21,6 +21,7 @@ const AdminDashboardPage = () => {
   const [logs, setLogs] = useState<Log[]>([]);
   const [activeTab, setActiveTab] = useState<'users' | 'logs'>('users');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
@@ -32,41 +33,58 @@ const AdminDashboardPage = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await axios.get('/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data);
-    } catch {
-      alert('Gagal load user');
+    } catch (err: any) {
+      console.error('❌ Gagal load user:', err);
+      setError('Gagal memuat data pengguna.');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchLogs = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await axios.get('/api/logs', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLogs(res.data);
-    } catch {
-      alert('Gagal load log');
+    } catch (err: any) {
+      console.error('❌ Gagal load log:', err);
+      setError('Gagal memuat log aktivitas.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const toggleSuspend = async (id: string) => {
-    await axios.patch(`/api/admin/suspend/${id}`, {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    fetchUsers();
+    try {
+      await axios.patch(`/api/admin/suspend/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchUsers();
+    } catch (err: any) {
+      console.error('❌ Gagal suspend user:', err);
+      alert('Gagal suspend user.');
+    }
   };
 
   const resetPassword = async (email: string) => {
-    const res = await axios.post('/api/admin/reset-password', { email }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    alert(`Reset link:\n${res.data.resetLink}`);
+    try {
+      const res = await axios.post('/api/admin/reset-password', { email }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert(`Reset link:\n${res.data.resetLink}`);
+    } catch (err: any) {
+      console.error('❌ Gagal reset password:', err);
+      alert('Gagal mengirim reset password.');
+    }
   };
 
   useEffect(() => {
@@ -81,6 +99,8 @@ const AdminDashboardPage = () => {
         <button onClick={() => setActiveTab('users')} className={`px-4 py-2 ${activeTab === 'users' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>User Management</button>
         <button onClick={() => setActiveTab('logs')} className={`px-4 py-2 ${activeTab === 'logs' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>Activity Logs</button>
       </div>
+
+      {error && <p className="text-red-500 mb-4">{error}</p>}
 
       {loading ? (
         <p className="text-gray-500">Loading...</p>

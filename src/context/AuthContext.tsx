@@ -5,7 +5,7 @@ import { doc, getDoc } from "firebase/firestore"
 import { db } from "../lib/firebaseClient"
 
 interface UserMeta {
-  role: "regular" | "premium"
+  role: "regular" | "premium" | "admin"
   premiumStartDate?: string
   premiumEndDate?: string
   daysLeft?: number
