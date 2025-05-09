@@ -27,8 +27,13 @@ const AdminDashboardPage = () => {
   const role = localStorage.getItem('role'); // or get from user context
 
   useEffect(() => {
-    if (role !== 'admin') navigate('/403');
+    if (role?.toLowerCase() !== 'admin') navigate('/403');
   }, [role, navigate]);
+  {loading ? (
+    <p className="text-gray-500">Loading...</p>
+  ) : (
+    // existing table or logs
+  )}
 
   const fetchUsers = async () => {
     setLoading(true);
