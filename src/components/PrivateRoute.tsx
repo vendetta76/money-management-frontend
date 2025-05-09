@@ -12,8 +12,11 @@ interface PrivateRouteProps {
 const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
   const { user, loading, userMeta } = useAuth()
   const location = useLocation()
-  const logoutTimeoutMs = 10 * 60 * 1000 // 10 menit auto logout (bisa diubah)
 
+  useEffect(() => {
+    console.log("🔥 [PrivateRoute] role from userMeta:", userMeta?.role);
+  }, [userMeta]);
+  
   // Reload user metadata on mount
   useEffect(() => {
     if (user) user.reload()

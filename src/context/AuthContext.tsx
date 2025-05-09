@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const data = docSnap.data()
 
             const role = data.role || "regular"
+            console.log("✅ [AuthContext] role loaded:", role);
             const premiumStartDate = data.premiumStartDate
             const premiumEndDate = data.premiumEndDate
             const preferredCurrency = data.preferredCurrency || null
