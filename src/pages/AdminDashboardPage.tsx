@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 interface User {
-  _id: string;
+  uid: string;
   email: string;
   role: string;
   isSuspended?: boolean;
@@ -45,6 +45,7 @@ const AdminDashboardPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(Array.isArray(res.data) ? res.data : []);
+      console.log("📦 Users fetched:", res.data);
     } catch (err: any) {
       console.error('❌ Gagal load user:', err);
       setError('Gagal memuat data pengguna.');
@@ -69,9 +70,9 @@ const AdminDashboardPage = () => {
     }
   };
 
-  const toggleSuspend = async (id: string) => {
+  const toggleSuspend = async (uid: string) => {
     try {
-      await axios.patch(`/api/admin/suspend/${id}`, {}, {
+      await axios.patch(`/api/admin/suspend/${uid}`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUsers();
@@ -121,27 +122,30 @@ const AdminDashboardPage = () => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(users) ? users.map((user) => (
-              <tr key={user._id} className="text-center border-t">
-                <td className="p-2">{user.email}</td>
-                <td className="p-2">{user.role}</td>
-                <td className="p-2">{user.isSuspended ? 'Suspended' : 'Active'}</td>
-                <td className="p-2 space-x-2">
-                  <button
-                    className="bg-yellow-500 px-3 py-1 text-white rounded"
-                    onClick={() => toggleSuspend(user._id)}
-                  >
-                    {user.isSuspended ? 'Unsuspend' : 'Suspend'}
-                  </button>
-                  <button
-                    className="bg-blue-500 px-3 py-1 text-white rounded"
-                    onClick={() => resetPassword(user.email)}
-                  >
-                    Reset Password
-                  </button>
-                </td>
-              </tr>
-            )) : null}
+            {Array.isArray(users) ? users.map((user) => {
+              console.log("📦 Render user row:", user);
+              return (
+                <tr key={user.uid} className="text-center border-t">
+                  <td className="p-2">{user.email}</td>
+                  <td className="p-2">{user.role}</td>
+                  <td className="p-2">{user.isSuspended ? 'Suspended' : 'Active'}</td>
+                  <td className="p-2 space-x-2">
+                    <button
+                      className="bg-yellow-500 px-3 py-1 text-white rounded"
+                      onClick={() => toggleSuspend(user.uid)}
+                    >
+                      {user.isSuspended ? 'Unsuspend' : 'Suspend'}
+                    </button>
+                    <button
+                      className="bg-blue-500 px-3 py-1 text-white rounded"
+                      onClick={() => resetPassword(user.email)}
+                    >
+                      Reset Password
+                    </button>
+                  </td>
+                </tr>
+              );
+            }) : null}
           </tbody>
         </table>
       ) : (
