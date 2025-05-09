@@ -511,6 +511,7 @@ const WalletPage: React.FC = () => {
           } else {
             setEnteredPin("");
             setPinLockVisible(true);
+            lock(); // Sync with PinLockContext by setting locked to true
           }
         }}
         className="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 z-40 transition"
