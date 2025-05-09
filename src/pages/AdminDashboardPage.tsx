@@ -41,7 +41,7 @@ const AdminDashboardPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get('/api/admin/users', {
+      const res = await axios.get('https://money-management-backend-f6dg.onrender.com/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(Array.isArray(res.data) ? res.data : []);

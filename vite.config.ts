@@ -16,5 +16,12 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      '/api': {
+        target: 'https://money-management-backend-f6dg.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 })
