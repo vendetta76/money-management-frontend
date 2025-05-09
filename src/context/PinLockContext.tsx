@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface PinLockContextType {
@@ -57,17 +56,16 @@ export const PinLockProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const unlock = (enteredPin: string) => {
     const savedPin = localStorage.getItem("walletPin");
-    console.log("[PinLock] Attempt unlock:");
-    console.log("Entered PIN:", enteredPin);
-    console.log("Saved PIN:", savedPin);
+    // Do not log sensitive data like the PIN
+    console.log("[PinLock] Attempting to unlock...");
 
     if (enteredPin === savedPin) {
       setLocked(false);
-      console.log("[PinLock] PIN benar, halaman dibuka.");
+      console.log("[PinLock] Unlock successful, halaman dibuka.");
       return true;
     }
 
-    console.warn("[PinLock] PIN salah.");
+    console.warn("[PinLock] Unlock failed: Incorrect PIN.");
     return false;
   };
 

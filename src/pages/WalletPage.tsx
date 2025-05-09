@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   collection,
   addDoc,
@@ -35,6 +35,7 @@ const WalletPage: React.FC = () => {
   const { locked, unlock, lock, pin } = usePinLock();
   const [pinLockVisible, setPinLockVisible] = useState(true);
   const [enteredPin, setEnteredPin] = useState("");
+  const [pinError, setPinError] = useState("");
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [form, setForm] = useState({
     name: "",
@@ -48,19 +49,31 @@ const WalletPage: React.FC = () => {
   const [success, setSuccess] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [showBalance, setShowBalance] = useState(false);
+  const pinInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!locked) setPinLockVisible(false);
-  }, [locked]);
+    if (pinLockVisible && pinInputRef.current) {
+      pinInputRef.current.focus();
+    }
+  }, [locked, pinLockVisible]);
 
   const handleUnlock = () => {
     const ok = unlock(enteredPin);
     if (ok) {
       setEnteredPin("");
+      setPinError("");
       setPinLockVisible(false);
       toast.success("PIN berhasil dibuka!");
     } else {
+      setPinError("PIN salah!");
       toast.error("PIN salah!");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleUnlock();
     }
   };
 
@@ -164,8 +177,9 @@ const WalletPage: React.FC = () => {
       setEditingId(null);
       setShowForm(false);
     } catch (err) {
+      // Avoid logging sensitive data like the PIN; log only generic error messages
       toast.error("Terjadi kesalahan saat menyimpan.");
-      console.error(err);
+      console.error("Error saving wallet:", err.message);
     }
   };
 
@@ -192,7 +206,7 @@ const WalletPage: React.FC = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen px-4 py-6 max-w-6xl mx-auto transition-all duration-300">
+      <main className={`min-h-screen px-4 py-6 max-w-6xl mx-auto transition-all duration-300 ${pinLockVisible ? "blur-md" : ""}`}>
         {/* Total Saldo */}
         <div className="mb-6">
           <h2 className="text-xl font-bold mb-4">
@@ -451,19 +465,36 @@ const WalletPage: React.FC = () => {
       </main>
 
       {pinLockVisible && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 transition-all">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-80 text-center animate-fade-in">
-            <h2 className="text-xl font-bold mb-4">Masukkan PIN</h2>
-            <input
-              type="password"
-              className="border rounded w-full px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={enteredPin}
-              onChange={(e) => setEnteredPin(e.target.value)}
-              placeholder="PIN"
-            />
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 transition-all duration-300">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-80 text-center animate-fade-in">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Masukkan PIN</h2>
+            <div className="mb-4">
+              <label htmlFor="pin-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                PIN
+              </label>
+              <input
+                id="pin-input"
+                type="password"
+                maxLength={6}
+                className="border rounded-lg w-full px-4 py-2 text-center text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-400"
+                value={enteredPin}
+                onChange={(e) => {
+                  setEnteredPin(e.target.value);
+                  setPinError("");
+                  // Do not log the PIN value to the console
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="••••••"
+                aria-label="Enter your PIN"
+                ref={pinInputRef}
+              />
+              {pinError && (
+                <p className="text-red-500 text-sm mt-2">{pinError}</p>
+              )}
+            </div>
             <button
               onClick={handleUnlock}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full transition-all"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg w-full hover:bg-blue-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Buka Kunci
             </button>
