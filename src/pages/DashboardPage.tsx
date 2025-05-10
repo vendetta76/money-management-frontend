@@ -4,7 +4,7 @@ import LayoutShell from '../layouts/LayoutShell'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../lib/firebaseClient'
 import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore'
-import { format } from 'date-fns'
+import { format, subDays, subMonths, subYears } from 'date-fns'
 import { id as localeID } from 'date-fns/locale'
 import {
   PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { toast } from 'sonner'
 import MoneySplitSimulator from "@/components/MoneySplitSimulator"
+import DashboardFilters from "@/components/DashboardFilters" // Import DashboardFilters
 
 const COLORS = ['#10B981', '#EF4444', '#6366F1', '#F59E0B', '#06B6D4']
 
@@ -70,9 +71,14 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState([])
   const [wallets, setWallets] = useState([])
   const [selectedCurrency, setSelectedCurrency] = useState('all')
+  const [filterDate, setFilterDate] = useState('all') // Added filterDate state
+  const [filterWallet, setFilterWallet] = useState('all') // Added filterWallet state
+  const [filterType, setFilterType] = useState('all') // Added filterType state
+  const [customStartDate, setCustomStartDate] = useState(null) // Added customStartDate state
+  const [customEndDate, setCustomEndDate] = useState(null) // Added customEndDate state
   const [isWalletsLoaded, setIsWalletsLoaded] = useState(false)
   const [displayName, setDisplayName] = useState<string | null>(null)
-  const [showSplit, setShowSplit] = useState(false) // Added showSplit state
+  const [showSplit, setShowSplit] = useState(false)
   const prevStatus = useRef(null)
 
   useEffect(() => {
@@ -100,7 +106,7 @@ export default function DashboardPage() {
         newTrans.push({ ...data, type: 'income', id: doc.id })
       })
       setIncome(total)
-      setTransactions(prev => [...prev, ...newTrans])
+      setTransactions(prev => [...prev.filter(tx => tx.type !== 'income'), ...newTrans])
     })
 
     const unsubOutcomes = onSnapshot(outcomeRef, (snap) => {
@@ -112,7 +118,7 @@ export default function DashboardPage() {
         newTrans.push({ ...data, type: 'outcome', id: doc.id })
       })
       setOutcome(total)
-      setTransactions(prev => [...prev, ...newTrans])
+      setTransactions(prev => [...prev.filter(tx => tx.type !== 'outcome'), ...newTrans])
     })
 
     const unsubWallets = onSnapshot(walletRef, (snap) => {
@@ -128,8 +134,44 @@ export default function DashboardPage() {
     }
   }, [user])
 
-  const sortedTx = transactions
-    .filter(tx => tx.createdAt)
+  // Filter transactions based on the new filter states
+  const filteredTx = transactions
+    .filter(tx => {
+      // Filter by createdAt date
+      if (!tx.createdAt) return false
+      const txDate = new Date(tx.createdAt.toDate())
+      const now = new Date()
+
+      if (filterDate === 'custom' && customStartDate && customEndDate) {
+        const start = new Date(customStartDate)
+        const end = new Date(customEndDate)
+        return txDate >= start && txDate <= end
+      } else if (filterDate === '7days') {
+        const start = subDays(now, 7)
+        return txDate >= start
+      } else if (filterDate === '30days') {
+        const start = subMonths(now, 1)
+        return txDate >= start
+      } else if (filterDate === '1year') {
+        const start = subYears(now, 1)
+        return txDate >= start
+      }
+      return true // 'all'
+    })
+    .filter(tx => {
+      // Filter by wallet
+      return filterWallet === 'all' || tx.wallet === filterWallet
+    })
+    .filter(tx => {
+      // Filter by type
+      return filterType === 'all' || tx.type === filterType
+    })
+    .filter(tx => {
+      // Filter by currency
+      return selectedCurrency === 'all' || tx.currency === selectedCurrency
+    })
+
+  const sortedTx = filteredTx
     .sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds)
     .slice(0, 7)
 
@@ -170,17 +212,22 @@ export default function DashboardPage() {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-600 mb-2">Filter Mata Uang</label>
-          <select
-            value={selectedCurrency}
-            onChange={(e) => setSelectedCurrency(e.target.value)}
-            className="w-full md:w-auto px-4 py-2 border rounded-lg bg-white shadow"
-          >
-            <option value="all">Semua</option>
-            {allCurrencies.map((cur) => (
-              <option key={cur} value={cur}>{cur}</option>
-            ))}
-          </select>
+          <DashboardFilters
+            filterDate={filterDate}
+            setFilterDate={setFilterDate}
+            filterWallet={filterWallet}
+            setFilterWallet={setFilterWallet}
+            filterType={filterType}
+            setFilterType={setFilterType}
+            selectedCurrency={selectedCurrency}
+            setSelectedCurrency={setSelectedCurrency}
+            customStartDate={customStartDate}
+            setCustomStartDate={setCustomStartDate}
+            customEndDate={customEndDate}
+            setCustomEndDate={setCustomEndDate}
+            wallets={wallets}
+            allCurrencies={allCurrencies}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -299,13 +346,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Toggle Button & Money Split */}
         <div className="mt-10">
           <button
             onClick={() => setShowSplit(!showSplit)}
             className="mb-4 inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-4 py-2 rounded hover:bg-purple-200"
           >
-            {showSplit ? "Sembunyikan Split Simulator" : "💸 Tampilkan Split Simulator"}
+            {showSplit ? "Sembunyikan Split Simulator" : "Tampilkan Split Simulator"}
           </button>
 
           {showSplit && (
