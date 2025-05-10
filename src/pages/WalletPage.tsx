@@ -121,7 +121,7 @@ const WalletPage: React.FC = () => {
           return {
             id: d.id,
             name: data.name,
-            balance: data.balance,
+            balance: data.balance ?? 0,
             currency: data.currency,
             createdAt: data.createdAt,
             colorStyle: data.colorStyle || "gradient",
