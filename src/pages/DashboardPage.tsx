@@ -199,7 +199,7 @@ export default function DashboardPage() {
                 <div className="max-h-[250px] overflow-y-auto">
                   <ul className="space-y-4">
                     {sortedTx.map((tx) => {
-                      const walletName = getWalletName(tx.walletId)
+                      const walletName = getWalletName(tx.wallet)
                       return (
                         <li
                           key={tx.id}
