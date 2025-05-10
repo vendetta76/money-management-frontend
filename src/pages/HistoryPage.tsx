@@ -25,6 +25,7 @@ interface HistoryEntry {
   amount: number
   createdAt?: any
   editHistory?: EditEntry[]
+  notes?: string // Assuming notes might be part of the data
 }
 
 interface WalletEntry {
@@ -212,6 +213,7 @@ const HistoryPage = () => {
                 key={item.id}
                 className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-xl shadow-md hover:shadow-lg transition-all border-l-4"
                 style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
+                title={`${item.type === 'income' ? 'Income' : 'Outcome'}: ${item.description} (Dompet: ${getWalletName(item.wallet)})`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
                   <span className="text-sm sm:text-base font-semibold text-gray-600 dark:text-gray-300">

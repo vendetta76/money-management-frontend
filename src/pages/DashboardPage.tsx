@@ -4,13 +4,12 @@ import LayoutShell from '../layouts/LayoutShell'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../lib/firebaseClient'
 import { collection, onSnapshot } from 'firebase/firestore'
-import { format, formatDistanceToNow } from 'date-fns'
+import { format } from 'date-fns'
 import { id as localeID } from 'date-fns/locale'
 import {
   PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid
 } from 'recharts'
-import { Tooltip } from 'react-tooltip'
 import { toast } from 'sonner'
 
 const COLORS = ['#10B981', '#EF4444', '#6366F1', '#F59E0B', '#06B6D4']
@@ -101,7 +100,7 @@ export default function DashboardPage() {
   const sortedTx = transactions
     .filter(tx => tx.createdAt)
     .sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds)
-    .slice(0, 7) // Show up to 7 transactions
+    .slice(0, 7)
 
   const allCurrencies = Array.from(new Set(wallets.map(w => w.currency)))
   const filteredWallets = selectedCurrency === 'all'
@@ -182,7 +181,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-white p-4 rounded-xl shadow">
-            <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terakhir</h3>
+            <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
             {sortedTx.length === 0 ? (
               <p className="text-sm text-gray-500">Belum ada transaksi.</p>
             ) : (
@@ -190,18 +189,12 @@ export default function DashboardPage() {
                 <div className="max-h-[250px] overflow-y-auto">
                   <ul className="space-y-4">
                     {sortedTx.map((tx) => {
-                      // Find the related wallet (assuming walletId exists in transaction data)
                       const relatedWallet = wallets.find(w => w.id === tx.walletId)?.name || 'Tidak diketahui'
                       return (
                         <li
                           key={tx.id}
                           className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0 hover:bg-gray-50 p-2 rounded transition"
-                          data-tooltip-id={`tooltip-${tx.id}`}
-                          data-tooltip-content={
-                            `Catatan: ${tx.notes || 'Tidak ada catatan'}\n` +
-                            `Dompet: ${relatedWallet}\n` +
-                            `ID Transaksi: ${tx.id}`
-                          }
+                          title={`${tx.type === 'income' ? 'Income' : 'Outcome'}: ${tx.description} (Dompet: ${relatedWallet})`}
                         >
                           <div className="flex items-start gap-2">
                             <span className="text-lg">
@@ -227,7 +220,6 @@ export default function DashboardPage() {
                           >
                             {tx.type === 'income' ? '+' : '–'} {formatRupiah(tx.amount)}
                           </span>
-                          <Tooltip id={`tooltip-${tx.id}`} place="top" style={{ whiteSpace: 'pre-line' }} />
                         </li>
                       )
                     })}
