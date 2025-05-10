@@ -25,21 +25,28 @@ const Button = ({ children, className = "", ...props }) => (
   </button>
 )
 
-function SortableItem({ id, item, onChange, onRemove, dragListeners }) {
-  const { setNodeRef, transform, transition } = useSortable({
+function SortableItem({ id, item, onChange, onRemove, isOverLimit }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition
+  } = useSortable({
     id,
-    transition: { duration: 250, easing: "ease" },
+    transition: { duration: 250, easing: "ease" }
   })
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition
   }
 
   return (
     <div
       ref={setNodeRef}
       style={style}
+      {...attributes}
       className="flex gap-2 items-center mb-2"
     >
       <Input
@@ -47,23 +54,30 @@ function SortableItem({ id, item, onChange, onRemove, dragListeners }) {
         onChange={(e) => onChange(id, "name", e.target.value)}
         placeholder="Nama Pos"
       />
-      <Input
-        type="number"
-        value={item.percent}
-        onChange={(e) => onChange(id, "percent", e.target.value)}
-        className="w-20"
-      />
-      <span>%</span>
+      <div className="relative w-20">
+        <Input
+          type="text"
+          value={item.percent}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/\D/g, "")
+            const clean = raw.replace(/^0+/, "")
+            onChange(id, "percent", clean)
+          }}
+          className={`text-right ${isOverLimit ? "border-red-500 text-red-600" : ""}`}
+        />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500">%</span>
+      </div>
       <button
         onClick={() => onRemove(id)}
         className="text-red-600 px-2 py-1 rounded hover:bg-red-100"
+        title="Hapus Pos"
       >
         ❌
       </button>
       <span
-        {...dragListeners}
+        {...listeners}
         className="cursor-grab text-gray-400 hover:text-gray-600"
-        title="Drag untuk urutkan"
+        title="Drag Posisi"
       >
         ≡
       </span>
@@ -91,6 +105,7 @@ export default function MoneySplitAdvanced() {
 
   const [prevCategories, setPrevCategories] = useState(null)
   const totalPercent = categories.reduce((sum, item) => sum + item.percent, 0)
+  const isOverLimit = totalPercent !== 100 // Define isOverLimit based on totalPercent
 
   useEffect(() => {
     localStorage.setItem("moneySplitCategories", JSON.stringify(categories))
@@ -209,7 +224,7 @@ export default function MoneySplitAdvanced() {
                   item={cat}
                   onChange={handleChange}
                   onRemove={handleRemove}
-                  dragListeners={{}}
+                  isOverLimit={isOverLimit}
                 />
               ))}
             </SortableContext>
