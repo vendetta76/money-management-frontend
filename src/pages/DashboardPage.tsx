@@ -11,6 +11,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid
 } from 'recharts'
 import { toast } from 'sonner'
+import MoneySplitAdvanced from "@/components/MoneySplitAdvanced" // Import MoneySplitAdvanced
 
 const COLORS = ['#10B981', '#EF4444', '#6366F1', '#F59E0B', '#06B6D4']
 
@@ -200,7 +201,8 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white p-4 rounded-xl shadow lg:col-start-2">
+          {/* Pie Chart */}
+          <div className="bg-white p-4 rounded-xl shadow">
             <h2 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Wallet (Pie)</h2>
             <div className="w-full h-48">
               <ResponsiveContainer>
@@ -216,9 +218,8 @@ export default function DashboardPage() {
             </div>
             <WalletLegend wallets={filteredWallets} />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Transaksi Terbaru */}
           <div className="bg-white p-4 rounded-xl shadow">
             <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
             {!isWalletsLoaded ? (
@@ -275,6 +276,7 @@ export default function DashboardPage() {
             )}
           </div>
 
+          {/* Health Score */}
           <div className="bg-white p-4 rounded-xl shadow text-sm text-gray-700">
             <h4 className="text-sm font-semibold text-gray-500 mb-4">Health Score</h4>
             <div className="text-center text-2xl font-semibold mb-2">
@@ -293,6 +295,13 @@ export default function DashboardPage() {
               <li>💰 Rasio Tabungan: {survivability.details.savings.ratio} → Skor: {survivability.details.savings.score}</li>
               <li>📊 Skor Total: {survivability.details.total}</li>
             </ul>
+          </div>
+        </div>
+
+        {/* Money Split Simulator Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white p-4 rounded-xl shadow lg:col-span-3">
+            <MoneySplitAdvanced />
           </div>
         </div>
       </main>

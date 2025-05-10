@@ -1,86 +1,173 @@
-import { useState } from "react"
+// ✅ Versi lengkap Money Split Simulator dengan drag, undo, reset, add/remove, validasi total 100%
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { DndContext, closestCenter } from "@dnd-kit/core"
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
-export default function MoneySplitSimulator() {
-  const [total, setTotal] = useState(0)
-  const [categories, setCategories] = useState([
-    { name: "Tabungan", percent: 30 },
-    { name: "Investasi", percent: 25 },
-    { name: "Kebutuhan", percent: 35 },
-    { name: "Hiburan", percent: 5 },
-    { name: "Lainnya", percent: 5 }
-  ])
-  const [error, setError] = useState("")
-  const [result, setResult] = useState([])
+function SortableItem({ id, item, index, onChange, onRemove }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id })
 
-  const totalPercent = categories.reduce((sum, item) => sum + item.percent, 0)
-
-  const handleChange = (i: number, field: string, value: string) => {
-    const newCategories = [...categories]
-    newCategories[i][field] = field === "percent" ? Number(value) : value
-    setCategories(newCategories)
-  }
-
-  const handleCalculate = () => {
-    if (totalPercent !== 100) {
-      setError(`Total persen harus 100% (saat ini ${totalPercent}%)`)
-      return
-    }
-    setError("")
-    setResult(
-      categories.map((item) => ({
-        ...item,
-        value: (item.percent / 100) * total
-      }))
-    )
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
   }
 
   return (
-    <div className="max-w-xl mx-auto bg-white shadow rounded-xl p-6 mt-10">
-      <h2 className="text-xl font-bold mb-4">Money Split Simulator</h2>
-
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex gap-2 items-center mb-2">
+      <Input
+        value={item.name}
+        onChange={(e) => onChange(index, 'name', e.target.value)}
+        className="flex-1"
+      />
       <Input
         type="number"
-        placeholder="Total uang (contoh: 10000000)"
-        value={total}
-        onChange={(e) => setTotal(Number(e.target.value))}
-        className="mb-4"
+        value={item.percent}
+        onChange={(e) => onChange(index, 'percent', e.target.value)}
+        className="w-20"
       />
+      <span>%</span>
+      <Button variant="ghost" onClick={() => onRemove(index)} size="icon">❌</Button>
+    </div>
+  )
+}
 
-      {categories.map((cat, idx) => (
-        <div className="flex gap-2 mb-2" key={idx}>
-          <Input
-            value={cat.name}
-            onChange={(e) => handleChange(idx, "name", e.target.value)}
-            className="flex-1"
-          />
-          <Input
-            type="number"
-            value={cat.percent}
-            onChange={(e) => handleChange(idx, "percent", e.target.value)}
-            className="w-24"
-          />
-          <span className="self-center text-sm text-gray-500">%</span>
-        </div>
-      ))}
+export default function MoneySplitAdvanced() {
+  const [totalByCurrency, setTotalByCurrency] = useState({ IDR: 10000000, USD: 250, THB: 9000 })
+  const [categories, setCategories] = useState(() => {
+    const saved = localStorage.getItem("moneySplitCategories")
+    return saved ? JSON.parse(saved) : [
+      { id: '1', name: "Tabungan", percent: 30 },
+      { id: '2', name: "Investasi", percent: 25 },
+      { id: '3', name: "Kebutuhan", percent: 35 },
+      { id: '4', name: "Hiburan", percent: 5 },
+      { id: '5', name: "Lainnya", percent: 5 },
+    ]
+  })
+  const [prevCategories, setPrevCategories] = useState(null)
 
-      {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+  const totalPercent = categories.reduce((sum, item) => sum + item.percent, 0)
 
-      <Button onClick={handleCalculate} className="mb-4">
-        Hitung
-      </Button>
+  useEffect(() => {
+    localStorage.setItem("moneySplitCategories", JSON.stringify(categories))
+  }, [categories])
 
-      {result.length > 0 && (
-        <div className="space-y-2">
-          {result.map((r, i) => (
-            <div key={i} className="flex justify-between text-sm">
-              <span>{r.name} ({r.percent}%)</span>
-              <span>Rp {r.value.toLocaleString("id-ID")}</span>
-            </div>
+  const handleChange = (i, field, value) => {
+    const updated = [...categories]
+    updated[i][field] = field === 'percent' ? Number(value) : value
+    setPrevCategories(categories)
+    setCategories(updated)
+  }
+
+  const handleAdd = () => {
+    setPrevCategories(categories)
+    setCategories([...categories, { id: Date.now().toString(), name: "Baru", percent: 0 }])
+  }
+
+  const handleRemove = (i) => {
+    setPrevCategories(categories)
+    setCategories(categories.filter((_, idx) => idx !== i))
+  }
+
+  const handleReset = () => {
+    setPrevCategories(categories)
+    setCategories([])
+  }
+
+  const handleUndo = () => {
+    if (prevCategories) {
+      setCategories(prevCategories)
+      setPrevCategories(null)
+    }
+  }
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+    if (active.id !== over?.id) {
+      const oldIndex = categories.findIndex(c => c.id === active.id)
+      const newIndex = categories.findIndex(c => c.id === over.id)
+      setPrevCategories(categories)
+      setCategories(arrayMove(categories, oldIndex, newIndex))
+    }
+  }
+
+  const result = categories.map((cat) => {
+    const valuePerCurrency = {}
+    Object.entries(totalByCurrency).forEach(([currency, amount]) => {
+      valuePerCurrency[currency] = (amount * cat.percent) / 100
+    })
+    return { ...cat, values: valuePerCurrency }
+  })
+
+  return (
+    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow rounded-xl">
+      <h2 className="text-2xl font-bold mb-4">Money Split Simulator</h2>
+
+      <h4 className="font-semibold text-sm mb-2">Total Uang</h4>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {Object.entries(totalByCurrency).map(([currency, val]) => (
+          <div key={currency} className="flex items-center gap-2">
+            <label className="text-sm w-12">{currency}</label>
+            <Input
+              type="number"
+              value={val}
+              onChange={(e) => setTotalByCurrency({ ...totalByCurrency, [currency]: Number(e.target.value) })}
+              className="flex-1"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-2 flex justify-between">
+        <h4 className="font-semibold text-sm">Kategori & Alokasi (%)</h4>
+        <span className={`text-sm font-semibold ${totalPercent !== 100 ? "text-red-500" : "text-green-600"}`}>
+          Total: {totalPercent}%
+        </span>
+      </div>
+
+      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+          {categories.map((cat, idx) => (
+            <SortableItem
+              key={cat.id}
+              id={cat.id}
+              index={idx}
+              item={cat}
+              onChange={handleChange}
+              onRemove={handleRemove}
+            />
           ))}
-        </div>
-      )}
+        </SortableContext>
+      </DndContext>
+
+      <div className="flex gap-2 mt-4">
+        <Button onClick={handleAdd} variant="outline">➕ Tambah Pos</Button>
+        <Button onClick={handleUndo} variant="secondary">↩️ Undo</Button>
+        <Button onClick={handleReset} variant="destructive">🔁 Reset</Button>
+      </div>
+
+      <h4 className="font-semibold text-sm mt-6 mb-2">Hasil Split</h4>
+      <div className="space-y-4">
+        {result.map((cat, idx) => (
+          <div key={idx} className="border rounded p-3">
+            <div className="font-semibold mb-2">💼 {cat.name} ({cat.percent}%)</div>
+            <ul className="text-sm text-gray-700 space-y-1">
+              {Object.entries(cat.values).map(([curr, val]) => (
+                <li key={curr}>
+                  {curr}: {val.toLocaleString("id-ID", { style: "currency", currency: curr })}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
