@@ -109,11 +109,11 @@ const IncomePage = () => {
 
     try {
       const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
-if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-  toast.error("Nominal tidak valid");
-  setLoading(false);
-  return;
-}
+      if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        toast.error("Nominal tidak valid");
+        setLoading(false);
+        return;
+      }
       if (!editingId) {
         await addDoc(collection(db, "users", user.uid, "incomes"), {
           ...form,
@@ -182,7 +182,11 @@ if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
     }).format(amount);
   };
 
-   return (
+  const getWalletName = (id: string) => {
+    return wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
+  };
+
+  return (
     <LayoutShell>
       <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 pt-4 max-w-screen-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -260,14 +264,14 @@ if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
           <div className="mb-4">
             <div className="relative">
               <input
-                type="text" // Changed to text to allow for formatting
+                type="text"
                 name="amount"
                 value={form.amount}
                 onChange={handleChange}
                 className={`px-4 py-2 w-full border rounded-lg bg-transparent focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white ${
                   errors.amount && "border-red-500 dark:border-red-400"
                 }`}
-                placeholder="" // Removed "0,00" placeholder
+                placeholder=""
               />
             </div>
             {errors.amount && (
@@ -343,9 +347,7 @@ if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
                         : "-"}
                     </div>
                     <div className="text-gray-500 dark:text-gray-400">
-                      {wallets.find((w) => w.id === entry.wallet)?.name ||
-                        entry.wallet}{" "}
-                      · {entry.currency}
+                      {getWalletName(entry.wallet)} · {entry.currency}
                     </div>
                     <div className="text-lg font-bold text-gray-900 dark:text-white">
                       {formatAmount(entry.amount, entry.currency)}
