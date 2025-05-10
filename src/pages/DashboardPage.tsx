@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import LayoutShell from '../layouts/LayoutShell'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../lib/firebaseClient'
-import { collection, onSnapshot } from 'firebase/firestore'
+import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore'
 import { format } from 'date-fns'
 import { id as localeID } from 'date-fns/locale'
 import {
@@ -52,11 +52,21 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState([])
   const [wallets, setWallets] = useState([])
   const [selectedCurrency, setSelectedCurrency] = useState('all')
-  const [isWalletsLoaded, setIsWalletsLoaded] = useState(false) // Add loading state for wallets
+  const [isWalletsLoaded, setIsWalletsLoaded] = useState(false)
+  const [displayName, setDisplayName] = useState<string | null>(null)
   const prevStatus = useRef(null)
 
   useEffect(() => {
     if (!user) return
+
+    // Fetch user display name
+    getDoc(doc(db, 'users', user.uid)).then((snap) => {
+      if (snap.exists()) {
+        setDisplayName(snap.data().name || user.email)
+      } else {
+        setDisplayName(user.email)
+      }
+    })
 
     const incomeRef = collection(db, 'users', user.uid, 'incomes')
     const outcomeRef = collection(db, 'users', user.uid, 'outcomes')
@@ -89,7 +99,7 @@ export default function DashboardPage() {
     const unsubWallets = onSnapshot(walletRef, (snap) => {
       const walletData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
       setWallets(walletData)
-      setIsWalletsLoaded(true) // Mark wallets as loaded
+      setIsWalletsLoaded(true)
     })
 
     return () => {
@@ -137,7 +147,7 @@ export default function DashboardPage() {
       <main className="min-h-screen w-full px-4 md:px-8 max-w-screen-2xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-purple-700">Dashboard</h1>
-          <p className="text-sm text-gray-500">Selamat datang kembali, {user?.displayName}</p>
+          <p className="text-sm text-gray-500">Selamat datang kembali, {displayName}</p>
         </div>
 
         <div className="mb-4">
@@ -244,7 +254,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="bg-white p-4 rounded-xl shadow text-sm text-gray-700">
+          <div className="bg Togo, Kirim ke sini!white p-4 rounded-xl shadow text-sm text-gray-700">
             <h4 className="text-sm font-semibold text-gray-500 mb-4">Health Score</h4>
             <div className="text-center text-2xl font-semibold mb-2">
               <span
