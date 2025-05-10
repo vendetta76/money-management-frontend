@@ -44,6 +44,23 @@ const getSurvivabilityStatus = (income, outcome, wallets) => {
   }
 }
 
+// Legend Component
+const WalletLegend = ({ wallets }) => {
+  return (
+    <div className="flex flex-wrap justify-center gap-4 mt-4">
+      {wallets.map((wallet, index) => (
+        <div key={wallet.id} className="flex items-center gap-2">
+          <span
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+          ></span>
+          <span className="text-sm text-gray-600">{wallet.name}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -164,8 +181,8 @@ export default function DashboardPage() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white p-4 rounded-xl shadow">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white p-4 rounded-xl shadow lg:col-span-3">
             <h2 className="text-sm font-semibold text-gray-500 mb-4">Trend Saldo ({selectedCurrency})</h2>
             <div className="w-full h-64">
               <ResponsiveContainer>
@@ -178,14 +195,17 @@ export default function DashboardPage() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            <WalletLegend wallets={filteredWallets} />
           </div>
+        </div>
 
-          <div className="bg-white p-4 rounded-xl shadow">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white p-4 rounded-xl shadow lg:col-start-2">
             <h2 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Wallet (Pie)</h2>
-            <div className="w-full h-64">
+            <div className="w-full h-48">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
+                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80} label>
                     {pieData.map((_, i) => (
                       <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
                     ))}
@@ -194,6 +214,7 @@ export default function DashboardPage() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
+            <WalletLegend wallets={filteredWallets} />
           </div>
         </div>
 
@@ -254,7 +275,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="bg Togo, Kirim ke sini!white p-4 rounded-xl shadow text-sm text-gray-700">
+          <div className="bg-white p-4 rounded-xl shadow text-sm text-gray-700">
             <h4 className="text-sm font-semibold text-gray-500 mb-4">Health Score</h4>
             <div className="text-center text-2xl font-semibold mb-2">
               <span
