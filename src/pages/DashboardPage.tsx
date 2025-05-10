@@ -1,4 +1,3 @@
-// DashboardPage.tsx
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LayoutShell from '../layouts/LayoutShell'
@@ -9,7 +8,7 @@ import { format } from 'date-fns'
 import { id as localeID } from 'date-fns/locale'
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid
+  LineChart, Line, XAxis, YAxis, CartesianGrid
 } from 'recharts'
 import { toast } from 'sonner'
 
@@ -103,6 +102,12 @@ export default function DashboardPage() {
 
   const pieData = filteredWallets.map(wallet => ({ name: wallet.name, value: wallet.balance }))
   const totalSaldo = filteredWallets.reduce((acc, w) => acc + (w.balance || 0), 0)
+  // Simulate a trend for the line chart (since totalSaldo is a single value)
+  const lineData = [
+    { name: 'Point 1', value: totalSaldo * 0.8 },
+    { name: 'Point 2', value: totalSaldo * 0.9 },
+    { name: 'Point 3', value: totalSaldo }
+  ]
   const survivability = getSurvivabilityStatus(income, outcome, wallets)
 
   useEffect(() => {
@@ -134,6 +139,21 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-white p-4 rounded-xl shadow">
+            <h2 className="text-sm font-semibold text-gray-500 mb-4">Trend Saldo ({selectedCurrency})</h2>
+            <div className="w-full h-64">
+              <ResponsiveContainer>
+                <LineChart data={lineData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="value" stroke="#6366F1" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl shadow">
             <h2 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Wallet (Pie)</h2>
             <div className="w-full h-64">
               <ResponsiveContainer>
@@ -148,60 +168,45 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-white p-4 rounded-xl shadow">
-            <h2 className="text-sm font-semibold text-gray-500 mb-4">Total Saldo ({selectedCurrency})</h2>
-            <div className="w-full h-64">
-              <ResponsiveContainer>
-                <BarChart data={[{ name: selectedCurrency.toUpperCase(), value: totalSaldo }]}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value">
-                    <Cell fill="#6366F1" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terakhir</h3>
+            <ul className="space-y-4">
+              {sortedTx.map((tx) => (
+                <li key={tx.id} className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0">
+                  <div>
+                    <p className="font-medium">{tx.description}</p>
+                    <p className="text-xs text-gray-400">
+                      {tx.createdAt?.toDate ? format(new Date(tx.createdAt.toDate()), 'dd MMM yyyy, HH:mm', { locale: localeID }) : '-'}
+                    </p>
+                  </div>
+                  <span className={`text-sm font-semibold ${tx.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                    {tx.type === 'income' ? '+' : '-'} Rp {tx.amount.toLocaleString('id-ID')}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
 
-        <div className="bg-white p-4 rounded-xl shadow mb-6">
-          <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
-          <ul className="space-y-4">
-            {sortedTx.map((tx) => (
-              <li key={tx.id} className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0">
-                <div>
-                  <p className="font-medium">{tx.description}</p>
-                  <p className="text-xs text-gray-400">
-                    {tx.createdAt?.toDate ? format(new Date(tx.createdAt.toDate()), 'dd MMM yyyy, HH:mm', { locale: localeID }) : '-'}
-                  </p>
-                </div>
-                <span className={`text-sm font-semibold ${tx.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
-                  {tx.type === 'income' ? '+' : '-'} Rp {tx.amount.toLocaleString('id-ID')}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="text-center text-2xl font-semibold mb-2">
-          <span className={
-            survivability.icon === '✅' ? 'text-green-500' :
-              survivability.icon === '⚠️' ? 'text-yellow-500' : 'text-red-500'
-          }>
-            {survivability.icon} {survivability.label}
-          </span>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow text-sm text-gray-700">
-          <h4 className="font-semibold mb-2">Rincian Penilaian:</h4>
-          <ul className="space-y-1">
-            <li>📈 Rasio Income/Outcome: {survivability.details.income.ratio} → Skor: {survivability.details.income.score}</li>
-            <li>💰 Rasio Tabungan: {survivability.details.savings.ratio} → Skor: {survivability.details.savings.score}</li>
-            <li>📊 Skor Total: {survivability.details.total}</li>
-          </ul>
+          <div className="bg-white p-4 rounded-xl shadow text-sm text-gray-700">
+            <h4 className="text-sm font-semibold text-gray-500 mb-4">Health Score</h4>
+            <div className="text-center text-2xl font-semibold mb-2">
+              <span className={
+                survivability.icon === '✅' ? 'text-green-500' :
+                  survivability.icon === '⚠️' ? 'text-yellow-500' : 'text-red-500'
+              }>
+                {survivability.icon} {survivability.label}
+              </span>
+            </div>
+            <h4 className="font-semibold mb-2">Rincian Penilaian:</h4>
+            <ul className="space-y-1">
+              <li>📈 Rasio Income/Outcome: {survivability.details.income.ratio} → Skor: {survivability.details.income.score}</li>
+              <li>💰 Rasio Tabungan: {survivability.details.savings.ratio} → Skor: {survivability.details.savings.score}</li>
+              <li>📊 Skor Total: {survivability.details.total}</li>
+            </ul>
+          </div>
         </div>
       </main>
     </LayoutShell>
