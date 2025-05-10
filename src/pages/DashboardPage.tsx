@@ -52,6 +52,7 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState([])
   const [wallets, setWallets] = useState([])
   const [selectedCurrency, setSelectedCurrency] = useState('all')
+  const [isWalletsLoaded, setIsWalletsLoaded] = useState(false) // Add loading state for wallets
   const prevStatus = useRef(null)
 
   useEffect(() => {
@@ -88,6 +89,7 @@ export default function DashboardPage() {
     const unsubWallets = onSnapshot(walletRef, (snap) => {
       const walletData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
       setWallets(walletData)
+      setIsWalletsLoaded(true) // Mark wallets as loaded
     })
 
     return () => {
@@ -123,6 +125,12 @@ export default function DashboardPage() {
       prevStatus.current = survivability.icon
     }
   }, [survivability.icon])
+
+  // Function to get wallet name, aligned with HistoryPage.tsx
+  const getWalletName = (walletId: string) => {
+    const wallet = wallets.find((w) => w.id === walletId)
+    return wallet ? wallet.name : `${walletId} (Telah dihapus)`
+  }
 
   return (
     <LayoutShell>
@@ -182,19 +190,21 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-white p-4 rounded-xl shadow">
             <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
-            {sortedTx.length === 0 ? (
+            {!isWalletsLoaded ? (
+              <p className="text-sm text-gray-500">Memuat dompet...</p>
+            ) : sortedTx.length === 0 ? (
               <p className="text-sm text-gray-500">Belum ada transaksi.</p>
             ) : (
               <>
                 <div className="max-h-[250px] overflow-y-auto">
                   <ul className="space-y-4">
                     {sortedTx.map((tx) => {
-                      const relatedWallet = wallets.find(w => w.id === tx.walletId)?.name || 'Tidak diketahui'
+                      const walletName = getWalletName(tx.walletId)
                       return (
                         <li
                           key={tx.id}
                           className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0 hover:bg-gray-50 p-2 rounded transition"
-                          title={`${tx.type === 'income' ? 'Income' : 'Outcome'}: ${tx.description} (Dompet: ${relatedWallet})`}
+                          title={`${tx.type === 'income' ? 'Income' : 'Outcome'}: ${tx.description} (Dompet: ${walletName})`}
                         >
                           <div className="flex items-start gap-2">
                             <span className="text-lg">
@@ -203,7 +213,7 @@ export default function DashboardPage() {
                             <div>
                               <p className="font-medium">{tx.description}</p>
                               <p className="text-xs text-gray-400">
-                                Dompet: {relatedWallet} ·{' '}
+                                Dompet: {walletName} ·{' '}
                                 {tx.createdAt?.toDate
                                   ? format(new Date(tx.createdAt.toDate()), 'dd MMM yyyy, HH:mm', { locale: localeID })
                                   : '-'}
