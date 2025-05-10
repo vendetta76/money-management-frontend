@@ -8,6 +8,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
+// Simple Input
 const Input = ({ ...props }) => (
   <input
     {...props}
@@ -15,6 +16,7 @@ const Input = ({ ...props }) => (
   />
 )
 
+// Simple Button
 const Button = ({ children, className = "", ...props }) => (
   <button
     {...props}
@@ -25,8 +27,10 @@ const Button = ({ children, className = "", ...props }) => (
 )
 
 function SortableItem({ id, item, index, onChange, onRemove }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id })
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id,
+    transition: { duration: 250, easing: 'ease' }
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -44,6 +48,7 @@ function SortableItem({ id, item, index, onChange, onRemove }) {
       <Input
         value={item.name}
         onChange={(e) => onChange(index, "name", e.target.value)}
+        placeholder="Nama Pos"
       />
       <Input
         type="number"
@@ -91,7 +96,10 @@ export default function MoneySplitAdvanced() {
 
   const handleChange = (i, field, value) => {
     const updated = [...categories]
-    updated[i][field] = field === "percent" ? Number(value) : value
+    updated[i] = {
+      ...updated[i],
+      [field]: field === "percent" ? parseFloat(value) || 0 : value,
+    }
     setPrevCategories(categories)
     setCategories(updated)
   }
