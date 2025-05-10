@@ -239,7 +239,6 @@ const WalletPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Daftar Wallet</h2>
           <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowBalance(!showBalance)}
             className="text-sm flex items-center gap-1"
