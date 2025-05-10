@@ -137,7 +137,7 @@ export default function DashboardPage() {
       <main className="min-h-screen w-full px-4 md:px-8 max-w-screen-2xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-purple-700">Dashboard</h1>
-          <p className="text-sm text-gray-500">Selamat datang kembali, {user?.email}</p>
+          <p className="text-sm text-gray-500">Selamat datang kembali, {user?.displayName}</p>
         </div>
 
         <div className="mb-4">
@@ -204,7 +204,7 @@ export default function DashboardPage() {
                         <li
                           key={tx.id}
                           className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0 hover:bg-gray-50 p-2 rounded transition"
-                          title={`${tx.type === 'income' ? 'Income' : 'Outcome'}: ${tx.description} (Dompet: ${walletName})`}
+                          title={`${tx.type === 'income' ? 'Income' : 'Outcome'}: ${tx.description} (${walletName})`}
                         >
                           <div className="flex items-start gap-2">
                             <span className="text-lg">
