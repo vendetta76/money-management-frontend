@@ -4,19 +4,18 @@ import {
   arrayMove,
   SortableContext,
   useSortable,
-  verticalListSortingStrategy,
+  verticalListSortingStrategy
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
-// Simple Input
+// UI Components
 const Input = ({ ...props }) => (
   <input
     {...props}
-    className={`px-3 py-2 border rounded w-full focus:outline-none focus:ring`}
+    className="px-3 py-2 border rounded w-full focus:outline-none focus:ring"
   />
 )
 
-// Simple Button
 const Button = ({ children, className = "", ...props }) => (
   <button
     {...props}
@@ -26,53 +25,56 @@ const Button = ({ children, className = "", ...props }) => (
   </button>
 )
 
-function SortableItem({ id, item, index, onChange, onRemove }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+function SortableItem({ id, item, onChange, onRemove, dragListeners }) {
+  const { setNodeRef, transform, transition } = useSortable({
     id,
-    transition: { duration: 250, easing: 'ease' }
+    transition: { duration: 250, easing: "ease" }
   })
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition
   }
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
       className="flex gap-2 items-center mb-2"
     >
       <Input
         value={item.name}
-        onChange={(e) => onChange(index, "name", e.target.value)}
+        onChange={(e) => onChange(id, "name", e.target.value)}
         placeholder="Nama Pos"
       />
       <Input
         type="number"
         value={item.percent}
-        onChange={(e) => onChange(index, "percent", e.target.value)}
+        onChange={(e) => onChange(id, "percent", e.target.value)}
         className="w-20"
       />
       <span>%</span>
       <button
-        onClick={() => onRemove(index)}
+        onClick={() => onRemove(id)}
         className="text-red-600 px-2 py-1 rounded hover:bg-red-100"
       >
         ❌
       </button>
+      <span
+        {...dragListeners}
+        className="cursor-grab text-gray-400 hover:text-gray-600"
+        title="Drag untuk urutkan"
+      >
+        ≡
+      </span>
     </div>
   )
 }
 
 export default function MoneySplitAdvanced() {
-  const [totalByCurrency, setTotalByCurrency] = useState({
-    IDR: 10000000,
-    USD: 250,
-    THB: 9000,
-  })
+  const availableCurrencies = ["IDR", "USD", "THB"]
+  const [selectedCurrency, setSelectedCurrency] = useState("")
+  const [total, setTotal] = useState(0)
 
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem("moneySplitCategories")
@@ -83,7 +85,7 @@ export default function MoneySplitAdvanced() {
           { id: "2", name: "Investasi", percent: 25 },
           { id: "3", name: "Kebutuhan", percent: 35 },
           { id: "4", name: "Hiburan", percent: 5 },
-          { id: "5", name: "Lainnya", percent: 5 },
+          { id: "5", name: "Lainnya", percent: 5 }
         ]
   })
 
@@ -94,12 +96,15 @@ export default function MoneySplitAdvanced() {
     localStorage.setItem("moneySplitCategories", JSON.stringify(categories))
   }, [categories])
 
-  const handleChange = (i, field, value) => {
-    const updated = [...categories]
-    updated[i] = {
-      ...updated[i],
-      [field]: field === "percent" ? parseFloat(value) || 0 : value,
-    }
+  const handleChange = (id, field, value) => {
+    const updated = categories.map((cat) =>
+      cat.id === id
+        ? {
+            ...cat,
+            [field]: field === "percent" ? parseFloat(value) || 0 : value
+          }
+        : cat
+    )
     setPrevCategories(categories)
     setCategories(updated)
   }
@@ -108,13 +113,13 @@ export default function MoneySplitAdvanced() {
     setPrevCategories(categories)
     setCategories([
       ...categories,
-      { id: Date.now().toString(), name: "Baru", percent: 0 },
+      { id: Date.now().toString(), name: "Baru", percent: 0 }
     ])
   }
 
-  const handleRemove = (i) => {
+  const handleRemove = (id) => {
     setPrevCategories(categories)
-    setCategories(categories.filter((_, idx) => idx !== i))
+    setCategories(categories.filter((cat) => cat.id !== id))
   }
 
   const handleReset = () => {
@@ -129,109 +134,117 @@ export default function MoneySplitAdvanced() {
     }
   }
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event
-    if (active.id !== over?.id) {
-      const oldIndex = categories.findIndex((c) => c.id === active.id)
-      const newIndex = categories.findIndex((c) => c.id === over.id)
-      setPrevCategories(categories)
-      setCategories(arrayMove(categories, oldIndex, newIndex))
-    }
+  const handleDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return
+    const oldIndex = categories.findIndex((c) => c.id === active.id)
+    const newIndex = categories.findIndex((c) => c.id === over.id)
+    setPrevCategories(categories)
+    setCategories(arrayMove(categories, oldIndex, newIndex))
   }
 
   const result = categories.map((cat) => {
-    const valuePerCurrency = {}
-    Object.entries(totalByCurrency).forEach(([currency, amount]) => {
-      valuePerCurrency[currency] = (amount * cat.percent) / 100
-    })
-    return { ...cat, values: valuePerCurrency }
+    const value = (total * cat.percent) / 100
+    return { ...cat, value }
   })
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow rounded-xl">
+    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow rounded-xl">
       <h2 className="text-2xl font-bold mb-4">Money Split Simulator</h2>
 
-      <h4 className="font-semibold text-sm mb-2">Total Uang</h4>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {Object.entries(totalByCurrency).map(([currency, val]) => (
-          <div key={currency} className="flex items-center gap-2">
-            <label className="text-sm w-12">{currency}</label>
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">Pilih Mata Uang</label>
+        <select
+          value={selectedCurrency}
+          onChange={(e) => {
+            setSelectedCurrency(e.target.value)
+            setTotal(0)
+          }}
+          className="px-4 py-2 border rounded w-full"
+        >
+          <option value="">-- Pilih Mata Uang --</option>
+          {availableCurrencies.map((cur) => (
+            <option key={cur} value={cur}>
+              {cur}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {selectedCurrency && (
+        <>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-1">
+              Total Uang ({selectedCurrency})
+            </label>
             <Input
               type="number"
-              value={val}
-              onChange={(e) =>
-                setTotalByCurrency({
-                  ...totalByCurrency,
-                  [currency]: Number(e.target.value),
-                })
-              }
+              value={total}
+              onChange={(e) => setTotal(Number(e.target.value))}
             />
           </div>
-        ))}
-      </div>
 
-      <div className="mb-2 flex justify-between">
-        <h4 className="font-semibold text-sm">Kategori & Alokasi (%)</h4>
-        <span
-          className={`text-sm font-semibold ${
-            totalPercent !== 100 ? "text-red-500" : "text-green-600"
-          }`}
-        >
-          Total: {totalPercent}%
-        </span>
-      </div>
+          <div className="mb-2 flex justify-between">
+            <h4 className="font-semibold text-sm">Kategori & Alokasi (%)</h4>
+            <span
+              className={`text-sm font-semibold ${
+                totalPercent !== 100 ? "text-red-500" : "text-green-600"
+              }`}
+            >
+              Total: {totalPercent}%
+            </span>
+          </div>
 
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext
-          items={categories.map((c) => c.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {categories.map((cat, idx) => (
-            <SortableItem
-              key={cat.id}
-              id={cat.id}
-              index={idx}
-              item={cat}
-              onChange={handleChange}
-              onRemove={handleRemove}
-            />
-          ))}
-        </SortableContext>
-      </DndContext>
-
-      <div className="flex gap-2 mt-4">
-        <Button onClick={handleAdd} className="bg-green-600 hover:bg-green-700">
-          ➕ Tambah Pos
-        </Button>
-        <Button onClick={handleUndo} className="bg-gray-500 hover:bg-gray-600">
-          ↩️ Undo
-        </Button>
-        <Button onClick={handleReset} className="bg-red-600 hover:bg-red-700">
-          🔁 Reset
-        </Button>
-      </div>
-
-      <h4 className="font-semibold text-sm mt-6 mb-2">Hasil Split</h4>
-      <div className="space-y-4">
-        {result.map((cat, idx) => (
-          <div key={idx} className="border rounded p-3">
-            <div className="font-semibold mb-2">
-              💼 {cat.name} ({cat.percent}%)
-            </div>
-            <ul className="text-sm text-gray-700 space-y-1">
-              {Object.entries(cat.values).map(([curr, val]) => (
-                <li key={curr}>
-                  {curr}:{" "}
-                  {val.toLocaleString("id-ID", {
-                    style: "currency",
-                    currency: curr,
-                  })}
-                </li>
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={categories.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {categories.map((cat) => (
+                <SortableItem
+                  key={cat.id}
+                  id={cat.id}
+                  item={cat}
+                  onChange={handleChange}
+                  onRemove={handleRemove}
+                  dragListeners={{}} // handled manually
+                />
               ))}
-            </ul>
+            </SortableContext>
+          </DndContext>
+
+          <div className="flex gap-2 mt-4">
+            <Button onClick={handleAdd} className="bg-green-600 hover:bg-green-700">
+              ➕ Tambah Pos
+            </Button>
+            <Button onClick={handleUndo} className="bg-gray-500 hover:bg-gray-600">
+              ↩️ Undo
+            </Button>
+            <Button onClick={handleReset} className="bg-red-600 hover:bg-red-700">
+              🔁 Reset
+            </Button>
           </div>
-        ))}
-      </div>
+
+          <h4 className="font-semibold text-sm mt-6 mb-2">Hasil Split</h4>
+          <div className="space-y-4">
+            {result.map((cat, idx) => (
+              <div key={idx} className="border rounded p-3">
+                <div className="font-semibold mb-2">
+                  💼 {cat.name} ({cat.percent}%)
+                </div>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  <li>
+                    {selectedCurrency}:{" "}
+                    {cat.value.toLocaleString("id-ID", {
+                      style: "currency",
+                      currency: selectedCurrency
+                    })}
+                  </li>
+                </ul>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
