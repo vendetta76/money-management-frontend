@@ -11,7 +11,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid
 } from 'recharts'
 import { toast } from 'sonner'
-import MoneySplitAdvanced from "@/components/MoneySplitAdvanced" // Import MoneySplitAdvanced
+import MoneySplitSimulator from "@/components/MoneySplitSimulator"
 
 const COLORS = ['#10B981', '#EF4444', '#6366F1', '#F59E0B', '#06B6D4']
 
@@ -72,6 +72,7 @@ export default function DashboardPage() {
   const [selectedCurrency, setSelectedCurrency] = useState('all')
   const [isWalletsLoaded, setIsWalletsLoaded] = useState(false)
   const [displayName, setDisplayName] = useState<string | null>(null)
+  const [showSplit, setShowSplit] = useState(false) // Added showSplit state
   const prevStatus = useRef(null)
 
   useEffect(() => {
@@ -298,11 +299,22 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Money Split Simulator Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white p-4 rounded-xl shadow lg:col-span-3">
-            <MoneySplitAdvanced />
-          </div>
+        {/* Toggle Button & Money Split */}
+        <div className="mt-10">
+          <button
+            onClick={() => setShowSplit(!showSplit)}
+            className="mb-4 inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-4 py-2 rounded hover:bg-purple-200"
+          >
+            {showSplit ? "Sembunyikan Split Simulator" : "💸 Tampilkan Split Simulator"}
+          </button>
+
+          {showSplit && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white p-4 rounded-xl shadow lg:col-span-3">
+                <MoneySplitSimulator />
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </LayoutShell>
