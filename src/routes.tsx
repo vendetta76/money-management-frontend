@@ -22,7 +22,6 @@ import WalletPage from './pages/WalletPage'
 import IncomePage from './pages/IncomePage'
 import OutcomePage from './pages/OutcomePage'
 import HistoryPage from './pages/HistoryPage'
-import AdminDashboardPage from './pages/AdminDashboardPage' // ✅ GANTI INI
 
 // Profile
 import ProfilePage from './pages/ProfilePage'
@@ -103,17 +102,7 @@ const routes: RouteObject[] = [
       </PrivateRoute>
     ),
   },
-  {
-    path: '/admin',
-    element: (
-      <PrivateRoute requiredRole="Admin">
-        <PageTransition>
-          <AdminDashboardPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-
+  
   // Profile
   {
     path: '/profile',
