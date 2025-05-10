@@ -4,7 +4,7 @@ import {
   arrayMove,
   SortableContext,
   useSortable,
-  verticalListSortingStrategy
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
@@ -28,12 +28,12 @@ const Button = ({ children, className = "", ...props }) => (
 function SortableItem({ id, item, onChange, onRemove, dragListeners }) {
   const { setNodeRef, transform, transition } = useSortable({
     id,
-    transition: { duration: 250, easing: "ease" }
+    transition: { duration: 250, easing: "ease" },
   })
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition
+    transition,
   }
 
   return (
@@ -85,7 +85,7 @@ export default function MoneySplitAdvanced() {
           { id: "2", name: "Investasi", percent: 25 },
           { id: "3", name: "Kebutuhan", percent: 35 },
           { id: "4", name: "Hiburan", percent: 5 },
-          { id: "5", name: "Lainnya", percent: 5 }
+          { id: "5", name: "Lainnya", percent: 5 },
         ]
   })
 
@@ -101,7 +101,7 @@ export default function MoneySplitAdvanced() {
       cat.id === id
         ? {
             ...cat,
-            [field]: field === "percent" ? parseFloat(value) || 0 : value
+            [field]: field === "percent" ? parseFloat(value) || 0 : value,
           }
         : cat
     )
@@ -113,7 +113,7 @@ export default function MoneySplitAdvanced() {
     setPrevCategories(categories)
     setCategories([
       ...categories,
-      { id: Date.now().toString(), name: "Baru", percent: 0 }
+      { id: Date.now().toString(), name: "Baru", percent: 0 },
     ])
   }
 
@@ -177,9 +177,12 @@ export default function MoneySplitAdvanced() {
               Total Uang ({selectedCurrency})
             </label>
             <Input
-              type="number"
-              value={total}
-              onChange={(e) => setTotal(Number(e.target.value))}
+              type="text"
+              value={total.toLocaleString("id-ID")}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "")
+                setTotal(Number(raw))
+              }}
             />
           </div>
 
@@ -206,7 +209,7 @@ export default function MoneySplitAdvanced() {
                   item={cat}
                   onChange={handleChange}
                   onRemove={handleRemove}
-                  dragListeners={{}} // handled manually
+                  dragListeners={{}}
                 />
               ))}
             </SortableContext>
@@ -231,15 +234,14 @@ export default function MoneySplitAdvanced() {
                 <div className="font-semibold mb-2">
                   💼 {cat.name} ({cat.percent}%)
                 </div>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  <li>
-                    {selectedCurrency}:{" "}
-                    {cat.value.toLocaleString("id-ID", {
-                      style: "currency",
-                      currency: selectedCurrency
-                    })}
-                  </li>
-                </ul>
+                <div className="text-sm text-gray-700">
+                  {cat.value.toLocaleString("id-ID", {
+                    style: "currency",
+                    currency: selectedCurrency,
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </div>
               </div>
             ))}
           </div>
