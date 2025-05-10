@@ -207,5 +207,3 @@ export default function DashboardPage() {
     </LayoutShell>
   )
 }
-
-export default DashboardPage
