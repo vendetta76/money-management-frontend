@@ -1,19 +1,32 @@
-// ✅ Versi lengkap Money Split Simulator dengan drag, undo, reset, add/remove, validasi total 100%
 import { useEffect, useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { DndContext, closestCenter } from "@dnd-kit/core"
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
+const Input = ({ ...props }) => (
+  <input
+    {...props}
+    className={`px-3 py-2 border rounded w-full focus:outline-none focus:ring`}
+  />
+)
+
+const Button = ({ children, className = "", ...props }) => (
+  <button
+    {...props}
+    className={`px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition ${className}`}
+  >
+    {children}
+  </button>
+)
+
 function SortableItem({ id, item, index, onChange, onRemove }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id })
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -21,38 +34,55 @@ function SortableItem({ id, item, index, onChange, onRemove }) {
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex gap-2 items-center mb-2">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="flex gap-2 items-center mb-2"
+    >
       <Input
         value={item.name}
-        onChange={(e) => onChange(index, 'name', e.target.value)}
-        className="flex-1"
+        onChange={(e) => onChange(index, "name", e.target.value)}
       />
       <Input
         type="number"
         value={item.percent}
-        onChange={(e) => onChange(index, 'percent', e.target.value)}
+        onChange={(e) => onChange(index, "percent", e.target.value)}
         className="w-20"
       />
       <span>%</span>
-      <Button variant="ghost" onClick={() => onRemove(index)} size="icon">❌</Button>
+      <button
+        onClick={() => onRemove(index)}
+        className="text-red-600 px-2 py-1 rounded hover:bg-red-100"
+      >
+        ❌
+      </button>
     </div>
   )
 }
 
 export default function MoneySplitAdvanced() {
-  const [totalByCurrency, setTotalByCurrency] = useState({ IDR: 10000000, USD: 250, THB: 9000 })
+  const [totalByCurrency, setTotalByCurrency] = useState({
+    IDR: 10000000,
+    USD: 250,
+    THB: 9000,
+  })
+
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem("moneySplitCategories")
-    return saved ? JSON.parse(saved) : [
-      { id: '1', name: "Tabungan", percent: 30 },
-      { id: '2', name: "Investasi", percent: 25 },
-      { id: '3', name: "Kebutuhan", percent: 35 },
-      { id: '4', name: "Hiburan", percent: 5 },
-      { id: '5', name: "Lainnya", percent: 5 },
-    ]
+    return saved
+      ? JSON.parse(saved)
+      : [
+          { id: "1", name: "Tabungan", percent: 30 },
+          { id: "2", name: "Investasi", percent: 25 },
+          { id: "3", name: "Kebutuhan", percent: 35 },
+          { id: "4", name: "Hiburan", percent: 5 },
+          { id: "5", name: "Lainnya", percent: 5 },
+        ]
   })
-  const [prevCategories, setPrevCategories] = useState(null)
 
+  const [prevCategories, setPrevCategories] = useState(null)
   const totalPercent = categories.reduce((sum, item) => sum + item.percent, 0)
 
   useEffect(() => {
@@ -61,14 +91,17 @@ export default function MoneySplitAdvanced() {
 
   const handleChange = (i, field, value) => {
     const updated = [...categories]
-    updated[i][field] = field === 'percent' ? Number(value) : value
+    updated[i][field] = field === "percent" ? Number(value) : value
     setPrevCategories(categories)
     setCategories(updated)
   }
 
   const handleAdd = () => {
     setPrevCategories(categories)
-    setCategories([...categories, { id: Date.now().toString(), name: "Baru", percent: 0 }])
+    setCategories([
+      ...categories,
+      { id: Date.now().toString(), name: "Baru", percent: 0 },
+    ])
   }
 
   const handleRemove = (i) => {
@@ -91,8 +124,8 @@ export default function MoneySplitAdvanced() {
   const handleDragEnd = (event) => {
     const { active, over } = event
     if (active.id !== over?.id) {
-      const oldIndex = categories.findIndex(c => c.id === active.id)
-      const newIndex = categories.findIndex(c => c.id === over.id)
+      const oldIndex = categories.findIndex((c) => c.id === active.id)
+      const newIndex = categories.findIndex((c) => c.id === over.id)
       setPrevCategories(categories)
       setCategories(arrayMove(categories, oldIndex, newIndex))
     }
@@ -118,8 +151,12 @@ export default function MoneySplitAdvanced() {
             <Input
               type="number"
               value={val}
-              onChange={(e) => setTotalByCurrency({ ...totalByCurrency, [currency]: Number(e.target.value) })}
-              className="flex-1"
+              onChange={(e) =>
+                setTotalByCurrency({
+                  ...totalByCurrency,
+                  [currency]: Number(e.target.value),
+                })
+              }
             />
           </div>
         ))}
@@ -127,13 +164,20 @@ export default function MoneySplitAdvanced() {
 
       <div className="mb-2 flex justify-between">
         <h4 className="font-semibold text-sm">Kategori & Alokasi (%)</h4>
-        <span className={`text-sm font-semibold ${totalPercent !== 100 ? "text-red-500" : "text-green-600"}`}>
+        <span
+          className={`text-sm font-semibold ${
+            totalPercent !== 100 ? "text-red-500" : "text-green-600"
+          }`}
+        >
           Total: {totalPercent}%
         </span>
       </div>
 
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={categories.map((c) => c.id)}
+          strategy={verticalListSortingStrategy}
+        >
           {categories.map((cat, idx) => (
             <SortableItem
               key={cat.id}
@@ -148,20 +192,32 @@ export default function MoneySplitAdvanced() {
       </DndContext>
 
       <div className="flex gap-2 mt-4">
-        <Button onClick={handleAdd} variant="outline">➕ Tambah Pos</Button>
-        <Button onClick={handleUndo} variant="secondary">↩️ Undo</Button>
-        <Button onClick={handleReset} variant="destructive">🔁 Reset</Button>
+        <Button onClick={handleAdd} className="bg-green-600 hover:bg-green-700">
+          ➕ Tambah Pos
+        </Button>
+        <Button onClick={handleUndo} className="bg-gray-500 hover:bg-gray-600">
+          ↩️ Undo
+        </Button>
+        <Button onClick={handleReset} className="bg-red-600 hover:bg-red-700">
+          🔁 Reset
+        </Button>
       </div>
 
       <h4 className="font-semibold text-sm mt-6 mb-2">Hasil Split</h4>
       <div className="space-y-4">
         {result.map((cat, idx) => (
           <div key={idx} className="border rounded p-3">
-            <div className="font-semibold mb-2">💼 {cat.name} ({cat.percent}%)</div>
+            <div className="font-semibold mb-2">
+              💼 {cat.name} ({cat.percent}%)
+            </div>
             <ul className="text-sm text-gray-700 space-y-1">
               {Object.entries(cat.values).map(([curr, val]) => (
                 <li key={curr}>
-                  {curr}: {val.toLocaleString("id-ID", { style: "currency", currency: curr })}
+                  {curr}:{" "}
+                  {val.toLocaleString("id-ID", {
+                    style: "currency",
+                    currency: curr,
+                  })}
                 </li>
               ))}
             </ul>
