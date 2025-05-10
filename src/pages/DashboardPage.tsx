@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
@@ -7,18 +7,36 @@ import { collection, onSnapshot } from "firebase/firestore"
 import { format } from "date-fns"
 import { id as localeID } from "date-fns/locale"
 import {
-  LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
 } from "recharts"
+import { toast } from "sonner"
 
 const COLORS = ["#10B981", "#EF4444", "#6366F1", "#F59E0B", "#06B6D4"]
 
-interface Transaction {
-  id?: string
-  type: "income" | "outcome"
-  description: string
-  amount: number
-  createdAt: any
+const getSurvivabilityStatus = (income, outcome, wallets) => {
+  const savings = wallets.reduce((acc, w) => acc + (w.isSaving ? w.balance || 0 : 0), 0)
+  const total = wallets.reduce((acc, w) => acc + (w.balance || 0), 0)
+  const ratio = outcome > 0 ? income / outcome : income > 0 ? 2 : 0
+  const savingsRatio = total > 0 ? savings / total : 0
+
+  let scoreIncome = ratio >= 1.5 ? 100 : ratio >= 1 ? 70 : ratio >= 0.8 ? 40 : 10
+  let scoreSavings = savingsRatio >= 0.3 ? 100 : savingsRatio >= 0.2 ? 70 : savingsRatio >= 0.1 ? 40 : 10
+
+  const totalScore = (scoreIncome + scoreSavings) / 2
+
+  let status = "🔴"
+  if (totalScore >= 80) status = "✅"
+  else if (totalScore >= 50) status = "⚠️"
+
+  return {
+    icon: status,
+    label: status === "✅" ? "Aman" : status === "⚠️" ? "Waspada" : "Bahaya",
+    details: {
+      income: { score: scoreIncome, ratio: ratio.toFixed(2) },
+      savings: { score: scoreSavings, ratio: savingsRatio.toFixed(2) },
+      total: totalScore.toFixed(1)
+    }
+  }
 }
 
 const DashboardPage = () => {
@@ -27,9 +45,11 @@ const DashboardPage = () => {
 
   const [income, setIncome] = useState(0)
   const [outcome, setOutcome] = useState(0)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [wallets, setWallets] = useState<any[]>([])
+  const [transactions, setTransactions] = useState([])
+  const [wallets, setWallets] = useState([])
   const [selectedCurrency, setSelectedCurrency] = useState("all")
+
+  const prevStatus = useRef(null)
 
   useEffect(() => {
     if (!user) return
@@ -40,7 +60,7 @@ const DashboardPage = () => {
 
     const unsubIncomes = onSnapshot(incomeRef, (snap) => {
       let total = 0
-      const newTrans: Transaction[] = []
+      const newTrans = []
 
       snap.forEach(doc => {
         const data = doc.data()
@@ -49,12 +69,12 @@ const DashboardPage = () => {
       })
 
       setIncome(total)
-      setTransactions((prev) => [...prev, ...newTrans])
+      setTransactions(prev => [...prev, ...newTrans])
     })
 
     const unsubOutcomes = onSnapshot(outcomeRef, (snap) => {
       let total = 0
-      const newTrans: Transaction[] = []
+      const newTrans = []
 
       snap.forEach(doc => {
         const data = doc.data()
@@ -63,7 +83,7 @@ const DashboardPage = () => {
       })
 
       setOutcome(total)
-      setTransactions((prev) => [...prev, ...newTrans])
+      setTransactions(prev => [...prev, ...newTrans])
     })
 
     const unsubWallets = onSnapshot(walletRef, (snap) => {
@@ -78,9 +98,8 @@ const DashboardPage = () => {
     }
   }, [user])
 
-  const totalBalance = income - outcome
   const sortedTx = transactions
-    .filter((tx) => tx.createdAt)
+    .filter(tx => tx.createdAt)
     .sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds)
     .slice(0, 5)
 
@@ -89,30 +108,36 @@ const DashboardPage = () => {
     ? wallets
     : wallets.filter(w => w.currency === selectedCurrency)
 
-  const total = filteredWallets.reduce((acc, wallet) => acc + (wallet.balance || 0), 0)
   const pieData = filteredWallets.map(wallet => ({
     name: wallet.name,
     value: wallet.balance,
   }))
 
+  const survivability = getSurvivabilityStatus(income, outcome, wallets)
+
+  useEffect(() => {
+    if (!prevStatus.current) {
+      prevStatus.current = survivability.icon
+    } else if (prevStatus.current !== survivability.icon) {
+      toast(`Status survivability berubah dari ${prevStatus.current} ke ${survivability.icon}`)
+      prevStatus.current = survivability.icon
+    }
+  }, [survivability.icon])
+
   return (
     <LayoutShell>
-      <main className="dark:text-white dark:bg-gray-900 min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 max-w-screen-2xl mx-auto">
-        <div className="dark:text-white dark:bg-gray-900 flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-2">
-          <div>
-            <h1 className="dark:text-white dark:bg-gray-900 text-2xl md:text-3xl font-bold text-purple-700 dark:text-purple-300">Dashboard</h1>
-            <p className="dark:text-white dark:bg-gray-900 text-sm text-gray-500 dark:text-gray-300 dark:text-gray-300">
-              Selamat datang kembali, {user?.email}
-            </p>
-          </div>
+      <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-20 max-w-screen-2xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-purple-700">Dashboard</h1>
+          <p className="text-sm text-gray-500">Selamat datang kembali, {user?.displayName}</p>
         </div>
 
-        <div className="dark:text-white dark:bg-gray-900 mb-4">
-          <label className="dark:text-white dark:bg-gray-900 block text-sm font-semibold text-gray-600 dark:text-gray-300 dark:text-gray-200 mb-2">Filter Mata Uang</label>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-600 mb-2">Filter Mata Uang</label>
           <select
             value={selectedCurrency}
             onChange={(e) => setSelectedCurrency(e.target.value)}
-            className="dark:text-white dark:bg-gray-900 w-full md:w-auto px-4 py-2 border rounded-lg bg-white dark:bg-gray-900 dark:bg-gray-800 dark:text-white shadow"
+            className="w-full md:w-auto px-4 py-2 border rounded-lg bg-white shadow"
           >
             <option value="all">Semua</option>
             {allCurrencies.map((cur) => (
@@ -121,10 +146,10 @@ const DashboardPage = () => {
           </select>
         </div>
 
-        <div className="dark:text-white dark:bg-gray-900 grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-          <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 dark:bg-gray-800 dark:text-white p-4 md:p-6 rounded-xl shadow">
-            <h2 className="dark:text-white dark:bg-gray-900 text-sm font-semibold text-gray-500 dark:text-gray-300 dark:text-gray-300 mb-4">Distribusi Wallet (Pie)</h2>
-            <div className="dark:text-white dark:bg-gray-900 w-full h-48 md:h-64">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white p-4 rounded-xl shadow">
+            <h2 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Wallet (Pie)</h2>
+            <div className="w-full h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
@@ -137,35 +162,16 @@ const DashboardPage = () => {
               </ResponsiveContainer>
             </div>
           </div>
-
-          <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 dark:bg-gray-800 dark:text-white p-4 md:p-6 rounded-xl shadow">
-            <h2 className="dark:text-white dark:bg-gray-900 text-sm font-semibold text-gray-500 dark:text-gray-300 dark:text-gray-300 mb-4">
-              Total Saldo {selectedCurrency === "all" ? "(Semua)" : selectedCurrency}
-            </h2>
-            <div className="dark:text-white dark:bg-gray-900 w-full h-48 md:h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{ name: selectedCurrency.toUpperCase(), value: total }]}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value">
-                    <Cell fill="#6366F1" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
         </div>
 
-        <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 dark:bg-gray-800 dark:text-white p-4 md:p-6 rounded-xl shadow mt-6">
-          <h3 className="dark:text-white dark:bg-gray-900 text-sm font-semibold text-gray-500 dark:text-gray-300 dark:text-gray-300 mb-4">Transaksi Terbaru</h3>
-          <ul className="dark:text-white dark:bg-gray-900 space-y-4">
+        <div className="bg-white p-4 rounded-xl shadow mb-6 overflow-x-auto max-h-[500px]">
+          <h3 className="text-sm font-semibold text-gray-500 mb-4">Transaksi Terbaru</h3>
+          <ul className="space-y-4">
             {sortedTx.map((tx) => (
-              <li key={tx.id} className="dark:text-white dark:bg-gray-900 flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0">
+              <li key={tx.id} className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0">
                 <div>
-                  <p className="dark:text-white dark:bg-gray-900 font-medium">{tx.description}</p>
-                  <p className="dark:text-white dark:bg-gray-900 text-xs text-gray-400 dark:text-gray-300">
+                  <p className="font-medium">{tx.description}</p>
+                  <p className="text-xs text-gray-400">
                     {tx.createdAt?.toDate
                       ? format(new Date(tx.createdAt.toDate()), "dd MMM yyyy, HH:mm", { locale: localeID })
                       : "-"}
@@ -176,6 +182,24 @@ const DashboardPage = () => {
                 </span>
               </li>
             ))}
+          </ul>
+        </div>
+
+        <div className="text-center text-xl sm:text-2xl md:text-3xl font-semibold mb-4">
+          <div className={
+            survivability.icon === "✅" ? "text-green-500" :
+            survivability.icon === "⚠️" ? "text-yellow-500" : "text-red-500"
+          }>
+            {survivability.icon} {survivability.label}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow text-sm text-gray-700">
+          <h4 className="font-semibold mb-2">Rincian Penilaian:</h4>
+          <ul className="space-y-1">
+            <li>💵 Rasio Income/Outcome: {survivability.details.income.ratio} → Skor: {survivability.details.income.score}</li>
+            <li>💰 Rasio Tabungan: {survivability.details.savings.ratio} → Skor: {survivability.details.savings.score}</li>
+            <li>📊 Skor Total: {survivability.details.total}</li>
           </ul>
         </div>
       </main>
