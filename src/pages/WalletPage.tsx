@@ -18,6 +18,7 @@ import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import { usePinLock } from "../context/PinLockContext";
 import { toast } from "react-hot-toast";
+import { fixAllWalletBalances } from "../utils/fixWallet";
 
 interface WalletEntry {
   id?: string;
@@ -238,20 +239,29 @@ const WalletPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Daftar Wallet</h2>
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowBalance(!showBalance)}
-              className="text-sm flex items-center gap-1"
-            >
-              {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
-              {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
-            </button>
-            <button
-              onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
-            >
-              <Plus size={16} /> Tambah Wallet
-            </button>
-          </div>
+          <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowBalance(!showBalance)}
+            className="text-sm flex items-center gap-1"
+          >
+            {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
+          </button>
+
+          <button
+            onClick={() => user?.uid && fixAllWalletBalances(user.uid)}
+            className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+          >
+            🔁 Rekalkulasi Saldo
+          </button>
+
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+          >
+            <Plus size={16} /> Tambah Wallet
+          </button>
+        </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
