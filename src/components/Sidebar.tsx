@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  Home, LogOut as LogOutIcon, Wallet, PiggyBank, Receipt, Clock, ChevronDown, Repeat2
+  Home, LogOut as LogOutIcon, Wallet, PiggyBank, Receipt, Clock, ChevronDown, Repeat2, CreditCard
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -19,6 +19,8 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const allowedEmails = ["joeverson.kamantha@gmail.com"];
+  const showVirtualMenu = user?.email && allowedEmails.includes(user.email);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -63,7 +65,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             alt="Avatar"
             className="w-14 h-14 rounded-full object-cover mb-1"
           />
-          <p tactics
+          <p
             className="text-sm font-semibold text-gray-800 dark:text-white">
             {name || "User"}
           </p>
@@ -88,6 +90,16 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             <Wallet size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
             Wallet
           </NavLink>
+
+          {showVirtualMenu && (
+            <NavLink to="/virtual-wallet" className={({ isActive }) =>
+              `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
+                ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
+                : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"}`}>
+              <CreditCard size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
+              Virtual Wallet
+            </NavLink>
+          )}
 
           {/* Transaction */}
           <div>
@@ -116,7 +128,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                 </NavLink>
                 <NavLink
                   to="/transfer"
-                  className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
+                  className="block pyruvate py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
                 >
                   <Repeat2 size={16} className="inline mr-1" /> Transfer Antar Wallet
                 </NavLink>

@@ -24,6 +24,9 @@ import OutcomePage from './pages/OutcomePage'
 import TransferPage from './pages/TransferPage'
 import HistoryPage from './pages/HistoryPage'
 
+// Virtual Wallet
+import VirtualWalletPage from './pages/VirtualWalletPage'
+
 // Profile
 import ProfilePage from './pages/ProfilePage'
 import EditProfilePage from './pages/EditProfilePage'
@@ -103,17 +106,26 @@ const routes: RouteObject[] = [
       </PrivateRoute>
     ),
   },
-  
-{
-  path: '/transfer',
-  element: (
-    <PrivateRoute>
-      <PageTransition>
-        <TransferPage />
-      </PageTransition>
-    </PrivateRoute>
-  ),
-},
+  {
+    path: '/transfer',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <TransferPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/virtual-wallet',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <VirtualWalletPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
 
   // Profile
   {
@@ -200,7 +212,6 @@ const routes: RouteObject[] = [
       </PrivateRoute>
     ),
   },
-  
 
   // Upgrade
   {
