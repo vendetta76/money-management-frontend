@@ -1,3 +1,18 @@
+
+// src/App.tsx
+import React from 'react'
+import { BrowserRouter as Router, useRoutes } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { PinLockProvider } from './context/PinLockContext'
+import routes from './routes'
+import { Toaster } from 'react-hot-toast'
+import AutoLogoutWrapper from './components/AutoLogoutWrapper'
+import { useTheme } from './hooks/useThemeAdvanced'
+
+function AppRoutes() {
+  return useRoutes(routes)
+}
+
 function App() {
   useTheme()
 
@@ -47,3 +62,5 @@ function App() {
     </AuthProvider>
   )
 }
+
+export default App
