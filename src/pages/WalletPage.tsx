@@ -19,8 +19,9 @@ import { useNavigate } from "react-router-dom";
 import { usePinLock } from "../context/PinLockContext";
 import { toast } from "react-hot-toast";
 import { fixAllWalletBalances } from "../utils/fixWallet";
+import WalletPopupHistory from "../components/WalletPopupHistory";
 
-const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com", "fsaaa442@gmail.com", "joeleo1425@gmail.com" ];
+const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com"];
 
 interface WalletEntry {
   id?: string;
@@ -52,6 +53,7 @@ const WalletPage: React.FC = () => {
   const [success, setSuccess] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [showBalance, setShowBalance] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState<{ id: string; name: string; style: React.CSSProperties } | null>(null);
   const pinInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -283,9 +285,13 @@ const WalletPage: React.FC = () => {
                 key={w.id}
                 className="p-5 rounded-2xl flex flex-col justify-between relative transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:ring-2 hover:ring-white/30 text-white"
                 style={cardStyle}
+                onClick={() => setSelectedWallet({ id: w.id!, name: w.name, style: cardStyle })}
               >
                 <button
-                  onClick={() => handleEdit(w)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click from triggering
+                    handleEdit(w);
+                  }}
                   className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 p-1 rounded-md transition backdrop-blur-sm ring-1 ring-white/20"
                   title={`Edit ${w.name}`}
                 >
@@ -481,6 +487,16 @@ const WalletPage: React.FC = () => {
               </div>
             </form>
           </div>
+        )}
+
+        {selectedWallet && (
+          <WalletPopupHistory
+            walletId={selectedWallet.id}
+            walletName={selectedWallet.name}
+            cardStyle={selectedWallet.style}
+            isOpen={!!selectedWallet}
+            onClose={() => setSelectedWallet(null)}
+          />
         )}
       </main>
 
