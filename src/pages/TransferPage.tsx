@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { db } from "../lib/firebaseClient";
@@ -35,20 +36,13 @@ interface TransferEntry {
 const formatNominal = (num: number, currency: string) => {
   const formattedNum = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   switch (currency) {
-    case "IDR":
-      return `Rp ${formattedNum}`;
-    case "THB":
-      return `฿ ${formattedNum}`;
-    case "USD":
-      return `$ ${formattedNum}`;
-    case "EUR":
-      return `€ ${formattedNum}`;
-    case "GBP":
-      return `£ ${formattedNum}`;
-    case "JPY":
-      return `¥ ${formattedNum}`;
-    default:
-      return `${currency} ${formattedNum}`;
+    case "IDR": return `Rp ${formattedNum}`;
+    case "THB": return `฿ ${formattedNum}`;
+    case "USD": return `$ ${formattedNum}`;
+    case "EUR": return `€ ${formattedNum}`;
+    case "GBP": return `£ ${formattedNum}`;
+    case "JPY": return `¥ ${formattedNum}`;
+    default: return `${currency} ${formattedNum}`;
   }
 };
 
@@ -57,7 +51,7 @@ const TransferPage: React.FC = () => {
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [fromWalletId, setFromWalletId] = useState("");
   const [toWalletId, setToWalletId] = useState("");
-  const [amount, setAmount] = useState<number>(0);
+  const [amount, setAmount] = useState(""); // formatted string
   const [description, setDescription] = useState("");
   const [transferHistory, setTransferHistory] = useState<TransferEntry[]>([]);
 
@@ -90,8 +84,15 @@ const TransferPage: React.FC = () => {
     };
   }, [user]);
 
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    setAmount(formatted);
+  };
+
   const handleTransfer = async () => {
-    if (!fromWalletId || !toWalletId || amount <= 0) {
+    const parsedAmount = Number(amount.replace(/,/g, ""));
+    if (!fromWalletId || !toWalletId || parsedAmount <= 0) {
       toast.error("Lengkapi semua field dan jumlah harus positif");
       return;
     }
@@ -109,29 +110,29 @@ const TransferPage: React.FC = () => {
 
       if (!fromWallet || !toWallet) throw new Error("Wallet tidak ditemukan");
 
-      if (fromWallet.balance < amount) {
+      if (fromWallet.balance < parsedAmount) {
         toast.error("Saldo tidak mencukupi");
         return;
       }
 
       await updateDoc(fromWalletRef, {
-        balance: fromWallet.balance - amount,
+        balance: fromWallet.balance - parsedAmount,
       });
       await updateDoc(toWalletRef, {
-        balance: toWallet.balance + amount,
+        balance: toWallet.balance + parsedAmount,
       });
 
       await addDoc(collection(db, "users", user.uid, "transfers"), {
         from: fromWallet.name,
         to: toWallet.name,
-        amount,
+        amount: parsedAmount,
         currency: fromWallet.currency,
         description,
         createdAt: serverTimestamp(),
       });
 
       toast.success("Transfer berhasil!");
-      setAmount(0);
+      setAmount("");
       setDescription("");
     } catch (err: any) {
       toast.error("Gagal transfer: " + err.message);
@@ -173,10 +174,11 @@ const TransferPage: React.FC = () => {
 
         <label className="block mb-2 font-semibold">Jumlah:</label>
         <input
-          type="number"
+          type="text"
           value={amount}
-          onChange={e => setAmount(Number(e.target.value))}
+          onChange={handleAmountChange}
           className="w-full p-2 border mb-4 rounded"
+          placeholder="Contoh: 1,000,000"
         />
 
         <label className="block mb-2 font-semibold">Deskripsi:</label>
