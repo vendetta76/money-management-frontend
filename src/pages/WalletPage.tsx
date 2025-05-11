@@ -416,12 +416,12 @@ const WalletPage: React.FC = () => {
                         <input
                           type="color"
                           value={(form.colorValue as { start: string; end: string }).start}
-                          onChange={(e | null) =>
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setForm({
                               ...form,
                               colorValue: {
                                 ...(form.colorValue as { start: string; end: string }),
-                                start: e?.target.value || "",
+                                start: e.target.value,
                               },
                             })
                           }
@@ -433,7 +433,7 @@ const WalletPage: React.FC = () => {
                         <input
                           type="color"
                           value={(form.colorValue as { start: string; end: string }).end}
-                          onChange={(e) =>
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setForm({
                               ...form,
                               colorValue: {
