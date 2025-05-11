@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import LayoutShell from "../layouts/LayoutShell";
-import { useAuth } from "../context/AuthContext"; // ✅ Import AuthContext
+import { useAuth } from "../context/AuthContext";
 
 interface VirtualWallet {
   id: string;
@@ -10,8 +11,7 @@ interface VirtualWallet {
 }
 
 const allowedEmails = [
-  "zen@example.com",
-  "admin@moniq.app",
+  "joeverson.kamantha@gmail.com",
 ];
 
 const VirtualWalletPage: React.FC = () => {
@@ -21,7 +21,9 @@ const VirtualWalletPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || !allowedEmails.includes(user.email)) {
+    if (!user) return;
+    const email = user.email.toLowerCase();
+    if (!allowedEmails.includes(email)) {
       alert("Akses ditolak. Halaman ini hanya untuk user tertentu.");
       window.location.href = "/dashboard";
     }
@@ -75,6 +77,8 @@ const VirtualWalletPage: React.FC = () => {
   const formatNumber = (value: number | string) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
+
+  if (!user) return <LayoutShell><p className="text-center py-10">Loading...</p></LayoutShell>;
 
   return (
     <LayoutShell>
