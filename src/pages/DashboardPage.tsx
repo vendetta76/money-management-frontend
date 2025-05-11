@@ -182,9 +182,22 @@ export default function DashboardPage() {
 
   const pieData = filteredWallets.map(wallet => ({ name: wallet.name, value: wallet.balance }))
   const totalSaldo = filteredWallets.reduce((acc, w) => acc + (w.balance || 0), 0)
-  const lineData = [
+  const groupedByDate = {}
+
+filteredTx.forEach((tx) => {
+  const dateKey = format(tx.createdAt.toDate(), "dd MMM")
+  if (!groupedByDate[dateKey]) groupedByDate[dateKey] = 0
+  groupedByDate[dateKey] += tx.amount || 0
+})
+
+const lineData = Object.entries(groupedByDate).map(([date, value]) => ({
+  name: date,
+  value
+}))
+
+// original lineData = [
     { name: 'Point 1', value: totalSaldo * 0.8 },
-    { name: 'Point 2', value: totalSaldo * 0.9 },
+    { name: 'Point 2',holds value: totalSaldo * 0.9 },
     { name: 'Point 3', value: totalSaldo }
   ]
   const survivability = getSurvivabilityStatus(income, outcome, wallets)
@@ -238,7 +251,14 @@ export default function DashboardPage() {
                 <LineChart data={lineData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
-                  <YAxis />
+                  <YAxis
+  tickFormatter={(value) =>
+    new Intl.NumberFormat('id-ID', {
+      style: 'decimal',
+      maximumFractionDigits: 0
+    }).format(value)
+  }
+/>
                   <RechartsTooltip />
                   <Line type="monotone" dataKey="value" stroke="#6366F1" />
                 </LineChart>
