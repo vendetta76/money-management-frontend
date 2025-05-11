@@ -63,13 +63,13 @@ const TransferPage: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchWallets = async () => {
-      const q = query(collection(db, "users", user.uid, "wallets"));
-      const snapshot = await getDocs(q);
-      const walletData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WalletEntry[];
-      setWallets(walletData);
-    };
-    fetchWallets();
+    const unsubWallets = onSnapshot(
+      collection(db, "users", user.uid, "wallets"),
+      (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WalletEntry[];
+        setWallets(data);
+      }
+    );
 
     const transferQuery = query(
       collection(db, "users", user.uid, "transfers"),
@@ -85,6 +85,7 @@ const TransferPage: React.FC = () => {
     });
 
     return () => {
+      unsubWallets();
       unsubTransfer();
     };
   }, [user]);

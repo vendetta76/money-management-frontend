@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
@@ -77,7 +76,7 @@ const HistoryPage = () => {
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"))
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"))
     const walletQuery = collection(db, "users", user.uid, "wallets")
-    const transferQuery = collection(db, "transfers")
+    const transferQuery = collection(db, "users", user.uid, "transfers")
 
     const unsubIn = onSnapshot(incomeQuery, (snapshot) => {
       const incomes = snapshot.docs.map((doc) => ({
@@ -116,7 +115,6 @@ const HistoryPage = () => {
     const unsubTransfer = onSnapshot(transferQuery, (snapshot) => {
       const data = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter((doc: any) => doc.userId === user.uid)
         .map((doc) => ({ ...doc, type: "transfer" })) as TransferEntry[]
       setTransfers(data)
     })
@@ -319,13 +317,12 @@ const HistoryPage = () => {
                           {item.currency} {item.amount.toLocaleString("id-ID")}
                         </span>
                         <div className="absolute top-1 right-1 text-gray-400 dark:text-gray-500">
-                        {expandedId === item.id ? (
+                          {expandedId === item.id ? (
                             <ChevronUp size={16} />
-                                                    ) : (
-                        <ChevronDown size={16} />
-                                                     )}
-                                  </div>
-
+                          ) : (
+                            <ChevronDown size={16} />
+                          )}
+                        </div>
                       </div>
 
                       <div
