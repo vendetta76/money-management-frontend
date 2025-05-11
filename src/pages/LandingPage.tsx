@@ -1,4 +1,6 @@
+
 import { useBlockLandingIfLoggedIn } from "../hooks/useBlockLandingIfLoggedIn"
+import InstallButton from "../components/InstallButton"
 
 const LandingPage = () => {
   useBlockLandingIfLoggedIn()
@@ -22,19 +24,24 @@ const LandingPage = () => {
         <p className="dark:text-white dark:bg-gray-900 text-lg md:text-xl mb-8">
           MoneyManager membantu kamu mengatur pemasukan dan pengeluaran secara efektif dan efisien.
         </p>
-        <div className="dark:text-white dark:bg-gray-900 space-x-4">
-          <a
-            href="/login"
-            className="dark:text-white dark:bg-gray-900 px-6 py-3 bg-white dark:bg-gray-900 text-blue-600 font-semibold rounded-lg hover:bg-gray-200 transition"
-          >
-            Masuk
-          </a>
-          <a
-            href="/register"
-            className="dark:text-white dark:bg-gray-900 px-6 py-3 bg-yellow-400 text-white font-semibold rounded-lg hover:bg-yellow-500 transition"
-          >
-            Daftar
-          </a>
+        <div className="dark:text-white dark:bg-gray-900 flex flex-col items-center space-y-3">
+          <div className="space-x-4">
+            <a
+              href="/login"
+              className="dark:text-white dark:bg-gray-900 px-6 py-3 bg-white dark:bg-gray-900 text-blue-600 font-semibold rounded-lg hover:bg-gray-200 transition"
+            >
+              Masuk
+            </a>
+            <a
+              href="/register"
+              className="dark:text-white dark:bg-gray-900 px-6 py-3 bg-yellow-400 text-white font-semibold rounded-lg hover:bg-yellow-500 transition"
+            >
+              Daftar
+            </a>
+          </div>
+
+          {/* Tombol Install PWA */}
+          <InstallButton />
         </div>
       </main>
 
