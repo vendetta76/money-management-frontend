@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { db } from "../lib/firebaseClient";
@@ -9,7 +8,6 @@ import {
   doc,
   getDocs,
   query,
-  where,
   serverTimestamp,
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
@@ -33,7 +31,7 @@ const TransferPage: React.FC = () => {
   useEffect(() => {
     if (!user) return;
     const fetchWallets = async () => {
-      const q = query(collection(db, "wallets"), where("userId", "==", user.uid));
+      const q = query(collection(db, "users", user.uid, "wallets"));
       const snapshot = await getDocs(q);
       const walletData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WalletEntry[];
       setWallets(walletData);
@@ -52,8 +50,8 @@ const TransferPage: React.FC = () => {
     }
 
     try {
-      const fromWalletRef = doc(db, "wallets", fromWalletId);
-      const toWalletRef = doc(db, "wallets", toWalletId);
+      const fromWalletRef = doc(db, "users", user.uid, "wallets", fromWalletId);
+      const toWalletRef = doc(db, "users", user.uid, "wallets", toWalletId);
 
       const fromWallet = wallets.find(w => w.id === fromWalletId);
       const toWallet = wallets.find(w => w.id === toWalletId);
@@ -72,8 +70,7 @@ const TransferPage: React.FC = () => {
         balance: toWallet.balance + amount,
       });
 
-      await addDoc(collection(db, "transfers"), {
-        userId: user.uid,
+      await addDoc(collection(db, "users", user.uid, "transfers"), {
         from: fromWallet.name,
         to: toWallet.name,
         amount,
