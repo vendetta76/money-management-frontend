@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { VitePWA } from 'vite-plugin-pwa' // ✅ tambahkan ini
+import { VitePWA } from 'vite-plugin-pwa' // ✅ Tambahkan ini
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
+    VitePWA({ // ✅ Aktifkan plugin PWA di sini
       registerType: 'autoUpdate',
       manifest: {
         name: 'MoniQ',
@@ -20,25 +19,25 @@ export default defineConfig({
           {
             src: '/assets/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/png'
           },
           {
             src: '/assets/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/png',
-          },
-        ],
-      },
-    }),
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
+      '@': path.resolve(__dirname, 'src')
+    }
   },
   build: {
     outDir: 'dist',
-    emptyOutDir: true,
+    emptyOutDir: true
   },
   server: {
     port: 3000,
@@ -46,8 +45,8 @@ export default defineConfig({
       '/api': {
         target: 'https://money-management-backend-f6dg.onrender.com',
         changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
+        secure: false
+      }
+    }
+  }
 })
