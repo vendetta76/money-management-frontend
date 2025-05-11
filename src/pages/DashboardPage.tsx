@@ -194,12 +194,6 @@ const lineData = Object.entries(groupedByDate).map(([date, value]) => ({
   name: date,
   value
 }))
-
-// original lineData = [
-  { name: 'Point 1', value: totalSaldo * 0.8 },
-  { name: 'Point 2',holds value: totalSaldo * 0.9 },
-  { name: 'Point 3', value: totalSaldo }
-  ]
   const survivability = getSurvivabilityStatus(income, outcome, wallets)
 
   useEffect(() => {
