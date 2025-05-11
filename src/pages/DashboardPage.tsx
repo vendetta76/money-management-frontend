@@ -95,6 +95,7 @@ export default function DashboardPage() {
 
     const incomeRef = collection(db, 'users', user.uid, 'incomes')
     const outcomeRef = collection(db, 'users', user.uid, 'outcomes')
+    const transferRef = collection(db, 'users', user.uid, 'transfers')
     const walletRef = collection(db, 'users', user.uid, 'wallets')
 
     const unsubIncomes = onSnapshot(incomeRef, (snap) => {
@@ -121,6 +122,15 @@ export default function DashboardPage() {
       setTransactions(prev => [...prev.filter(tx => tx.type !== 'outcome'), ...newTrans])
     })
 
+    const unsubTransfers = onSnapshot(transferRef, (snap) => {
+      const newTransfers = snap.docs.map(doc => ({
+        ...doc.data(),
+        type: "transfer",
+        id: doc.id
+      }))
+      setTransactions(prev => [...prev.filter(tx => tx.type !== 'transfer'), ...newTransfers])
+    })
+
     const unsubWallets = onSnapshot(walletRef, (snap) => {
       const walletData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
       setWallets(walletData)
@@ -131,6 +141,7 @@ export default function DashboardPage() {
       unsubIncomes()
       unsubOutcomes()
       unsubWallets()
+      unsubTransfers()
     }
   }, [user])
 
@@ -160,7 +171,11 @@ export default function DashboardPage() {
     })
     .filter(tx => {
       // Filter by wallet
-      return filterWallet === 'all' || tx.wallet === filterWallet
+      if (filterWallet === 'all') return true
+      if (tx.type === 'transfer') {
+        return tx.fromWalletId === filterWallet || tx.toWalletId === filterWallet
+      }
+      return tx.wallet === filterWallet
     })
     .filter(tx => {
       // Filter by type
@@ -184,16 +199,16 @@ export default function DashboardPage() {
   const totalSaldo = filteredWallets.reduce((acc, w) => acc + (w.balance || 0), 0)
   const groupedByDate = {}
 
-filteredTx.forEach((tx) => {
-  const dateKey = format(tx.createdAt.toDate(), "dd MMM")
-  if (!groupedByDate[dateKey]) groupedByDate[dateKey] = 0
-  groupedByDate[dateKey] += tx.amount || 0
-})
+  filteredTx.forEach((tx) => {
+    const dateKey = format(tx.createdAt.toDate(), "dd MMM")
+    if (!groupedByDate[dateKey]) groupedByDate[dateKey] = 0
+    groupedByDate[dateKey] += tx.amount || 0
+  })
 
-const lineData = Object.entries(groupedByDate).map(([date, value]) => ({
-  name: date,
-  value
-}))
+  const lineData = Object.entries(groupedByDate).map(([date, value]) => ({
+    name: date,
+    value
+  }))
   const survivability = getSurvivabilityStatus(income, outcome, wallets)
 
   useEffect(() => {
@@ -246,13 +261,13 @@ const lineData = Object.entries(groupedByDate).map(([date, value]) => ({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis
-  tickFormatter={(value) =>
-    new Intl.NumberFormat('id-ID', {
-      style: 'decimal',
-      maximumFractionDigits: 0
-    }).format(value)
-  }
-/>
+                    tickFormatter={(value) =>
+                      new Intl.NumberFormat('id-ID', {
+                        style: 'decimal',
+                        maximumFractionDigits: 0
+                      }).format(value)
+                    }
+                  />
                   <RechartsTooltip />
                   <Line type="monotone" dataKey="value" stroke="#6366F1" />
                 </LineChart>
@@ -298,16 +313,18 @@ const lineData = Object.entries(groupedByDate).map(([date, value]) => ({
                         <li
                           key={tx.id}
                           className="flex justify-between items-start text-sm flex-col sm:flex-row gap-2 sm:gap-0 hover:bg-gray-50 p-2 rounded transition"
-                          title={`${tx.type === 'income' ? 'Income' : 'Outcome'}: ${tx.description} (${walletName})`}
+                          title={`${tx.type === 'income' ? 'Income' : tx.type === 'outcome' ? 'Outcome' : 'Transfer'}: ${tx.description} (${tx.type === 'transfer' ? `Dari: ${tx.from} → Ke: ${tx.to}` : walletName})`}
                         >
                           <div className="flex items-start gap-2">
                             <span className="text-lg">
-                              {tx.type === 'income' ? '📥' : '📤'}
+                              {tx.type === 'income' ? '📥' : tx.type === 'outcome' ? '📤' : '🔁'}
                             </span>
                             <div>
                               <p className="font-medium">{tx.description}</p>
                               <p className="text-xs text-gray-400">
-                                Dompet: {walletName} ·{' '}
+                                {tx.type === 'transfer'
+                                  ? `Dari: ${tx.from} → Ke: ${tx.to}`
+                                  : `Dompet: ${walletName}`} ·{' '}
                                 {tx.createdAt?.toDate
                                   ? format(new Date(tx.createdAt.toDate()), 'dd MMM yyyy, HH:mm', { locale: localeID })
                                   : '-'}
@@ -320,9 +337,9 @@ const lineData = Object.entries(groupedByDate).map(([date, value]) => ({
                             </div>
                           </div>
                           <span
-                            className={`text-sm font-semibold ${tx.type === 'income' ? 'text-green-500' : 'text-red-500'}`}
+                            className={`text-sm font-semibold ${tx.type === 'income' ? 'text-green-500' : tx.type === 'outcome' ? 'text-red-500' : 'text-blue-500'}`}
                           >
-                            {tx.type === 'income' ? '+' : '–'} {formatRupiah(tx.amount)}
+                            {tx.type === 'income' ? '+' : tx.type === 'outcome' ? '–' : ''} {formatRupiah(tx.amount)}
                           </span>
                         </li>
                       )
