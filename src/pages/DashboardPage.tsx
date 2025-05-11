@@ -184,7 +184,7 @@ export default function DashboardPage() {
   const totalSaldo = filteredWallets.reduce((acc, w) => acc + (w.balance || 0), 0)
   const lineData = [
     { name: 'Point 1', value: totalSaldo * 0.8 },
-    { name: 'Point 2',holds value: totalSaldo * 0.9 },
+    { name: 'Point 2', value: totalSaldo * 0.9 },
     { name: 'Point 3', value: totalSaldo }
   ]
   const survivability = getSurvivabilityStatus(income, outcome, wallets)
