@@ -34,7 +34,22 @@ interface TransferEntry {
 
 const formatNominal = (num: number, currency: string) => {
   const formattedNum = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return currency === "IDR" ? `Rp ${formattedNum}` : `${currency} ${formattedNum}`;
+  switch (currency) {
+    case "IDR":
+      return `Rp ${formattedNum}`;
+    case "THB":
+      return `฿ ${formattedNum}`;
+    case "USD":
+      return `$ ${formattedNum}`;
+    case "EUR":
+      return `€ ${formattedNum}`;
+    case "GBP":
+      return `£ ${formattedNum}`;
+    case "JPY":
+      return `¥ ${formattedNum}`;
+    default:
+      return `${currency} ${formattedNum}`;
+  }
 };
 
 const TransferPage: React.FC = () => {

@@ -12,7 +12,7 @@ import {
 } from 'recharts'
 import { toast } from 'sonner'
 import MoneySplitSimulator from "@/components/MoneySplitSimulator"
-import DashboardFilters from "@/components/DashboardFilters" // Import DashboardFilters
+import DashboardFilters from "@/components/DashboardFilters"
 
 const COLORS = ['#10B981', '#EF4444', '#6366F1', '#F59E0B', '#06B6D4']
 
@@ -71,11 +71,11 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState([])
   const [wallets, setWallets] = useState([])
   const [selectedCurrency, setSelectedCurrency] = useState('all')
-  const [filterDate, setFilterDate] = useState('all') // Added filterDate state
-  const [filterWallet, setFilterWallet] = useState('all') // Added filterWallet state
-  const [filterType, setFilterType] = useState('all') // Added filterType state
-  const [customStartDate, setCustomStartDate] = useState(null) // Added customStartDate state
-  const [customEndDate, setCustomEndDate] = useState(null) // Added customEndDate state
+  const [filterDate, setFilterDate] = useState('all')
+  const [filterWallet, setFilterWallet] = useState('all')
+  const [filterType, setFilterType] = useState('all')
+  const [customStartDate, setCustomStartDate] = useState(null)
+  const [customEndDate, setCustomEndDate] = useState(null)
   const [isWalletsLoaded, setIsWalletsLoaded] = useState(false)
   const [displayName, setDisplayName] = useState<string | null>(null)
   const [showSplit, setShowSplit] = useState(false)
@@ -184,7 +184,7 @@ export default function DashboardPage() {
   const totalSaldo = filteredWallets.reduce((acc, w) => acc + (w.balance || 0), 0)
   const lineData = [
     { name: 'Point 1', value: totalSaldo * 0.8 },
-    { name: 'Point 2', value: totalSaldo * 0.9 },
+    { name: 'Point 2',holds value: totalSaldo * 0.9 },
     { name: 'Point 3', value: totalSaldo }
   ]
   const survivability = getSurvivabilityStatus(income, outcome, wallets)
@@ -324,25 +324,80 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Health Score */}
+          {/* Health Score (Progress Based) */}
           <div className="bg-white p-4 rounded-xl shadow text-sm text-gray-700">
-            <h4 className="text-sm font-semibold text-gray-500 mb-4">Health Score</h4>
-            <div className="text-center text-2xl font-semibold mb-2">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-semibold text-gray-500">Health Score</h4>
+              <div className="relative group cursor-pointer">
+                <svg
+                  className="w-4 h-4 text-gray-400 group-hover:text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-label="Informasi tentang perhitungan skor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+                </svg>
+                <div
+                  className="absolute z-10 hidden group-hover:block bg-white border text-xs rounded shadow px-3 py-2 top-6 right-0 w-60"
+                  role="tooltip"
+                >
+                  Skor dihitung dari:<br />
+                  - Rasio Income/Outcome (ideal: 2.0)<br />
+                  - Rasio Tabungan terhadap Income (ideal: 1.0)
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center text-xl font-bold mb-4">
               <span
                 className={
-                  survivability.icon === '✅' ? 'text-green-500' :
-                    survivability.icon === '⚠️' ? 'text-yellow-500' : 'text-red-500'
+                  survivability.icon === "✅"
+                    ? "text-green-500"
+                    : survivability.icon === "⚠️"
+                    ? "text-yellow-500"
+                    : "text-red-500"
                 }
               >
                 {survivability.icon} {survivability.label}
               </span>
             </div>
-            <h4 className="font-semibold mb-2">Rincian Penilaian:</h4>
-            <ul className="space-y-1">
-              <li>📈 Rasio Income/Outcome: {survivability.details.income.ratio} → Skor: {survivability.details.income.score}</li>
-              <li>💰 Rasio Tabungan: {survivability.details.savings.ratio} → Skor: {survivability.details.savings.score}</li>
-              <li>📊 Skor Total: {survivability.details.total}</li>
-            </ul>
+
+            {/* Overall Score */}
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-center mb-1">Overall Score</p>
+              <div className="w-full bg-gray-100 rounded-full h-4" role="progressbar" aria-valuenow={survivability.details.total} aria-valuemin={0} aria-valuemax={100}>
+                <div
+                  className="bg-purple-500 h-4 rounded-full transition-all duration-300"
+                  style={{ width: `${survivability.details.total}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <hr className="my-4" />
+
+            {/* Income vs Outcome */}
+            <div className="mb-4">
+              <p className="text-xs font-semibold mb-1">Income vs Outcome</p>
+              <div className="w-full bg-gray-100 rounded-full h-3" role="progressbar" aria-valuenow={survivability.details.income.score} aria-valuemin={0} aria-valuemax={100}>
+                <div
+                  className="bg-green-500 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${survivability.details.income.score}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Savings Score */}
+            <div>
+              <p className="text-xs font-semibold mb-1">Savings Score</p>
+              <div className="w-full bg-gray-100 rounded-full h-3" role="progressbar" aria-valuenow={survivability.details.savings.score} aria-valuemin={0} aria-valuemax={100}>
+                <div
+                  className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${survivability.details.savings.score}%` }}
+                ></div>
+              </div>
+            </div>
           </div>
         </div>
 
