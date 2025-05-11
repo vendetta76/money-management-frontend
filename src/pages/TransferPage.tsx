@@ -8,6 +8,8 @@ import {
   doc,
   getDocs,
   query,
+  orderBy,
+  onSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
@@ -18,6 +20,16 @@ interface WalletEntry {
   name: string;
   balance: number;
   currency: string;
+}
+
+interface TransferEntry {
+  id: string;
+  from: string;
+  to: string;
+  amount: number;
+  currency: string;
+  description: string;
+  createdAt: any;
 }
 
 const formatNominal = (num: number, currency: string) => {
@@ -32,9 +44,11 @@ const TransferPage: React.FC = () => {
   const [toWalletId, setToWalletId] = useState("");
   const [amount, setAmount] = useState<number>(0);
   const [description, setDescription] = useState("");
+  const [transferHistory, setTransferHistory] = useState<TransferEntry[]>([]);
 
   useEffect(() => {
     if (!user) return;
+
     const fetchWallets = async () => {
       const q = query(collection(db, "users", user.uid, "wallets"));
       const snapshot = await getDocs(q);
@@ -42,6 +56,23 @@ const TransferPage: React.FC = () => {
       setWallets(walletData);
     };
     fetchWallets();
+
+    const transferQuery = query(
+      collection(db, "users", user.uid, "transfers"),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubTransfer = onSnapshot(transferQuery, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as TransferEntry[];
+      setTransferHistory(data);
+    });
+
+    return () => {
+      unsubTransfer();
+    };
   }, [user]);
 
   const handleTransfer = async () => {
@@ -147,6 +178,38 @@ const TransferPage: React.FC = () => {
         >
           Transfer
         </button>
+
+        {transferHistory.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-lg font-semibold mb-2">Riwayat Transfer Terbaru</h2>
+            <div className="space-y-3">
+              {transferHistory.map((entry) => (
+                <div key={entry.id} className="p-3 rounded border border-blue-200 bg-blue-50">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-sm font-semibold text-blue-800">
+                        {entry.from} ➡️ {entry.to}
+                      </div>
+                      <div className="text-xs text-gray-500">{entry.description}</div>
+                    </div>
+                    <div className="text-sm font-bold text-blue-600">
+                      {formatNominal(entry.amount, entry.currency)}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {new Date(entry.createdAt?.toDate?.() ?? entry.createdAt).toLocaleString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </LayoutShell>
   );
