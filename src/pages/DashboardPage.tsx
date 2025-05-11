@@ -18,7 +18,7 @@ const COLORS = ['#10B981', '#EF4444', '#6366F1', '#F59E0B', '#06B6D4']
 
 // Rupiah formatter
 const formatRupiah = (amount) => {
-  return amount.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })
+  return amount.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })
 }
 
 const getSurvivabilityStatus = (income, outcome, wallets) => {
