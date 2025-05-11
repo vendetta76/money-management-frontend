@@ -20,6 +20,8 @@ import { usePinLock } from "../context/PinLockContext";
 import { toast } from "react-hot-toast";
 import { fixAllWalletBalances } from "../utils/fixWallet";
 
+const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com"];
+
 interface WalletEntry {
   id?: string;
   name: string;
@@ -150,7 +152,7 @@ const WalletPage: React.FC = () => {
     try {
       const payload = {
         name: form.name,
-        balance: 0,
+        balance: parseFloat(form.balance.replace(/,/g, "")),
         currency: form.currency,
         createdAt: serverTimestamp(),
         colorStyle: form.colorStyle,
@@ -178,7 +180,6 @@ const WalletPage: React.FC = () => {
       setEditingId(null);
       setShowForm(false);
     } catch (err) {
-      // Avoid logging sensitive data like the PIN; log only generic error messages
       toast.error("Terjadi kesalahan saat menyimpan.");
       console.error("Error saving wallet:", err.message);
     }
@@ -187,7 +188,7 @@ const WalletPage: React.FC = () => {
   const handleEdit = (w: WalletEntry) => {
     setForm({
       name: w.name,
-      balance: "0",
+      balance: w.balance.toString(),
       currency: w.currency,
       colorStyle: w.colorStyle || "gradient",
       colorValue: w.colorValue || { start: "#9333ea", end: "#4f46e5" },
@@ -239,28 +240,30 @@ const WalletPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Daftar Wallet</h2>
           <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowBalance(!showBalance)}
-            className="text-sm flex items-center gap-1"
-          >
-            {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
-            {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
-          </button>
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="text-sm flex items-center gap-1"
+            >
+              {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
+            </button>
 
-          <button
-            onClick={() => user?.uid && fixAllWalletBalances(user.uid)}
-            className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-          >
-            🔁 Rekalkulasi Saldo
-          </button>
+            {allowedRecalcEmails.includes(user?.email || "") && (
+              <button
+                onClick={() => user?.uid && fixAllWalletBalances(user.uid)}
+                className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                🔁 Rekalkulasi Saldo
+              </button>
+            )}
 
-          <button
-            onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
-          >
-            <Plus size={16} /> Tambah Wallet
-          </button>
-        </div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+            >
+              <Plus size={16} /> Tambah Wallet
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
@@ -344,6 +347,14 @@ const WalletPage: React.FC = () => {
                   <p className="text-red-500 text-sm">{errors.name}</p>
                 )}
               </div>
+              <div className="mb-3">
+                <input
+                  type="text"
+                  disabled
+                  value={form.balance}
+                  className="w-full px-4 py-2 border rounded bg-gray-100"
+                />
+              </div>
               <div className="mb-4">
                 <Select
                   options={currencyOptions}
@@ -405,12 +416,12 @@ const WalletPage: React.FC = () => {
                         <input
                           type="color"
                           value={(form.colorValue as { start: string; end: string }).start}
-                          onChange={(e) =>
+                          onChange={(e | null) =>
                             setForm({
                               ...form,
                               colorValue: {
                                 ...(form.colorValue as { start: string; end: string }),
-                                start: e.target.value,
+                                start: e?.target.value || "",
                               },
                             })
                           }
@@ -490,7 +501,6 @@ const WalletPage: React.FC = () => {
                 onChange={(e) => {
                   setEnteredPin(e.target.value);
                   setPinError("");
-                  // Do not log the PIN value to the console
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder="••••••"
@@ -520,7 +530,7 @@ const WalletPage: React.FC = () => {
           } else {
             setEnteredPin("");
             setPinLockVisible(true);
-            lock(); // Sync with PinLockContext by setting locked to true
+            lock();
           }
         }}
         className="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 z-40 transition"
