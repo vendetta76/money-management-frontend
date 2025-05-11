@@ -21,6 +21,7 @@ import DashboardPage from './pages/DashboardPage'
 import WalletPage from './pages/WalletPage'
 import IncomePage from './pages/IncomePage'
 import OutcomePage from './pages/OutcomePage'
+import TransferPage from './pages/TransferPage'
 import HistoryPage from './pages/HistoryPage'
 
 // Profile
@@ -103,6 +104,17 @@ const routes: RouteObject[] = [
     ),
   },
   
+{
+  path: '/transfer',
+  element: (
+    <PrivateRoute>
+      <PageTransition>
+        <TransferPage />
+      </PageTransition>
+    </PrivateRoute>
+  ),
+},
+
   // Profile
   {
     path: '/profile',
@@ -188,6 +200,7 @@ const routes: RouteObject[] = [
       </PrivateRoute>
     ),
   },
+  
 
   // Upgrade
   {
