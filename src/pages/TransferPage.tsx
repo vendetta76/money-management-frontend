@@ -38,15 +38,15 @@ interface TransferEntry {
 }
 
 const formatNominal = (num: number, currency: string) => {
-  const formattedNum = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const formatted = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   switch (currency) {
-    case "IDR": return `Rp ${formattedNum}`;
-    case "THB": return `฿ ${_formattedNum}`;
-    case "USD": return `$ ${formattedNum}`;
-    case "EUR": return `€ ${formattedNum}`;
-    case "GBP": return `£ ${formattedNum}`;
-    case "JPY": return `¥ ${formattedNum}`;
-    default: return `${currency} ${formattedNum}`;
+    case "IDR": return `Rp ${formatted}`;
+    case "THB": return `฿ ${formatted}`;
+    case "USD": return `$ ${formatted}`;
+    case "EUR": return `€ ${formatted}`;
+    case "GBP": return `£ ${formatted}`;
+    case "JPY": return `¥ ${formatted}`;
+    default: return `${currency} ${formatted}`;
   }
 };
 
@@ -105,23 +105,31 @@ const TransferPage: React.FC = () => {
 
   const handleTransfer = async () => {
     const parsedAmount = Number(amount.replace(/,/g, ""));
-    if (!fromWalletId || !toWalletId || parsedAmount <= 0) {
-      toast.error("Lengkapi semua field dan jumlah harus positif");
+    // Validate mandatory fields
+    if (!fromWalletId || !toWalletId || parsedAmount <= 0 || !description.trim()) {
+      toast.error("Lengkapi semua field, jumlah harus positif, dan deskripsi wajib diisi");
       return;
     }
+    // Validate same wallet
     if (fromWalletId === toWalletId) {
       toast.error("Dompet asal dan tujuan tidak boleh sama");
       return;
     }
 
     try {
-      const fromWalletRef = doc(db, "users", user.uid, "wallets", fromWalletId);
-      const toWalletRef = doc(db, "users", user.uid, "wallets", toWalletId);
-
       const fromWallet = wallets.find(w => w.id === fromWalletId);
       const toWallet = wallets.find(w => w.id === toWalletId);
 
       if (!fromWallet || !toWallet) throw new Error("Wallet tidak ditemukan");
+
+      // Validate same currency
+      if (fromWallet.currency !== toWallet.currency) {
+        toast.error("Transfer hanya diperbolehkan antar dompet dengan mata uang yang sama");
+        return;
+      }
+
+      const fromWalletRef = doc(db, "users", user.uid, "wallets", fromWalletId);
+      const toWalletRef = doc(db, "users", user.uid, "wallets", toWalletId);
 
       if (editingTransfer) {
         const previousAmount = editingTransfer.amount;
@@ -277,12 +285,12 @@ const TransferPage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Deskripsi</label>
+            <label className="block text-sm font-medium text-gray-700">Deskripsi *</label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Masukkan deskripsi (opsional)"
+              placeholder="Masukkan deskripsi (wajib)"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
