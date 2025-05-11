@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { db } from "../lib/firebaseClient";
@@ -6,6 +5,7 @@ import {
   collection,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   getDocs,
   query,
@@ -55,9 +55,10 @@ const TransferPage: React.FC = () => {
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [fromWalletId, setFromWalletId] = useState("");
   const [toWalletId, setToWalletId] = useState("");
-  const [amount, setAmount] = useState(""); // formatted string
+  const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [transferHistory, setTransferHistory] = useState<TransferEntry[]>([]);
+  const [editingTransfer, setEditingTransfer] = useState<TransferEntry | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -114,36 +115,111 @@ const TransferPage: React.FC = () => {
 
       if (!fromWallet || !toWallet) throw new Error("Wallet tidak ditemukan");
 
-      if (fromWallet.balance < parsedAmount) {
-        toast.error("Saldo tidak mencukupi");
-        return;
+      if (editingTransfer) {
+        const previousAmount = editingTransfer.amount;
+
+        // Rollback saldo lama
+        const fromRef = doc(db, "users", user.uid, "wallets", editingTransfer.fromWalletId);
+        const toRef = doc(db, "users", user.uid, "wallets", editingTransfer.toWalletId);
+
+        await updateDoc(fromRef, {
+          balance: fromWallet.balance + previousAmount,
+        });
+        await updateDoc(toRef, {
+          balance: toWallet.balance - previousAmount,
+        });
+
+        // Update saldo baru
+        await updateDoc(fromWalletRef, {
+          balance: fromWallet.balance - parsedAmount,
+        });
+        await updateDoc(toWalletRef, {
+          balance: toWallet.balance + parsedAmount,
+        });
+
+        // Update dokumen transfer
+        await updateDoc(doc(db, "users", user.uid, "transfers", editingTransfer.id), {
+          from: fromWallet.name,
+          to: toWallet.name,
+          fromWalletId,
+          toWalletId,
+          wallet: fromWalletId,
+          type: "transfer",
+          amount: parsedAmount,
+          currency: fromWallet.currency,
+          description,
+        });
+
+        toast.success("Transfer berhasil diperbarui!");
+        setEditingTransfer(null);
+      } else {
+        await updateDoc(fromWalletRef, {
+          balance: fromWallet.balance - parsedAmount,
+        });
+        await updateDoc(toWalletRef, {
+          balance: toWallet.balance + parsedAmount,
+        });
+
+        await addDoc(collection(db, "users", user.uid, "transfers"), {
+          from: fromWallet.name,
+          to: toWallet.name,
+          fromWalletId,
+          toWalletId,
+          wallet: fromWalletId,
+          type: "transfer",
+          amount: parsedAmount,
+          currency: fromWallet.currency,
+          description,
+          createdAt: serverTimestamp(),
+        });
+
+        toast.success("Transfer berhasil!");
       }
 
-      await updateDoc(fromWalletRef, {
-        balance: fromWallet.balance - parsedAmount,
-      });
-      await updateDoc(toWalletRef, {
-        balance: toWallet.balance + parsedAmount,
-      });
-
-      await addDoc(collection(db, "users", user.uid, "transfers"), {
-        from: fromWallet.name,
-        to: toWallet.name,
-        fromWalletId,
-        toWalletId,
-        wallet: fromWalletId,
-        type: "transfer",
-        amount: parsedAmount,
-        currency: fromWallet.currency,
-        description,
-        createdAt: serverTimestamp(),
-      });
-
-      toast.success("Transfer berhasil!");
       setAmount("");
       setDescription("");
+      setFromWalletId("");
+      setToWalletId("");
     } catch (err: any) {
       toast.error("Gagal transfer: " + err.message);
+    }
+  };
+
+  const handleEditTransfer = (entry: TransferEntry) => {
+    setEditingTransfer(entry);
+    setFromWalletId(entry.fromWalletId);
+    setToWalletId(entry.toWalletId);
+    setAmount(entry.amount.toString());
+    setDescription(entry.description);
+  };
+
+  const handleDeleteTransfer = async (entry: TransferEntry) => {
+    if (!user) return;
+    try {
+      const fromRef = doc(db, "users", user.uid, "wallets", entry.fromWalletId);
+      const toRef = doc(db, "users", user.uid, "wallets", entry.toWalletId);
+
+      const fromSnap = await getDocs(query(collection(db, "users", user.uid, "wallets")));
+      const walletsData = fromSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WalletEntry[];
+
+      const fromWallet = walletsData.find(w => w.id === entry.fromWalletId);
+      const toWallet = walletsData.find(w => w.id === entry.toWalletId);
+
+      if (!fromWallet || !toWallet) throw new Error("Wallet tidak ditemukan saat rollback");
+
+      await updateDoc(fromRef, {
+        balance: fromWallet.balance + entry.amount,
+      });
+
+      await updateDoc(toRef, {
+        balance: toWallet.balance - entry.amount,
+      });
+
+      await deleteDoc(doc(db, "users", user.uid, "transfers", entry.id));
+
+      toast.success("Transaksi transfer berhasil dihapus dan saldo dikembalikan.");
+    } catch (err: any) {
+      toast.error("Gagal hapus transaksi: " + err.message);
     }
   };
 
@@ -152,57 +228,7 @@ const TransferPage: React.FC = () => {
       <div className="max-w-xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Transfer Antar Wallet</h1>
 
-        <label className="block mb-2 font-semibold">Dari Wallet:</label>
-        <select
-          value={fromWalletId}
-          onChange={e => setFromWalletId(e.target.value)}
-          className="w-full p-2 border mb-4 rounded"
-        >
-          <option value="">Pilih Wallet</option>
-          {wallets.map(wallet => (
-            <option key={wallet.id} value={wallet.id}>
-              {wallet.name} - {wallet.currency} ({formatNominal(wallet.balance, wallet.currency)})
-            </option>
-          ))}
-        </select>
-
-        <label className="block mb-2 font-semibold">Ke Wallet:</label>
-        <select
-          value={toWalletId}
-          onChange={e => setToWalletId(e.target.value)}
-          className="w-full p-2 border mb-4 rounded"
-        >
-          <option value="">Pilih Wallet</option>
-          {wallets.map(wallet => (
-            <option key={wallet.id} value={wallet.id}>
-              {wallet.name} - {wallet.currency} ({formatNominal(wallet.balance, wallet.currency)})
-            </option>
-          ))}
-        </select>
-
-        <label className="block mb-2 font-semibold">Jumlah:</label>
-        <input
-          type="text"
-          value={amount}
-          onChange={handleAmountChange}
-          className="w-full p-2 border mb-4 rounded"
-          placeholder="Contoh: 1,000,000"
-        />
-
-        <label className="block mb-2 font-semibold">Deskripsi:</label>
-        <input
-          type="text"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          className="w-full p-2 border mb-4 rounded"
-        />
-
-        <button
-          onClick={handleTransfer}
-          className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-        >
-          Transfer
-        </button>
+        {/* ...form */}
 
         {transferHistory.length > 0 && (
           <div className="mt-10">
@@ -221,14 +247,30 @@ const TransferPage: React.FC = () => {
                       {formatNominal(entry.amount, entry.currency)}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    {new Date(entry.createdAt?.toDate?.() ?? entry.createdAt).toLocaleString("id-ID", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                  <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
+                    <span>
+                      {new Date(entry.createdAt?.toDate?.() ?? entry.createdAt).toLocaleString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    <div className="space-x-3">
+                      <button
+                        onClick={() => handleEditTransfer(entry)}
+                        className="text-blue-500 hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTransfer(entry)}
+                        className="text-red-500 hover:underline"
+                      >
+                        Hapus
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
