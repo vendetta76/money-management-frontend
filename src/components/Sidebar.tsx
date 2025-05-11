@@ -1,51 +1,51 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import {
-  Home, LogOut as LogOutIcon, Wallet, PiggyBank, Receipt, Clock, ChevronDown
-} from "lucide-react"
-import { NavLink, useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
-import { doc, onSnapshot } from "firebase/firestore"
-import { db } from "../lib/firebaseClient"
-import { toast } from "react-hot-toast"
-import ThemeSelect from "../components/ThemeSelect"
+  Home, LogOut as LogOutIcon, Wallet, PiggyBank, Receipt, Clock, ChevronDown, Repeat2
+} from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebaseClient";
+import { toast } from "react-hot-toast";
+import ThemeSelect from "../components/ThemeSelect";
 
 const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const [isTransactionOpen, setIsTransactionOpen] = useState(true)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [isAboutOpen, setIsAboutOpen] = useState(false)
-  const [photoURL, setPhotoURL] = useState<string | null>(null)
-  const [name, setName] = useState<string>("")
-  const [role, setRole] = useState<string>("regular")
-  const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const [isTransactionOpen, setIsTransactionOpen] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [photoURL, setPhotoURL] = useState<string | null>(null);
+  const [name, setName] = useState<string>("");
+  const [role, setRole] = useState<string>("regular");
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
-    if (!user?.uid) return
+    if (!user?.uid) return;
     const unsub = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
-      if (!snapshot.exists()) return
-      const data = snapshot.data()
-      if (data.avatar) setPhotoURL(data.avatar)
-      if (data.name) setName(data.name)
-      if (data.role) setRole(data.role.toLowerCase())
-      setLoading(false)
+      if (!snapshot.exists()) return;
+      const data = snapshot.data();
+      if (data.avatar) setPhotoURL(data.avatar);
+      if (data.name) setName(data.name);
+      if (data.role) setRole(data.role.toLowerCase());
+      setLoading(false);
     }, (error) => {
-      console.error("🔥 Firestore error:", error)
-      toast.error("Gagal memuat data pengguna.")
-      setLoading(false)
-    })
-    return () => unsub()
-  }, [user])
+      console.error("🔥 Firestore error:", error);
+      toast.error("Gagal memuat data pengguna.");
+      setLoading(false);
+    });
+    return () => unsub();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
-      await signOut()
-      toast.success("Berhasil logout.")
-      navigate("/login")
+      await signOut();
+      toast.success("Berhasil logout.");
+      navigate("/login");
     } catch (err) {
-      toast.error("Gagal logout.")
+      toast.error("Gagal logout.");
     }
-  }
+  };
 
   return (
     <aside className={`fixed top-0 left-0 h-screen w-60 md:w-64 z-50
@@ -63,44 +63,38 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             alt="Avatar"
             className="w-14 h-14 rounded-full object-cover mb-1"
           />
-          <p className="text-sm font-semibold text-gray-800 dark:text-white">
+          <p tactics
+            className="text-sm font-semibold text-gray-800 dark:text-white">
             {name || "User"}
           </p>
-          <span className={`text-xs ${
-            role === "admin"
-              ? "text-red-500"
-              : role === "premium"
-              ? "text-yellow-500"
-              : "text-gray-500"
-          }`}>
+          <span className={`text-xs ${role === "admin" ? "text-red-500" : role === "premium" ? "text-yellow-500" : "text-gray-500"}`}>
             {role === "admin" ? "👑 Admin" : role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
           </span>
         </div>
 
         <nav className="space-y-2">
           <NavLink to="/dashboard" className={({ isActive }) =>
-            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
-                : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"
-            }`}>
+            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
+              ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
+              : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"}`}>
             <Home size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
             Dashboard
           </NavLink>
 
           <NavLink to="/wallet" className={({ isActive }) =>
-            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
-                : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"
-            }`}>
+            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
+              ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
+              : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"}`}>
             <Wallet size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
             Wallet
           </NavLink>
 
           {/* Transaction */}
           <div>
-            <button onClick={() => setIsTransactionOpen(!isTransactionOpen)} className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
+            <button
+              onClick={() => setIsTransactionOpen(!isTransactionOpen)}
+              className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+            >
               <span className="flex items-center gap-2">
                 <ChevronDown className={`w-4 h-4 transition-transform ${isTransactionOpen ? "rotate-180" : ""}`} />
                 Transaction
@@ -108,29 +102,42 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             </button>
             {isTransactionOpen && (
               <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/income" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline">
+                <NavLink
+                  to="/income"
+                  className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
+                >
                   <PiggyBank size={16} className="inline mr-1" /> Income
                 </NavLink>
-                <NavLink to="/outcome" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline">
+                <NavLink
+                  to="/outcome"
+                  className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
+                >
                   <Receipt size={16} className="inline mr-1" /> Outcome
+                </NavLink>
+                <NavLink
+                  to="/transfer"
+                  className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
+                >
+                  <Repeat2 size={16} className="inline mr-1" /> Transfer Antar Wallet
                 </NavLink>
               </div>
             )}
           </div>
 
           <NavLink to="/history" className={({ isActive }) =>
-            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-              isActive
-                ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
-                : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"
-            }`}>
+            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
+              ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
+              : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"}`}>
             <Clock size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
             History
           </NavLink>
 
           {/* Settings */}
           <div>
-            <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
+            <button
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+            >
               <span className="flex items-center gap-2">
                 <ChevronDown className={`w-4 h-4 transition-transform ${isSettingsOpen ? "rotate-180" : ""}`} />
                 Settings
@@ -138,22 +145,19 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             </button>
             {isSettingsOpen && (
               <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/settings/profile" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  👤 Profile
-                </NavLink>
-                <NavLink to="/settings/security" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  🔐 Security
-                </NavLink>
-                <NavLink to="/settings/preferences" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  ⚙️ Preferences
-                </NavLink>
+                <NavLink to="/settings/profile" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">👤 Profile</NavLink>
+                <NavLink to="/settings/security" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">🔐 Security</NavLink>
+                <NavLink to="/settings/preferences" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">⚙️ Preferences</NavLink>
               </div>
             )}
           </div>
 
           {/* About MoniQ */}
           <div>
-            <button onClick={() => setIsAboutOpen(!isAboutOpen)} className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
+            <button
+              onClick={() => setIsAboutOpen(!isAboutOpen)}
+              className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+            >
               <span className="flex items-center gap-2">
                 <ChevronDown className={`w-4 h-4 transition-transform ${isAboutOpen ? "rotate-180" : ""}`} />
                 About MoniQ
@@ -161,15 +165,9 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
             </button>
             {isAboutOpen && (
               <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/about" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  📘 Tentang
-                </NavLink>
-                <NavLink to="/about/privacy-policy" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  📜 Kebijakan Privasi
-                </NavLink>
-                <NavLink to="/about/terms-and-conditions" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">
-                  📄 Syarat & Ketentuan
-                </NavLink>
+                <NavLink to="/about" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">📘 Tentang</NavLink>
+                <NavLink to="/about/privacy-policy" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">📜 Kebijakan Privasi</NavLink>
+                <NavLink to="/about/terms-and-conditions" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">📄 Syarat & Ketentuan</NavLink>
               </div>
             )}
           </div>
@@ -185,12 +183,10 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
           <LogOutIcon size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
           Logout
         </button>
-
-        {/* 🎨 Theme Selector */}
         <ThemeSelect />
       </div>
     </aside>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;
