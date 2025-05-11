@@ -21,8 +21,11 @@ const VirtualWalletPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !user.email) return;
+
     const email = user.email.toLowerCase();
+    console.log("👤 Email login:", email); // 🔍 Debug
+  
     if (!allowedEmails.includes(email)) {
       alert("Akses ditolak. Halaman ini hanya untuk user tertentu.");
       window.location.href = "/dashboard";
