@@ -20,7 +20,7 @@ import { usePinLock } from "../context/PinLockContext";
 import { toast } from "react-hot-toast";
 import { fixAllWalletBalances } from "../utils/fixWallet";
 
-const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com"];
+const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com", "fsaaa442@gmail.com", "joeleo1425@gmail.com" ];
 
 interface WalletEntry {
   id?: string;
