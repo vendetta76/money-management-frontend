@@ -41,7 +41,7 @@ const formatNominal = (num: number, currency: string) => {
   const formattedNum = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   switch (currency) {
     case "IDR": return `Rp ${formattedNum}`;
-    case "THB": return `฿ ${formattedNum}`;
+    case "THB": return `฿ ${_formattedNum}`;
     case "USD": return `$ ${formattedNum}`;
     case "EUR": return `€ ${formattedNum}`;
     case "GBP": return `£ ${formattedNum}`;
@@ -93,6 +93,14 @@ const TransferPage: React.FC = () => {
     const raw = e.target.value.replace(/\D/g, "");
     const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     setAmount(formatted);
+  };
+
+  const resetForm = () => {
+    setAmount("");
+    setDescription("");
+    setFromWalletId("");
+    setToWalletId("");
+    setEditingTransfer(null);
   };
 
   const handleTransfer = async () => {
@@ -176,10 +184,7 @@ const TransferPage: React.FC = () => {
         toast.success("Transfer berhasil!");
       }
 
-      setAmount("");
-      setDescription("");
-      setFromWalletId("");
-      setToWalletId("");
+      resetForm();
     } catch (err: any) {
       toast.error("Gagal transfer: " + err.message);
     }
@@ -196,16 +201,16 @@ const TransferPage: React.FC = () => {
   const handleDeleteTransfer = async (entry: TransferEntry) => {
     if (!user) return;
     try {
+      const fromWallet = wallets.find(w => w.id === entry.fromWalletId);
+      const toWallet = wallets.find(w => w.id === entry.toWalletId);
+
+      if (!fromWallet || !toWallet) {
+        toast.error("Dompet tidak ditemukan, tidak bisa rollback saldo.");
+        return;
+      }
+
       const fromRef = doc(db, "users", user.uid, "wallets", entry.fromWalletId);
       const toRef = doc(db, "users", user.uid, "wallets", entry.toWalletId);
-
-      const fromSnap = await getDocs(query(collection(db, "users", user.uid, "wallets")));
-      const walletsData = fromSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WalletEntry[];
-
-      const fromWallet = walletsData.find(w => w.id === entry.fromWalletId);
-      const toWallet = walletsData.find(w => w.id === entry.toWalletId);
-
-      if (!fromWallet || !toWallet) throw new Error("Wallet tidak ditemukan saat rollback");
 
       await updateDoc(fromRef, {
         balance: fromWallet.balance + entry.amount,
@@ -218,6 +223,7 @@ const TransferPage: React.FC = () => {
       await deleteDoc(doc(db, "users", user.uid, "transfers", entry.id));
 
       toast.success("Transaksi transfer berhasil dihapus dan saldo dikembalikan.");
+      resetForm();
     } catch (err: any) {
       toast.error("Gagal hapus transaksi: " + err.message);
     }
@@ -228,7 +234,73 @@ const TransferPage: React.FC = () => {
       <div className="max-w-xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Transfer Antar Wallet</h1>
 
-        {/* ...form */}
+        {/* Form */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Dari Dompet</label>
+            <select
+              value={fromWalletId}
+              onChange={(e) => setFromWalletId(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">Pilih Dompet</option>
+              {wallets.map((wallet) => (
+                <option key={wallet.id} value={wallet.id}>
+                  {wallet.name} ({formatNominal(wallet.balance, wallet.currency)})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Ke Dompet</label>
+            <select
+              value={toWalletId}
+              onChange={(e) => setToWalletId(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">Pilih Dompet</option>
+              {wallets.map((wallet) => (
+                <option key={wallet.id} value={wallet.id}>
+                  {wallet.name} ({formatNominal(wallet.balance, wallet.currency)})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Jumlah</label>
+            <input
+              type="text"
+              value={amount}
+              onChange={handleAmountChange}
+              placeholder="Masukkan jumlah"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Deskripsi</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Masukkan deskripsi (opsional)"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            onClick={handleTransfer}
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+          >
+            {editingTransfer ? "Perbarui Transfer" : "Transfer"}
+          </button>
+          {editingTransfer && (
+            <button
+              onClick={resetForm}
+              className="w-full bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
+            >
+              Batal Edit
+            </button>
+          )}
+        </div>
 
         {transferHistory.length > 0 && (
           <div className="mt-10">
