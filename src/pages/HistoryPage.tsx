@@ -13,7 +13,9 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   Repeat2,
-  Search
+  Search,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react"
 
 interface EditEntry {

@@ -20,6 +20,11 @@ interface WalletEntry {
   currency: string;
 }
 
+const formatNominal = (num: number, currency: string) => {
+  const formattedNum = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return currency === "IDR" ? `Rp ${formattedNum}` : `${currency} ${formattedNum}`;
+};
+
 const TransferPage: React.FC = () => {
   const { user } = useAuth();
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
@@ -101,7 +106,7 @@ const TransferPage: React.FC = () => {
           <option value="">Pilih Wallet</option>
           {wallets.map(wallet => (
             <option key={wallet.id} value={wallet.id}>
-              {wallet.name} - {wallet.currency} ({wallet.balance.toLocaleString("id-ID")})
+              {wallet.name} - {wallet.currency} ({formatNominal(wallet.balance, wallet.currency)})
             </option>
           ))}
         </select>
@@ -115,7 +120,7 @@ const TransferPage: React.FC = () => {
           <option value="">Pilih Wallet</option>
           {wallets.map(wallet => (
             <option key={wallet.id} value={wallet.id}>
-              {wallet.name} - {wallet.currency} ({wallet.balance.toLocaleString("id-ID")})
+              {wallet.name} - {wallet.currency} ({formatNominal(wallet.balance, wallet.currency)})
             </option>
           ))}
         </select>
