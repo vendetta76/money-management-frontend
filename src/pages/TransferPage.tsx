@@ -27,6 +27,10 @@ interface TransferEntry {
   id: string;
   from: string;
   to: string;
+  fromWalletId: string;
+  toWalletId: string;
+  wallet: string;
+  type: string;
   amount: number;
   currency: string;
   description: string;
@@ -125,6 +129,10 @@ const TransferPage: React.FC = () => {
       await addDoc(collection(db, "users", user.uid, "transfers"), {
         from: fromWallet.name,
         to: toWallet.name,
+        fromWalletId,
+        toWalletId,
+        wallet: fromWalletId,
+        type: "transfer",
         amount: parsedAmount,
         currency: fromWallet.currency,
         description,
