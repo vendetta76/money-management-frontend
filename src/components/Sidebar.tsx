@@ -8,6 +8,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { toast } from "react-hot-toast";
 import ThemeSelect from "../components/ThemeSelect";
+import InstallButton from "../components/InstallButton";
 
 const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [isTransactionOpen, setIsTransactionOpen] = useState(true);
@@ -128,7 +129,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                 </NavLink>
                 <NavLink
                   to="/transfer"
-                  className="block pyruvate py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
+                  className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
                 >
                   <Repeat2 size={16} className="inline mr-1" /> Transfer Antar Wallet
                 </NavLink>
@@ -188,6 +189,7 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
 
       {/* Bottom Section */}
       <div className="mt-6 space-y-3">
+        <InstallButton />
         <button
           onClick={handleLogout}
           className="w-full group flex items-center justify-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 px-3 py-2 border border-red-400 dark:border-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 ease-in-out transform hover:scale-[1.02]"
