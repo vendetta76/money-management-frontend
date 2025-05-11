@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
@@ -8,7 +9,12 @@ import {
   query,
   orderBy
 } from "firebase/firestore"
-import { Search } from "lucide-react"
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Repeat2,
+  Search
+} from "lucide-react"
 
 interface EditEntry {
   description: string
@@ -25,7 +31,18 @@ interface HistoryEntry {
   amount: number
   createdAt?: any
   editHistory?: EditEntry[]
-  notes?: string // Assuming notes might be part of the data
+  notes?: string
+}
+
+interface TransferEntry {
+  id?: string
+  from: string
+  to: string
+  amount: number
+  currency: string
+  description: string
+  createdAt?: any
+  type?: "transfer"
 }
 
 interface WalletEntry {
@@ -33,6 +50,8 @@ interface WalletEntry {
   name: string
   currency: string
 }
+
+type UnifiedEntry = HistoryEntry | (TransferEntry & { type: "transfer" })
 
 const HistoryPage = () => {
   const { user } = useAuth()
@@ -43,6 +62,12 @@ const HistoryPage = () => {
   const [selectedWallet, setSelectedWallet] = useState("all")
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [wallets, setWallets] = useState<WalletEntry[]>([])
+  const [transfers, setTransfers] = useState<TransferEntry[]>([])
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  const toggleExpand = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id))
+  }
 
   useEffect(() => {
     if (!user) return
@@ -50,6 +75,7 @@ const HistoryPage = () => {
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"))
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"))
     const walletQuery = collection(db, "users", user.uid, "wallets")
+    const transferQuery = collection(db, "transfers")
 
     const unsubIn = onSnapshot(incomeQuery, (snapshot) => {
       const incomes = snapshot.docs.map((doc) => ({
@@ -60,7 +86,7 @@ const HistoryPage = () => {
 
       setHistory((prev) => {
         const others = prev.filter((item) => item.type !== "income")
-        return [...incomes, ...others].sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+        return [...incomes, ...others]
       })
     })
 
@@ -73,7 +99,7 @@ const HistoryPage = () => {
 
       setHistory((prev) => {
         const others = prev.filter((item) => item.type !== "outcome")
-        return [...others, ...outcomes].sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+        return [...others, ...outcomes]
       })
     })
 
@@ -85,10 +111,19 @@ const HistoryPage = () => {
       setWallets(data)
     })
 
+    const unsubTransfer = onSnapshot(transferQuery, (snapshot) => {
+      const data = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter((doc: any) => doc.userId === user.uid)
+        .map((doc) => ({ ...doc, type: "transfer" })) as TransferEntry[]
+      setTransfers(data)
+    })
+
     return () => {
       unsubIn()
       unsubOut()
       unsubWallet()
+      unsubTransfer()
     }
   }, [user])
 
@@ -127,13 +162,41 @@ const HistoryPage = () => {
     return true
   }
 
-  const filtered = history.filter((item) => {
-    const matchType = selectedType === "all" || item.type === selectedType
-    const matchWallet = selectedWallet === "all" || item.wallet === selectedWallet
-    const matchSearch = item.description.toLowerCase().includes(search.toLowerCase())
-    const matchDate = isInSelectedDateRange(new Date(item.createdAt?.toDate?.() ?? item.createdAt))
-    return matchType && matchWallet && matchSearch && matchDate
+  const mergedHistory: UnifiedEntry[] = [
+    ...history,
+    ...transfers
+  ].sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+
+  const filtered = mergedHistory.filter((item) => {
+    const matchType =
+      selectedType === "all" || item.type === selectedType;
+
+    const matchWallet =
+      selectedWallet === "all" ||
+      (item.type === "transfer"
+        ? item.from === selectedWallet || item.to === selectedWallet
+        : item.wallet === selectedWallet);
+
+    const matchSearch =
+      "description" in item &&
+      item.description.toLowerCase().includes(search.toLowerCase());
+
+    const matchDate = isInSelectedDateRange(
+      new Date(item.createdAt?.toDate?.() ?? item.createdAt)
+    );
+
+    return matchType && matchWallet && matchSearch && matchDate;
   })
+
+  const groupedByDate: { [date: string]: UnifiedEntry[] } = {};
+  filtered.forEach((item) => {
+    const d = new Date(item.createdAt?.seconds * 1000);
+    const dateStr = d.toISOString().split("T")[0];
+    if (!groupedByDate[dateStr]) {
+      groupedByDate[dateStr] = [];
+    }
+    groupedByDate[dateStr].push(item);
+  });
 
   const getWalletName = (walletId: string) => {
     const wallet = wallets.find((w) => w.id === walletId)
@@ -149,30 +212,27 @@ const HistoryPage = () => {
     <LayoutShell>
       <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-6 max-w-screen-2xl mx-auto bg-white dark:bg-gray-900 dark:text-white">
         <h1 className="text-2xl sm:text-3xl font-bold text-purple-700 dark:text-purple-300 mb-6">📜 Riwayat Transaksi</h1>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="flex gap-2 items-center flex-wrap">
-            <select
-              value={selectedDateRange}
-              onChange={(e) => setSelectedDateRange(e.target.value)}
+          <select
+            value={selectedDateRange}
+            onChange={(e) => setSelectedDateRange(e.target.value)}
+            className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+          >
+            <option value="all">Semua Tanggal</option>
+            <option value="today">Hari Ini</option>
+            <option value="yesterday">Kemarin</option>
+            <option value="last7">7 Hari Terakhir</option>
+            <option value="thisMonth">Bulan Ini</option>
+            <option value="custom">📆 Tanggal Khusus</option>
+          </select>
+          {selectedDateRange === "custom" && (
+            <input
+              type="date"
+              value={customDate}
+              onChange={(e) => setCustomDate(e.target.value)}
               className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-            >
-              <option value="all">Semua Tanggal</option>
-              <option value="today">Hari Ini</option>
-              <option value="yesterday">Kemarin</option>
-              <option value="last7">7 Hari Terakhir</option>
-              <option value="thisMonth">Bulan Ini</option>
-              <option value="custom">📆 Tanggal Khusus</option>
-            </select>
-            {selectedDateRange === "custom" && (
-              <input
-                type="date"
-                value={customDate}
-                onChange={(e) => setCustomDate(e.target.value)}
-                className="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-              />
-            )}
-          </div>
+            />
+          )}
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
@@ -181,6 +241,7 @@ const HistoryPage = () => {
             <option value="all">Semua Jenis</option>
             <option value="income">Income</option>
             <option value="outcome">Outcome</option>
+            <option value="transfer">Transfer</option>
           </select>
           <select
             value={selectedWallet}
@@ -204,52 +265,97 @@ const HistoryPage = () => {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {Object.entries(groupedByDate).length === 0 ? (
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-300 text-center py-8">Tidak ada transaksi ditemukan.</p>
         ) : (
           <div className="grid gap-4">
-            {filtered.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-xl shadow-md hover:shadow-lg transition-all border-l-4"
-                style={{ borderColor: item.type === "income" ? "#22C55E" : "#EF4444" }}
-                title={`${item.type === 'income' ? 'Income' : 'Outcome'}: ${item.description} (Dompet: ${getWalletName(item.wallet)})`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-                  <span className="text-sm sm:text-base font-semibold text-gray-600 dark:text-gray-300">
-                    {item.type === "income" ? "📥 Income" : "📤 Outcome"} • {getWalletName(item.wallet)} ({getWalletCurrency(item.wallet)})
-                  </span>
-                  <span
-                    className={`text-sm sm:text-base font-semibold ${item.type === "income" ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
-                  >
-                    {item.type === "income" ? "+" : "-"} Rp {item.amount.toLocaleString("id-ID")}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-700 dark:text-gray-100">
-                  {item.description}
-                  {item.editHistory && item.editHistory.length > 0 && (
-                    <span className="text-xs text-blue-500 dark:text-blue-400 ml-2">(edited)</span>
-                  )}
-                </div>
-                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  {new Date(item.createdAt?.toDate?.() ?? item.createdAt).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric"
+            {Object.entries(groupedByDate).map(([dateStr, entries]) => (
+              <div key={dateStr}>
+                <div className="sticky top-0 bg-gray-100 dark:bg-gray-800 py-1 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300 shadow-sm z-10 border-b border-gray-200 dark:border-gray-700">
+                  {new Date(dateStr).toLocaleDateString("id-ID", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
                   })}
                 </div>
-                {item.editHistory && item.editHistory.length > 0 && (
-                  <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
-                    <p className="font-semibold mb-2">Histori Perubahan:</p>
-                    <ul className="list-disc ml-5 space-y-1.5">
-                      {item.editHistory.map((log, i) => (
-                        <li key={i}>
-                          {new Date(log.editedAt?.toDate?.() ?? log.editedAt).toLocaleString("id-ID")}: {log.description} - Rp {log.amount.toLocaleString("id-ID")}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <div className="grid gap-4 mt-2">
+                  {entries.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => toggleExpand(item.id!)}
+                      className={`cursor-pointer p-4 sm:p-5 rounded-xl border-l-4 shadow-md transition-all duration-300 ease-in-out transform hover:scale-[1.01] hover:shadow-lg ${
+                        item.type === "income"
+                          ? "bg-green-50 dark:bg-green-900 border-green-400"
+                          : item.type === "outcome"
+                          ? "bg-red-50 dark:bg-red-900 border-red-400"
+                          : "bg-blue-50 dark:bg-blue-900 border-blue-400"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2 relative">
+                        <span className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-white">
+                          {item.type === "income" && <ArrowDownCircle size={16} />}
+                          {item.type === "outcome" && <ArrowUpCircle size={16} />}
+                          {item.type === "transfer" && <Repeat2 size={16} />}
+                          {item.type === "income"
+                            ? `Income • ${getWalletName(item.wallet)}`
+                            : item.type === "outcome"
+                            ? `Outcome • ${getWalletName(item.wallet)}`
+                            : `Transfer • ${item.from} ➡️ ${item.to}`}
+                        </span>
+                        <span
+                          className={`flex items-center gap-1 text-sm font-semibold ${
+                            item.type === "income"
+                              ? "text-green-600 dark:text-green-400"
+                              : item.type === "outcome"
+                              ? "text-red-500 dark:text-red-400"
+                              : "text-blue-700 dark:text-blue-300"
+                          }`}
+                        >
+                          {item.type === "income" && <ArrowDownCircle size={16} />}
+                          {item.type === "outcome" && <ArrowUpCircle size={16} />}
+                          {item.type === "transfer" && <Repeat2 size={16} />}
+                          {item.currency} {item.amount.toLocaleString("id-ID")}
+                        </span>
+                        <div className="absolute top-1 right-1 text-gray-400 dark:text-gray-500 text-lg">
+                          {expandedId === item.id ? "🔼" : "🔽"}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`transition-all duration-300 ease-in-out overflow-hidden text-sm mt-3 space-y-2 ${
+                          expandedId === item.id ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        {"description" in item && item.description && (
+                          <div className="text-gray-600 dark:text-gray-200">
+                            ✏️ <span className="font-medium">Deskripsi:</span> {item.description}
+                          </div>
+                        )}
+
+                        {"editHistory" in item && item.editHistory && item.editHistory.length > 0 && (
+                          <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg text-xs text-gray-700 dark:text-gray-300">
+                            <p className="font-semibold mb-2">Histori Perubahan:</p>
+                            <ul className="list-disc ml-5 space-y-1.5">
+                              {item.editHistory.map((log, i) => (
+                                <li key={i}>
+                                  {new Date(log.editedAt?.toDate?.() ?? log.editedAt).toLocaleString("id-ID")}: {log.description} - Rp{" "}
+                                  {log.amount.toLocaleString("id-ID")}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                        {new Date(item.createdAt?.seconds * 1000).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
