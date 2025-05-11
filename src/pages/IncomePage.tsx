@@ -74,9 +74,16 @@ const IncomePage = () => {
   }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
-  };
+    const { name, value } = e.target;
+    if (name === "amount") {
+      const numeric = value.replace(/\D/g, "");
+      const formatted = numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      setForm({ ...form, amount: formatted });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+    setErrors({ ...errors, [name]: "" });
+  }
 
   const handleWalletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedWallet = wallets.find((w) => w.id === e.target.value);
