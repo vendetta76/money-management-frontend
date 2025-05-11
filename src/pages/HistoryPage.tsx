@@ -316,9 +316,14 @@ const HistoryPage = () => {
                           {item.type === "transfer" && <Repeat2 size={16} />}
                           {item.currency} {item.amount.toLocaleString("id-ID")}
                         </span>
-                        <div className="absolute top-1 right-1 text-gray-400 dark:text-gray-500 text-lg">
-                          {expandedId === item.id ? "🔼" : "🔽"}
-                        </div>
+                        <div className="absolute top-1 right-1 text-gray-400 dark:text-gray-500">
+                        {expandedId === item.id ? (
+                            <ChevronUp size={16} />
+                                                    ) : (
+                        <ChevronDown size={16} />
+                                                     )}
+                                  </div>
+
                       </div>
 
                       <div
