@@ -1,5 +1,5 @@
 import AdminLayout from "@/layouts/AdminLayout";
-import StatsCards from "@/pages/admin/StatsCards";
+import StatsCards from "@/pages/admin/AdminDashboard/StatsCards";
 import UserOverviewChart from "@/pages/admin/AdminDashboard/UserOverviewChart";
 import LatestTransactions from "@/pages/admin/AdminDashboard/LatestTransactions";
 import IncomePieChart from "@/pages/admin/AdminDashboard/IncomePieChart";
