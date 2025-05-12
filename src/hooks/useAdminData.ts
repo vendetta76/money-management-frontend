@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { getIdToken } from "firebase/auth";
+import { auth } from "@/lib/firebaseClient";
 
 export function useAdminData() {
   const [summary, setSummary] = useState({ totalUsers: 0, totalBalance: 0, totalTransactions: 0 });
@@ -6,17 +8,31 @@ export function useAdminData() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetch("/api/admin/summary")
-      .then(res => res.json())
-      .then(data => setSummary(data));
+    const fetchData = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
 
-    fetch("/api/admin/transactions")
-      .then(res => res.json())
-      .then(data => setTransactions(data));
+        const token = await getIdToken(user);
+        const headers = { Authorization: `Bearer ${token}` };
 
-    fetch("/api/admin/users")
-      .then(res => res.json())
-      .then(data => setUsers(data));
+        const summaryRes = await fetch("/api/admin/summary", { headers });
+        const summaryData = await summaryRes.json();
+        setSummary(summaryData);
+
+        const txRes = await fetch("/api/admin/transactions", { headers });
+        const txData = await txRes.json();
+        setTransactions(txData);
+
+        const usersRes = await fetch("/api/admin/users", { headers });
+        const usersData = await usersRes.json();
+        setUsers(usersData);
+      } catch (err) {
+        console.error("❌ Error fetching admin data:", err);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return { summary, transactions, users };
