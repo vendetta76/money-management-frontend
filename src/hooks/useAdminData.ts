@@ -11,21 +11,34 @@ export function useAdminData() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("✅ onAuthStateChanged fired. User:", user);
       if (!user) return;
 
       try {
         const token = await getIdToken(user);
+        console.log("🔑 Firebase token:", token);
+
         const headers = { Authorization: `Bearer ${token}` };
 
         const [summaryRes, txRes, usersRes] = await Promise.all([
           fetch(`${BASE_URL}/api/admin/summary`, { headers }),
           fetch(`${BASE_URL}/api/admin/transactions`, { headers }),
           fetch(`${BASE_URL}/api/admin/users`, { headers }),
-        ]);        
+        ]);
+
+        console.log("📦 Response status:", {
+          summary: summaryRes.status,
+          transactions: txRes.status,
+          users: usersRes.status,
+        });
 
         const summaryData = await summaryRes.json();
         const txData = await txRes.json();
         const usersData = await usersRes.json();
+
+        console.log("📊 Summary Data:", summaryData);
+        console.log("📄 Transactions:", txData);
+        console.log("👥 Users:", usersData);
 
         setSummary(summaryData);
         setTransactions(txData);
