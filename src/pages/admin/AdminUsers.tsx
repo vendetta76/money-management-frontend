@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { getIdToken } from "firebase/auth";
 import { auth } from "@/lib/firebaseClient";
 
+const BASE_URL = "https://money-management-backend-f6dg.onrender.com";
+
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -12,7 +14,7 @@ export default function AdminUsers() {
       const user = auth.currentUser;
       if (!user) return;
       const token = await getIdToken(user);
-      const res = await fetch("/api/admin/users", {
+      const res = await fetch(`${BASE_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -24,7 +26,7 @@ export default function AdminUsers() {
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
       const token = await getIdToken(auth.currentUser);
-      const res = await fetch(`/api/admin/users/${userId}/role`, {
+      const res = await fetch(`${BASE_URL}/api/admin/users/${userId}/role`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
