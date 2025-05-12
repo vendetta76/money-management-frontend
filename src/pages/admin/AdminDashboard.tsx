@@ -1,9 +1,9 @@
 import AdminLayout from "@/layouts/AdminLayout";
-import StatsCards from "@/components/admin/StatsCards";
-import UserOverviewChart from "@/components/admin/UserOverviewChart";
-import LatestTransactions from "@/components/admin/LatestTransactions";
-import IncomePieChart from "@/components/admin/IncomePieChart";
-import RecentUsers from "@/components/admin/RecentUsers";
+import StatsCards from "@/pages/admin/StatsCards";
+import UserOverviewChart from "@/pages/admin/UserOverviewChart";
+import LatestTransactions from "@/pages/admin/LatestTransactions";
+import IncomePieChart from "@/pages/admin/IncomePieChart";
+import RecentUsers from "@/pages/admin/RecentUsers";
 import { useAdminData } from "@/hooks/useAdminData";
 
 export default function AdminDashboard() {
