@@ -1,4 +1,3 @@
-// src/routes.tsx
 import React from 'react'
 import { RouteObject } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
@@ -43,6 +42,13 @@ import TermsAndConditionsPage from './pages/about/TermsAndConditionsPage'
 
 // Upgrade Page ✨
 import UpgradePage from './pages/upgrade/UpgradePage'
+
+// Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard"
+import AdminUsers from "./pages/admin/AdminUsers"
+import AdminTransactions from "./pages/admin/AdminTransactions"
+import AdminReports from "./pages/admin/AdminReports"
+import AdminSettings from "./pages/admin/AdminSettings"
 
 const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },
@@ -220,6 +226,58 @@ const routes: RouteObject[] = [
       <PrivateRoute>
         <PageTransition>
           <UpgradePage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+
+  // Admin Routes
+  {
+    path: '/admin',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <AdminDashboard />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/users',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <AdminUsers />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/transactions',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <AdminTransactions />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/reports',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <AdminReports />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/settings',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <AdminSettings />
         </PageTransition>
       </PrivateRoute>
     ),
