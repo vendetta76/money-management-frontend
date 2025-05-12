@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getIdToken } from "firebase/auth";
-import { auth } from "@/firebaseClient";
+import { auth } from "@/lib/firebaseClient";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
