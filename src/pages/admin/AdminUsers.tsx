@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { getIdToken } from "firebase/auth";
 import { auth } from "@/lib/firebaseClient";
 import AdminLayout from "@/layouts/AdminLayout";
-import UserToolbar from "@/components/admin/UserToolbar";
-import UserTable from "@/components/admin/UserTable";
+import UserToolbar from "@/pages/admin/AdminUsers/UserToolbar";
+import UserTable from "@/pages/admin/AdminUsers/UserTable";
 
 const BASE_URL = "https://money-management-backend-f6dg.onrender.com";
 
