@@ -24,7 +24,7 @@ export function useAdminData() {
         const txData = await txRes.json();
         setTransactions(txData);
 
-        const usersRes = await fetch("/api/admin/users", { headers });
+        const usersRes = await fetch("https://money-management-backend-f6dg.onrender.com/api/admin/users", { headers });
         const usersData = await usersRes.json();
         setUsers(usersData);
       } catch (err) {
