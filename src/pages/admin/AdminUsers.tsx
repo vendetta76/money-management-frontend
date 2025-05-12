@@ -4,7 +4,7 @@ import { auth } from "@/lib/firebaseClient";
 import AdminLayout from "@/layouts/AdminLayout";
 import UserToolbar from "@/pages/admin/AdminUsers/UserToolbar";
 import UsersList from "@/pages/admin/AdminUsers/UsersList";
-import PaginationBar from "@/components/ui/PaginationBar";
+import PaginationBar from "@/pages/admin/AdminUsers/PaginationBar";
 
 const BASE_URL = "https://money-management-backend-f6dg.onrender.com";
 const ITEMS_PER_PAGE = 10;
