@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { getIdToken } from "firebase/auth";
+import { getIdToken, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebaseClient";
+
+const BASE_URL = "https://money-management-backend-f6dg.onrender.com";
 
 export function useAdminData() {
   const [summary, setSummary] = useState({ totalUsers: 0, totalBalance: 0, totalTransactions: 0 });
@@ -8,31 +10,32 @@ export function useAdminData() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
 
+      try {
         const token = await getIdToken(user);
         const headers = { Authorization: `Bearer ${token}` };
 
-        const summaryRes = await fetch("/api/admin/summary", { headers });
+        const [summaryRes, txRes, usersRes] = await Promise.all([
+          fetch(`${BASE_URL}/api/admin/summary`, { headers }),
+          fetch(`${BASE_URL}/api/admin/transactions`, { headers }),
+          fetch(`${BASE_URL}/api/admin/users`, { headers }),
+        ]);
+
         const summaryData = await summaryRes.json();
-        setSummary(summaryData);
-
-        const txRes = await fetch("/api/admin/transactions", { headers });
         const txData = await txRes.json();
-        setTransactions(txData);
-
-        const usersRes = await fetch("https://money-management-backend-f6dg.onrender.com/api/admin/users", { headers });
         const usersData = await usersRes.json();
+
+        setSummary(summaryData);
+        setTransactions(txData);
         setUsers(usersData);
       } catch (err) {
         console.error("❌ Error fetching admin data:", err);
       }
-    };
+    });
 
-    fetchData();
+    return () => unsubscribe();
   }, []);
 
   return { summary, transactions, users };
