@@ -7,6 +7,7 @@ import {
   Settings,
 } from "lucide-react";
 import ThemeSelect from "@/components/ThemeSelect";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 const links = [
   { to: "/admin", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
@@ -17,6 +18,8 @@ const links = [
 ];
 
 export default function Sidebar() {
+  const { signOut } = useAuth(); // Access signOut function
+
   return (
     <aside className="md:col-span-1 p-4 bg-gray-100 min-h-screen flex flex-col justify-between">
       <div>
@@ -42,7 +45,15 @@ export default function Sidebar() {
         </ul>
       </div>
 
-      <ThemeSelect />
+      <div className="space-y-4">
+        <ThemeSelect />
+        <button
+          onClick={signOut}
+          className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-700 transition"
+        >
+          Logout
+        </button>
+      </div>
     </aside>
   );
 }
