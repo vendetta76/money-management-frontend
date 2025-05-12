@@ -26,7 +26,12 @@ export default function AdminUsers() {
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
       const token = await getIdToken(auth.currentUser);
-      const res = await fetch(`${BASE_URL}/api/admin/users/${userId}/role`, {
+      const url = `${BASE_URL}/api/admin/users/${userId}/role`;
+  
+      console.log("⬆️ Posting role update to:", url);
+      console.log("⬆️ Payload:", { role: newRole });
+  
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,15 +39,24 @@ export default function AdminUsers() {
         },
         body: JSON.stringify({ role: newRole }),
       });
-      if (res.ok) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-        );
+  
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("❌ Failed to update role:", res.status, errorText);
+        throw new Error(`Server error ${res.status}`);
       }
+  
+      const responseData = await res.json();
+      console.log("✅ Role updated:", responseData);
+  
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+      );
     } catch (err) {
-      console.error("Gagal update role:", err);
+      console.error("❌ Gagal update role:", err);
     }
   };
+  
 
   const filteredUsers = users
     .filter((user) =>
