@@ -35,6 +35,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await currentUser.reload()
         // Force token refresh to get the latest custom claims
         await currentUser.getIdToken(true)
+        const tokenResult = await currentUser.getIdTokenResult(true);
+        console.log("💠 Custom claims:", tokenResult.claims);
         setUser(currentUser)
         window.firebaseUser = currentUser
 
