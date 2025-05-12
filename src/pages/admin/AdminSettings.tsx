@@ -1,3 +1,9 @@
+import AdminLayout from "@/layouts/AdminLayout";
+
 export default function AdminSettings() {
-    return <div className="p-4 text-white">⚙️ Admin Settings</div>;
+    return (
+        <AdminLayout>
+          <div className="p-4 text-white">⚙️ Admin Settings</div>
+        </AdminLayout>
+    );
   }
