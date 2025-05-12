@@ -50,6 +50,9 @@ import AdminTransactions from "./pages/admin/AdminTransactions"
 import AdminReports from "./pages/admin/AdminReports"
 import AdminSettings from "./pages/admin/AdminSettings"
 
+// 404 Page
+import NotFoundPage from './pages/NotFoundPage'
+
 const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
@@ -235,7 +238,7 @@ const routes: RouteObject[] = [
   {
     path: '/admin',
     element: (
-      <PrivateRoute>
+      <PrivateRoute requiredRole="Admin">
         <PageTransition>
           <AdminDashboard />
         </PageTransition>
@@ -245,7 +248,7 @@ const routes: RouteObject[] = [
   {
     path: '/admin/users',
     element: (
-      <PrivateRoute>
+      <PrivateRoute requiredRole="Admin">
         <PageTransition>
           <AdminUsers />
         </PageTransition>
@@ -255,7 +258,7 @@ const routes: RouteObject[] = [
   {
     path: '/admin/transactions',
     element: (
-      <PrivateRoute>
+      <PrivateRoute requiredRole="Admin">
         <PageTransition>
           <AdminTransactions />
         </PageTransition>
@@ -265,7 +268,7 @@ const routes: RouteObject[] = [
   {
     path: '/admin/reports',
     element: (
-      <PrivateRoute>
+      <PrivateRoute requiredRole="Admin">
         <PageTransition>
           <AdminReports />
         </PageTransition>
@@ -275,13 +278,16 @@ const routes: RouteObject[] = [
   {
     path: '/admin/settings',
     element: (
-      <PrivateRoute>
+      <PrivateRoute requiredRole="Admin">
         <PageTransition>
           <AdminSettings />
         </PageTransition>
       </PrivateRoute>
     ),
   },
+
+  // Catch-all route for 404
+  { path: '*', element: <NotFoundPage /> },
 ]
 
 export default routes

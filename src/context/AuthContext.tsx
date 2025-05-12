@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { User, onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth"
 import { auth } from "../lib/firebaseClient"
-import { doc, getDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc } from "firebase/firestore"
 import { db } from "../lib/firebaseClient"
 
 interface UserMeta {
-  role: "regular" | "premium" | "admin"
+  role: "Regular" | "Premium" | "Admin"
   premiumStartDate?: string
   premiumEndDate?: string
   daysLeft?: number
@@ -33,18 +33,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         await currentUser.reload()
-        setUser(currentUser);
-        window.firebaseUser = currentUser;
+        // Force token refresh to get the latest custom claims
+        await currentUser.getIdToken(true)
+        setUser(currentUser)
+        window.firebaseUser = currentUser
 
         try {
+          // Fetch custom claims
+          const tokenResult = await currentUser.getIdTokenResult()
+          const hasAdminClaim = tokenResult.claims.Admin === true
+
           const docRef = doc(db, "users", currentUser.uid)
           const docSnap = await getDoc(docRef)
 
+          let role: "Regular" | "Premium" | "Admin" = "Regular" // Default role
+
           if (docSnap.exists()) {
             const data = docSnap.data()
+            const firestoreRole = data.role || "Regular"
 
-            const role = data.role || "regular"
-            console.log("✅ [AuthContext] role loaded:", role);
+            // Prioritize custom claim for admin role
+            if (hasAdminClaim) {
+              role = "Admin"
+              // Optionally sync Firestore role with custom claim
+              if (firestoreRole !== "Admin") {
+                await setDoc(docRef, { role: "Admin" }, { merge: true })
+              }
+            } else {
+              // Use Firestore role if no admin claim, mapping to capitalized values
+              role = firestoreRole === "premium" ? "Premium" : firestoreRole === "admin" ? "Admin" : "Regular"
+            }
+
             const premiumStartDate = data.premiumStartDate
             const premiumEndDate = data.premiumEndDate
             const preferredCurrency = data.preferredCurrency || null
@@ -57,6 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               daysLeft = Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0)
             }
 
+            console.log("✅ [AuthContext] role loaded:", role)
             setUserMeta({
               role,
               premiumStartDate,
@@ -66,11 +86,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             })
           } else {
             // Default meta for new users without Firestore entry
-            setUserMeta({ role: "regular" })
+            role = hasAdminClaim ? "Admin" : "Regular"
+            console.log("✅ [AuthContext] role loaded (new user):", role)
+            setUserMeta({ role })
+            // Optionally create a Firestore entry for the new user
+            await setDoc(docRef, { role }, { merge: true })
           }
         } catch (err) {
           console.error("Error loading userMeta:", err)
-          setUserMeta({ role: "regular" }) // fallback safe
+          setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" }) // Fallback with custom claim check
         }
       } else {
         setUser(null)

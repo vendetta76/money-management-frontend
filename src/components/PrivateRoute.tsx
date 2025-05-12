@@ -16,9 +16,12 @@ const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
     console.log("🔥 [PrivateRoute] role from userMeta:", userMeta?.role);
   }, [userMeta]);
 
-  // Refresh user
+  // Refresh user and token
   useEffect(() => {
-    if (user) user.reload();
+    if (user) {
+      user.reload();
+      user.getIdToken(true); // Force token refresh
+    }
   }, [user]);
 
   if (loading || !userMeta) return <div>Loading...</div>;
@@ -37,10 +40,7 @@ const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
     );
   }
 
-  if (
-    requiredRole &&
-    userMeta?.role?.toLowerCase() !== requiredRole.toLowerCase()
-  ) {
+  if (requiredRole && userMeta?.role !== requiredRole) {
     return <Navigate to="/403" replace />;
   }
 
