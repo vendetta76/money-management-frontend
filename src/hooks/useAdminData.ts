@@ -21,7 +21,7 @@ export function useAdminData() {
           fetch(`${BASE_URL}/api/admin/summary`, { headers }),
           fetch(`${BASE_URL}/api/admin/transactions`, { headers }),
           fetch(`${BASE_URL}/api/admin/users`, { headers }),
-        ]);
+        ]);        
 
         const summaryData = await summaryRes.json();
         const txData = await txRes.json();
