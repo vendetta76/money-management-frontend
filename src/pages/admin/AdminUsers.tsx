@@ -3,14 +3,17 @@ import { getIdToken } from "firebase/auth";
 import { auth } from "@/lib/firebaseClient";
 import AdminLayout from "@/layouts/AdminLayout";
 import UserToolbar from "@/pages/admin/AdminUsers/UserToolbar";
-import UserTable from "@/pages/admin/AdminUsers/UserTable";
+import UsersList from "@/pages/admin/AdminUsers/UsersList";
+import PaginationBar from "@/components/ui/PaginationBar";
 
 const BASE_URL = "https://money-management-backend-f6dg.onrender.com";
+const ITEMS_PER_PAGE = 10;
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -58,12 +61,29 @@ export default function AdminUsers() {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const pagedUsers = filteredUsers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   return (
     <AdminLayout>
-      <div className="p-4 text-white">
+      <div className="p-4 text-black dark:text-white">
         <h1 className="text-2xl font-bold mb-4">👤 User Management</h1>
-        <UserToolbar search={search} setSearch={setSearch} sortBy={sortBy} setSortBy={setSortBy} />
-        <UserTable users={filteredUsers} handleRoleChange={handleRoleChange} />
+        <UserToolbar
+          search={search}
+          setSearch={setSearch}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
+        <UsersList users={pagedUsers} onEdit={(user) => alert("Edit: " + user.name)} onDelete={(user) => alert("Delete: " + user.name)} />
+        <PaginationBar
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onNext={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          onPrev={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+        />
       </div>
     </AdminLayout>
   );
