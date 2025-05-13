@@ -19,7 +19,7 @@ import ResetPinPage from './pages/ResetPinPage'
 import DashboardPage from './pages/DashboardPage'
 import WalletPage from './pages/WalletPage'
 import IncomePage from './pages/Income/IncomePage'
-import OutcomePage from './pages/OutcomePage'
+import OutcomePage from './pages/Outcome/OutcomePage'
 import TransferPage from './pages/TransferPage'
 import HistoryPage from './pages/HistoryPage'
 
