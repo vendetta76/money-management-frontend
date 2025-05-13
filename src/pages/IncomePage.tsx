@@ -35,6 +35,8 @@ interface WalletEntry {
   balance: number;
   currency: string;
   createdAt?: any;
+  colorStyle?: "solid" | "gradient"; // Added based on preview snippet
+  colorValue?: string | { start: string; end: string }; // Added based on preview snippet
 }
 
 const formatCurrency = (amount: number, currency: string) => {
@@ -197,6 +199,37 @@ const IncomePage = () => {
           {editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}
         </h1>
 
+        {/* PREVIEW KARTU WALLET */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {wallets.map((w) => {
+            const cardStyle =
+              w.colorStyle === "solid"
+                ? { backgroundColor: typeof w.colorValue === "string" ? w.colorValue : "#9333ea" }
+                : {
+                    background: `linear-gradient(to bottom right, ${
+                      typeof w.colorValue === "object" ? w.colorValue.start : "#9333ea"
+                    }, ${typeof w.colorValue === "object" ? w.colorValue.end : "#4f46e5"})`,
+                  };
+
+            return (
+              <div
+                key={w.id}
+                className="p-4 rounded-xl text-white shadow hover:shadow-lg transition-transform hover:-translate-y-1"
+                style={cardStyle}
+              >
+                <h3 className="text-lg font-semibold truncate">{w.name}</h3>
+                <p className="text-xl font-bold mt-2">
+                  {new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: w.currency,
+                    maximumFractionDigits: 0,
+                  }).format(w.balance)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
         {success && (
           <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 rounded-lg border border-green-300 dark:border-green-700 animate-in fade-in duration-300">
             ✅ {editingId ? "Pemasukan diperbarui!" : "Pemasukan disimpan!"}
@@ -314,10 +347,16 @@ const IncomePage = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleEdit(entry)} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                    <button
+                      onClick={() => handleEdit(entry)}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                    >
                       <Pencil size={18} />
                     </button>
-                    <button onClick={() => handleDelete(entry.id!, entry.amount, entry.wallet)} className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
+                    <button
+                      onClick={() => handleDelete(entry.id!, entry.amount, entry.wallet)}
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                    >
                       <Trash size={18} />
                     </button>
                   </div>
