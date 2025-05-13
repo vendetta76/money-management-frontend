@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import LayoutShell from "../layouts/LayoutShell";
+import LayoutShell from "../../layouts/LayoutShell";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../lib/firebaseClient";
 import {
