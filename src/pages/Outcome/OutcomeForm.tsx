@@ -122,7 +122,11 @@ const OutcomeForm = () => {
         return;
       }
 
-      await addDoc(collection(db, "users", user.uid, "outcomes"), {
+      const parsedAmount = Number(form.amount.replace(/\./g, ""));
+    const walletRef = doc(db, "users", user.uid, "wallets", form.wallet);
+    await updateDoc(walletRef, { balance: increment(-parsedAmount) });
+
+    await addDoc(collection(db, "users", user.uid, "outcomes"), {
         ...form,
         amount: parsedAmount,
         createdAt: serverTimestamp(),
@@ -174,7 +178,11 @@ const OutcomeForm = () => {
         setLoading(false);
         return;
       }
-      await addDoc(collection(db, "users", user.uid, "outcomes"), {
+      const parsedAmount = Number(form.amount.replace(/\./g, ""));
+    const walletRef = doc(db, "users", user.uid, "wallets", form.wallet);
+    await updateDoc(walletRef, { balance: increment(-parsedAmount) });
+
+    await addDoc(collection(db, "users", user.uid, "outcomes"), {
         wallet,
         currency,
         description: form.description,
