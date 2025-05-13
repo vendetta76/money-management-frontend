@@ -62,58 +62,61 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-4">
-      <div className="dark:text-white dark:bg-gray-900 bg-white dark:bg-gray-900 w-full max-w-md p-8 rounded-xl shadow-lg">
+    <div className="dark:text-white dark:bg-gray-900 min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-4 overflow-auto">
+      <div className="dark:text-white dark:bg-gray-900 bg-white w-full max-w-md p-8 rounded-xl shadow-lg">
         <BackButton />
 
-        <h1 className="dark:text-white dark:bg-gray-900 text-3xl font-bold text-center text-purple-700 mb-6">Daftar Akun</h1>
+        <h1 className="text-3xl font-bold text-center text-purple-700 mb-6">Daftar Akun</h1>
 
-        <form onSubmit={handleRegister} className="dark:text-white dark:bg-gray-900 space-y-4">
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label htmlFor="name" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Nama Lengkap</label>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
             <input
               id="name"
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               required
-              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="text-black dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               required
-              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="text-black dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="dark:text-white dark:bg-gray-900 block text-sm font-medium text-gray-700">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               required
-              className="dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="text-black dark:text-white dark:bg-gray-900 mt-1 w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
-          {error && <p className="dark:text-white dark:bg-gray-900 text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading || redirecting}
-            className="dark:text-white dark:bg-gray-900 w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50 flex justify-center items-center"
+            className="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition disabled:opacity-50 flex justify-center items-center"
           >
             {redirecting ? (
-              <div className="dark:text-white dark:bg-gray-900 animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
             ) : loading ? (
               "Mendaftarkan..."
             ) : (
@@ -122,9 +125,9 @@ const RegisterPage = () => {
           </button>
         </form>
 
-        <p className="dark:text-white dark:bg-gray-900 text-center text-sm text-gray-600 dark:text-gray-300 mt-4">
+        <p className="text-center text-sm text-gray-600 dark:text-gray-300 mt-4">
           Sudah punya akun?{" "}
-          <a href="/login" className="dark:text-white dark:bg-gray-900 text-purple-600 hover:underline">
+          <a href="/login" className="text-purple-600 hover:underline">
             Masuk di sini
           </a>
         </p>
