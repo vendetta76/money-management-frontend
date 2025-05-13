@@ -18,7 +18,7 @@ import ResetPinPage from './pages/ResetPinPage'
 // Core Pages
 import DashboardPage from './pages/DashboardPage'
 import WalletPage from './pages/WalletPage'
-import IncomePage from './pages/IncomePage'
+import IncomePage from './pages/Income/IncomePage'
 import OutcomePage from './pages/OutcomePage'
 import TransferPage from './pages/TransferPage'
 import HistoryPage from './pages/HistoryPage'
