@@ -1,4 +1,4 @@
-import LayoutShell from "../layouts/LayoutShell";
+import LayoutShell from "../../layouts/LayoutShell";
 import IncomeForm from "./IncomeForm";
 import RecentTransactions from "./RecentTransactions";
 
