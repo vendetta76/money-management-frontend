@@ -1,4 +1,3 @@
-// src/components/admin/UserToolbar.tsx
 interface UserToolbarProps {
     search: string;
     setSearch: (value: string) => void;
@@ -8,17 +7,17 @@ interface UserToolbarProps {
   
   export default function UserToolbar({ search, setSearch, sortBy, setSortBy }: UserToolbarProps) {
     return (
-      <div className="flex gap-4 mb-4">
+      <div className="flex flex-wrap gap-4 mb-4">
         <input
           type="text"
           placeholder="Search user..."
-          className="rounded p-2 text-black"
+          className="rounded p-2 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 transition-colors duration-300"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
   
         <select
-          className="rounded p-2 text-black"
+          className="rounded p-2 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-700 transition-colors duration-300"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
         >
