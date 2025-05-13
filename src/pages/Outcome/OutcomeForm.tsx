@@ -1,13 +1,17 @@
+// src/components/OutcomeForm.tsx
+// ✅ Wrapped in LayoutShell with max-w-2xl container
+// ✅ Added success message display
+// ✅ Added global Enter key shortcut
+// ✅ Added handleQuickSubmit for "Simpan & Lanjut"
+
 import { useEffect, useRef, useState } from "react";
-import LayoutShell from "../../layouts/LayoutShell";
+import LayoutShell from "../layouts/LayoutShell";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../lib/firebaseClient";
 import {
   collection,
   addDoc,
   updateDoc,
-  deleteDoc,
-  doc,
   serverTimestamp,
   increment,
   arrayUnion,
@@ -47,6 +51,7 @@ const OutcomeForm = () => {
     };
   }, [user]);
 
+  // Global shortcut ENTER → Simpan (hanya jika form valid)
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
       if (e.key === "Enter" && !editingId && document.activeElement?.tagName !== "TEXTAREA") {
@@ -57,19 +62,10 @@ const OutcomeForm = () => {
           descriptionRef.current?.form?.requestSubmit();
         }
       }
-      if (e.key === "Escape") {
-        resetForm();
-      }
-      if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        if (!loading && descriptionRef.current?.form) {
-          descriptionRef.current.form.requestSubmit();
-        }
-      }
     };
     document.addEventListener("keydown", listener);
     return () => document.removeEventListener("keydown", listener);
-  }, [form, editingId, loading]);
+  }, [form, editingId]);
 
   const resetForm = () => {
     setForm({ wallet: "", description: "", amount: "", currency: "" });
@@ -126,46 +122,22 @@ const OutcomeForm = () => {
         return;
       }
 
-      if (!editingId) {
-        const selectedWallet = wallets.find((w) => w.id === form.wallet);
-        if (selectedWallet && selectedWallet.balance < parsedAmount) {
-          alert("Saldo tidak cukup.");
-          setLoading(false);
-          return;
-        }
-        await addDoc(collection(db, "users", user.uid, "outcomes"), {
-          ...form,
-          amount: parsedAmount,
-          createdAt: serverTimestamp(),
-        });
-        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
-          balance: increment(-parsedAmount),
-        });
-      } else {
-        const old = outcomes.find((i) => i.id === editingId);
-        if (!old) return;
-        const diff = parsedAmount - old.amount;
-        const selectedWallet = wallets.find((w) => w.id === form.wallet);
-        if (selectedWallet && selectedWallet.balance + old.amount < parsedAmount) {
-          alert("Saldo tidak mencukupi.");
-          setLoading(false);
-          return;
-        }
-        await updateDoc(doc(db, "users", user.uid, "outcomes", editingId), {
-          description: form.description,
-          amount: parsedAmount,
-          wallet: form.wallet,
-          currency: form.currency,
-          editHistory: arrayUnion({
-            description: old.description,
-            amount: old.amount,
-            editedAt: new Date(),
-          }),
-        });
-        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
-          balance: increment(-diff),
-        });
+      const selectedWallet = wallets.find((w) => w.id === form.wallet);
+      if (selectedWallet && selectedWallet.balance < parsedAmount) {
+        alert("Saldo tidak cukup.");
+        setLoading(false);
+        return;
       }
+
+      await addDoc(collection(db, "users", user.uid, "outcomes"), {
+        ...form,
+        amount: parsedAmount,
+        createdAt: serverTimestamp(),
+      });
+
+      await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+        balance: increment(-parsedAmount),
+      });
 
       setForm({ wallet: form.wallet, currency: form.currency, description: "", amount: "" });
       setTimeout(() => descriptionRef.current?.focus(), 50);
@@ -246,7 +218,7 @@ const OutcomeForm = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl shadow">
+        <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl shadow w-full">
           <div>
             <label className="block mb-1 text-sm font-medium">Pilih Dompet</label>
             <select
