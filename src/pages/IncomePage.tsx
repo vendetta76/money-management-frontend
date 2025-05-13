@@ -1,3 +1,7 @@
+// FINAL: src/pages/income/IncomePage.tsx
+// ✅ Preview wallet hanya untuk dompet yang dipilih
+// ✅ Updated button section with "Simpan & Lanjut" functionality
+
 import { useState, useEffect } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { useAuth } from "../context/AuthContext";
@@ -288,68 +292,94 @@ const IncomePage = () => {
           <div className="flex justify-between items-center">
             {editingId && (
               <button
-              type="button"
-              disabled={loading}
-              onClick={async () => {
-                const validation = validate();
-                const { wallet, currency } = form;
-            
-                if (!wallet || !currency) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    wallet: wallet ? "" : "Dompet wajib dipilih.",
-                    currency: currency ? "" : "Mata uang wajib dipilih.",
-                  }));
-                  return;
-                }
-            
-                if (!form.description.trim() || !form.amount.trim()) {
-                  setErrors({
-                    description: !form.description.trim() ? "Deskripsi wajib diisi." : "",
-                    amount:
-                      !form.amount.trim() || parseFloat(form.amount.replace(/\./g, "")) <= 0
-                        ? "Nominal harus lebih dari 0."
-                        : "",
-                  });
-                  return;
-                }
-            
-                if (!user) return;
-                setLoading(true);
-            
-                try {
-                  const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
-                  if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-                    setLoading(false);
-                    return;
-                  }
-            
-                  await addDoc(collection(db, "users", user.uid, "incomes"), {
-                    wallet,
-                    currency,
-                    description: form.description,
-                    amount: parsedAmount,
-                    createdAt: serverTimestamp(),
-                  });
-            
-                  await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
-                    balance: increment(parsedAmount),
-                  });
-            
-                  // ✅ Reset hanya input, bukan wallet
-                  setForm({ wallet, currency, description: "", amount: "" });
-                } catch (err) {
-                  console.error("❌ Gagal simpan & lanjut:", err);
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              className="flex items-center gap-2 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
-            >
-              {loading && <Loader2 className="animate-spin" size={18} />}
-              Lanjut
-            </button>
-            
+                type="button"
+                onClick={() => {
+                  setForm({ wallet: "", description: "", amount: "", currency: "" });
+                  setEditingId(null);
+                }}
+                className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
+              >
+                Batal Edit
+              </button>
+            )}
+
+            <div className="flex gap-2">
+              {/* Tombol Simpan (submit form) */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading && <Loader2 className="animate-spin" size={18} />}
+                {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
+              </button>
+
+              {/* Tombol Simpan & Lanjut (hanya saat TAMBAH, bukan saat edit) */}
+              {!editingId && (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={async () => {
+                    const validation = validate();
+                    const { wallet, currency } = form;
+
+                    if (!wallet || !currency) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        wallet: wallet ? "" : "Dompet wajib dipilih.",
+                        currency: currency ? "" : "Mata uang wajib dipilih.",
+                      }));
+                      return;
+                    }
+
+                    if (!form.description.trim() || !form.amount.trim()) {
+                      setErrors({
+                        description: !form.description.trim() ? "Deskripsi wajib diisi." : "",
+                        amount:
+                          !form.amount.trim() || parseFloat(form.amount.replace(/\./g, "")) <= 0
+                            ? "Nominal harus lebih dari 0."
+                            : "",
+                      });
+                      return;
+                    }
+
+                    if (!user) return;
+                    setLoading(true);
+
+                    try {
+                      const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
+                      if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+                        setLoading(false);
+                        return;
+                      }
+
+                      await addDoc(collection(db, "users", user.uid, "incomes"), {
+                        wallet,
+                        currency,
+                        description: form.description,
+                        amount: parsedAmount,
+                        createdAt: serverTimestamp(),
+                      });
+
+                      await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
+                        balance: increment(parsedAmount),
+                      });
+
+                      // Reset hanya deskripsi dan nominal
+                      setForm({ wallet, currency, description: "", amount: "" });
+                    } catch (err) {
+                      console.error("❌ Gagal simpan & lanjut:", err);
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="flex items-center gap-2 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                >
+                  {loading && <Loader2 className="animate-spin" size={18} />}
+                  Simpan & Lanjut
+                </button>
+              )}
+            </div>
           </div>
         </form>
 
