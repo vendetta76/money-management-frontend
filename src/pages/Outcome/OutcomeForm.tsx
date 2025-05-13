@@ -1,3 +1,6 @@
+// src/components/OutcomeForm.tsx
+// ✅ Updated handleSubmit and handleQuickSubmit to fix duplicate balance updates
+
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../lib/firebaseClient";
@@ -122,18 +125,13 @@ const OutcomeForm = () => {
         return;
       }
 
-      const parsedAmount = Number(form.amount.replace(/\./g, ""));
-    const walletRef = doc(db, "users", user.uid, "wallets", form.wallet);
-    await updateDoc(walletRef, { balance: increment(-parsedAmount) });
+      const walletRef = doc(db, "users", user.uid, "wallets", form.wallet);
+      await updateDoc(walletRef, { balance: increment(-parsedAmount) });
 
-    await addDoc(collection(db, "users", user.uid, "outcomes"), {
+      await addDoc(collection(db, "users", user.uid, "outcomes"), {
         ...form,
         amount: parsedAmount,
         createdAt: serverTimestamp(),
-      });
-
-      await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
-        balance: increment(-parsedAmount),
       });
 
       setForm({ wallet: form.wallet, currency: form.currency, description: "", amount: "" });
@@ -172,26 +170,24 @@ const OutcomeForm = () => {
         setLoading(false);
         return;
       }
-      const selectedWallet = wallets.find((w) => w.id === form.wallet);
+      const selectedWallet = wallets.find((w) => w.id === wallet);
       if (selectedWallet && selectedWallet.balance < parsedAmount) {
         alert("Saldo tidak cukup.");
         setLoading(false);
         return;
       }
-      const parsedAmount = Number(form.amount.replace(/\./g, ""));
-    const walletRef = doc(db, "users", user.uid, "wallets", form.wallet);
-    await updateDoc(walletRef, { balance: increment(-parsedAmount) });
 
-    await addDoc(collection(db, "users", user.uid, "outcomes"), {
+      const walletRef = doc(db, "users", user.uid, "wallets", wallet);
+      await updateDoc(walletRef, { balance: increment(-parsedAmount) });
+
+      await addDoc(collection(db, "users", user.uid, "outcomes"), {
         wallet,
         currency,
         description: form.description,
         amount: parsedAmount,
         createdAt: serverTimestamp(),
       });
-      await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
-        balance: increment(-parsedAmount),
-      });
+
       setForm({ wallet, currency, description: "", amount: "" });
       setTimeout(() => descriptionRef.current?.focus(), 50);
       setSuccess(true);
