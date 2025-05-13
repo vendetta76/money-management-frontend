@@ -69,7 +69,7 @@ export default function AdminUsers() {
 
   return (
     <AdminLayout>
-      <div className="p-4 text-black dark:text-white">
+      <div className="p-4 bg-white dark:bg-gray-900 text-black dark:text-white transition-colors duration-300 min-h-screen">
         <h1 className="text-2xl font-bold mb-4">👤 User Management</h1>
         <UserToolbar
           search={search}
@@ -77,7 +77,11 @@ export default function AdminUsers() {
           sortBy={sortBy}
           setSortBy={setSortBy}
         />
-        <UsersList users={pagedUsers} onEdit={(user) => alert("Edit: " + user.name)} onDelete={(user) => alert("Delete: " + user.name)} />
+        <UsersList
+          users={pagedUsers}
+          onEdit={(user) => alert("Edit: " + user.name)}
+          onDelete={(user) => alert("Delete: " + user.name)}
+        />
         <PaginationBar
           currentPage={currentPage}
           totalPages={totalPages}
@@ -86,5 +90,5 @@ export default function AdminUsers() {
         />
       </div>
     </AdminLayout>
-  );
+  );  
 }
