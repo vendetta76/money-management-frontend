@@ -1,6 +1,3 @@
-// FINAL: src/pages/income/IncomePage.tsx
-// ✅ Preview wallet hanya untuk dompet yang dipilih
-
 import { useState, useEffect } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { useAuth } from "../context/AuthContext";
@@ -127,131 +124,21 @@ const IncomePage = () => {
     return newErrors;
   };
 
-  await updateDoc(doc(db, "users", user.uid, "incomes", editingId), {
-    description: form.description,
-    amount: parsedAmount,
-    wallet: form.wallet,
-    currency: form.currency,
-    editHistory: arrayUnion({
-      description: old.description,
-      amount: old.amount,
-      editedAt: new Date(),
-    }),
-  });
-  
-
-interface WalletEntry {
-  id?: string
-  name: string
-  balance: number
-  currency: string
-  createdAt?: any
-  colorStyle?: "solid" | "gradient"
-  colorValue?: string | { start: string; end: string }
-}
-
-const formatCurrency = (amount: number, currency: string) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-// Helper untuk getCardStyle
-const getCardStyle = (wallet: WalletEntry): React.CSSProperties => {
-  if (wallet.colorStyle === "solid") {
-    return {
-      backgroundColor: typeof wallet.colorValue === "string" ? wallet.colorValue : "#9333ea",
-    }
-  }
-  if (wallet.colorStyle === "gradient" && typeof wallet.colorValue === "object") {
-    return {
-      background: `linear-gradient(to bottom right, ${wallet.colorValue.start}, ${wallet.colorValue.end})`,
-    }
-  }
-  return { backgroundColor: "#9333ea" }
-}
-
-const IncomePage = () => {
-  const { user } = useAuth()
-  const [incomes, setIncomes] = useState<IncomeEntry[]>([])
-  const [wallets, setWallets] = useState<WalletEntry[]>([])
-  const [form, setForm] = useState({ wallet: "", description: "", amount: "", currency: "" })
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-
-  useEffect(() => {
-    if (!user) return
-
-    const q = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"))
-    const unsubIncomes = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as IncomeEntry[]
-      setIncomes(data)
-    })
-
-    const walletRef = collection(db, "users", user.uid, "wallets")
-    const unsubWallets = onSnapshot(walletRef, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as WalletEntry[]
-      setWallets(data)
-    })
-
-    return () => {
-      unsubIncomes()
-      unsubWallets()
-    }
-  }, [user])
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    if (name === "amount") {
-      const numeric = value.replace(/\D/g, "")
-      const formatted = numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-      setForm({ ...form, amount: formatted })
-    } else {
-      setForm({ ...form, [name]: value })
-    }
-    setErrors({ ...errors, [name]: "" })
-  }
-
-  const handleWalletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedWallet = wallets.find((w) => w.id === e.target.value)
-    setForm({
-      ...form,
-      wallet: e.target.value,
-      currency: selectedWallet?.currency || "",
-    })
-    setErrors({ ...errors, wallet: "", currency: "" })
-  }
-
-  const validate = () => {
-    const newErrors: Record<string, string> = {}
-    if (!form.wallet.trim()) newErrors.wallet = "Dompet wajib dipilih."
-    if (!form.description.trim()) newErrors.description = "Deskripsi wajib diisi."
-    if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "")) <= 0)
-      newErrors.amount = "Nominal harus lebih dari 0."
-    if (!form.currency.trim()) newErrors.currency = "Mata uang wajib dipilih."
-    return newErrors
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const validation = validate()
+    e.preventDefault();
+    const validation = validate();
     if (Object.keys(validation).length > 0) {
-      setErrors(validation)
-      return
+      setErrors(validation);
+      return;
     }
-    if (!user) return
-    setLoading(true)
+    if (!user) return;
+    setLoading(true);
 
     try {
-      const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."))
+      const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
       if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-        setLoading(false)
-        return
+        setLoading(false);
+        return;
       }
 
       if (!editingId) {
@@ -259,14 +146,14 @@ const IncomePage = () => {
           ...form,
           amount: parsedAmount,
           createdAt: serverTimestamp(),
-        })
+        });
 
         await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
           balance: increment(parsedAmount),
-        })
+        });
       } else {
-        const old = incomes.find((i) => i.id === editingId)
-        if (!old) return
+        const old = incomes.find((i) => i.id === editingId);
+        if (!old) return;
 
         await updateDoc(doc(db, "users", user.uid, "incomes", editingId), {
           description: form.description,
@@ -278,24 +165,24 @@ const IncomePage = () => {
             amount: old.amount,
             editedAt: new Date(),
           }),
-        })
+        });
 
-        const diff = parsedAmount - old.amount
+        const diff = parsedAmount - old.amount;
         await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
           balance: increment(diff),
-        })
+        });
       }
 
-      setForm({ wallet: "", description: "", amount: "", currency: "" })
-      setEditingId(null)
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 2000)
+      setForm({ wallet: "", description: "", amount: "", currency: "" });
+      setEditingId(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
     } catch (err) {
-      console.error("Gagal menyimpan pemasukan:", err)
+      console.error("Gagal menyimpan pemasukan:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = (item: IncomeEntry) => {
     setForm({
@@ -303,20 +190,20 @@ const IncomePage = () => {
       description: item.description,
       amount: item.amount.toString(),
       currency: item.currency,
-    })
-    setEditingId(item.id || null)
-  }
+    });
+    setEditingId(item.id || null);
+  };
 
   const handleDelete = async (id: string, amount: number, wallet: string) => {
-    if (!user) return
-    await deleteDoc(doc(db, "users", user.uid, "incomes", id))
+    if (!user) return;
+    await deleteDoc(doc(db, "users", user.uid, "incomes", id));
     await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
       balance: increment(-amount),
-    })
-  }
+    });
+  };
 
-  const getWalletName = (id: string) => wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan"
-  const getWalletBalance = (id: string) => wallets.find((w) => w.id === id)?.balance || 0
+  const getWalletName = (id: string) => wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
+  const getWalletBalance = (id: string) => wallets.find((w) => w.id === id)?.balance || 0;
 
   return (
     <LayoutShell>
@@ -403,8 +290,8 @@ const IncomePage = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setForm({ wallet: "", description: "", amount: "", currency: "" })
-                  setEditingId(null)
+                  setForm({ wallet: "", description: "", amount: "", currency: "" });
+                  setEditingId(null);
                 }}
                 className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
               >
@@ -470,7 +357,7 @@ const IncomePage = () => {
         </div>
       </main>
     </LayoutShell>
-  )
-}
+  );
+};
 
-export default IncomePage
+export default IncomePage;
