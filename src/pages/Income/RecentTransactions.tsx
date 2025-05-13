@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { db } from "../lib/firebaseClient";
+import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import {
   collection,
