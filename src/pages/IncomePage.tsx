@@ -127,46 +127,18 @@ const IncomePage = () => {
     return newErrors;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const validation = validate();
-    if (Object.keys(validation).length > 0) {
-      setErrors(validation);
-      return;
-    }
-    if (!user) return;
-    setLoading(true);
-
-    try {
-      const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
-      if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-        setLoading(false);
-        return;
-      }
-
-      if (!editingId) {
-        await addDoc(collection(db, "users", user.uid, "incomes"), {
-          ...form,
-          amount: parsedAmount,
-          createdAt: serverTimestamp(),
-        });
-
-        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
-          balance: increment(parsedAmount),
-        });
-      } else {
-        const old = incomes.find((i) => i.id === editingId);
-        if (!old) return;
-
-        await updateDoc(doc(db, "users", user.uid, "incomes", editingId), {
-          description: form.description,
-          amount: parsedAmount,
-          wallet: form.wallet,
-          currency: type: string
-  currency: string
-  createdAt?: any
-  editHistory?: any[]
-}
+  await updateDoc(doc(db, "users", user.uid, "incomes", editingId), {
+    description: form.description,
+    amount: parsedAmount,
+    wallet: form.wallet,
+    currency: form.currency,
+    editHistory: arrayUnion({
+      description: old.description,
+      amount: old.amount,
+      editedAt: new Date(),
+    }),
+  });
+  
 
 interface WalletEntry {
   id?: string
