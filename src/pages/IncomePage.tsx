@@ -1,8 +1,9 @@
 // FINAL: src/pages/income/IncomePage.tsx
 // ✅ Preview wallet hanya untuk dompet yang dipilih
 // ✅ Updated button section with "Simpan & Lanjut" functionality
+// ✅ Added ref for description input with auto-focus and Enter key shortcut
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../lib/firebaseClient";
@@ -74,6 +75,7 @@ const IncomePage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const descriptionRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -95,6 +97,22 @@ const IncomePage = () => {
       unsubWallets();
     };
   }, [user]);
+
+  // Global shortcut ENTER → Simpan (hanya jika form valid)
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !editingId && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        const valid = validate();
+        if (Object.keys(valid).length === 0) {
+          (document.activeElement as HTMLElement)?.blur();
+          descriptionRef.current?.form?.requestSubmit();
+        }
+      }
+    };
+    document.addEventListener("keydown", listener);
+    return () => document.removeEventListener("keydown", listener);
+  }, [form, editingId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -258,6 +276,7 @@ const IncomePage = () => {
           <div>
             <label className="block mb-1 text-sm font-medium">Deskripsi</label>
             <input
+              ref={descriptionRef}
               name="description"
               value={form.description}
               onChange={handleChange}
@@ -365,8 +384,9 @@ const IncomePage = () => {
                         balance: increment(parsedAmount),
                       });
 
-                      // Reset hanya deskripsi dan nominal
+                      // Reset hanya deskripsi dan nominal, lalu fokus ke deskripsi
                       setForm({ wallet, currency, description: "", amount: "" });
+                      setTimeout(() => descriptionRef.current?.focus(), 50);
                     } catch (err) {
                       console.error("❌ Gagal simpan & lanjut:", err);
                     } finally {
