@@ -6,17 +6,21 @@ interface User {
   fullName?: string;
   email: string;
   avatarUrl?: string;
+  role?: string;
+  status?: string;
 }
 
 interface UsersListProps {
   users: User[];
+  selected: string[];
+  toggleSelect: (id: string) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
 }
 
-export default function UsersList({ users, onEdit, onDelete }: UsersListProps) {
+export default function UsersList({ users, selected, toggleSelect, onEdit, onDelete }: UsersListProps) {
   return (
-    <div className="rounded-md shadow overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div className="rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       {users.length === 0 ? (
         <div className="p-6 text-center text-gray-500 dark:text-gray-400">No users found.</div>
       ) : (
@@ -25,6 +29,8 @@ export default function UsersList({ users, onEdit, onDelete }: UsersListProps) {
             <UserCardRow
               key={user.id}
               user={user}
+              isSelected={selected.includes(user.id)}
+              onToggleSelect={toggleSelect}
               onEdit={onEdit}
               onDelete={onDelete}
             />
