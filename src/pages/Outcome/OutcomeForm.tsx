@@ -5,10 +5,10 @@ import {
   collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
   increment, arrayUnion, onSnapshot, query, orderBy
 } from "firebase/firestore";
-import { Loader2, Pencil, Trash } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { formatCurrency } from "./helpers/formatCurrency";
 import { getCardStyle } from "./helpers/getCardStyle";
-import { OutcomeEntry, WalletEntry } from "./types";
+import { WalletEntry, OutcomeEntry } from "./types";
 
 const OutcomeForm = () => {
   const { user } = useAuth();
@@ -27,13 +27,13 @@ const OutcomeForm = () => {
     const unsubWallets = onSnapshot(walletRef, (snap) => {
       setWallets(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[]);
     });
-    const incomeRef = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
-    const unsubIncomes = onSnapshot(incomeRef, (snap) => {
+    const outcomeRef = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
+    const unsubOutcomes = onSnapshot(outcomeRef, (snap) => {
       setOutcomes(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as OutcomeEntry[]);
     });
     return () => {
       unsubWallets();
-      unsubIncomes();
+      unsubOutcomes();
     };
   }, [user]);
 
@@ -156,7 +156,9 @@ const OutcomeForm = () => {
         });
       }
 
-      resetForm();
+      setForm({ wallet: form.wallet, currency: form.currency, description: "", amount: "" });
+      setTimeout(() => descriptionRef.current?.focus(), 50);
+      setEditingId(null);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
     } catch (err) {
@@ -170,7 +172,7 @@ const OutcomeForm = () => {
   const getWalletBalance = (id: string) => wallets.find((w) => w.id === id)?.balance || 0;
 
   return (
-       <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl shadow">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl shadow">
           
       <div>
         <label className="block mb-1 text-sm font-medium">Pilih Dompet</label>
