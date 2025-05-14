@@ -58,6 +58,13 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
         colorValue:
           editingData.colorValue || { start: "#9333ea", end: "#4f46e5" },
       });
+    } else {
+      setForm({
+        name: "",
+        currency: "",
+        colorStyle: "gradient",
+        colorValue: { start: "#9333ea", end: "#4f46e5" },
+      });
     }
   }, [editingData]);
 
@@ -200,3 +207,15 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
 };
 
 export default WalletFormModal;
+
+
+--- ✅ PATCHED: WalletPage.tsx (support tambah wallet) ---
+<WalletFormModal
+  isOpen={showForm || !!editingWallet}
+  editingData={editingWallet}
+  onClose={() => {
+    setShowForm(false);
+    setEditingWallet(null);
+    setSelectedWallet(null);
+  }}
+/>
