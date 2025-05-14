@@ -34,15 +34,14 @@ const WalletCard: React.FC<WalletCardProps> = ({
 }) => {
   const pointerDownRef = useRef<number>(0);
 
-  const handlePointerDown = () => {
-    pointerDownRef.current = Date.now();
-  };
-
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
     const diff = Date.now() - pointerDownRef.current;
-    if (diff < 200) {
-      onClick(); // dianggap klik cepat
-    }
+
+    // ⛔️ Cegah buka popup kalau kliknya bukan di card langsung
+    const target = e.target as HTMLElement;
+    if (target.closest("button")) return;
+
+    if (diff < 200) onClick();
   };
 
   const bgStyle =
@@ -63,7 +62,7 @@ const WalletCard: React.FC<WalletCardProps> = ({
     <div
       className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md p-4 transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       style={bgStyle}
-      onPointerDown={handlePointerDown}
+      onPointerDown={() => (pointerDownRef.current = Date.now())}
       onPointerUp={handlePointerUp}
     >
       <div className="flex justify-between items-start">
