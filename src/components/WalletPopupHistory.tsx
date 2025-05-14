@@ -86,7 +86,24 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
           </button>
         </DialogHeader>
 
-        <div className="rounded-xl h-32 mt-4 shadow-md" style={cardStyle} />
+        {/* Credit card preview */}
+        <div className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md mx-auto mt-4" style={cardStyle} />
+
+        {/* Tambah transaksi */}
+        <div className="flex justify-center gap-4 mt-4">
+          <button
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+            onClick={() => console.log("Tambah Pemasukan")}
+          >
+            ➕ Tambah Pemasukan
+          </button>
+          <button
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+            onClick={() => console.log("Tambah Pengeluaran")}
+          >
+            ➖ Tambah Pengeluaran
+          </button>
+        </div>
 
         <div className="mt-4 flex items-center gap-2">
           <Search size={18} className="text-gray-400" />
