@@ -3,7 +3,6 @@ import {
   collection,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   onSnapshot,
   query,
@@ -241,12 +240,11 @@ const WalletPage: React.FC = () => {
                 isMobile={isMobile}
                 onEdit={(id) => setEditingWallet(walletMap[id])}
                 onCardClick={(id) => {
-                  // ⛔ Cegah buka popup kalau sedang klik tombol edit
                   if (editingWallet || showForm) return;
                   setSelectedWallet({
                     id,
                     name: walletMap[id].name,
-                    style: {} // Atau ambil dari walletMap[id]
+                    style: {}
                   });
                 }}
               />
@@ -257,58 +255,10 @@ const WalletPage: React.FC = () => {
 
       <WalletFormModal
         isOpen={showForm || !!editingWallet}
-        form={editingWallet ?? {
-          name: "",
-          balance: 0,
-          currency: "USD",
-          colorStyle: "gradient",
-          colorValue: { start: "#9333ea", end: "#4f46e5" },
-        }}
-        editing={!!editingWallet}
+        editingData={editingWallet}
         onClose={() => {
           setShowForm(false);
           setEditingWallet(null);
-        }}
-        onSubmit={async (data) => {
-          try {
-            if (!data.name?.trim()) {
-              toast.error("Nama wajib diisi");
-              return;
-            }
-            if (!data.currency) {
-              toast.error("Pilih mata uang");
-              return;
-            }
-            const payload = {
-              ...data,
-              balance: 0,
-              createdAt: serverTimestamp(),
-            };
-            if (!editingWallet) {
-              await addDoc(collection(db, "users", user!.uid, "wallets"), payload);
-              toast.success("Wallet berhasil ditambahkan");
-            } else {
-              await updateDoc(doc(db, "users", user!.uid, "wallets", editingWallet.id!), payload);
-              toast.success("Wallet berhasil diperbarui");
-            }
-            setShowForm(false);
-            setEditingWallet(null);
-          } catch (err) {
-            console.error("Firestore error:", err);
-            toast.error("Gagal menyimpan dompet");
-          }
-        }}
-        onDelete={async () => {
-          if (!editingWallet) return;
-          try {
-            await deleteDoc(doc(db, "users", user!.uid, "wallets", editingWallet.id!));
-            toast.success("Wallet dihapus");
-            setShowForm(false);
-            setEditingWallet(null);
-          } catch (err) {
-            console.error("Firestore error:", err);
-            toast.error("Gagal menghapus dompet");
-          }
         }}
       />
 
