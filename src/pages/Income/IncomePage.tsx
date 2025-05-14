@@ -3,7 +3,7 @@ import IncomeForm from "./IncomeForm";
 import RecentTransactions from "./RecentTransactions";
 import { useAuth } from "../../context/AuthContext";
 import { usePageLockStatus } from "../../hooks/usePageLockStatus"; // Adjust path as needed
-import PageLockAnnouncement from "../../components/PageLockAnnouncement"; // Adjust path as needed
+import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"; // Adjust path as needed
 
 const IncomePage = () => {
   const { user } = useAuth();
