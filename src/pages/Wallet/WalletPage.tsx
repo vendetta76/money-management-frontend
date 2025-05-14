@@ -64,7 +64,7 @@ const WalletPage: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect() => {
+  useEffect(() => {
     if (!pinLocked) setPinLockVisible(false);
     if (pinLockVisible && pinInputRef.current) {
       pinInputRef.current.focus();
@@ -72,36 +72,53 @@ const WalletPage: React.FC = () => {
   }, [pinLocked, pinLockVisible]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
     const q = query(collection(db, "users", user.uid, "wallets"), orderBy("createdAt", "desc"));
-    return onSnapshot(q, (snap) => {
-      setWallets(
-        snap.docs.map((d) => {
-          const data = d.data() as WalletEntry;
-          return {
-            id: d.id,
-            name: data.name,
-            balance: data.balance ?? 0,
-            currency: data.currency,
-            createdAt: data.createdAt,
-            colorStyle: data.colorStyle || "gradient",
-            colorValue: data.colorValue || { start: "#9333ea", end: "#4f46e5" },
-          };
-        })
-      );
-      setLoading(false);
-    });
-  }, [user]);
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setWallets(
+          snap.docs.map((d) => {
+            const data = d.data() as WalletEntry;
+            return {
+              id: d.id,
+              name: data.name || "",
+              balance: data.balance ?? 0,
+              currency: data.currency || "USD",
+              createdAt: data.createdAt,
+              colorStyle: data.colorStyle || "gradient",
+              colorValue: data.colorValue || { start: "#9333ea", end: "#4f46e5" },
+            };
+          })
+        );
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Firestore error:", err);
+        toast.error("Gagal memuat dompet");
+        setLoading(false);
+      }
+    );
+    return () => unsub();
+  }, [user?.uid]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
     const ref = doc(db, "users", user.uid);
-    return onSnapshot(ref, (snap) => {
-      if (snap.exists()) {
-        setWalletOrder(snap.data().walletOrder || []);
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        if (snap.exists()) {
+          setWalletOrder(snap.data().walletOrder || []);
+        }
+      },
+      (err) => {
+        console.error("Firestore error:", err);
+        toast.error("Gagal memuat urutan dompet");
       }
-    });
-  }, [user]);
+    );
+    return () => unsub();
+  }, [user?.uid]);
 
   const handleUnlock = () => {
     const ok = unlock(enteredPin);
@@ -198,7 +215,7 @@ const WalletPage: React.FC = () => {
               )}
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-purple-600 text-white px-4 py-2 sealed text-sm sm:text-base flex items-center gap-2"
+                className="bg-purple-600 text-white px-4 py-2 rounded text-sm sm:text-base flex items-center gap-2"
               >
                 <Plus size={16} /> Tambah Wallet
               </button>
@@ -224,7 +241,7 @@ const WalletPage: React.FC = () => {
                 isMobile={isMobile}
                 onEdit={(id) => setEditingWallet(walletMap[id])}
                 onCardClick={(id) => {
-                  if (editingWallet) return; // ⛔ jika sedang edit, jangan buka popup
+                  if (editingWallet) return;
                   setSelectedWallet({ id, name: walletMap[id].name, style: {} });
                 }}
               />
@@ -247,29 +264,46 @@ const WalletPage: React.FC = () => {
           setShowForm(false);
           setEditingWallet(null);
         }}
-        onSubmit={(data) => {
-          const payload = {
-            ...data,
-            balance: 0,
-            createdAt: serverTimestamp(),
-          };
-
-          if (!editingWallet) {
-            addDoc(collection(db, "users", user!.uid, "wallets"), payload).then(() =>
-              toast.success("Wallet berhasil ditambahkan")
-            );
-          } else {
-            updateDoc(doc(db, "users", user!.uid, "wallets", editingWallet.id!), payload).then(() =>
-              toast.success("Wallet berhasil diperbarui")
-            );
+        onSubmit={async (data) => {
+          try {
+            if (!data.name?.trim()) {
+              toast.error("Nama wajib diisi");
+              return;
+            }
+            if (!data.currency) {
+              toast.error("Pilih mata uang");
+              return;
+            }
+            const payload = {
+              ...data,
+              balance: 0,
+              createdAt: serverTimestamp(),
+            };
+            if (!editingWallet) {
+              await addDoc(collection(db, "users", user!.uid, "wallets"), payload);
+              toast.success("Wallet berhasil ditambahkan");
+            } else {
+              await updateDoc(doc(db, "users", user!.uid, "wallets", editingWallet.id!), payload);
+              toast.success("Wallet berhasil diperbarui");
+            }
+            setShowForm(false);
+            setEditingWallet(null);
+          } catch (err) {
+            console.error("Firestore error:", err);
+            toast.error("Gagal menyimpan dompet");
           }
         }}
         onDelete={async () => {
           if (!editingWallet) return;
-          await deleteDoc(doc(db, "users", user!.uid, "wallets", editingWallet.id!));
-          toast.success("Wallet dihapus");
-          setShowForm(false);
-          setEditingWallet(null);
+          try {
+            await deleteDoc(doc(db, "users", user!.uid, "wallets", editingWallet.id!));
+            toast.success("Wallet dihapus");
+            setShowForm(false);
+            setEditingWallet(null);
+          } catch (err) {
+            console.error("Firestore error:", err);
+            toast.error("Gagal menghapus dompet");
+          }
         }}
       />
 
