@@ -34,7 +34,7 @@ interface WalletEntry {
 }
 
 const WalletPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, userMeta } = useAuth();
   const { locked, message } = usePageLockStatus("wallet");
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
@@ -43,6 +43,12 @@ const WalletPage: React.FC = () => {
   const [showBalance, setShowBalance] = useState(true);
   const [selectedWallet, setSelectedWallet] = useState<{ id: string; name: string; style: React.CSSProperties } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const bypassFor = ["Admin", "Staff", "Tester"];
+  const normalizedBypass = bypassFor.map((b) => b.toLowerCase());
+  const email = user?.email?.toLowerCase() || "";
+  const role = userMeta?.role?.toLowerCase() || "";
+  const isBypassed = normalizedBypass.includes(email) || normalizedBypass.includes(role);
 
   useEffect(() => {
     if (!user) return;
@@ -82,19 +88,19 @@ const WalletPage: React.FC = () => {
   return (
     <LayoutShell>
       <main className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto">
-        {locked && userMeta && (
+        {locked && !isBypassed && userMeta && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
             <PageLockAnnouncement
               locked={true}
               message={message}
               currentUserEmail={user?.email || ""}
-              currentUserRole={user?.role || ""}
-              bypassFor={["Admin", "diorvendetta76@gmail.com"]}
+              currentUserRole={userMeta?.role || ""}
+              bypassFor={bypassFor}
             />
           </div>
         )}
 
-        <div className={locked ? "pointer-events-none blur-sm" : "relative z-10"}>
+        <div className={!locked || isBypassed ? "relative z-10" : "pointer-events-none blur-sm"}>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
             <h1 className="text-xl sm:text-2xl font-bold">Dompet Saya</h1>
             <div className="flex flex-wrap gap-2 sm:gap-3">
