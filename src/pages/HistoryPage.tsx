@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 // Add the new imports
 import { usePageLockStatus } from "../hooks/usePageLockStatus"
-import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"
+import PageLockAnnouncement from "../components/admin/PageLockAnnouncement"
 
 interface EditEntry {
   description: string
