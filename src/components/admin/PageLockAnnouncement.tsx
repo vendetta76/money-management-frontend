@@ -15,9 +15,10 @@ const PageLockAnnouncement: React.FC<PageLockAnnouncementProps> = ({
   currentUserRole,
   bypassFor = ["diorvendetta76@gmail.com", "Admin"],
 }) => {
+  const normalizedBypass = bypassFor.map((entry) => entry.toLowerCase());
   const isBypassed =
-    bypassFor.includes(currentUserEmail) ||
-    (currentUserRole && bypassFor.includes(currentUserRole));
+    normalizedBypass.includes(currentUserEmail?.toLowerCase() || "") ||
+  (currentUserRole && normalizedBypass.includes(currentUserRole.toLowerCase()));
 
   if (!locked || isBypassed) return null;
 
