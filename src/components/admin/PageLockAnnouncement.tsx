@@ -22,13 +22,14 @@ const PageLockAnnouncement: React.FC<PageLockAnnouncementProps> = ({
   if (!locked || isBypassed) return null;
 
   return (
-    <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/40 flex items-center justify-center text-center px-6">
-      <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 max-w-md shadow-xl">
-        <h2 className="text-lg sm:text-xl font-semibold mb-2 text-gray-800 dark:text-white">
+    <div className="absolute inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 backdrop-blur-sm bg-black/30" />
+      <div className="relative z-10 bg-white dark:bg-zinc-800 rounded-xl p-6 w-full max-w-sm shadow-xl text-center">
+        <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
           🚧 Halaman Dikunci
         </h2>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-          {message || "Halaman ini sedang tidak tersedia untuk saat ini."}
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          {message || "Halaman ini sedang tidak tersedia."}
         </p>
       </div>
     </div>
