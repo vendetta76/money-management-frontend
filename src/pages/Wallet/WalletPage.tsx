@@ -19,7 +19,7 @@ import WalletPopupHistory from "./WalletPopupHistory";
 import { toast } from "react-hot-toast";
 import { Eye, EyeOff, Plus } from "lucide-react";
 import { usePageLockStatus } from "import { usePageLockStatus } from "../../hooks/usePageLockStatus";"; // Adjust path as needed
-import PageLockAnnouncement from "../../components/PageLockAnnouncement"; // Adjust path as needed
+import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"; // Adjust path as needed
 
 const allowedRecalcEmails = [
   "diorvendetta76@gmail.com",
