@@ -56,7 +56,7 @@ const SortableWalletCard: React.FC<{
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} className="relative">
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <WalletCard
         id={wallet.id}
         name={wallet.name}
