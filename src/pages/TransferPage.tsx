@@ -16,7 +16,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { usePageLockStatus } from "../hooks/usePageLockStatus";
-import PageLockAnnouncement from "../pages/admin/PageLockAnnouncement";
+import PageLockAnnouncement from "../components/admin/PageLockAnnouncement";
 
 interface WalletEntry {
   id: string;
