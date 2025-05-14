@@ -25,10 +25,7 @@ import WalletFormModal from "./WalletFormModal";
 import { useIsBypassed } from "../../hooks/useIsBypassed";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 
-const allowedRecalcEmails = [
-  "diorvendetta76@gmail.com",
-  "joeverson.kamantha@gmail.com"
-];
+const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com"];
 
 interface WalletEntry {
   id?: string;
@@ -49,6 +46,14 @@ const WalletPage: React.FC = () => {
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingWallet, setEditingWallet] = useState<WalletEntry | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    balance: "0",
+    currency: "",
+    colorStyle: "gradient" as "solid" | "gradient",
+    colorValue: { start: "#9333ea", end: "#4f46e5" },
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [showBalance, setShowBalance] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<{ id: string; name: string; style: React.CSSProperties } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -125,10 +130,57 @@ const WalletPage: React.FC = () => {
     }
   };
 
+  const handleFormChange = (field: string, value: any) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    if (!form.name.trim()) newErrors.name = "Nama wajib diisi";
+    if (!form.currency) newErrors.currency = "Pilih mata uang";
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const payload = {
+      name: form.name,
+      balance: parseFloat(form.balance) || 0,
+      currency: form.currency,
+      createdAt: serverTimestamp(),
+      colorStyle: form.colorStyle,
+      colorValue: form.colorStyle === "solid" ? (form.colorValue as string) : form.colorValue,
+    };
+
+    try {
+      if (!editingWallet) {
+        await addDoc(collection(db, "users", user!.uid, "wallets"), payload);
+        toast.success("Wallet berhasil ditambahkan");
+      } else {
+        await updateDoc(doc(db, "users", user!.uid, "wallets", editingWallet.id!), payload);
+        toast.success("Wallet berhasil diperbarui");
+      }
+      setShowForm(false);
+      setEditingWallet(null);
+      setForm({
+        name: "",
+        balance: "0",
+        currency: "",
+        colorStyle: "gradient",
+        colorValue: { start: "#9333ea", end: "#4f46e5" },
+      });
+      setErrors({});
+    } catch (err) {
+      toast.error("Gagal menyimpan wallet");
+      console.error(err);
+    }
+  };
+
   const walletMap = Object.fromEntries(wallets.map((w) => [w.id!, w]));
   const orderedWallets = [
     ...walletOrder.map((id) => walletMap[id]).filter(Boolean),
-    ...wallets.filter((w) => !walletOrder.includes(w.id!))
+    ...wallets.filter((w) => !walletOrder.includes(w.id!)),
   ];
 
   const totalsByCurrency = orderedWallets.reduce((acc, w) => {
@@ -138,7 +190,11 @@ const WalletPage: React.FC = () => {
 
   return (
     <LayoutShell>
-      <main className={`relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300 ${pinLockVisible || (locked && !isBypassed) ? "blur-md pointer-events-none" : ""}`}>
+      <main
+        className={`relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300 ${
+          pinLockVisible || (locked && !isBypassed) ? "blur-md pointer-events-none" : ""
+        }`}
+      >
         {(locked && !isBypassed) && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
             <PageLockAnnouncement
@@ -191,7 +247,9 @@ const WalletPage: React.FC = () => {
                 <button
                   onClick={() => fixAllWalletBalances(user!.uid).then(() => toast.success("Rekalkulasi selesai!"))}
                   className="text-sm border px-3 py-1 rounded"
-                >🔁 Rekalkulasi</button>
+                >
+                  🔁 Rekalkulasi
+                </button>
               )}
               <button
                 onClick={() => setShowForm(true)}
@@ -229,23 +287,54 @@ const WalletPage: React.FC = () => {
 
       <WalletFormModal
         isOpen={showForm || !!editingWallet}
-        form={editingWallet ?? {
-          name: "",
-          balance: "0",
-          currency: "USD",
-          colorStyle: "gradient",
-          colorValue: { start: "#9333ea", end: "#4f46e5" },
-        }}
-        errors={{}}
+        form={form}
+        errors={errors}
         editing={!!editingWallet}
         onClose={() => {
           setShowForm(false);
           setEditingWallet(null);
+          setForm({
+            name: "",
+            balance: "0",
+            currency: "",
+            colorStyle: "gradient",
+            colorValue: { start: "#9333ea", end: "#4f46e5" },
+          });
+          setErrors({});
         }}
-        onChange={() => {}}
-        onSubmit={() => {}}
-        currencyOptions={[]}
-        colorStyleOptions={[]}
+        onChange={handleFormChange}
+        onSubmit={handleSubmit}
+        currencyOptions={[
+          { value: "IDR", label: "IDR" },
+          { value: "USD", label: "USD" },
+          { value: "THB", label: "THB" },
+          { value: "EUR", label: "EUR" },
+          { value: "JPY", label: "JPY" },
+        ]}
+        colorStyleOptions={[
+          { value: "solid", label: "Solid" },
+          { value: "gradient", label: "Gradient" },
+        ]}
+        onDelete={async () => {
+          if (!editingWallet) return;
+          try {
+            await deleteDoc(doc(db, "users", user!.uid, "wallets", editingWallet.id!));
+            toast.success("Wallet dihapus");
+            setShowForm(false);
+            setEditingWallet(null);
+            setForm({
+              name: "",
+              balance: "0",
+              currency: "",
+              colorStyle: "gradient",
+              colorValue: { start: "#9333ea", end: "#4f46e5" },
+            });
+            setErrors({});
+          } catch (err) {
+            toast.error("Gagal menghapus wallet");
+            console.error(err);
+          }
+        }}
       />
 
       {selectedWallet && (
