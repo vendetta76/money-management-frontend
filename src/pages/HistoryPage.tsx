@@ -16,9 +16,8 @@ import {
   ChevronDown,
   ChevronUp
 } from "lucide-react"
-// Add the new imports
 import { usePageLockStatus } from "../hooks/usePageLockStatus"
-import PageLockAnnouncement from "../components/admin/PageLockAnnouncement"
+import PageLockAnnouncement from "../components/PageLockAnnouncement"
 
 interface EditEntry {
   description: string
@@ -59,8 +58,7 @@ type UnifiedEntry = HistoryEntry | (TransferEntry & { type: "transfer" })
 
 const HistoryPage = () => {
   const { user } = useAuth()
-  // Add page lock status
-  const { locked, message } = usePageLockStatus("history", "GLOBAL_ADMIN_ID")
+  const { locked, message } = usePageLockStatus("history")
   const [search, setSearch] = useState("")
   const [selectedDateRange, setSelectedDateRange] = useState("all")
   const [customDate, setCustomDate] = useState("")
@@ -215,15 +213,19 @@ const HistoryPage = () => {
 
   return (
     <LayoutShell>
-      <PageLockAnnouncement
-        locked={locked}
-        message={message}
-        currentUserEmail={user?.email || ""}
-        currentUserRole={user?.role}
-        bypassFor={["Admin", "diorvendetta76@gmail.com"]}
-      />
-      {!locked && (
-        <main className="min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-6 max-w-screen-2xl mx-auto bg-white dark:bg-gray-900 dark:text-white">
+      <main className="relative min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-6 max-w-screen-2xl mx-auto bg-white dark:bg-gray-900 dark:text-white">
+        {locked && (
+          <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
+            <PageLockAnnouncement
+              locked={true}
+              message={message}
+              currentUserEmail={user?.email || ""}
+              currentUserRole={user?.role}
+              bypassFor={["Admin", "diorvendetta76@gmail.com"]}
+            />
+          </div>
+        )}
+        <div className={locked ? "pointer-events-none blur-sm" : "relative z-10"}>
           <h1 className="text-2xl sm:text-3xl font-bold text-purple-700 dark:text-purple-300 mb-6">📜 Riwayat Transaksi</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <select
@@ -377,8 +379,8 @@ const HistoryPage = () => {
               ))}
             </div>
           )}
-        </main>
-      )}
+        </div>
+      </main>
     </LayoutShell>
   )
 }

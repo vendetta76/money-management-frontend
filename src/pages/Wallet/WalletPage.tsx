@@ -15,8 +15,8 @@ import WalletFormModal from "./WalletFormModal";
 import WalletPopupHistory from "../../components/WalletPopupHistory";
 import { toast } from "react-hot-toast";
 import { Eye, EyeOff, Plus } from "lucide-react";
-import { usePageLockStatus } from "../../hooks/usePageLockStatus"; // Adjust path as needed
-import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"; // Adjust path as needed
+import { usePageLockStatus } from "../../hooks/usePageLockStatus";
+import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 
 const allowedRecalcEmails = [
   "diorvendetta76@gmail.com",
@@ -35,7 +35,7 @@ interface WalletEntry {
 
 const WalletPage: React.FC = () => {
   const { user } = useAuth();
-  const { locked, message } = usePageLockStatus("wallet", "GLOBAL_ADMIN_ID");
+  const { locked, message } = usePageLockStatus("wallet");
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -81,80 +81,86 @@ const WalletPage: React.FC = () => {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto">
-        <PageLockAnnouncement
-          locked={locked}
-          message={message}
-          currentUserEmail={user?.email || ""}
-          currentUserRole={user?.role || ""}
-          bypassFor={["Admin", "diorvendetta76@gmail.com"]}
-        />
-
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold">Dompet Saya</h1>
-          <div className="flex flex-wrap gap-2 sm:gap-3">
-            <button
-              onClick={() => setShowBalance(!showBalance)}
-              className="text-sm underline flex items-center gap-1"
-            >
-              {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
-            </button>
-            {allowedRecalcEmails.includes(user?.email || "") && (
-              <button
-                onClick={() => toast("Rekalkulasi placeholder")}
-                className="text-sm border px-3 py-1 rounded"
-              >🔁 Rekalkulasi</button>
-            )}
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-purple-600 text-white px-4 py-2 rounded text-sm sm:text-base"
-            >
-              <Plus size={16} /> Tambah Wallet
-            </button>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="h-24 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse"
-              ></div>
-            ))}
-          </div>
-        ) : (
-          <>
-            <WalletTotalOverview totalsByCurrency={totalsByCurrency} showBalance={showBalance} />
-
-            <WalletGrid
-              userId={user?.uid || ""}
-              wallets={orderedWallets}
-              showBalance={showBalance}
-              onEdit={(id) => setEditingWallet(walletMap[id])}
-              onCardClick={(id) => setSelectedWallet({ id, name: walletMap[id].name, style: {} })}
+      <main className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto">
+        {locked && (
+          <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
+            <PageLockAnnouncement
+              locked={true}
+              message={message}
+              currentUserEmail={user?.email || ""}
+              currentUserRole={user?.role || ""}
+              bypassFor={["Admin", "diorvendetta76@gmail.com"]}
             />
-          </>
+          </div>
         )}
 
-        <WalletFormModal
-          visible={showForm || !!editingWallet}
-          onClose={() => {
-            setShowForm(false);
-            setEditingWallet(null);
-          }}
-          editing={editingWallet}
-        />
+        <div className={locked ? "pointer-events-none blur-sm" : "relative z-10"}>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold">Dompet Saya</h1>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="text-sm underline flex items-center gap-1"
+              >
+                {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
+              </button>
+              {allowedRecalcEmails.includes(user?.email || "") && (
+                <button
+                  onClick={() => toast("Rekalkulasi placeholder")}
+                  className="text-sm border px-3 py-1 rounded"
+                >🔁 Rekalkulasi</button>
+              )}
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-purple-600 text-white px-4 py-2 rounded text-sm sm:text-base"
+              >
+                <Plus size={16} /> Tambah Wallet
+              </button>
+            </div>
+          </div>
 
-        {selectedWallet && (
-          <WalletPopupHistory
-            walletId={selectedWallet.id}
-            walletName={selectedWallet.name}
-            cardStyle={selectedWallet.style}
-            isOpen={!!selectedWallet}
-            onClose={() => setSelectedWallet(null)}
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-24 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse"
+                ></div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <WalletTotalOverview totalsByCurrency={totalsByCurrency} showBalance={showBalance} />
+
+              <WalletGrid
+                userId={user?.uid || ""}
+                wallets={orderedWallets}
+                showBalance={showBalance}
+                onEdit={(id) => setEditingWallet(walletMap[id])}
+                onCardClick={(id) => setSelectedWallet({ id, name: walletMap[id].name, style: {} })}
+              />
+            </>
+          )}
+
+          <WalletFormModal
+            visible={showForm || !!editingWallet}
+            onClose={() => {
+              setShowForm(false);
+              setEditingWallet(null);
+            }}
+            editing={editingWallet}
           />
-        )}
+
+          {selectedWallet && (
+            <WalletPopupHistory
+              walletId={selectedWallet.id}
+              walletName={selectedWallet.name}
+              cardStyle={selectedWallet.style}
+              isOpen={!!selectedWallet}
+              onClose={() => setSelectedWallet(null)}
+            />
+          )}
+        </div>
       </main>
     </LayoutShell>
   );

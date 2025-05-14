@@ -15,9 +15,8 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
-// Add the new imports
 import { usePageLockStatus } from "../hooks/usePageLockStatus";
-import PageLockAnnouncement from "../components/admin/PageLockAnnouncement";
+import PageLockAnnouncement from "../components/PageLockAnnouncement";
 
 interface WalletEntry {
   id: string;
@@ -55,8 +54,7 @@ const formatNominal = (num: number, currency: string) => {
 
 const TransferPage: React.FC = () => {
   const { user } = useAuth();
-  // Add page lock status
-  const { locked, message } = usePageLockStatus("transfer", "GLOBAL_ADMIN_ID");
+  const { locked, message } = usePageLockStatus("transfer");
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [fromWalletId, setFromWalletId] = useState("");
   const [toWalletId, setToWalletId] = useState("");
@@ -142,7 +140,7 @@ const TransferPage: React.FC = () => {
 
         // Rollback saldo lama
         const fromRef = doc(db, "users", user.uid, "wallets", editingTransfer.fromWalletId);
-        const toRef = doc(db, "users", user.uid, "wallets", editingTransfer.toWalletId);
+        const toRef = doc(db, "users", user.uid, "wallets", editingTransfer.to estágioId);
 
         await updateDoc(fromRef, {
           balance: fromWallet.balance + previousAmount,
@@ -243,136 +241,140 @@ const TransferPage: React.FC = () => {
     }
   };
 
-  // Conditionally render based on lock status
-  if (locked) {
-    return (
-      <LayoutShell>
-        <PageLockAnnouncement message={message} />
-      </LayoutShell>
-    );
-  }
-
   return (
     <LayoutShell>
-      <div className="max-w-xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Transfer Antar Wallet</h1>
-
-        {/* Form */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Dari Dompet</label>
-            <select
-              value={fromWalletId}
-              onChange={(e) => setFromWalletId(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Pilih Dompet</option>
-              {wallets.map((wallet) => (
-                <option key={wallet.id} value={wallet.id}>
-                  {wallet.name} ({formatNominal(wallet.balance, wallet.currency)})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Ke Dompet</label>
-            <select
-              value={toWalletId}
-              onChange={(e) => setToWalletId(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Pilih Dompet</option>
-              {wallets.map((wallet) => (
-                <option key={wallet.id} value={wallet.id}>
-                  {wallet.name} ({formatNominal(wallet.balance, wallet.currency)})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Jumlah</label>
-            <input
-              type="text"
-              value={amount}
-              onChange={handleAmountChange}
-              placeholder="Masukkan jumlah"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      <main className="relative max-w-xl mx-auto p-4">
+        {locked && (
+          <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
+            <PageLockAnnouncement
+              locked={true}
+              message={message}
+              currentUserEmail={user?.email || ""}
+              currentUserRole={user?.role}
+              bypassFor={["Admin", "diorvendetta76@gmail.com"]}
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Deskripsi *</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Masukkan deskripsi (wajib)"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            onClick={handleTransfer}
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-          >
-            {editingTransfer ? "Perbarui Transfer" : "Transfer"}
-          </button>
-          {editingTransfer && (
-            <button
-              onClick={resetForm}
-              className="w-full bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
-            >
-              Batal Edit
-            </button>
-          )}
-        </div>
-
-        {transferHistory.length > 0 && (
-          <div className="mt-10">
-            <h2 className="text-lg font-semibold mb-2">Riwayat Transfer Terbaru</h2>
-            <div className="space-y-3">
-              {transferHistory.map((entry) => (
-                <div key={entry.id} className="p-3 rounded border border-blue-200 bg-blue-50">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="text-sm font-semibold text-blue-800">
-                        {entry.from} ➡️ {entry.to}
-                      </div>
-                      <div className="text-xs text-gray-500">{entry.description}</div>
-                    </div>
-                    <div className="text-sm font-bold text-blue-600">
-                      {formatNominal(entry.amount, entry.currency)}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
-                    <span>
-                      {new Date(entry.createdAt?.toDate?.() ?? entry.createdAt).toLocaleString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                    <div className="space-x-3">
-                      <button
-                        onClick={() => handleEditTransfer(entry)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTransfer(entry)}
-                        className="text-red-500 hover:underline"
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
-      </div>
+        <div className={locked ? "pointer-events-none blur-sm" : "relative z-10"}>
+          <h1 className="text-2xl font-bold mb-4">Transfer Antar Wallet</h1>
+
+          {/* Form */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Dari Dompet</label>
+              <select
+                value={fromWalletId}
+                onChange={(e) => setFromWalletId(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="">Pilih Dompet</option>
+                {wallets.map((wallet) => (
+                  <option key={wallet.id} value={wallet.id}>
+                    {wallet.name} ({formatNominal(wallet.balance, wallet.currency)})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Ke Dompet</label>
+              <select
+                value={toWalletId}
+                onChange={(e) => setToWalletId(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="">Pilih Dompet</option>
+                {wallets.map((wallet) => (
+                  <option key={wallet.id} value={wallet.id}>
+                    {wallet.name} ({formatNominal(wallet.balance, wallet.currency)})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Jumlah</label>
+              <input
+                type="text"
+                value={amount}
+                onChange={handleAmountChange}
+                placeholder="Masukkan jumlah"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Deskripsi *</label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Masukkan deskripsi (wajib)"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <button
+              onClick={handleTransfer}
+              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+            >
+              {editingTransfer ? "Perbarui Transfer" : "Transfer"}
+            </button>
+            {editingTransfer && (
+              <button
+                onClick={resetForm}
+                className="w-full bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
+              >
+                Batal Edit
+              </button>
+            )}
+          </div>
+
+          {transferHistory.length > 0 && (
+            <div className="mt-10">
+              <h2 className="text-lg font-semibold mb-2">Riwayat Transfer Terbaru</h2>
+              <div className="space-y-3">
+                {transferHistory.map((entry) => (
+                  <div key={entry.id} className="p-3 rounded border border-blue-200 bg-blue-50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-sm font-semibold text-blue-800">
+                          {entry.from} ➡️ {entry.to}
+                        </div>
+                        <div className="text-xs text-gray-500">{entry.description}</div>
+                      </div>
+                      <div className="text-sm font-bold text-blue-600">
+                        {formatNominal(entry.amount, entry.currency)}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
+                      <span>
+                        {new Date(entry.createdAt?.toDate?.() ?? entry.createdAt).toLocaleString("id-ID", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <div className="space-x-3">
+                        <button
+                          onClick={() => handleEditTransfer(entry)}
+                          className="text-blue-500 hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTransfer(entry)}
+                          className="text-red-500 hover:underline"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
     </LayoutShell>
   );
 };
