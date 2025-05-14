@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { db } from "../lib/firebaseClient";
+import { db } from "../../lib/firebaseClient";
 
 interface WalletEntry {
   id: string;
