@@ -40,13 +40,8 @@ const WalletCard: React.FC<WalletCardProps> = ({
 
   const handlePointerUp = (e: React.PointerEvent) => {
     const diff = Date.now() - pointerDownRef.current;
-
-    // ⛔️ Cegah buka popup kalau klik berasal dari tombol (misal tombol edit)
     if ((e.target as HTMLElement).closest("button")) return;
-
-    if (diff < 200) {
-      onClick();
-    }
+    if (diff < 200) onClick();
   };
 
   const bgStyle =

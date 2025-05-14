@@ -13,22 +13,14 @@ interface WalletFormModalProps {
 }
 
 const currencyOptions = [
-  { value: "IDR", label: "IDR - Rupiah" },
+  { value: "IDR", label: "IDR - Indonesian Rupiah" },
   { value: "USD", label: "USD - US Dollar" },
   { value: "EUR", label: "EUR - Euro" },
-  { value: "JPY", label: "JPY - Yen" },
-  { value: "THB", label: "THB - Baht" },
-  { value: "SGD", label: "SGD - Singapore Dollar" },
+  { value: "GBP", label: "GBP - British Pound" },
+  { value: "JPY", label: "JPY - Japanese Yen" },
   { value: "AUD", label: "AUD - Australian Dollar" },
-  { value: "CAD", label: "CAD - Canadian Dollar" },
-  { value: "GBP", label: "GBP - Pound Sterling" },
-  { value: "CHF", label: "CHF - Swiss Franc" },
-  { value: "CNY", label: "CNY - Yuan" },
-  { value: "VND", label: "VND - Dong" },
-  { value: "PHP", label: "PHP - Peso" },
-  { value: "MYR", label: "MYR - Ringgit" },
-  { value: "KRW", label: "KRW - Won" },
-  { value: "HKD", label: "HKD - Hong Kong Dollar" },
+  { value: "CNY", label: "CNY - Chinese Yuan" },
+  { value: "THB", label: "THB - Thailand Baht" },
 ];
 
 const colorStyleOptions = [
@@ -36,11 +28,7 @@ const colorStyleOptions = [
   { value: "gradient", label: "Gradient" },
 ];
 
-const WalletFormModal: React.FC<WalletFormModalProps> = ({
-  isOpen,
-  onClose,
-  editingData,
-}) => {
+const WalletFormModal: React.FC<WalletFormModalProps> = ({ isOpen, onClose, editingData }) => {
   const { user } = useAuth();
   const [form, setForm] = useState({
     name: "",
@@ -70,7 +58,6 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
     const newErrors: Record<string, string> = {};
     if (!form.name.trim()) newErrors.name = "Nama wallet wajib diisi";
     if (!form.currency) newErrors.currency = "Pilih mata uang";
-
     if (Object.keys(newErrors).length) return setErrors(newErrors);
 
     try {
@@ -116,16 +103,9 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 pointer-events-auto">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-xl max-w-sm w-full relative"
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-3 right-3"
-        >
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl max-w-sm w-full relative">
+        <button type="button" onClick={onClose} className="absolute top-3 right-3">
           <X size={20} />
         </button>
 
@@ -162,46 +142,6 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
             onChange={(sel) => handleChange("colorStyle", sel?.value || "gradient")}
           />
         </div>
-
-        {form.colorStyle === "solid" ? (
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Pilih Warna</label>
-            <input
-              type="color"
-              value={form.colorValue as string}
-              onChange={(e) => handleChange("colorValue", e.target.value)}
-              className="w-full h-10 border rounded"
-            />
-          </div>
-        ) : (
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Pilih Warna Gradient</label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={(form.colorValue as any)?.start ?? "#9333ea"}
-                onChange={(e) =>
-                  handleChange("colorValue", {
-                    ...(form.colorValue as any),
-                    start: e.target.value,
-                  })
-                }
-                className="h-10 w-full border rounded"
-              />
-              <input
-                type="color"
-                value={(form.colorValue as any)?.end ?? "#4f46e5"}
-                onChange={(e) =>
-                  handleChange("colorValue", {
-                    ...(form.colorValue as any),
-                    end: e.target.value,
-                  })
-                }
-                className="h-10 w-full border rounded"
-              />
-            </div>
-          </div>
-        )}
 
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Pratinjau Warna</label>
