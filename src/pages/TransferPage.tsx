@@ -244,7 +244,7 @@ const TransferPage: React.FC = () => {
   return (
     <LayoutShell>
       <main className="relative max-w-xl mx-auto p-4">
-        {locked && (
+        {locked && userMeta && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
             <PageLockAnnouncement
               locked={true}

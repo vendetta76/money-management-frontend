@@ -82,7 +82,7 @@ const WalletPage: React.FC = () => {
   return (
     <LayoutShell>
       <main className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto">
-        {locked && (
+        {locked && userMeta && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
             <PageLockAnnouncement
               locked={true}

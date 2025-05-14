@@ -12,7 +12,7 @@ const OutcomePage = () => {
   return (
     <LayoutShell>
       <main className="relative max-w-2xl mx-auto px-4 py-6">
-        {locked && (
+        {locked && userMeta && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
             <PageLockAnnouncement
               locked={true}

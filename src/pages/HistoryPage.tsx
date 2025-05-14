@@ -214,7 +214,7 @@ const HistoryPage = () => {
   return (
     <LayoutShell>
       <main className="relative min-h-screen w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-20 py-6 max-w-screen-2xl mx-auto bg-white dark:bg-gray-900 dark:text-white">
-        {locked && (
+        {locked && userMeta && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
             <PageLockAnnouncement
               locked={true}
