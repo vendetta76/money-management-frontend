@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import IncomeForm from "../pages/Income/IncomeForm";
+import OutcomeForm from "../pages/Outcome/OutcomeForm";
 
 interface WalletPopupProps {
   walletId: string;
@@ -20,6 +22,8 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
   const [transactions, setTransactions] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [showIncomeForm, setShowIncomeForm] = useState(false);
+  const [showOutcomeForm, setShowOutcomeForm] = useState(false);
 
   console.log("🧪 WalletPopup props", { isOpen, walletId, walletName, cardStyle });
 
@@ -93,17 +97,31 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
         <div className="flex justify-center gap-4 mt-4">
           <button
             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-            onClick={() => console.log("Tambah Pemasukan")}
+            onClick={() => setShowIncomeForm(true)}
           >
             ➕ Tambah Pemasukan
           </button>
           <button
             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-            onClick={() => console.log("Tambah Pengeluaran")}
+            onClick={() => setShowOutcomeForm(true)}
           >
             ➖ Tambah Pengeluaran
           </button>
         </div>
+
+        {showIncomeForm && (
+          <IncomeForm
+            presetWalletId={walletId}
+            onClose={() => setShowIncomeForm(false)}
+          />
+        )}
+
+        {showOutcomeForm && (
+          <OutcomeForm
+            presetWalletId={walletId}
+            onClose={() => setShowOutcomeForm(false)}
+          />
+        )}
 
         <div className="mt-4 flex items-center gap-2">
           <Search size={18} className="text-gray-400" />
