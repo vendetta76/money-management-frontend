@@ -53,7 +53,7 @@ const formatNominal = (num: number, currency: string) => {
 };
 
 const TransferPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, userMeta } = useAuth();
   const { locked, message } = usePageLockStatus("transfer");
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [fromWalletId, setFromWalletId] = useState("");
