@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
 import { auth } from "../lib/firebaseClient";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 
 interface UserMeta {
@@ -42,52 +42,55 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           window.firebaseUser = currentUser;
 
           const docRef = doc(db, "users", currentUser.uid);
-          const docSnap = await getDoc(docRef);
 
-          let role: UserMeta["role"] = hasAdminClaim ? "Admin" : "Regular";
+          onSnapshot(docRef, async (docSnap) => {
+            let role: UserMeta["role"] = hasAdminClaim ? "Admin" : "Regular";
 
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const firestoreRole = data.role || "Regular";
-            const allowedRoles = ["Regular", "Premium", "Admin", "Staff", "Tester"];
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              const firestoreRole = data.role || "Regular";
+              const allowedRoles = ["Regular", "Premium", "Admin", "Staff", "Tester"];
 
-            if (hasAdminClaim) {
-              role = "Admin";
-              if (firestoreRole !== "Admin") {
-                await setDoc(docRef, { role: "Admin" }, { merge: true });
+              if (hasAdminClaim) {
+                role = "Admin";
+                if (firestoreRole !== "Admin") {
+                  await setDoc(docRef, { role: "Admin" }, { merge: true });
+                }
+              } else {
+                role = allowedRoles.includes(firestoreRole) ? firestoreRole : "Regular";
               }
+
+              const premiumStartDate = data.premiumStartDate;
+              const premiumEndDate = data.premiumEndDate;
+              const preferredCurrency = data.preferredCurrency || null;
+
+              let daysLeft = 0;
+              if (premiumEndDate) {
+                const today = new Date();
+                const end = new Date(premiumEndDate);
+                const diff = end.getTime() - today.getTime();
+                daysLeft = Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
+              }
+
+              console.log("✅ [AuthContext] role loaded:", role);
+              setUserMeta({ role, premiumStartDate, premiumEndDate, daysLeft, preferredCurrency });
             } else {
-              role = allowedRoles.includes(firestoreRole) ? firestoreRole : "Regular";
+              console.log("✅ [AuthContext] new user role:", role);
+              setUserMeta({ role });
+              await setDoc(docRef, { role }, { merge: true });
             }
-
-            const premiumStartDate = data.premiumStartDate;
-            const premiumEndDate = data.premiumEndDate;
-            const preferredCurrency = data.preferredCurrency || null;
-
-            let daysLeft = 0;
-            if (premiumEndDate) {
-              const today = new Date();
-              const end = new Date(premiumEndDate);
-              const diff = end.getTime() - today.getTime();
-              daysLeft = Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
-            }
-
-            console.log("✅ [AuthContext] role loaded:", role);
-            setUserMeta({ role, premiumStartDate, premiumEndDate, daysLeft, preferredCurrency });
-          } else {
-            console.log("✅ [AuthContext] new user role:", role);
-            setUserMeta({ role });
-            await setDoc(docRef, { role }, { merge: true });
-          }
+            setLoading(false);
+          });
         } catch (err) {
           console.error("Error loading userMeta:", err);
           setUserMeta({ role: "Regular" });
+          setLoading(false);
         }
       } else {
         setUser(null);
         setUserMeta(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
