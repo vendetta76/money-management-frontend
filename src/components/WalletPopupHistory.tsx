@@ -21,10 +21,10 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
 
-  if (!isOpen || !walletId || walletId === "") return null;
+  if (!isOpen || !walletId || walletId === "" || !walletName) return null;
 
   useEffect(() => {
-    if (!user || !walletId) return;
+    if (!isOpen || !walletId || walletId === "" || !user) return;
 
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
@@ -56,7 +56,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
       unsubOut();
       unsubTransfer();
     };
-  }, [user, walletId]);
+  }, [user, walletId, isOpen]);
 
   const filteredTransactions = transactions.filter(tx => {
     const matchDescription = tx.description?.toLowerCase().includes(search.toLowerCase());
