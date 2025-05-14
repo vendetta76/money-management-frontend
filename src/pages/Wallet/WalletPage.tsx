@@ -241,8 +241,13 @@ const WalletPage: React.FC = () => {
                 isMobile={isMobile}
                 onEdit={(id) => setEditingWallet(walletMap[id])}
                 onCardClick={(id) => {
-                  if (editingWallet) return;
-                  setSelectedWallet({ id, name: walletMap[id].name, style: {} });
+                  // ⛔ Cegah buka popup kalau sedang klik tombol edit
+                  if (editingWallet || showForm) return;
+                  setSelectedWallet({
+                    id,
+                    name: walletMap[id].name,
+                    style: {} // Atau ambil dari walletMap[id]
+                  });
                 }}
               />
             </>
