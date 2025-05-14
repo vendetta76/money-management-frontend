@@ -1,4 +1,3 @@
---- ✅ PATCHED: WalletPage.tsx ---
 import React, { useEffect, useState, useRef } from "react";
 import {
   collection,
