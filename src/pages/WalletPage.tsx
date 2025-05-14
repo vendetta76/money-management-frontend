@@ -24,7 +24,7 @@ import { toast } from "react-hot-toast";
 import { fixAllWalletBalances } from "../utils/fixWallet";
 import WalletPopupHistory from "../components/WalletPopupHistory";
 import { usePageLockStatus } from "../context/PageLockContext"; // Adjust path as needed
-import PageLockAnnouncement from "../components/PageLockAnnouncement"; // Adjust path as needed
+import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"; // Adjust path as needed
 
 const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com"];
 
