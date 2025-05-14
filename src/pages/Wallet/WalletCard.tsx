@@ -36,13 +36,15 @@ const WalletCard: React.FC<WalletCardProps> = ({
     colorStyle === "solid"
       ? { backgroundColor: colorValue as string }
       : {
-          background: `linear-gradient(to bottom right, ${(colorValue as any).start}, ${(colorValue as any).end})`,
+          background: `linear-gradient(to bottom right, ${
+            (colorValue as any)?.start ?? "#9333ea"
+          }, ${(colorValue as any)?.end ?? "#4f46e5"})`,
         };
 
   const contrastColor =
     colorStyle === "solid"
       ? getContrastColor(colorValue as string)
-      : getContrastColor((colorValue as any).end);
+      : getContrastColor((colorValue as any)?.end ?? "#4f46e5");
 
   return (
     <div
@@ -51,10 +53,7 @@ const WalletCard: React.FC<WalletCardProps> = ({
       onClick={onClick}
     >
       <div className="flex justify-between items-start">
-        <h3
-          className="text-lg font-semibold truncate"
-          style={{ color: contrastColor }}
-        >
+        <h3 className="text-lg font-semibold truncate" style={{ color: contrastColor }}>
           {name}
         </h3>
         <button

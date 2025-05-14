@@ -123,7 +123,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
                   <label className="text-sm">Warna Awal</label>
                   <input
                     type="color"
-                    value={(form.colorValue as any).start}
+                    value={(form.colorValue as any)?.start ?? "#9333ea"}
                     onChange={(e) =>
                       onChange("colorValue", {
                         ...(form.colorValue as any),
@@ -137,7 +137,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
                   <label className="text-sm">Warna Akhir</label>
                   <input
                     type="color"
-                    value={(form.colorValue as any).end}
+                    value={(form.colorValue as any)?.end ?? "#4f46e5"}
                     onChange={(e) =>
                       onChange("colorValue", {
                         ...(form.colorValue as any),
@@ -162,7 +162,9 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
               form.colorStyle === "solid"
                 ? { backgroundColor: form.colorValue as string }
                 : {
-                    background: `linear-gradient(to bottom right, ${(form.colorValue as any).start}, ${(form.colorValue as any).end})`,
+                    background: `linear-gradient(to bottom right, ${
+                      (form.colorValue as any)?.start ?? "#9333ea"
+                    }, ${(form.colorValue as any)?.end ?? "#4f46e5"})`,
                   }
             }
           />
