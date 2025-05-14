@@ -1,4 +1,3 @@
-// src/routes.tsx
 import React from 'react'
 import { RouteObject } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
@@ -18,11 +17,14 @@ import ResetPinPage from './pages/ResetPinPage'
 
 // Core Pages
 import DashboardPage from './pages/DashboardPage'
-import WalletPage from './pages/WalletPage'
+import WalletPage from './pages/Wallet/WalletPage'
 import IncomePage from './pages/Income/IncomePage'
 import OutcomePage from './pages/Outcome/OutcomePage'
+import TransferPage from './pages/TransferPage'
 import HistoryPage from './pages/HistoryPage'
-import AdminDashboardPage from './pages/AdminDashboardPage' // ✅ GANTI INI
+
+// Virtual Wallet
+import VirtualWalletPage from './pages/VirtualWalletPage'
 
 // Profile
 import ProfilePage from './pages/ProfilePage'
@@ -40,6 +42,16 @@ import TermsAndConditionsPage from './pages/about/TermsAndConditionsPage'
 
 // Upgrade Page ✨
 import UpgradePage from './pages/upgrade/UpgradePage'
+
+// Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard"
+import AdminUsers from "./pages/admin/AdminUsers"
+import AdminTransactions from "./pages/admin/AdminTransactions"
+import AdminReports from "./pages/admin/AdminReports"
+import AdminSettings from "./pages/admin/AdminSettings"
+
+// 404 Page
+import NotFoundPage from './pages/NotFoundPage'
 
 const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },
@@ -104,11 +116,21 @@ const routes: RouteObject[] = [
     ),
   },
   {
-    path: '/admin',
+    path: '/transfer',
     element: (
-      <PrivateRoute requiredRole="Admin">
+      <PrivateRoute>
         <PageTransition>
-          <AdminDashboardPage />
+          <TransferPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/virtual-wallet',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <VirtualWalletPage />
         </PageTransition>
       </PrivateRoute>
     ),
@@ -211,6 +233,61 @@ const routes: RouteObject[] = [
       </PrivateRoute>
     ),
   },
+
+  // Admin Routes
+  {
+    path: '/admin',
+    element: (
+      <PrivateRoute requiredRole="Admin">
+        <PageTransition>
+          <AdminDashboard />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/users',
+    element: (
+      <PrivateRoute requiredRole="Admin">
+        <PageTransition>
+          <AdminUsers />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/transactions',
+    element: (
+      <PrivateRoute requiredRole="Admin">
+        <PageTransition>
+          <AdminTransactions />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/reports',
+    element: (
+      <PrivateRoute requiredRole="Admin">
+        <PageTransition>
+          <AdminReports />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/settings',
+    element: (
+      <PrivateRoute requiredRole="Admin">
+        <PageTransition>
+          <AdminSettings />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+
+  // Catch-all route for 404
+  { path: '*', element: <NotFoundPage /> },
 ]
 
 export default routes

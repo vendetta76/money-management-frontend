@@ -46,7 +46,7 @@ const WalletCard: React.FC<WalletCardProps> = ({
 
   return (
     <div
-      className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md p-4 transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+      className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md p-4 transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       style={bgStyle}
       onClick={onClick}
     >
@@ -62,7 +62,7 @@ const WalletCard: React.FC<WalletCardProps> = ({
             e.stopPropagation();
             onEdit();
           }}
-          className="p-1 rounded hover:bg-white/20"
+          className="p-1 rounded hover:bg-white/20 focus:outline-none focus:ring-1 focus:ring-white"
           title={`Edit ${name}`}
         >
           <SquarePen size={16} color={contrastColor} />

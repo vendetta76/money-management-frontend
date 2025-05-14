@@ -1,3 +1,6 @@
+// src/pages/WalletPage.tsx
+// ✅ Added page lock status with PageLockAnnouncement
+
 import React, { useEffect, useState, useRef } from "react";
 import {
   collection,
@@ -20,6 +23,8 @@ import { usePinLock } from "../context/PinLockContext";
 import { toast } from "react-hot-toast";
 import { fixAllWalletBalances } from "../utils/fixWallet";
 import WalletPopupHistory from "../components/WalletPopupHistory";
+import { usePageLockStatus } from "../context/PageLockContext"; // Adjust path as needed
+import PageLockAnnouncement from "../components/PageLockAnnouncement"; // Adjust path as needed
 
 const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com"];
 
@@ -37,6 +42,7 @@ const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { locked, unlock, lock, pin } = usePinLock();
+  const { locked: pageLocked, message } = usePageLockStatus("dashboard", "GLOBAL_ADMIN_ID");
   const [pinLockVisible, setPinLockVisible] = useState(true);
   const [enteredPin, setEnteredPin] = useState("");
   const [pinError, setPinError] = useState("");
@@ -211,6 +217,14 @@ const WalletPage: React.FC = () => {
   return (
     <LayoutShell>
       <main className={`min-h-screen px-4 py-6 max-w-6xl mx-auto transition-all duration-300 ${pinLockVisible ? "blur-md" : ""}`}>
+        <PageLockAnnouncement
+          locked={pageLocked}
+          message={message}
+          currentUserEmail={user?.email || ""}
+          currentUserRole={user?.role || ""}
+          bypassFor={["Admin", "diorvendetta76@gmail.com"]}
+        />
+
         {/* Total Saldo */}
         <div className="mb-6">
           <h2 className="text-xl font-bold mb-4">

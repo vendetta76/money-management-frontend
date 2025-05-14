@@ -1,7 +1,4 @@
-// src/components/OutcomeForm.tsx
-// ✅ Updated handleSubmit and handleQuickSubmit to fix duplicate balance updates
-
-import { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../lib/firebaseClient";
 import {
@@ -10,10 +7,10 @@ import {
   updateDoc,
   serverTimestamp,
   increment,
-  arrayUnion,
   onSnapshot,
   query,
   orderBy,
+  doc,
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "./helpers/formatCurrency";
@@ -47,7 +44,7 @@ const OutcomeForm = () => {
     };
   }, [user]);
 
-  // Global shortcut ENTER → Simpan (hanya jika form valid)
+  // Global Enter key handler for form submission
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
       if (e.key === "Enter" && !editingId && document.activeElement?.tagName !== "TEXTAREA") {
@@ -63,10 +60,14 @@ const OutcomeForm = () => {
     return () => document.removeEventListener("keydown", listener);
   }, [form, editingId]);
 
-  const resetForm = () => {
-    setForm({ wallet: "", description: "", amount: "", currency: "" });
-    setEditingId(null);
-    setErrors({});
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.wallet.trim()) e.wallet = "Dompet wajib dipilih.";
+    if (!form.description.trim()) e.description = "Deskripsi wajib diisi.";
+    if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "")) <= 0)
+      e.amount = "Nominal harus lebih dari 0.";
+    if (!form.currency.trim()) e.currency = "Mata uang wajib dipilih.";
+    return e;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,16 +92,6 @@ const OutcomeForm = () => {
     setErrors({ ...errors, wallet: "", currency: "" });
   };
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (!form.wallet.trim()) e.wallet = "Dompet wajib dipilih.";
-    if (!form.description.trim()) e.description = "Deskripsi wajib diisi.";
-    if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "")) <= 0)
-      e.amount = "Nominal harus lebih dari 0.";
-    if (!form.currency.trim()) e.currency = "Mata uang wajib dipilih.";
-    return e;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const v = validate();
@@ -114,8 +105,7 @@ const OutcomeForm = () => {
     try {
       const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
       if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-        setLoading(false);
-        return;
+        throw new Error("Invalid amount");
       }
 
       const selectedWallet = wallets.find((w) => w.id === form.wallet);
@@ -147,48 +137,37 @@ const OutcomeForm = () => {
   };
 
   const handleQuickSubmit = async () => {
-    const validation = validate();
-    const { wallet, currency } = form;
-    if (!wallet || !currency) {
-      setErrors((prev) => ({ ...prev, wallet: "Dompet wajib dipilih.", currency: "Mata uang wajib dipilih." }));
-      return;
-    }
-    if (!form.description.trim() || !form.amount.trim()) {
-      setErrors({
-        description: !form.description.trim() ? "Deskripsi wajib diisi." : "",
-        amount: !form.amount.trim() || parseFloat(form.amount.replace(/\./g, "")) <= 0
-          ? "Nominal harus lebih dari 0."
-          : "",
-      });
+    const v = validate();
+    if (Object.keys(v).length) {
+      setErrors(v);
       return;
     }
     if (!user) return;
     setLoading(true);
+
     try {
       const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
       if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-        setLoading(false);
-        return;
+        throw new Error("Invalid amount");
       }
-      const selectedWallet = wallets.find((w) => w.id === wallet);
+
+      const selectedWallet = wallets.find((w) => w.id === form.wallet);
       if (selectedWallet && selectedWallet.balance < parsedAmount) {
         alert("Saldo tidak cukup.");
         setLoading(false);
         return;
       }
 
-      const walletRef = doc(db, "users", user.uid, "wallets", wallet);
+      const walletRef = doc(db, "users", user.uid, "wallets", form.wallet);
       await updateDoc(walletRef, { balance: increment(-parsedAmount) });
 
       await addDoc(collection(db, "users", user.uid, "outcomes"), {
-        wallet,
-        currency,
-        description: form.description,
+        ...form,
         amount: parsedAmount,
         createdAt: serverTimestamp(),
       });
 
-      setForm({ wallet, currency, description: "", amount: "" });
+      setForm({ wallet: form.wallet, currency: form.currency, description: "", amount: "" });
       setTimeout(() => descriptionRef.current?.focus(), 50);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
@@ -197,6 +176,12 @@ const OutcomeForm = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setForm({ wallet: "", description: "", amount: "", currency: "" });
+    setEditingId(null);
+    setErrors({});
   };
 
   const getWalletName = (id: string) => wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
@@ -284,10 +269,7 @@ const OutcomeForm = () => {
           {editingId && (
             <button
               type="button"
-              onClick={() => {
-                setForm({ wallet: "", description: "", amount: "", currency: "" });
-                setEditingId(null);
-              }}
+              onClick={resetForm}
               className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
             >
               Batal Edit

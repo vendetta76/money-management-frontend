@@ -1,4 +1,5 @@
 import React from "react";
+import CountUp from "react-countup";
 
 interface WalletTotalOverviewProps {
   totalsByCurrency: Record<string, number>;
@@ -16,19 +17,27 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
         {Object.entries(totalsByCurrency).map(([currency, total]) => (
           <div
             key={currency}
-            className="bg-white shadow-md rounded-lg p-4 border-t-4 border-indigo-500 hover:shadow-lg transition"
+            className="bg-white dark:bg-zinc-800 shadow-md rounded-lg p-4 border-t-4 border-indigo-500 hover:shadow-lg transition"
           >
-            <div className="text-sm text-gray-500 font-medium mb-1">
+            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">
               {currency}
             </div>
-            <div className="text-xl font-bold text-gray-900 tracking-tight">
-              {showBalance
-                ? new Intl.NumberFormat("id-ID", {
+            <div className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+              {showBalance ? (
+                <CountUp
+                  end={total}
+                  duration={1.2}
+                  separator="," 
+                  decimals={0}
+                  prefix={new Intl.NumberFormat("id-ID", {
                     style: "currency",
                     currency,
                     maximumFractionDigits: 0,
-                  }).format(total)
-                : "••••••"}
+                  }).format(0).replace(/\d+/, '')} // ambil prefix symbol aja
+                />
+              ) : (
+                "••••••"
+              )}
             </div>
           </div>
         ))}
