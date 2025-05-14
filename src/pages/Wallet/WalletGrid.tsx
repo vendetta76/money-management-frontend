@@ -34,6 +34,7 @@ interface WalletGridProps {
   showBalance: boolean;
   onEdit: (walletId: string) => void;
   onCardClick: (walletId: string) => void;
+  isMobile?: boolean;
 }
 
 const SortableWalletCard: React.FC<{
@@ -78,6 +79,7 @@ const WalletGrid: React.FC<WalletGridProps> = ({
   showBalance,
   onEdit,
   onCardClick,
+  isMobile = false,
 }) => {
   const [items, setItems] = useState<string[]>([]);
 
@@ -115,7 +117,6 @@ const WalletGrid: React.FC<WalletGridProps> = ({
         const newIndex = prev.indexOf(over.id);
         const newOrder = arrayMove(prev, oldIndex, newIndex);
 
-        // Simpan ke Firestore
         const ref = doc(db, "users", userId);
         setDoc(ref, { walletOrder: newOrder }, { merge: true });
 
@@ -139,6 +140,27 @@ const WalletGrid: React.FC<WalletGridProps> = ({
   }
 
   const sortedWallets = items.map((id) => walletMap[id]).filter(Boolean);
+
+  if (isMobile) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {sortedWallets.map((wallet) => (
+          <WalletCard
+            key={wallet.id}
+            id={wallet.id}
+            name={wallet.name}
+            balance={wallet.balance}
+            currency={wallet.currency}
+            colorStyle={wallet.colorStyle}
+            colorValue={wallet.colorValue}
+            showBalance={showBalance}
+            onEdit={() => onEdit(wallet.id)}
+            onClick={() => onCardClick(wallet.id)}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
