@@ -1,7 +1,22 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import WalletCard from "./WalletCard";
-import { useSortable } from "@dnd-kit/sortable";
+import {
+  useSortable,
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import {
+  DndContext,
+  useSensor,
+  useSensors,
+  MouseSensor,
+  TouchSensor,
+  closestCenter,
+} from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../../lib/firebaseClient";
 
 interface WalletEntry {
   id: string;
@@ -41,8 +56,7 @@ const SortableWalletCard: React.FC<{
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} className="relative group">
-      <div {...listeners} className="absolute inset-0 z-0 cursor-move" />
+    <div ref={setNodeRef} style={style} {...attributes} className="relative">
       <WalletCard
         id={wallet.id}
         name={wallet.name}
@@ -59,24 +73,55 @@ const SortableWalletCard: React.FC<{
 };
 
 const WalletGrid: React.FC<WalletGridProps> = ({
+  userId,
   wallets,
   showBalance,
   onEdit,
   onCardClick,
   isMobile = false,
 }) => {
+  const [items, setItems] = useState<string[]>(wallets.map((w) => w.id));
+
+  useEffect(() => {
+    setItems(wallets.map((w) => w.id));
+  }, [wallets]);
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const handleDragEnd = async (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      const oldIndex = items.indexOf(active.id);
+      const newIndex = items.indexOf(over.id);
+      const newItems = arrayMove(items, oldIndex, newIndex);
+      setItems(newItems);
+      await setDoc(doc(db, "users", userId), { walletOrder: newItems }, { merge: true });
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {wallets.map((wallet) => (
-        <SortableWalletCard
-          key={wallet.id}
-          wallet={wallet}
-          showBalance={showBalance}
-          onEdit={onEdit}
-          onClick={onCardClick}
-        />
-      ))}
-    </div>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={items} strategy={verticalListSortingStrategy}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {items.map((id) => {
+            const wallet = wallets.find((w) => w.id === id);
+            if (!wallet) return null;
+            return (
+              <SortableWalletCard
+                key={wallet.id}
+                wallet={wallet}
+                showBalance={showBalance}
+                onEdit={onEdit}
+                onClick={onCardClick}
+              />
+            );
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 };
 
