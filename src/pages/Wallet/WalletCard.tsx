@@ -72,6 +72,7 @@ const WalletCard: React.FC<WalletCardProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            console.log("EDIT DITEKAN:", name); // ⛳ TEST INI
             onEdit();
           }}
           className="p-1 rounded hover:bg-white/20 focus:outline-none focus:ring-1 focus:ring-white"

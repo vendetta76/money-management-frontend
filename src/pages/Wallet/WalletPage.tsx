@@ -1,3 +1,4 @@
+--- ✅ PATCHED: WalletPage.tsx ---
 import React, { useEffect, useState, useRef } from "react";
 import {
   collection,
@@ -24,29 +25,17 @@ import WalletFormModal from "./WalletFormModal";
 import { useIsBypassed } from "../../hooks/useIsBypassed";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 
-const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com", "fsaaa442@gmail.com", "joeleo1425@gmail.com"];
-
-interface WalletEntry {
-  id?: string;
-  name: string;
-  balance: number;
-  currency: string;
-  createdAt?: any;
-  colorStyle: "solid" | "gradient";
-  colorValue: string | { start: string; end: string };
-}
-
 const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, userMeta } = useAuth();
-  const { locked: pinLocked, unlock, lock, pin } = usePinLock();
-  const { locked, message, isBypassed, userMeta: bypassedUserMeta } = useIsBypassed("wallet");
-  const [wallets, setWallets] = useState<WalletEntry[]>([]);
+  const { locked: pinLocked, unlock, lock } = usePinLock();
+  const { locked, message, isBypassed } = useIsBypassed("wallet");
+  const [wallets, setWallets] = useState<any[]>([]);
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingWallet, setEditingWallet] = useState<WalletEntry | null>(null);
+  const [editingWallet, setEditingWallet] = useState<any | null>(null);
   const [showBalance, setShowBalance] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<{ id: string; name: string; style: React.CSSProperties } | null>(null);
+  const [selectedWallet, setSelectedWallet] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [pinLockVisible, setPinLockVisible] = useState(true);
   const [enteredPin, setEnteredPin] = useState("");
@@ -73,49 +62,25 @@ const WalletPage: React.FC = () => {
   useEffect(() => {
     if (!user?.uid) return;
     const q = query(collection(db, "users", user.uid, "wallets"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        setWallets(
-          snap.docs.map((d) => {
-            const data = d.data() as WalletEntry;
-            return {
-              id: d.id,
-              name: data.name || "",
-              balance: data.balance ?? 0,
-              currency: data.currency || "USD",
-              createdAt: data.createdAt,
-              colorStyle: data.colorStyle || "gradient",
-              colorValue: data.colorValue || { start: "#9333ea", end: "#4f46e5" },
-            };
-          })
-        );
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Firestore error:", err);
-        toast.error("Gagal memuat dompet");
-        setLoading(false);
-      }
-    );
+    const unsub = onSnapshot(q, (snap) => {
+      setWallets(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    }, (err) => {
+      console.error("Firestore error:", err);
+      toast.error("Gagal memuat dompet");
+      setLoading(false);
+    });
     return () => unsub();
   }, [user?.uid]);
 
   useEffect(() => {
     if (!user?.uid) return;
     const ref = doc(db, "users", user.uid);
-    const unsub = onSnapshot(
-      ref,
-      (snap) => {
-        if (snap.exists()) {
-          setWalletOrder(snap.data().walletOrder || []);
-        }
-      },
-      (err) => {
-        console.error("Firestore error:", err);
-        toast.error("Gagal memuat urutan dompet");
+    const unsub = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        setWalletOrder(snap.data().walletOrder || []);
       }
-    );
+    });
     return () => unsub();
   }, [user?.uid]);
 
@@ -133,15 +98,13 @@ const WalletPage: React.FC = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleUnlock();
-    }
+    if (e.key === "Enter") handleUnlock();
   };
 
-  const walletMap = Object.fromEntries(wallets.map((w) => [w.id!, w]));
+  const walletMap = Object.fromEntries(wallets.map((w) => [w.id, w]));
   const orderedWallets = [
     ...walletOrder.map((id) => walletMap[id]).filter(Boolean),
-    ...wallets.filter((w) => !walletOrder.includes(w.id!)),
+    ...wallets.filter((w) => !walletOrder.includes(w.id))
   ];
 
   const totalsByCurrency = orderedWallets.reduce((acc, w) => {
@@ -152,9 +115,7 @@ const WalletPage: React.FC = () => {
   return (
     <LayoutShell>
       <main
-        className={`relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300 ${
-          pinLockVisible || (locked && !isBypassed) ? "blur-md pointer-events-none" : ""
-        }`}
+        className={`relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300 ${pinLockVisible || (locked && !isBypassed) ? "blur-md pointer-events-none" : ""}`}
       >
         {(locked && !isBypassed) && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
@@ -204,9 +165,9 @@ const WalletPage: React.FC = () => {
               >
                 {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
               </button>
-              {allowedRecalcEmails.includes(user?.email || "") && (
+              {user?.email && allowedRecalcEmails.includes(user.email) && (
                 <button
-                  onClick={() => fixAllWalletBalances(user!.uid).then(() => toast.success("Rekalkulasi selesai!"))}
+                  onClick={() => fixAllWalletBalances(user.uid).then(() => toast.success("Rekalkulasi selesai!"))}
                   className="text-sm border px-3 py-1 rounded"
                 >
                   🔁 Rekalkulasi
@@ -238,13 +199,16 @@ const WalletPage: React.FC = () => {
                 wallets={orderedWallets}
                 showBalance={showBalance}
                 isMobile={isMobile}
-                onEdit={(id) => setEditingWallet(walletMap[id])}
+                onEdit={(id) => {
+                  setSelectedWallet(null);
+                  setEditingWallet(walletMap[id]);
+                }}
                 onCardClick={(id) => {
                   if (editingWallet || showForm) return;
                   setSelectedWallet({
                     id,
                     name: walletMap[id].name,
-                    style: {}
+                    style: {},
                   });
                 }}
               />
@@ -254,11 +218,12 @@ const WalletPage: React.FC = () => {
       </main>
 
       <WalletFormModal
-        isOpen={showForm || !!editingWallet}
+        isOpen={!!editingWallet}
         editingData={editingWallet}
         onClose={() => {
           setShowForm(false);
           setEditingWallet(null);
+          setSelectedWallet(null);
         }}
       />
 
