@@ -12,7 +12,7 @@ import LayoutShell from "../../layouts/LayoutShell";
 import WalletGrid from "./WalletGrid";
 import WalletTotalOverview from "./WalletTotalOverview";
 import WalletFormModal from "./WalletFormModal";
-import WalletPopupHistory from "./WalletPopupHistory";
+import WalletPopupHistory from "../../components/WalletPopupHistory";
 import { toast } from "react-hot-toast";
 import { Eye, EyeOff, Plus } from "lucide-react";
 import { usePageLockStatus } from "../../hooks/usePageLockStatus"; // Adjust path as needed
