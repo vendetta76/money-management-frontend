@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { SquarePen } from "lucide-react";
 
 interface WalletCardProps {
@@ -32,6 +32,19 @@ const WalletCard: React.FC<WalletCardProps> = ({
   onEdit,
   onClick,
 }) => {
+  const pointerDownRef = useRef<number>(0);
+
+  const handlePointerDown = () => {
+    pointerDownRef.current = Date.now();
+  };
+
+  const handlePointerUp = () => {
+    const diff = Date.now() - pointerDownRef.current;
+    if (diff < 200) {
+      onClick(); // dianggap klik cepat
+    }
+  };
+
   const bgStyle =
     colorStyle === "solid"
       ? { backgroundColor: colorValue as string }
@@ -50,7 +63,8 @@ const WalletCard: React.FC<WalletCardProps> = ({
     <div
       className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md p-4 transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       style={bgStyle}
-      onClick={onClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
     >
       <div className="flex justify-between items-start">
         <h3 className="text-lg font-semibold truncate" style={{ color: contrastColor }}>
