@@ -1,5 +1,3 @@
-// Updated WalletPage.tsx with modals outside <main> and correct prop usage
-
 import React, { useEffect, useState, useRef } from "react";
 import {
   collection,
@@ -252,9 +250,9 @@ const WalletPage: React.FC = () => {
 
       {selectedWallet && (
         <WalletPopupHistory
-          walletId={selectedWallet.id}
-          walletName={selectedWallet.name}
-          cardStyle={selectedWallet.style}
+          walletId={selectedWallet?.id ?? ""}
+          walletName={selectedWallet?.name ?? ""}
+          cardStyle={selectedWallet?.style ?? {}}
           isOpen={!!selectedWallet}
           onClose={() => setSelectedWallet(null)}
         />

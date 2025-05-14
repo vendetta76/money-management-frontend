@@ -56,6 +56,8 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
     };
   }, [user, walletId]);
 
+  if (!isOpen || !walletId) return null;
+
   const filteredTransactions = transactions.filter(tx => {
     const matchDescription = tx.description?.toLowerCase().includes(search.toLowerCase());
     const matchDate = dateFilter ? format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter : true;
