@@ -24,6 +24,13 @@ import WalletFormModal from "./WalletFormModal";
 import { useIsBypassed } from "../../hooks/useIsBypassed";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 
+const allowedRecalcEmails = [
+  "diorvendetta76@gmail.com",
+  "joeverson.kamantha@gmail.com",
+  "fsaaa442@gmail.com",
+  "joeleo1425@gmail.com"
+];
+
 const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, userMeta } = useAuth();
