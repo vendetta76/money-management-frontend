@@ -20,7 +20,7 @@ export default function AdminSettings() {
   useEffect(() => {
     const fetchLocks = async () => {
       if (!user) return;
-      const ref = doc(db, "users", user.uid);
+      const ref = doc(db, "users", "kJ2inCI7zWRnJcdQtfAUOUkFJqr1");
       const snap = await getDoc(ref);
       if (snap.exists()) {
         const data = snap.data();

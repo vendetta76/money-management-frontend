@@ -1,3 +1,4 @@
+// hooks/usePageLockStatus.ts (versi fix agar semua user baca dari admin global)
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
@@ -7,12 +8,14 @@ interface PageLockData {
   message?: string;
 }
 
-export const usePageLockStatus = (pageKey: string, userId: string | undefined) => {
+// Gantilah ini dengan ID admin yang menyimpan pageLocks
+const GLOBAL_ADMIN_ID = "kJ2inCI7zWRnJcdQtfAUOUkFJqr1";
+
+export const usePageLockStatus = (pageKey: string) => {
   const [lockStatus, setLockStatus] = useState<PageLockData>({ locked: false });
 
   useEffect(() => {
-    if (!userId) return;
-    const ref = doc(db, "users", userId);
+    const ref = doc(db, "users", GLOBAL_ADMIN_ID);
     const unsub = onSnapshot(ref, (snap) => {
       if (snap.exists()) {
         const data = snap.data();
@@ -21,7 +24,7 @@ export const usePageLockStatus = (pageKey: string, userId: string | undefined) =
       }
     });
     return () => unsub();
-  }, [userId, pageKey]);
+  }, [pageKey]);
 
   return lockStatus;
 };
