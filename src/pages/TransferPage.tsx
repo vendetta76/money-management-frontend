@@ -140,7 +140,7 @@ const TransferPage: React.FC = () => {
 
         // Rollback saldo lama
         const fromRef = doc(db, "users", user.uid, "wallets", editingTransfer.fromWalletId);
-        const toRef = doc(db, "users", user.uid, "wallets", editingTransfer.to estágioId);
+        const toRef = doc(db, "users", user.uid, "wallets", editingTransfer.toWalletId);
 
         await updateDoc(fromRef, {
           balance: fromWallet.balance + previousAmount,
