@@ -21,7 +21,17 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
 
-  if (!isOpen || !walletId || walletId === "" || !walletName) return null;
+  console.log("🧪 WalletPopup props", { isOpen, walletId, walletName, cardStyle });
+
+  if (!isOpen || !walletId || walletId === "" || !walletName || cardStyle == null) {
+    console.warn("❌ WalletPopup render dihindari karena data tidak lengkap", {
+      isOpen,
+      walletId,
+      walletName,
+      cardStyle,
+    });
+    return null;
+  }
 
   useEffect(() => {
     if (!isOpen || !walletId || walletId === "" || !user) return;
@@ -60,7 +70,9 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
 
   const filteredTransactions = transactions.filter(tx => {
     const matchDescription = tx.description?.toLowerCase().includes(search.toLowerCase());
-    const matchDate = dateFilter ? format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter : true;
+    const matchDate = dateFilter && tx.createdAt?.seconds
+      ? format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter
+      : true;
     return matchDescription && matchDate;
   });
 
