@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import Select from "react-select";
-import { db } from "../lib/firebaseClient";
+import { db } from "../../lib/firebaseClient";
 import { doc, updateDoc, addDoc, collection, serverTimestamp, deleteDoc } from "firebase/firestore";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 
 interface WalletFormModalProps {
