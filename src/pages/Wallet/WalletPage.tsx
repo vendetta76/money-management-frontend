@@ -10,18 +10,21 @@ import {
   orderBy,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../lib/firebaseClient";
-import { useAuth } from "../context/AuthContext";
-import { usePinLock } from "../context/PinLockContext";
-import LayoutShell from "../layouts/LayoutShell";
+import { db } from "../../lib/firebaseClient";
+import { useAuth } from "../../context/AuthContext";
+import { usePinLock } from "../../context/PinLockContext";
+import LayoutShell from "../../layouts/LayoutShell";
 import { Plus, X, Eye, EyeOff, SquarePen, Lock } from "lucide-react";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { fixAllWalletBalances } from "../utils/fixWallet";
-import WalletPopupHistory from "../components/WalletPopupHistory";
-import { useIsBypassed } from "../hooks/useIsBypassed";
-import PageLockAnnouncement from "../components/PageLockAnnouncement";
+import { fixAllWalletBalances } from "../../utils/fixWallet";
+import WalletPopupHistory from "../../components/WalletPopupHistory";
+import WalletTotalOverview from "./WalletTotalOverview";
+import WalletGrid from "./WalletGrid";
+import WalletFormModal from "./WalletFormModal";
+import { useIsBypassed } from "../../hooks/useIsBypassed";
+import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 
 const allowedRecalcEmails = [
   "diorvendetta76@gmail.com",
@@ -53,7 +56,17 @@ const WalletPage: React.FC = () => {
   const [pinLockVisible, setPinLockVisible] = useState(true);
   const [enteredPin, setEnteredPin] = useState("");
   const [pinError, setPinError] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const pinInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!pinLocked) setPinLockVisible(false);
@@ -205,6 +218,7 @@ const WalletPage: React.FC = () => {
                 userId={user?.uid || ""}
                 wallets={orderedWallets}
                 showBalance={showBalance}
+                isMobile={isMobile}
                 onEdit={(id) => setEditingWallet(walletMap[id])}
                 onCardClick={(id) => setSelectedWallet({ id, name: walletMap[id].name, style: {} })}
               />
@@ -221,7 +235,7 @@ const WalletPage: React.FC = () => {
           />
 
           {selectedWallet && (
-            <WalletPopupHistory
+            < WalletPopupHistory
               walletId={selectedWallet.id}
               walletName={selectedWallet.name}
               cardStyle={selectedWallet.style}
