@@ -52,6 +52,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           {editing ? "Edit Wallet" : "Tambah Wallet"}
         </h3>
 
+        {/* Nama Wallet */}
         <div className="mb-3">
           <input
             name="name"
@@ -65,15 +66,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           )}
         </div>
 
-        <div className="mb-3">
-          <input
-            type="text"
-            disabled
-            value={form.balance}
-            className="w-full px-4 py-2 border rounded bg-gray-100"
-          />
-        </div>
-
+        {/* Pilih Mata Uang */}
         <div className="mb-4">
           <Select
             options={currencyOptions}
@@ -86,6 +79,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           )}
         </div>
 
+        {/* Pilih Gaya Warna */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">
             Pilih Gaya Warna
@@ -100,6 +94,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           />
         </div>
 
+        {/* Input Warna */}
         <div className="mb-4">
           {form.colorStyle === "solid" ? (
             <div>
@@ -108,7 +103,11 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
               </label>
               <input
                 type="color"
-                value={form.colorValue as string}
+                value={
+                  typeof form.colorValue === "string"
+                    ? form.colorValue
+                    : "#9333ea"
+                }
                 onChange={(e) => onChange("colorValue", e.target.value)}
                 className="w-full h-10 border rounded"
               />
@@ -152,6 +151,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           )}
         </div>
 
+        {/* Preview Warna */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">
             Pratinjau Warna
@@ -160,7 +160,12 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
             className="w-full h-12 rounded border"
             style={
               form.colorStyle === "solid"
-                ? { backgroundColor: form.colorValue as string }
+                ? {
+                    backgroundColor:
+                      typeof form.colorValue === "string"
+                        ? form.colorValue
+                        : "#9333ea",
+                  }
                 : {
                     background: `linear-gradient(to bottom right, ${
                       (form.colorValue as any)?.start ?? "#9333ea"
@@ -170,6 +175,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           />
         </div>
 
+        {/* Tombol Aksi */}
         <div className="flex justify-between items-center">
           {editing && onDelete && (
             <button
