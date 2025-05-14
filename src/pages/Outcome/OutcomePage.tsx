@@ -2,7 +2,7 @@ import LayoutShell from "../../layouts/LayoutShell";
 import OutcomeForm from "./OutcomeForm";
 import RecentOutcomeTransactions from "./RecentOutcomeTransactions";
 import { useAuth } from "../../context/AuthContext";
-import { usePageLockStatus } from "import { usePageLockStatus } from "../../hooks/usePageLockStatus";"; // Adjust path as needed
+import { usePageLockStatus } from "../../hooks/usePageLockStatus"; // Adjust path as needed
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"; // Adjust path as needed
 
 const OutcomePage = () => {

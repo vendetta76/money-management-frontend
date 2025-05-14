@@ -1,6 +1,3 @@
-// WalletPage.tsx (dengan loading skeleton & responsive layout)
-// ✅ Added page lock status with PageLockAnnouncement
-
 import React, { useEffect, useState } from "react";
 import {
   collection,
@@ -18,7 +15,7 @@ import WalletFormModal from "./WalletFormModal";
 import WalletPopupHistory from "./WalletPopupHistory";
 import { toast } from "react-hot-toast";
 import { Eye, EyeOff, Plus } from "lucide-react";
-import { usePageLockStatus } from "import { usePageLockStatus } from "../../hooks/usePageLockStatus";"; // Adjust path as needed
+import { usePageLockStatus } from "../../hooks/usePageLockStatus"; // Adjust path as needed
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"; // Adjust path as needed
 
 const allowedRecalcEmails = [
