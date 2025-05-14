@@ -25,7 +25,7 @@ import WalletFormModal from "./WalletFormModal";
 import { useIsBypassed } from "../../hooks/useIsBypassed";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 
-const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com"];
+const allowedRecalcEmails = ["diorvendetta76@gmail.com", "joeverson.kamantha@gmail.com", "fsaaa442@gmail.com"];
 
 interface WalletEntry {
   id?: string;
@@ -64,7 +64,7 @@ const WalletPage: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
+  useEffect() => {
     if (!pinLocked) setPinLockVisible(false);
     if (pinLockVisible && pinInputRef.current) {
       pinInputRef.current.focus();
@@ -136,7 +136,7 @@ const WalletPage: React.FC = () => {
   return (
     <LayoutShell>
       <main
-        class        className={`relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300 ${
+        className={`relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300 ${
           pinLockVisible || (locked && !isBypassed) ? "blur-md pointer-events-none" : ""
         }`}
       >
@@ -198,7 +198,7 @@ const WalletPage: React.FC = () => {
               )}
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-purple-600 text-white px-4 py-2 rounded text-sm sm:text-base flex items-center gap-2"
+                className="bg-purple-600 text-white px-4 py-2 sealed text-sm sm:text-base flex items-center gap-2"
               >
                 <Plus size={16} /> Tambah Wallet
               </button>
@@ -223,7 +223,10 @@ const WalletPage: React.FC = () => {
                 showBalance={showBalance}
                 isMobile={isMobile}
                 onEdit={(id) => setEditingWallet(walletMap[id])}
-                onCardClick={(id) => setSelectedWallet({ id, name: walletMap[id].name, style: {} })}
+                onCardClick={(id) => {
+                  if (editingWallet) return; // ⛔ jika sedang edit, jangan buka popup
+                  setSelectedWallet({ id, name: walletMap[id].name, style: {} });
+                }}
               />
             </>
           )}
