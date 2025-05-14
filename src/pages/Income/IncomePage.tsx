@@ -7,7 +7,7 @@ import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"; 
 
 const IncomePage = () => {
   const { user } = useAuth();
-  const { locked, message } = usePageLockStatus("dashboard", "GLOBAL_ADMIN_ID");
+  const { locked, message } = usePageLockStatus("income", "GLOBAL_ADMIN_ID");
 
   return (
     <LayoutShell>

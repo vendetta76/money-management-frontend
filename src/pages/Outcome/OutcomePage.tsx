@@ -7,7 +7,7 @@ import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement"; 
 
 const OutcomePage = () => {
   const { user } = useAuth();
-  const { locked, message } = usePageLockStatus("dashboard", "GLOBAL_ADMIN_ID");
+  const { locked, message } = usePageLockStatus("outcome", "GLOBAL_ADMIN_ID");
 
   return (
     <LayoutShell>

@@ -15,6 +15,9 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
+// Add the new imports
+import { usePageLockStatus } from "../hooks/usePageLockStatus";
+import PageLockAnnouncement from "../components/PageLockAnnouncement";
 
 interface WalletEntry {
   id: string;
@@ -52,6 +55,8 @@ const formatNominal = (num: number, currency: string) => {
 
 const TransferPage: React.FC = () => {
   const { user } = useAuth();
+  // Add page lock status
+  const { locked, message } = usePageLockStatus("transfer", "GLOBAL_ADMIN_ID");
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [fromWalletId, setFromWalletId] = useState("");
   const [toWalletId, setToWalletId] = useState("");
@@ -237,6 +242,15 @@ const TransferPage: React.FC = () => {
       toast.error("Gagal hapus transaksi: " + err.message);
     }
   };
+
+  // Conditionally render based on lock status
+  if (locked) {
+    return (
+      <LayoutShell>
+        <PageLockAnnouncement message={message} />
+      </LayoutShell>
+    );
+  }
 
   return (
     <LayoutShell>

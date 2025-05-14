@@ -35,7 +35,7 @@ interface WalletEntry {
 
 const WalletPage: React.FC = () => {
   const { user } = useAuth();
-  const { locked, message } = usePageLockStatus("dashboard", "GLOBAL_ADMIN_ID");
+  const { locked, message } = usePageLockStatus("wallet", "GLOBAL_ADMIN_ID");
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
