@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import Select from "react-select";
 import { db } from "../../lib/firebaseClient";
-import { doc, updateDoc, addDoc, collection, serverTimestamp, deleteDoc } from "firebase/firestore";
+import { doc, updateDoc, addDoc, deleteDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 
 interface WalletFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  editingData?: any; // WalletEntry type optional
+  editingData?: any;
 }
 
 const currencyOptions = [
@@ -45,8 +45,8 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
   const [form, setForm] = useState({
     name: "",
     currency: "",
-    colorStyle: "gradient" as "solid" | "gradient",
-    colorValue: { start: "#9333ea", end: "#4f46e5" } as string | { start: string; end: string },
+    colorStyle: "gradient",
+    colorValue: { start: "#9333ea", end: "#4f46e5" },
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -58,15 +58,8 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
         colorStyle: editingData.colorStyle || "gradient",
         colorValue: editingData.colorValue || { start: "#9333ea", end: "#4f46e5" },
       });
-    } else {
-      setForm({
-        name: "",
-        currency: "",
-        colorStyle: "gradient",
-        colorValue: { start: "#9333ea", end: "#4f46e5" },
-      });
     }
-  }, [editingData, isOpen]);
+  }, [editingData]);
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -77,29 +70,24 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
     const newErrors: Record<string, string> = {};
     if (!form.name.trim()) newErrors.name = "Nama wallet wajib diisi";
     if (!form.currency) newErrors.currency = "Pilih mata uang";
+
     if (Object.keys(newErrors).length) return setErrors(newErrors);
 
     try {
       const payload = {
         name: form.name,
         currency: form.currency,
-        balance: editingData?.balance ?? 0,
         colorStyle: form.colorStyle,
         colorValue: form.colorValue,
+        balance: editingData?.balance ?? 0,
         createdAt: editingData?.createdAt ?? serverTimestamp(),
       };
 
       if (editingData?.id) {
-        await updateDoc(
-          doc(db, "users", user!.uid, "wallets", editingData.id),
-          payload
-        );
+        await updateDoc(doc(db, "users", user!.uid, "wallets", editingData.id), payload);
         toast.success("Wallet diperbarui");
       } else {
-        await addDoc(
-          collection(db, "users", user!.uid, "wallets"),
-          payload
-        );
+        await addDoc(collection(db, "users", user!.uid, "wallets"), payload);
         toast.success("Wallet ditambahkan");
       }
 
@@ -141,7 +129,9 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           <X size={20} />
         </button>
 
-        <h3 className="mb-4 font-semibold">{editingData ? "Edit Wallet" : "Tambah Wallet"}</h3>
+        <h3 className="mb-4 font-semibold">
+          {editingData ? "Edit Wallet" : "Tambah Wallet"}
+        </h3>
 
         <div className="mb-3">
           <input
@@ -169,9 +159,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           <Select
             options={colorStyleOptions}
             value={colorStyleOptions.find((o) => o.value === form.colorStyle)}
-            onChange={(sel) =>
-              handleChange("colorStyle", sel?.value || "gradient")
-            }
+            onChange={(sel) => handleChange("colorStyle", sel?.value || "gradient")}
           />
         </div>
 
