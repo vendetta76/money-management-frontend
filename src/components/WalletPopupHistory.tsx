@@ -21,6 +21,8 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
 
+  if (!isOpen || !walletId || walletId === "") return null;
+
   useEffect(() => {
     if (!user || !walletId) return;
 
@@ -55,8 +57,6 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
       unsubTransfer();
     };
   }, [user, walletId]);
-
-  if (!isOpen || !walletId) return null;
 
   const filteredTransactions = transactions.filter(tx => {
     const matchDescription = tx.description?.toLowerCase().includes(search.toLowerCase());
