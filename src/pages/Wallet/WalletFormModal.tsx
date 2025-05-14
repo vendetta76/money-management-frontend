@@ -1,44 +1,90 @@
-import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import Select from "react-select";
 
 interface WalletFormModalProps {
   isOpen: boolean;
-  form: {
+  onClose: () => void;
+  onSubmit: (data: {
     name: string;
-    balance: string;
     currency: string;
     colorStyle: "solid" | "gradient";
     colorValue: string | { start: string; end: string };
-  };
-  errors: Record<string, string>;
-  onClose: () => void;
-  onChange: (field: string, value: any) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  onDelete?: () => void;
-  editing: boolean;
-  currencyOptions: { value: string; label: string }[];
-  colorStyleOptions: { value: "solid" | "gradient"; label: string }[];
+  }) => void;
+  editingData?: any;
 }
+
+const currencyOptions = [
+  { value: "IDR", label: "IDR - Rupiah" },
+  { value: "USD", label: "USD - US Dollar" },
+  { value: "EUR", label: "EUR - Euro" },
+  { value: "JPY", label: "JPY - Yen" },
+  { value: "THB", label: "THB - Baht" },
+  { value: "SGD", label: "SGD - Singapore Dollar" },
+  { value: "AUD", label: "AUD - Australian Dollar" },
+  { value: "CAD", label: "CAD - Canadian Dollar" },
+  { value: "GBP", label: "GBP - Pound Sterling" },
+  { value: "CHF", label: "CHF - Swiss Franc" },
+  { value: "CNY", label: "CNY - Yuan" },
+  { value: "VND", label: "VND - Dong" },
+  { value: "PHP", label: "PHP - Peso" },
+  { value: "MYR", label: "MYR - Ringgit" },
+  { value: "KRW", label: "KRW - Won" },
+  { value: "HKD", label: "HKD - Hong Kong Dollar" },
+];
+
+const colorStyleOptions = [
+  { value: "solid", label: "Solid" },
+  { value: "gradient", label: "Gradient" },
+];
 
 const WalletFormModal: React.FC<WalletFormModalProps> = ({
   isOpen,
-  form,
-  errors,
   onClose,
-  onChange,
   onSubmit,
-  onDelete,
-  editing,
-  currencyOptions,
-  colorStyleOptions,
+  editingData,
 }) => {
+  const [form, setForm] = useState({
+    name: editingData?.name || "",
+    currency: editingData?.currency || "",
+    colorStyle: editingData?.colorStyle || "gradient",
+    colorValue: editingData?.colorValue || {
+      start: "#9333ea",
+      end: "#4f46e5",
+    },
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleChange = (field: string, value: any) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    if (!form.name.trim()) newErrors.name = "Nama wallet wajib diisi";
+    if (!form.currency) newErrors.currency = "Pilih mata uang";
+
+    if (Object.keys(newErrors).length) return setErrors(newErrors);
+
+    onSubmit(form);
+    setForm({
+      name: "",
+      currency: "",
+      colorStyle: "gradient",
+      colorValue: { start: "#9333ea", end: "#4f46e5" },
+    });
+    setErrors({});
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 pointer-events-auto">
       <form
-        onSubmit={onSubmit}
+        onSubmit={handleSubmit}
         className="bg-white p-6 rounded-xl max-w-sm w-full relative"
       >
         <button
@@ -48,16 +94,14 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
         >
           <X size={20} />
         </button>
-        <h3 className="mb-4 font-semibold">
-          {editing ? "Edit Wallet" : "Tambah Wallet"}
-        </h3>
 
-        {/* Nama Wallet */}
+        <h3 className="mb-4 font-semibold">Tambah Wallet</h3>
+
         <div className="mb-3">
           <input
             name="name"
             value={form.name}
-            onChange={(e) => onChange("name", e.target.value)}
+            onChange={(e) => handleChange("name", e.target.value)}
             placeholder="Nama Wallet"
             className="w-full px-4 py-2 border rounded"
           />
@@ -66,12 +110,13 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           )}
         </div>
 
-        {/* Pilih Mata Uang */}
         <div className="mb-4">
           <Select
             options={currencyOptions}
             value={currencyOptions.find((o) => o.value === form.currency)}
-            onChange={(sel) => onChange("currency", sel?.value || "")}
+            onChange={(sel) =>
+              handleChange("currency", sel?.value || "")
+            }
             placeholder="Pilih mata uang"
           />
           {errors.currency && (
@@ -79,77 +124,71 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           )}
         </div>
 
-        {/* Pilih Gaya Warna */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">
             Pilih Gaya Warna
           </label>
           <Select
             options={colorStyleOptions}
-            value={colorStyleOptions.find((o) => o.value === form.colorStyle)}
+            value={colorStyleOptions.find(
+              (o) => o.value === form.colorStyle
+            )}
             onChange={(sel) =>
-              onChange("colorStyle", sel?.value || "gradient")
+              handleChange("colorStyle", sel?.value || "gradient")
             }
             placeholder="Pilih gaya warna"
           />
         </div>
 
-        {/* Input Warna */}
-        <div className="mb-4">
-          {form.colorStyle === "solid" ? (
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Pilih Warna
-              </label>
+        {form.colorStyle === "solid" ? (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Pilih Warna
+            </label>
+            <input
+              type="color"
+              value={
+                typeof form.colorValue === "string"
+                  ? form.colorValue
+                  : "#9333ea"
+              }
+              onChange={(e) =>
+                handleChange("colorValue", e.target.value)
+              }
+              className="w-full h-10 border rounded"
+            />
+          </div>
+        ) : (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Pilih Warna Gradient
+            </label>
+            <div className="flex gap-2">
               <input
                 type="color"
-                value={
-                  typeof form.colorValue === "string"
-                    ? form.colorValue
-                    : "#9333ea"
+                value={(form.colorValue as any)?.start ?? "#9333ea"}
+                onChange={(e) =>
+                  handleChange("colorValue", {
+                    ...(form.colorValue as any),
+                    start: e.target.value,
+                  })
                 }
-                onChange={(e) => onChange("colorValue", e.target.value)}
-                className="w-full h-10 border rounded"
+                className="h-10 w-full border rounded"
+              />
+              <input
+                type="color"
+                value={(form.colorValue as any)?.end ?? "#4f46e5"}
+                onChange={(e) =>
+                  handleChange("colorValue", {
+                    ...(form.colorValue as any),
+                    end: e.target.value,
+                  })
+                }
+                className="h-10 w-full border rounded"
               />
             </div>
-          ) : (
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Pilih Warna Gradient
-              </label>
-              <div className="flex space-x-2">
-                <div>
-                  <label className="text-sm">Warna Awal</label>
-                  <input
-                    type="color"
-                    value={(form.colorValue as any)?.start ?? "#9333ea"}
-                    onChange={(e) =>
-                      onChange("colorValue", {
-                        ...(form.colorValue as any),
-                        start: e.target.value,
-                      })
-                    }
-                    className="w-full h-10 border rounded"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm">Warna Akhir</label>
-                  <input
-                    type="color"
-                    value={(form.colorValue as any)?.end ?? "#4f46e5"}
-                    onChange={(e) =>
-                      onChange("colorValue", {
-                        ...(form.colorValue as any),
-                        end: e.target.value,
-                      })
-                    }
-                    className="w-full h-10 border rounded"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Preview Warna */}
         <div className="mb-4">
@@ -175,21 +214,12 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           />
         </div>
 
-        {/* Tombol Aksi */}
-        <div className="flex justify-between items-center">
-          {editing && onDelete && (
-            <button
-              type="button"
-              onClick={onDelete}
-              className="text-red-600"
-            >
-              Hapus Wallet
-            </button>
-          )}
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">
-            {editing ? "Simpan" : "Tambah"}
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+        >
+          Simpan
+        </button>
       </form>
     </div>
   );
