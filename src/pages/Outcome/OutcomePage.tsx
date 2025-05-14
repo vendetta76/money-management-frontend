@@ -6,7 +6,7 @@ import { usePageLockStatus } from "../../hooks/usePageLockStatus";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 
 const OutcomePage = () => {
-  const { user } = useAuth();
+  const { user, userMeta } = useAuth();
   const { locked, message } = usePageLockStatus("outcome");
 
   return (
@@ -18,8 +18,8 @@ const OutcomePage = () => {
               locked={true}
               message={message}
               currentUserEmail={user?.email || ""}
-              currentUserRole={user?.role || ""}
-              bypassFor={["Admin", "diorvendetta76@gmail.com"]}
+              currentUserRole={userMeta?.role || ""}
+              bypassFor={["Admin", "Staff", "Tester"]}
             />
           </div>
         )}

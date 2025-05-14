@@ -251,7 +251,7 @@ const TransferPage: React.FC = () => {
               message={message}
               currentUserEmail={user?.email || ""}
               currentUserRole={user?.role}
-              bypassFor={["Admin", "diorvendetta76@gmail.com"]}
+              bypassFor={["Admin", "Staff", "Tester"]}
             />
           </div>
         )}
