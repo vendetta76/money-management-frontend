@@ -17,7 +17,7 @@ import {
   ChevronUp
 } from "lucide-react"
 import { usePageLockStatus } from "../hooks/usePageLockStatus"
-import PageLockAnnouncement from "../components/PageLockAnnouncement"
+import PageLockAnnouncement from "../pages/admin/PageLockAnnouncement"
 
 interface EditEntry {
   description: string
