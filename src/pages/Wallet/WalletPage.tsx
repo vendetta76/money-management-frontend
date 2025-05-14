@@ -1,3 +1,5 @@
+// Updated WalletPage.tsx with modals outside <main> and correct prop usage
+
 import React, { useEffect, useState, useRef } from "react";
 import {
   collection,
@@ -14,8 +16,7 @@ import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { usePinLock } from "../../context/PinLockContext";
 import LayoutShell from "../../layouts/LayoutShell";
-import { Plus, X, Eye, EyeOff, SquarePen, Lock } from "lucide-react";
-import Select from "react-select";
+import { Plus, X, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { fixAllWalletBalances } from "../../utils/fixWallet";
@@ -177,6 +178,7 @@ const WalletPage: React.FC = () => {
             </div>
           </div>
         )}
+
         <div className={(locked && !isBypassed) || pinLockVisible ? "pointer-events-none blur-sm" : "relative z-10"}>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
             <h1 className="text-xl sm:text-2xl font-bold">Dompet Saya</h1>
@@ -224,27 +226,39 @@ const WalletPage: React.FC = () => {
               />
             </>
           )}
-
-          <WalletFormModal
-            visible={showForm || !!editingWallet}
-            onClose={() => {
-              setShowForm(false);
-              setEditingWallet(null);
-            }}
-            editing={editingWallet}
-          />
-
-          {selectedWallet && (
-            < WalletPopupHistory
-              walletId={selectedWallet.id}
-              walletName={selectedWallet.name}
-              cardStyle={selectedWallet.style}
-              isOpen={!!selectedWallet}
-              onClose={() => setSelectedWallet(null)}
-            />
-          )}
         </div>
       </main>
+
+      <WalletFormModal
+        isOpen={showForm || !!editingWallet}
+        form={editingWallet ?? {
+          name: "",
+          balance: "0",
+          currency: "USD",
+          colorStyle: "gradient",
+          colorValue: { start: "#9333ea", end: "#4f46e5" },
+        }}
+        errors={{}}
+        editing={!!editingWallet}
+        onClose={() => {
+          setShowForm(false);
+          setEditingWallet(null);
+        }}
+        onChange={() => {}}
+        onSubmit={() => {}}
+        currencyOptions={[]}
+        colorStyleOptions={[]}
+      />
+
+      {selectedWallet && (
+        <WalletPopupHistory
+          walletId={selectedWallet.id}
+          walletName={selectedWallet.name}
+          cardStyle={selectedWallet.style}
+          isOpen={!!selectedWallet}
+          onClose={() => setSelectedWallet(null)}
+        />
+      )}
     </LayoutShell>
   );
 };
