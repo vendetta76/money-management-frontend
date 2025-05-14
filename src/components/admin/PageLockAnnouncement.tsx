@@ -5,7 +5,7 @@ interface PageLockAnnouncementProps {
   message?: string;
   currentUserEmail: string;
   currentUserRole?: string;
-  bypassFor?: string[]; // list of allowed emails or roles
+  bypassFor?: string[];
 }
 
 const PageLockAnnouncement: React.FC<PageLockAnnouncementProps> = ({
@@ -13,13 +13,24 @@ const PageLockAnnouncement: React.FC<PageLockAnnouncementProps> = ({
   message,
   currentUserEmail,
   currentUserRole,
-  bypassFor = ["diorvendetta76@gmail.com", "Admin"],
+  bypassFor = ["Admin", "Staff", "Tester"],
 }) => {
-  const normalizedBypass = bypassFor.map((entry) => entry.toLowerCase());
-  const isBypassed =
-    normalizedBypass.includes(currentUserEmail?.toLowerCase() || "") ||
-  (currentUserRole && normalizedBypass.includes(currentUserRole.toLowerCase()));
+  const normalizedBypass = bypassFor.map((b) => b.toLowerCase());
+  const email = currentUserEmail?.toLowerCase() || "";
+  const role = currentUserRole?.toLowerCase() || "";
 
+  const isBypassed =
+    normalizedBypass.includes(email) || normalizedBypass.includes(role);
+
+  console.log("🚨 DEBUG PageLock", {
+    locked,
+    currentUserEmail,
+    currentUserRole,
+    isBypassed,
+    bypassFor,
+  });
+
+  if (!currentUserEmail) return null;
   if (!locked || isBypassed) return null;
 
   return (

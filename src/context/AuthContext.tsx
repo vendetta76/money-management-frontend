@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 
 interface UserMeta {
-  role: "Regular" | "Premium" | "Admin";
+  role: "Regular" | "Premium" | "Admin" | "Staff" | "Tester";
   premiumStartDate?: string;
   premiumEndDate?: string;
   daysLeft?: number;
@@ -44,11 +44,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const docRef = doc(db, "users", currentUser.uid);
           const docSnap = await getDoc(docRef);
 
-          let role: "Regular" | "Premium" | "Admin" = hasAdminClaim ? "Admin" : "Regular";
+          let role: UserMeta["role"] = hasAdminClaim ? "Admin" : "Regular";
 
           if (docSnap.exists()) {
             const data = docSnap.data();
             const firestoreRole = data.role || "Regular";
+            const allowedRoles = ["Regular", "Premium", "Admin", "Staff", "Tester"];
 
             if (hasAdminClaim) {
               role = "Admin";
@@ -56,11 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 await setDoc(docRef, { role: "Admin" }, { merge: true });
               }
             } else {
-              role = firestoreRole === "premium"
-                ? "Premium"
-                : firestoreRole === "admin"
-                ? "Admin"
-                : "Regular";
+              role = allowedRoles.includes(firestoreRole) ? firestoreRole : "Regular";
             }
 
             const premiumStartDate = data.premiumStartDate;
