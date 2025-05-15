@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 
-import LayoutShell from '@/layouts/LayoutShell';
-import { useAuth } from '@/context/AuthContext';
-import { db } from '@/lib/firebaseClient';
+import LayoutShell from '../../layouts/LayoutShell';
+import { useAuth } from '../../context/AuthContext';
+import { db } from '../../lib/firebaseClient';
 
 // Modular Components
 import DashboardFilters from './DashboardFilters';
@@ -167,3 +167,5 @@ export default function DashboardPage() {
       </main>
     </LayoutShell>
   );
+
+  export default DashboardPage;
