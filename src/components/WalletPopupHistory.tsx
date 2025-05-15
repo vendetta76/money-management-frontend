@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -10,9 +10,25 @@ import IncomeForm from "../pages/Income/IncomeForm";
 import OutcomeForm from "../pages/Outcome/OutcomeForm";
 import WalletCard from "../pages/Wallet/WalletCard";
 
-const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
+interface WalletEntry {
+  id: string;
+  name: string;
+  balance: number;
+  currency: string;
+  colorStyle: "solid" | "gradient";
+  colorValue: string | { start?: string; end?: string };
+}
+
+interface WalletPopupProps {
+  walletId: string;
+  wallets: WalletEntry[];
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, onClose }) => {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [showIncomeForm, setShowIncomeForm] = useState(false);
@@ -53,13 +69,16 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
       unsubOut();
       unsubTransfer();
     };
-  }, [user, walletId]);
+  }, [user, walletId, isOpen]);
 
   const filteredTransactions = transactions.filter(tx => {
-    const matchDescription = tx.description?.toLowerCase().includes(search.toLowerCase());
-    const matchDate = dateFilter && tx.createdAt?.seconds
-      ? format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter
-      : true;
+    const matchDescription =
+      !search || tx.description?.toLowerCase().includes(search.toLowerCase());
+    const matchDate =
+      !dateFilter || (
+        tx.createdAt?.seconds &&
+        format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter
+      );
     return matchDescription && matchDate;
   });
 
@@ -90,7 +109,7 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
               showBalance={showBalance}
               onEdit={() => {}}
               onClick={() => {}}
-              showEdit={false} // <- pastikan WalletCard support ini
+              showEdit={false} // tambahkan ke WalletCard agar ikon pensil hilang
             />
           </div>
         )}
@@ -145,19 +164,21 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
           />
         </div>
 
-        {/* List Transaksi */}
+        {/* Daftar transaksi */}
         <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
-          {filteredTransactions.length ? filteredTransactions.map(tx => (
-            <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
-              <div className="flex items-center gap-3">
-                {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
-                {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
-                {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                <span className="font-medium truncate">{tx.description || "Transfer"}</span>
+          {filteredTransactions.length ? (
+            filteredTransactions.map(tx => (
+              <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
+                <div className="flex items-center gap-3">
+                  {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
+                  {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
+                  {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
+                  <span className="font-medium truncate">{tx.description || "Transfer"}</span>
+                </div>
+                <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
               </div>
-              <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
-            </div>
-          )) : (
+            ))
+          ) : (
             <div className="text-center text-gray-500">Tidak ada transaksi ditemukan.</div>
           )}
         </div>
