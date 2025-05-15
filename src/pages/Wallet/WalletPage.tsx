@@ -52,6 +52,7 @@ const WalletPage: React.FC = () => {
   const [editingWallet, setEditingWallet] = useState<WalletData | null>(null);
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showBalance, setShowBalance] = useState(true);
   const [pinLockVisible, setPinLockVisible] = useState(true);
   const [enteredPin, setEnteredPin] = useState("");
   const [pinError, setPinError] = useState("");
