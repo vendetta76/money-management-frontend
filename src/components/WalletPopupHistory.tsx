@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import IncomeForm from "../pages/Income/IncomeForm";
 import OutcomeForm from "../pages/Outcome/OutcomeForm";
+import WalletCard from "./WalletCard";
 
 interface WalletEntry {
   id: string;
@@ -23,9 +24,10 @@ interface WalletPopupProps {
   wallets: WalletEntry[];
   isOpen: boolean;
   onClose: () => void;
+  showBalance: boolean;
 }
 
-const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, onClose }) => {
+const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, onClose, showBalance }) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -45,22 +47,6 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
     });
     return null;
   }
-
-  const getCardStyle = (wallet: WalletEntry) => {
-    if (!wallet) return {};
-
-    if (wallet.colorStyle === "solid") {
-      return { background: wallet.colorValue as string };
-    }
-
-    const gradient = wallet.colorValue as { start?: string; end?: string };
-    const start = gradient?.start || "#ccc"; // fallback default
-    const end = gradient?.end || "#eee";
-
-    return {
-      background: `linear-gradient(to right, ${start}, ${end})`
-    };
-  };
 
   useEffect(() => {
     if (!isOpen || !walletId || walletId === "" || !user) return;
@@ -115,22 +101,25 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
           <DialogTitle className="text-xl font-bold">
             {activeWallet?.name || "Wallet"}
           </DialogTitle>
+          <DialogClose asChild>
+            <button className="absolute right-3 top-3 rounded-full p-2 hover:bg-gray-100">
+              <X className="w-5 h-5" />
+            </button>
+          </DialogClose>
         </DialogHeader>
-        <button
-          onClick={() => {
-            console.log("Popup ditutup");
-            onClose();
-          }}
-          className="absolute top-3 right-3 text-gray-400 hover:text-black transition hover:scale-110 transform transition-transform"
-        >
-          <X size={20} />
-        </button>
 
         {activeWallet && (
-          <div className="flex justify-center sm:justify-start mt-4">
-            <div
-              className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md"
-              style={getCardStyle(activeWallet)}
+          <div className="flex justify-center my-4">
+            <WalletCard
+              id={activeWallet.id}
+              name={activeWallet.name}
+              balance={activeWallet.balance}
+              currency={activeWallet.currency}
+              colorStyle={activeWallet.colorStyle}
+              colorValue={activeWallet.colorValue}
+              showBalance={showBalance}
+              onEdit={() => {}}
+              onClick={() => {}}
             />
           </div>
         )}
