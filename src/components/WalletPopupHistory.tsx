@@ -86,7 +86,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
     <Dialog open={isOpen} onClose={onClose}>
       <DialogContent
         hideClose
-        className="w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto relative"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto"
       >
         {/* Tombol Close */}
         <button
@@ -97,22 +97,20 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
         </button>
 
         {/* Wallet Card */}
-        {activeWallet && (
-          <div className="flex justify-center mt-4 mb-6">
-            <WalletCard
-              id={activeWallet.id}
-              name={activeWallet.name}
-              balance={activeWallet.balance}
-              currency={activeWallet.currency}
-              colorStyle={activeWallet.colorStyle}
-              colorValue={activeWallet.colorValue}
-              showBalance={showBalance}
-              onEdit={() => {}}
-              onClick={() => {}}
-              showEdit={false} // tambahkan ke WalletCard agar ikon pensil hilang
-            />
-          </div>
-        )}
+        <div className="flex justify-center mt-4 mb-6">
+          <WalletCard
+            id={activeWallet.id}
+            name={activeWallet.name}
+            balance={activeWallet.balance}
+            currency={activeWallet.currency}
+            colorStyle={activeWallet.colorStyle}
+            colorValue={activeWallet.colorValue}
+            showBalance={showBalance}
+            onEdit={() => {}}
+            onClick={() => {}}
+            showEdit={false} // pastikan WalletCard support ini
+          />
+        </div>
 
         {/* Tombol transaksi */}
         <div className="flex justify-center gap-4 mt-4">
