@@ -163,7 +163,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
           <Search size={18} className="text-gray-400" />
           <Input
             placeholder="Cari transaksi..."
-            value={search
+            value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full"
           />
