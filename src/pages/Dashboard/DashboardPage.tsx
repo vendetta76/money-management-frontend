@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebaseClient';
 
 // Modular Components
+import DashboardHeader from './DashboardHeader';
 import DashboardFilters from './DashboardFilters';
 import MoneySplitSimulator from './MoneySplitSimulator';
 import BalanceTrendChart from './BalanceTrendChart';
@@ -106,11 +107,8 @@ function DashboardPage() {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 md:px-8 max-w-screen-2xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-purple-700">Dashboard</h1>
-          <p className="text-sm text-gray-500">Selamat datang kembali, {displayName}</p>
-        </div>
+        <main className="min-h-screen w-full px-4 md:px-8 max-w-screen-2xl mx-auto">
+    <DashboardHeader displayName={displayName} />
 
         <DashboardFilters
           filterDate={filterDate}
