@@ -94,8 +94,17 @@ const WalletPage: React.FC = () => {
     return () => unsub();
   }, [user?.uid]);
 
-  // Expose wallets to window for debugging
+  // Validate currency and expose wallets to window for debugging
   useEffect(() => {
+    if (wallets.length === 0) return; // Skip kalau masih loading awal
+
+    wallets.forEach((w) => {
+      if (!w.currency) {
+        toast.error(`⚠️ Dompet "${w.name}" tidak memiliki currency, silakan perbaiki di Firestore.`);
+      }
+    });
+
+    // Expose ke window
     if (typeof window !== "undefined") {
       window.wallets = wallets;
     }
