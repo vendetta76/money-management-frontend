@@ -17,11 +17,16 @@ import { formatCurrency } from "./helpers/formatCurrency";
 import { getCardStyle } from "./helpers/getCardStyle";
 import { WalletEntry, OutcomeEntry } from "./types";
 
-const OutcomeForm = () => {
+interface OutcomeFormProps {
+  presetWalletId?: string; // Prop untuk WalletPopupHistory
+  onClose?: () => void; // Prop untuk menutup form dari WalletPopupHistory
+}
+
+const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose }) => {
   const { user } = useAuth();
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [outcomes, setOutcomes] = useState<OutcomeEntry[]>([]);
-  const [form, setForm] = useState({ wallet: "", description: "", amount: "", currency: "" });
+  const [form, setForm] = useState({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -44,7 +49,17 @@ const OutcomeForm = () => {
     };
   }, [user]);
 
-  // Global Enter key handler for form submission
+  useEffect(() => {
+    if (presetWalletId) {
+      const selected = wallets.find((w) => w.id === presetWalletId);
+      setForm((prev) => ({
+        ...prev,
+        wallet: presetWalletId,
+        currency: selected?.currency || "",
+      }));
+    }
+  }, [presetWalletId, wallets]);
+
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
       if (e.key === "Enter" && !editingId && document.activeElement?.tagName !== "TEXTAREA") {
@@ -55,10 +70,16 @@ const OutcomeForm = () => {
           descriptionRef.current?.form?.requestSubmit();
         }
       }
+      if (e.key === "Escape") {
+        setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
+        setEditingId(null);
+        setErrors({});
+        if (onClose) onClose();
+      }
     };
     document.addEventListener("keydown", listener);
     return () => document.removeEventListener("keydown", listener);
-  }, [form, editingId]);
+  }, [form, editingId, presetWalletId, onClose]);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -105,7 +126,9 @@ const OutcomeForm = () => {
     try {
       const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
       if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-        throw new Error("Invalid amount");
+        setErrors({ amount: "Nominal harus lebih dari 0." });
+        setLoading(false);
+        return;
       }
 
       const selectedWallet = wallets.find((w) => w.id === form.wallet);
@@ -115,20 +138,40 @@ const OutcomeForm = () => {
         return;
       }
 
-      const walletRef = doc(db, "users", user.uid, "wallets", form.wallet);
-      await updateDoc(walletRef, { balance: increment(-parsedAmount) });
+      if (!editingId) {
+        // Menggunakan logika dari handleAddOutcome
+        const outcomeData = {
+          amount: parsedAmount,
+          description: form.description,
+          wallet: form.wallet,
+          currency: form.currency,
+          createdAt: serverTimestamp(),
+        };
+        await addDoc(collection(db, "users", user.uid, "outcomes"), outcomeData);
+        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+          balance: increment(-parsedAmount),
+        });
+      } else {
+        // Logika edit dari versi lengkap
+        const old = outcomes.find((o) => o.id === editingId);
+        if (!old) return;
+        await updateDoc(doc(db, "users", user.uid, "outcomes", editingId), {
+          description: form.description,
+          amount: parsedAmount,
+          wallet: form.wallet,
+          currency: form.currency,
+        });
+        const diff = parsedAmount - old.amount;
+        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+          balance: increment(-diff),
+        });
+      }
 
-      await addDoc(collection(db, "users", user.uid, "outcomes"), {
-        ...form,
-        amount: parsedAmount,
-        createdAt: serverTimestamp(),
-      });
-
-      setForm({ wallet: form.wallet, currency: form.currency, description: "", amount: "" });
-      setTimeout(() => descriptionRef.current?.focus(), 50);
+      setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: form.currency });
       setEditingId(null);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
+      if (onClose) onClose();
     } catch (err) {
       console.error("❌ Gagal simpan:", err);
     } finally {
@@ -148,7 +191,9 @@ const OutcomeForm = () => {
     try {
       const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
       if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-        throw new Error("Invalid amount");
+        setErrors({ amount: "Nominal harus lebih dari 0." });
+        setLoading(false);
+        return;
       }
 
       const selectedWallet = wallets.find((w) => w.id === form.wallet);
@@ -158,16 +203,20 @@ const OutcomeForm = () => {
         return;
       }
 
-      const walletRef = doc(db, "users", user.uid, "wallets", form.wallet);
-      await updateDoc(walletRef, { balance: increment(-parsedAmount) });
-
-      await addDoc(collection(db, "users", user.uid, "outcomes"), {
-        ...form,
+      // Menggunakan logika dari handleAddOutcome
+      const outcomeData = {
         amount: parsedAmount,
+        description: form.description,
+        wallet: form.wallet,
+        currency: form.currency,
         createdAt: serverTimestamp(),
+      };
+      await addDoc(collection(db, "users", user.uid, "outcomes"), outcomeData);
+      await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+        balance: increment(-parsedAmount),
       });
 
-      setForm({ wallet: form.wallet, currency: form.currency, description: "", amount: "" });
+      setForm({ wallet: form.wallet, description: "", amount: "", currency: form.currency });
       setTimeout(() => descriptionRef.current?.focus(), 50);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
@@ -179,9 +228,10 @@ const OutcomeForm = () => {
   };
 
   const resetForm = () => {
-    setForm({ wallet: "", description: "", amount: "", currency: "" });
+    setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
     setEditingId(null);
     setErrors({});
+    if (onClose) onClose();
   };
 
   const getWalletName = (id: string) => wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
@@ -206,6 +256,7 @@ const OutcomeForm = () => {
             name="wallet"
             value={form.wallet}
             onChange={handleWalletChange}
+            disabled={!!presetWalletId} // Nonaktifkan jika presetWalletId ada
             className={`w-full rounded border px-4 py-2 dark:bg-gray-800 dark:text-white ${
               errors.wallet && "border-red-500"
             }`}

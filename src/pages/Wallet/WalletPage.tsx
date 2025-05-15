@@ -23,6 +23,7 @@ import WalletGrid from "./WalletGrid";
 import WalletFormModal from "./WalletFormModal";
 import { useIsBypassed } from "../../hooks/useIsBypassed";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
+import RecalcButtonWithTooltip from "@/components/RecalcButtonWithTooltip"; // Impor baru
 
 interface WalletData {
   id: string;
@@ -33,13 +34,6 @@ interface WalletData {
   colorValue: string | { start: string; end: string };
   createdAt: any; // Firestore Timestamp or other type
 }
-
-const allowedRecalcEmails = [
-  "diorvendetta76@gmail.com",
-  "joeverson.kamantha@gmail.com",
-  "fsaaa442@gmail.com",
-  "joeleo1425@gmail.com"
-];
 
 const WalletPage: React.FC = () => {
   const navigate = useNavigate();
@@ -57,6 +51,7 @@ const WalletPage: React.FC = () => {
   const [enteredPin, setEnteredPin] = useState("");
   const [pinError, setPinError] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [recalcLoading, setRecalcLoading] = useState(false); // State baru
   const pinInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -181,14 +176,11 @@ const WalletPage: React.FC = () => {
               >
                 {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
               </button>
-              {user?.email && allowedRecalcEmails.includes(user.email) && (
-                <button
-                  onClick={() => fixAllWalletBalances(user.uid).then(() => toast.success("Rekalkulasi selesai!"))}
-                  className="text-sm border px-3 py-1 rounded"
-                >
-                  🔁 Rekalkulasi
-                </button>
-              )}
+              <RecalcButtonWithTooltip
+                userId={user?.uid || ""}
+                setLoading={setRecalcLoading}
+                loading={recalcLoading}
+              />
               <button
                 onClick={() => setShowForm(true)}
                 className="bg-purple-600 text-white px-4 py-2 rounded text-sm sm:text-base flex items-center gap-2"

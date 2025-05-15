@@ -12,6 +12,7 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp,
+  increment,
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
@@ -138,23 +139,23 @@ const TransferPage: React.FC = () => {
       if (editingTransfer) {
         const previousAmount = editingTransfer.amount;
 
-        // Rollback saldo lama
+        // Rollback saldo lama menggunakan increment
         const fromRef = doc(db, "users", user.uid, "wallets", editingTransfer.fromWalletId);
         const toRef = doc(db, "users", user.uid, "wallets", editingTransfer.toWalletId);
 
         await updateDoc(fromRef, {
-          balance: fromWallet.balance + previousAmount,
+          balance: increment(previousAmount),
         });
         await updateDoc(toRef, {
-          balance: toWallet.balance - previousAmount,
+          balance: increment(-previousAmount),
         });
 
-        // Update saldo baru
+        // Update saldo baru menggunakan increment
         await updateDoc(fromWalletRef, {
-          balance: fromWallet.balance - parsedAmount,
+          balance: increment(-parsedAmount),
         });
         await updateDoc(toWalletRef, {
-          balance: toWallet.balance + parsedAmount,
+          balance: increment(parsedAmount),
         });
 
         // Update dokumen transfer
@@ -173,11 +174,12 @@ const TransferPage: React.FC = () => {
         toast.success("Transfer berhasil diperbarui!");
         setEditingTransfer(null);
       } else {
+        // Update saldo menggunakan increment
         await updateDoc(fromWalletRef, {
-          balance: fromWallet.balance - parsedAmount,
+          balance: increment(-parsedAmount),
         });
         await updateDoc(toWalletRef, {
-          balance: toWallet.balance + parsedAmount,
+          balance: increment(parsedAmount),
         });
 
         await addDoc(collection(db, "users", user.uid, "transfers"), {
@@ -224,12 +226,12 @@ const TransferPage: React.FC = () => {
       const fromRef = doc(db, "users", user.uid, "wallets", entry.fromWalletId);
       const toRef = doc(db, "users", user.uid, "wallets", entry.toWalletId);
 
+      // Rollback saldo menggunakan increment
       await updateDoc(fromRef, {
-        balance: fromWallet.balance + entry.amount,
+        balance: increment(entry.amount),
       });
-
       await updateDoc(toRef, {
-        balance: toWallet.balance - entry.amount,
+        balance: increment(-entry.amount),
       });
 
       await deleteDoc(doc(db, "users", user.uid, "transfers", entry.id));
