@@ -17,6 +17,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../lib/firebaseClient";
+import useIsMobile from "../../hooks/useIsMobile";
 
 interface WalletEntry {
   id: string;
@@ -33,7 +34,6 @@ interface WalletGridProps {
   showBalance: boolean;
   onEdit: (walletId: string) => void;
   onCardClick: (walletId: string) => void;
-  isMobile?: boolean;
 }
 
 const SortableWalletCard: React.FC<{
@@ -78,8 +78,8 @@ const WalletGrid: React.FC<WalletGridProps> = ({
   showBalance,
   onEdit,
   onCardClick,
-  isMobile = false,
 }) => {
+  const isMobile = useIsMobile();
   const [items, setItems] = useState<string[]>(wallets.map((w) => w.id));
 
   useEffect(() => {
@@ -102,24 +102,51 @@ const WalletGrid: React.FC<WalletGridProps> = ({
     }
   };
 
+  const GridContent = () => (
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+      {items.map((id) => {
+        const wallet = wallets.find((w) => w.id === id);
+        if (!wallet) return null;
+
+        if (isMobile) {
+          return (
+            <div key={wallet.id}>
+              <WalletCard
+                id={wallet.id}
+                name={wallet.name}
+                balance={wallet.balance}
+                currency={wallet.currency}
+                colorStyle={wallet.colorStyle}
+                colorValue={wallet.colorValue}
+                showBalance={showBalance}
+                onEdit={() => onEdit(wallet.id)}
+                onClick={() => onCardClick(wallet.id)}
+              />
+            </div>
+          );
+        } else {
+          return (
+            <SortableWalletCard
+              key={wallet.id}
+              wallet={wallet}
+              showBalance={showBalance}
+              onEdit={onEdit}
+              onClick={onCardClick}
+            />
+          );
+        }
+      })}
+    </div>
+  );
+
+  if (isMobile) {
+    return <GridContent />;
+  }
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {items.map((id) => {
-            const wallet = wallets.find((w) => w.id === id);
-            if (!wallet) return null;
-            return (
-              <SortableWalletCard
-                key={wallet.id}
-                wallet={wallet}
-                showBalance={showBalance}
-                onEdit={onEdit}
-                onClick={onCardClick}
-              />
-            );
-          })}
-        </div>
+        <GridContent />
       </SortableContext>
     </DndContext>
   );

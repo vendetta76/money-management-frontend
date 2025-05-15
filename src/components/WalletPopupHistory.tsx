@@ -81,14 +81,23 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg p-6 bg-white rounded-xl shadow-xl">
-        <DialogHeader className="flex justify-between items-center">
+    <Dialog open={isOpen}>
+      <DialogContent
+        hideClose
+        className="w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto"
+      >
+        <DialogHeader className="sticky top-0 z-10 bg-white flex justify-between items-center pb-2 border-b">
           <DialogTitle className="text-xl font-bold">{walletName}</DialogTitle>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
-            <X size={20} />
-          </button>
         </DialogHeader>
+        <button
+          onClick={() => {
+            console.log("Popup ditutup");
+            onClose();
+          }}
+          className="absolute top-3 right-3 text-gray-400 hover:text-black transition hover:scale-110 transform transition-transform"
+        >
+          <X size={20} />
+        </button>
 
         {/* Credit card preview */}
         <div className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md mx-auto mt-4" style={cardStyle} />
