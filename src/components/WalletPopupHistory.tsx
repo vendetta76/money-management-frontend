@@ -83,17 +83,17 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
   });
 
   return (
-    <Dialog open={isOpen} onClose={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        hideClose
+        showClose={false}
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto"
       >
         {/* Tombol Close */}
         <button
           onClick={onClose}
-          className="absolute right-3 top-3 rounded-full p-2 hover:bg-gray-100 z-20"
+          className="absolute right-4 top-4 bg-white border border-gray-300 shadow rounded-full p-1.5 hover:bg-gray-100 z-20"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
         {/* Wallet Card */}
@@ -108,7 +108,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
             showBalance={showBalance}
             onEdit={() => {}}
             onClick={() => {}}
-            showEdit={false} // pastikan WalletCard support ini
+            showEdit={false}
           />
         </div>
 
