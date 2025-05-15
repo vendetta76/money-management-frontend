@@ -209,7 +209,6 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
 export default WalletFormModal;
 
 
---- ✅ PATCHED: WalletPage.tsx (support tambah wallet) ---
 <WalletFormModal
   isOpen={showForm || !!editingWallet}
   editingData={editingWallet}
