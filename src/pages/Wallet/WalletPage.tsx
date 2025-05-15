@@ -41,7 +41,7 @@ const WalletPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingWallet, setEditingWallet] = useState<any | null>(null);
   const [showBalance, setShowBalance] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<any | null>(null);
+  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pinLockVisible, setPinLockVisible] = useState(true);
   const [enteredPin, setEnteredPin] = useState("");
@@ -206,16 +206,13 @@ const WalletPage: React.FC = () => {
                 showBalance={showBalance}
                 isMobile={isMobile}
                 onEdit={(id) => {
-                  setSelectedWallet(null);
+                  setSelectedWalletId(null);
                   setEditingWallet(walletMap[id]);
+                  setShowForm(true);
                 }}
                 onCardClick={(id) => {
                   if (editingWallet || showForm) return;
-                  setSelectedWallet({
-                    id,
-                    name: walletMap[id].name,
-                    style: {},
-                  });
+                  setSelectedWalletId(id);
                 }}
               />
             </>
@@ -224,22 +221,21 @@ const WalletPage: React.FC = () => {
       </main>
 
       <WalletFormModal
-        isOpen={!!editingWallet}
+        isOpen={showForm || !!editingWallet}
         editingData={editingWallet}
         onClose={() => {
           setShowForm(false);
           setEditingWallet(null);
-          setSelectedWallet(null);
+          setSelectedWalletId(null);
         }}
       />
 
-      {selectedWallet && (
+      {selectedWalletId && (
         <WalletPopupHistory
-          walletId={selectedWallet?.id ?? ""}
-          walletName={selectedWallet?.name ?? ""}
-          cardStyle={selectedWallet?.style ?? {}}
-          isOpen={!!selectedWallet}
-          onClose={() => setSelectedWallet(null)}
+          walletId={selectedWalletId}
+          wallets={orderedWallets}
+          isOpen={!!selectedWalletId}
+          onClose={() => setSelectedWalletId(null)}
         />
       )}
     </LayoutShell>
