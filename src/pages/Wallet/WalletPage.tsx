@@ -94,6 +94,13 @@ const WalletPage: React.FC = () => {
     return () => unsub();
   }, [user?.uid]);
 
+  // Expose wallets to window for debugging
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.wallets = wallets;
+    }
+  }, [wallets]);
+
   const handleUnlock = () => {
     const ok = unlock(enteredPin);
     if (ok) {
