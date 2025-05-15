@@ -10,33 +10,15 @@ import IncomeForm from "../pages/Income/IncomeForm";
 import OutcomeForm from "../pages/Outcome/OutcomeForm";
 import WalletCard from "../pages/Wallet/WalletCard";
 
-interface WalletEntry {
-  id: string;
-  name: string;
-  balance: number;
-  currency: string;
-  colorStyle: "solid" | "gradient";
-  colorValue: string | { start?: string; end?: string };
-}
-
-interface WalletPopupProps {
-  walletId: string;
-  wallets: WalletEntry[];
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, onClose }) => {
+const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
-  const [showIncomeForm, setShowIncomeForm] = useState(false);
-  const [showOutcomeForm, setShowOutcomeForm] = useState(false);
   const [showBalance] = useState(true);
+  const [activeTab, setActiveTab] = useState("history"); // "income" | "outcome" | "history"
 
   const activeWallet = wallets.find(w => w.id === walletId);
-
   if (!isOpen || !walletId || !activeWallet) return null;
 
   useEffect(() => {
@@ -46,47 +28,45 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
     const transferQuery = collection(db, "users", user.uid, "transfers");
 
-    const unsubIn = onSnapshot(incomeQuery, snapshot => {
-      const incomes = snapshot.docs.map(doc => ({ id: doc.id, type: "income", ...doc.data() }))
+    const unsubIn = onSnapshot(incomeQuery, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, type: "income", ...d.data() }))
         .filter(tx => tx.wallet === walletId);
-      setTransactions(prev => [...prev.filter(tx => tx.type !== "income"), ...incomes]);
+      setTransactions(prev => [...prev.filter(x => x.type !== "income"), ...data]);
     });
 
-    const unsubOut = onSnapshot(outcomeQuery, snapshot => {
-      const outcomes = snapshot.docs.map(doc => ({ id: doc.id, type: "outcome", ...doc.data() }))
+    const unsubOut = onSnapshot(outcomeQuery, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, type: "outcome", ...d.data() }))
         .filter(tx => tx.wallet === walletId);
-      setTransactions(prev => [...prev.filter(tx => tx.type !== "outcome"), ...outcomes]);
+      setTransactions(prev => [...prev.filter(x => x.type !== "outcome"), ...data]);
     });
 
-    const unsubTransfer = onSnapshot(transferQuery, snapshot => {
-      const transfers = snapshot.docs.map(doc => ({ id: doc.id, type: "transfer", ...doc.data() }))
+    const unsubTransfer = onSnapshot(transferQuery, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, type: "transfer", ...d.data() }))
         .filter(tx => tx.from === walletId || tx.to === walletId);
-      setTransactions(prev => [...prev.filter(tx => tx.type !== "transfer"), ...transfers]);
+      setTransactions(prev => [...prev.filter(x => x.type !== "transfer"), ...data]);
     });
 
     return () => {
-      unsubIn();
-      unsubOut();
-      unsubTransfer();
+      unsubIn(); unsubOut(); unsubTransfer();
     };
   }, [user, walletId, isOpen]);
 
   const filteredTransactions = transactions.filter(tx => {
-    const matchDescription =
-      !search || tx.description?.toLowerCase().includes(search.toLowerCase());
-    const matchDate =
-      !dateFilter || (
-        tx.createdAt?.seconds &&
-        format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter
-      );
-    return matchDescription && matchDate;
+    const matchDesc = !search || tx.description?.toLowerCase().includes(search.toLowerCase());
+    const matchDate = !dateFilter || (
+      tx.createdAt?.seconds &&
+      format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter
+    );
+    return matchDesc && matchDate;
   });
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showClose={false}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                   w-[95%] max-w-lg p-3 sm:p-6 bg-white rounded-xl shadow-xl 
+                   max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Tombol Close */}
         <button
@@ -96,8 +76,8 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
           <X className="w-4 h-4" />
         </button>
 
-        {/* Wallet Card */}
-        <div className="flex justify-center mt-4 mb-6">
+        {/* WalletCard */}
+        <div className="flex justify-center mt-4 mb-2">
           <WalletCard
             id={activeWallet.id}
             name={activeWallet.name}
@@ -112,72 +92,81 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
           />
         </div>
 
-        {/* Tombol transaksi */}
-        <div className="flex justify-center gap-4 mt-4">
-          <button
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-            onClick={() => setShowIncomeForm(true)}
-          >
-            ➕ Tambah Pemasukan
-          </button>
-          <button
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-            onClick={() => setShowOutcomeForm(true)}
-          >
-            ➖ Tambah Pengeluaran
-          </button>
+        {/* Tab Selector */}
+        <div className="flex justify-center gap-2 mt-4 mb-2">
+          {["income", "outcome", "history"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded text-sm font-medium ${
+                activeTab === tab
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {tab === "income" && "Pemasukan"}
+              {tab === "outcome" && "Pengeluaran"}
+              {tab === "history" && "Riwayat"}
+            </button>
+          ))}
         </div>
 
-        {showIncomeForm && (
-          <IncomeForm
-            presetWalletId={walletId}
-            onClose={() => setShowIncomeForm(false)}
-          />
-        )}
-        {showOutcomeForm && (
-          <OutcomeForm
-            presetWalletId={walletId}
-            onClose={() => setShowOutcomeForm(false)}
-          />
-        )}
+        {/* Content */}
+        <div className="mt-2 flex-1 overflow-y-auto space-y-4">
+          {activeTab === "income" && (
+            <IncomeForm
+              presetWalletId={walletId}
+              onClose={() => setActiveTab("history")}
+            />
+          )}
 
-        {/* Filter */}
-        <div className="mt-4 flex items-center gap-2">
-          <Search size={18} className="text-gray-400" />
-          <Input
-            placeholder="Cari transaksi..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full"
-          />
-        </div>
+          {activeTab === "outcome" && (
+            <OutcomeForm
+              presetWalletId={walletId}
+              onClose={() => setActiveTab("history")}
+            />
+          )}
 
-        <div className="mt-2 flex items-center gap-2">
-          <Calendar size={18} className="text-gray-400" />
-          <Input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="w-full"
-          />
-        </div>
-
-        {/* Daftar transaksi */}
-        <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
-          {filteredTransactions.length ? (
-            filteredTransactions.map(tx => (
-              <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
-                <div className="flex items-center gap-3">
-                  {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
-                  {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
-                  {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                  <span className="font-medium truncate">{tx.description || "Transfer"}</span>
-                </div>
-                <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
+          {activeTab === "history" && (
+            <>
+              <div className="flex items-center gap-2">
+                <Search size={18} className="text-gray-400" />
+                <Input
+                  placeholder="Cari transaksi..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full"
+                />
               </div>
-            ))
-          ) : (
-            <div className="text-center text-gray-500">Tidak ada transaksi ditemukan.</div>
+
+              <div className="flex items-center gap-2">
+                <Calendar size={18} className="text-gray-400" />
+                <Input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                {filteredTransactions.length ? (
+                  filteredTransactions.map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
+                      <div className="flex items-center gap-3">
+                        {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
+                        {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
+                        {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
+                        <span className="font-medium truncate">{tx.description || "Transfer"}</span>
+                      </div>
+                      <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500 pt-4">Tidak ada transaksi ditemukan.</div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </DialogContent>
