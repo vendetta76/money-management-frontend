@@ -1,7 +1,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 
 const LangToggle = () => {
-  const { language, toggleLanguage, setLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   return (
     <select
