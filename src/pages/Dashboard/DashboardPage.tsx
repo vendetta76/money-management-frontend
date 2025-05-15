@@ -17,7 +17,7 @@ import WalletPieChart from './WalletPieChart';
 import RecentTransactions from './RecentTransactions';
 import SurvivabilityScoreBox from './SurvivabilityScoreBox';
 
-export default function DashboardPage() {
+function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -167,5 +167,6 @@ export default function DashboardPage() {
       </main>
     </LayoutShell>
   );
+}
 
-  export default DashboardPage;
+export default DashboardPage;
