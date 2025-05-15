@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Dialog, DialogContent, DialogHeader, DialogClose, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -10,25 +10,9 @@ import IncomeForm from "../pages/Income/IncomeForm";
 import OutcomeForm from "../pages/Outcome/OutcomeForm";
 import WalletCard from "../pages/Wallet/WalletCard";
 
-interface WalletEntry {
-  id: string;
-  name: string;
-  balance: number;
-  currency: string;
-  colorStyle: "solid" | "gradient";
-  colorValue: string | { start?: string; end?: string };
-}
-
-interface WalletPopupProps {
-  walletId: string;
-  wallets: WalletEntry[];
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, onClose }) => {
+const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [showIncomeForm, setShowIncomeForm] = useState(false);
@@ -37,41 +21,29 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
 
   const activeWallet = wallets.find(w => w.id === walletId);
 
-  console.log("🧪 WalletPopup props", { isOpen, walletId, activeWallet });
-
-  if (!isOpen || !walletId || walletId === "" || !activeWallet) {
-    console.warn("❌ WalletPopup render dihindari karena data tidak lengkap", {
-      isOpen,
-      walletId,
-      activeWallet,
-    });
-    return null;
-  }
+  if (!isOpen || !walletId || !activeWallet) return null;
 
   useEffect(() => {
-    if (!isOpen || !walletId || walletId === "" || !user) return;
+    if (!user) return;
 
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
     const transferQuery = collection(db, "users", user.uid, "transfers");
 
     const unsubIn = onSnapshot(incomeQuery, snapshot => {
-      const incomes = snapshot.docs
-        .map(doc => ({ id: doc.id, type: "income", ...doc.data() }))
+      const incomes = snapshot.docs.map(doc => ({ id: doc.id, type: "income", ...doc.data() }))
         .filter(tx => tx.wallet === walletId);
       setTransactions(prev => [...prev.filter(tx => tx.type !== "income"), ...incomes]);
     });
 
     const unsubOut = onSnapshot(outcomeQuery, snapshot => {
-      const outcomes = snapshot.docs
-        .map(doc => ({ id: doc.id, type: "outcome", ...doc.data() }))
+      const outcomes = snapshot.docs.map(doc => ({ id: doc.id, type: "outcome", ...doc.data() }))
         .filter(tx => tx.wallet === walletId);
       setTransactions(prev => [...prev.filter(tx => tx.type !== "outcome"), ...outcomes]);
     });
 
     const unsubTransfer = onSnapshot(transferQuery, snapshot => {
-      const transfers = snapshot.docs
-        .map(doc => ({ id: doc.id, type: "transfer", ...doc.data() }))
+      const transfers = snapshot.docs.map(doc => ({ id: doc.id, type: "transfer", ...doc.data() }))
         .filter(tx => tx.from === walletId || tx.to === walletId);
       setTransactions(prev => [...prev.filter(tx => tx.type !== "transfer"), ...transfers]);
     });
@@ -81,7 +53,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
       unsubOut();
       unsubTransfer();
     };
-  }, [user, walletId, isOpen]);
+  }, [user, walletId]);
 
   const filteredTransactions = transactions.filter(tx => {
     const matchDescription = tx.description?.toLowerCase().includes(search.toLowerCase());
@@ -95,22 +67,17 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
     <Dialog open={isOpen} onClose={onClose}>
       <DialogContent
         hideClose
-        className="w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto"
+        className="w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto relative"
       >
-        <DialogHeader className="sticky top-0 z-10 bg-white flex justify-between items-center pb-2 border-b">
-          <DialogTitle as="h2" className="sr-only">
-            Wallet Popup
-          </DialogTitle>
-          <DialogClose asChild>
-            <button
-              onClick={onClose}
-              className="absolute right-3 top-3 rounded-full p-2 hover:bg-gray-100"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </DialogClose>
-        </DialogHeader>
+        {/* Tombol Close */}
+        <button
+          onClick={onClose}
+          className="absolute right-3 top-3 rounded-full p-2 hover:bg-gray-100 z-20"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
+        {/* Wallet Card */}
         {activeWallet && (
           <div className="flex justify-center mt-4 mb-6">
             <WalletCard
@@ -123,11 +90,12 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
               showBalance={showBalance}
               onEdit={() => {}}
               onClick={() => {}}
+              showEdit={false} // <- pastikan WalletCard support ini
             />
           </div>
         )}
 
-        {/* Tambah transaksi */}
+        {/* Tombol transaksi */}
         <div className="flex justify-center gap-4 mt-4">
           <button
             className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
@@ -149,7 +117,6 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
             onClose={() => setShowIncomeForm(false)}
           />
         )}
-
         {showOutcomeForm && (
           <OutcomeForm
             presetWalletId={walletId}
@@ -157,6 +124,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
           />
         )}
 
+        {/* Filter */}
         <div className="mt-4 flex items-center gap-2">
           <Search size={18} className="text-gray-400" />
           <Input
@@ -177,6 +145,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
           />
         </div>
 
+        {/* List Transaksi */}
         <div className="mt-4 space-y-2 max-h-96 overflow-y-auto">
           {filteredTransactions.length ? filteredTransactions.map(tx => (
             <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
