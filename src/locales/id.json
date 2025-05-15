@@ -1,0 +1,9 @@
+{
+  "income": "Pemasukan",
+  "outcome": "Pengeluaran",
+  "history": "Riwayat Transaksi",
+  "search": "Cari transaksi...",
+  "no_transactions": "Tidak ada transaksi ditemukan.",
+  "add_income": "Tambah Pemasukan",
+  "add_outcome": "Tambah Pengeluaran"
+}

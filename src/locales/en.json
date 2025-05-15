@@ -1,0 +1,10 @@
+{
+  "income": "Income",
+  "outcome": "Expense",
+  "history": "Transaction History",
+  "search": "Search transactions...",
+  "no_transactions": "No transactions found.",
+  "add_income": "Add Income",
+  "add_outcome": "Add Expense"
+  "setting"
+}
