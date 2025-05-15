@@ -15,7 +15,7 @@ interface WalletEntry {
   balance: number;
   currency: string;
   colorStyle: "solid" | "gradient";
-  colorValue: string | { start: string; end: string };
+  colorValue: string | { start?: string; end?: string };
 }
 
 interface WalletPopupProps {
@@ -48,11 +48,17 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
 
   const getCardStyle = (wallet: WalletEntry) => {
     if (!wallet) return {};
+
+    if (wallet.colorStyle === "solid") {
+      return { background: wallet.colorValue as string };
+    }
+
+    const gradient = wallet.colorValue as { start?: string; end?: string };
+    const start = gradient?.start || "#ccc"; // fallback default
+    const end = gradient?.end || "#eee";
+
     return {
-      background:
-        wallet.colorStyle === "solid"
-          ? wallet.colorValue
-          : `linear-gradient(to right, ${(wallet.colorValue as any).start}, ${(wallet.colorValue as any).end})`
+      background: `linear-gradient(to right, ${start}, ${end})`
     };
   };
 
