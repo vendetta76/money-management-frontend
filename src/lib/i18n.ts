@@ -6,6 +6,8 @@ import id from '@/locales/clean_id.json';
 import es from '@/locales/clean_es.json';
 import zh from '@/locales/clean_zh.json';
 
+const savedLang = localStorage.getItem('lang') || 'en';
+
 i18n
   .use(initReactI18next)
   .init({
@@ -15,15 +17,16 @@ i18n
       es: { translation: es },
       zh: { translation: zh },
     },
-    lng: 'en', // default
+    lng: savedLang,
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
-    },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage']
     }
   });
+
+// Simpan perubahan bahasa ke localStorage setiap kali user mengganti bahasa
+i18n.on('languageChanged', (lng) => {
+  localStorage.setItem('lang', lng);
+});
 
 export default i18n;
