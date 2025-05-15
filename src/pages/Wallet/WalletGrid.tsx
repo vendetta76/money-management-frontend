@@ -18,8 +18,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../lib/firebaseClient";
 import useIsMobile from "../../hooks/useIsMobile";
-import { archiveWallet } from "@/lib/archiveWallet"; // Impor dari patch
-import { toast } from "react-hot-toast"; // Impor dari patch
+import { archiveWallet } from "@/lib/archiveWallet";
+import { toast } from "react-hot-toast";
 
 interface WalletEntry {
   id: string;
@@ -43,8 +43,7 @@ const SortableWalletCard: React.FC<{
   showBalance: boolean;
   onEdit: (id: string) => void;
   onClick: (id: string) => void;
-  onDelete: (wallet: WalletEntry) => void; // Tambahan untuk hapus
-}> = ({ wallet, showBalance, onEdit, onClick, onDelete }) => {
+}> = ({ wallet, showBalance, onEdit, onClick }) => {
   const {
     setNodeRef,
     attributes,
@@ -60,28 +59,17 @@ const SortableWalletCard: React.FC<{
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div className="relative">
-        <WalletCard
-          id={wallet.id}
-          name={wallet.name}
-          balance={wallet.balance}
-          currency={wallet.currency}
-          colorStyle={wallet.colorStyle}
-          colorValue={wallet.colorValue}
-          showBalance={showBalance}
-          onEdit={() => onEdit(wallet.id)}
-          onClick={() => onClick(wallet.id)}
-        />
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(wallet);
-          }}
-          className="absolute top-2 right-2 text-red-500 text-xs hover:underline"
-        >
-          Hapus
-        </button>
-      </div>
+      <WalletCard
+        id={wallet.id}
+        name={wallet.name}
+        balance={wallet.balance}
+        currency={wallet.currency}
+        colorStyle={wallet.colorStyle}
+        colorValue={wallet.colorValue}
+        showBalance={showBalance}
+        onEdit={() => onEdit(wallet.id)}
+        onClick={() => onClick(wallet.id)}
+      />
     </div>
   );
 };
@@ -116,6 +104,8 @@ const WalletGrid: React.FC<WalletGridProps> = ({
     }
   };
 
+  // Note: handleDelete is retained for reference but not used in this component.
+  // Assume it's implemented in the edit modal via onEdit.
   const handleDelete = async (wallet: WalletEntry) => {
     if (wallet.balance !== 0) {
       toast.error("Saldo wallet masih ada. Kosongkan dulu sebelum menghapus.");
@@ -137,28 +127,18 @@ const WalletGrid: React.FC<WalletGridProps> = ({
 
         if (isMobile) {
           return (
-            <div key={wallet.id} className="relative">
-              <WalletCard
-                id={wallet.id}
-                name={wallet.name}
-                balance={wallet.balance}
-                currency={wallet.currency}
-                colorStyle={wallet.colorStyle}
-                colorValue={wallet.colorValue}
-                showBalance={showBalance}
-                onEdit={() => onEdit(wallet.id)}
-                onClick={() => onCardClick(wallet.id)}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(wallet);
-                }}
-                className="absolute top-2 right-2 text-red-500 text-xs hover:underline"
-              >
-                Hapus
-              </button>
-            </div>
+            <WalletCard
+              key={wallet.id}
+              id={wallet.id}
+              name={wallet.name}
+              balance={wallet.balance}
+              currency={wallet.currency}
+              colorStyle={wallet.colorStyle}
+              colorValue={wallet.colorValue}
+              showBalance={showBalance}
+              onEdit={() => onEdit(wallet.id)}
+              onClick={() => onCardClick(wallet.id)}
+            />
           );
         } else {
           return (
@@ -168,7 +148,6 @@ const WalletGrid: React.FC<WalletGridProps> = ({
               showBalance={showBalance}
               onEdit={onEdit}
               onClick={onCardClick}
-              onDelete={handleDelete}
             />
           );
         }
