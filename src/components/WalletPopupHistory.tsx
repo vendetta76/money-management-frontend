@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogClose } from "@/components/ui/dialog";
 import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -24,16 +24,16 @@ interface WalletPopupProps {
   wallets: WalletEntry[];
   isOpen: boolean;
   onClose: () => void;
-  showBalance: boolean;
 }
 
-const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, onClose, showBalance }) => {
+const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, onClose }) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showOutcomeForm, setShowOutcomeForm] = useState(false);
+  const [showBalance] = useState(true);
 
   const activeWallet = wallets.find(w => w.id === walletId);
 
@@ -98,9 +98,6 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
         className="w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto"
       >
         <DialogHeader className="sticky top-0 z-10 bg-white flex justify-between items-center pb-2 border-b">
-          <DialogTitle className="text-xl font-bold">
-            {activeWallet?.name || "Wallet"}
-          </DialogTitle>
           <DialogClose asChild>
             <button className="absolute right-3 top-3 rounded-full p-2 hover:bg-gray-100">
               <X className="w-5 h-5" />
@@ -109,7 +106,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
         </DialogHeader>
 
         {activeWallet && (
-          <div className="flex justify-center my-4">
+          <div className="flex justify-center mt-4 mb-6">
             <WalletCard
               id={activeWallet.id}
               name={activeWallet.name}
@@ -193,5 +190,5 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, on
     </Dialog>
   );
 };
-// sdsds
+
 export default WalletPopup;
