@@ -24,6 +24,16 @@ import WalletFormModal from "./WalletFormModal";
 import { useIsBypassed } from "../../hooks/useIsBypassed";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 
+interface WalletData {
+  id: string;
+  name: string;
+  balance: number;
+  currency: string;
+  colorStyle: "solid" | "gradient";
+  colorValue: string | { start: string; end: string };
+  createdAt: any; // Firestore Timestamp or other type
+}
+
 const allowedRecalcEmails = [
   "diorvendetta76@gmail.com",
   "joeverson.kamantha@gmail.com",
@@ -36,11 +46,10 @@ const WalletPage: React.FC = () => {
   const { user, userMeta } = useAuth();
   const { locked: pinLocked, unlock, lock } = usePinLock();
   const { locked, message, isBypassed } = useIsBypassed("wallet");
-  const [wallets, setWallets] = useState<any[]>([]);
+  const [wallets, setWallets] = useState<WalletData[]>([]);
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingWallet, setEditingWallet] = useState<any | null>(null);
-  const [showBalance, setShowBalance] = useState(false);
+  const [editingWallet, setEditingWallet] = useState<WalletData | null>(null);
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pinLockVisible, setPinLockVisible] = useState(true);
@@ -69,7 +78,7 @@ const WalletPage: React.FC = () => {
     if (!user?.uid) return;
     const q = query(collection(db, "users", user.uid, "wallets"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snap) => {
-      setWallets(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setWallets(snap.docs.map((d) => ({ id: d.id, ...d.data() } as WalletData)));
       setLoading(false);
     }, (err) => {
       console.error("Firestore error:", err);
