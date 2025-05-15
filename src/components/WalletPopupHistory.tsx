@@ -9,15 +9,23 @@ import { format } from "date-fns";
 import IncomeForm from "../pages/Income/IncomeForm";
 import OutcomeForm from "../pages/Outcome/OutcomeForm";
 
+interface WalletEntry {
+  id: string;
+  name: string;
+  balance: number;
+  currency: string;
+  colorStyle: "solid" | "gradient";
+  colorValue: string | { start: string; end: string };
+}
+
 interface WalletPopupProps {
   walletId: string;
-  walletName: string;
-  cardStyle: React.CSSProperties;
+  wallets: WalletEntry[];
   isOpen: boolean;
   onClose: () => void;
 }
 
-const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardStyle, isOpen, onClose }) => {
+const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, wallets, isOpen, onClose }) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -25,17 +33,28 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showOutcomeForm, setShowOutcomeForm] = useState(false);
 
-  console.log("🧪 WalletPopup props", { isOpen, walletId, walletName, cardStyle });
+  const activeWallet = wallets.find(w => w.id === walletId);
 
-  if (!isOpen || !walletId || walletId === "" || !walletName || cardStyle == null) {
+  console.log("🧪 WalletPopup props", { isOpen, walletId, activeWallet });
+
+  if (!isOpen || !walletId || walletId === "" || !activeWallet) {
     console.warn("❌ WalletPopup render dihindari karena data tidak lengkap", {
       isOpen,
       walletId,
-      walletName,
-      cardStyle,
+      activeWallet,
     });
     return null;
   }
+
+  const getCardStyle = (wallet: WalletEntry) => {
+    if (!wallet) return {};
+    return {
+      background:
+        wallet.colorStyle === "solid"
+          ? wallet.colorValue
+          : `linear-gradient(to right, ${(wallet.colorValue as any).start}, ${(wallet.colorValue as any).end})`
+    };
+  };
 
   useEffect(() => {
     if (!isOpen || !walletId || walletId === "" || !user) return;
@@ -87,7 +106,9 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
         className="w-[95%] max-w-lg p-4 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto"
       >
         <DialogHeader className="sticky top-0 z-10 bg-white flex justify-between items-center pb-2 border-b">
-          <DialogTitle className="text-xl font-bold">{walletName}</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            {activeWallet?.name || "Wallet"}
+          </DialogTitle>
         </DialogHeader>
         <button
           onClick={() => {
@@ -99,8 +120,14 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
           <X size={20} />
         </button>
 
-        {/* Credit card preview */}
-        <div className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md mx-auto mt-4" style={cardStyle} />
+        {activeWallet && (
+          <div className="flex justify-center sm:justify-start mt-4">
+            <div
+              className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md"
+              style={getCardStyle(activeWallet)}
+            />
+          </div>
+        )}
 
         {/* Tambah transaksi */}
         <div className="flex justify-center gap-4 mt-4">
@@ -136,7 +163,7 @@ const WalletPopup: React.FC<WalletPopupProps> = ({ walletId, walletName, cardSty
           <Search size={18} className="text-gray-400" />
           <Input
             placeholder="Cari transaksi..."
-            value={search}
+            value={search
             onChange={(e) => setSearch(e.target.value)}
             className="w-full"
           />
