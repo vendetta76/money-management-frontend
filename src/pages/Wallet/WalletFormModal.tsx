@@ -11,7 +11,7 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
-import { archiveWallet } from "@/lib/archiveWallet"; // Impor ditambahkan
+import { archiveWallet } from "@/lib/archiveWallet";
 
 interface WalletEntry {
   id: string;
@@ -20,7 +20,7 @@ interface WalletEntry {
   currency: string;
   colorStyle: "solid" | "gradient";
   colorValue: string | { start: string; end: string };
-  status?: string; // Untuk mendukung arsip
+  status?: string;
 }
 
 interface WalletFormModalProps {
@@ -113,6 +113,17 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleColorChange = (field: string, value: string) => {
+    if (form.colorStyle === "solid") {
+      setForm((prev) => ({ ...prev, colorValue: value }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        colorValue: { ...prev.colorValue, [field]: value },
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -234,6 +245,35 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
             }
           />
         </div>
+        {form.colorStyle === "solid" ? (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Warna Solid</label>
+            <input
+              type="color"
+              value={form.colorValue as string}
+              onChange={(e) => handleColorChange("", e.target.value)}
+              className="w-full h-10 p-0 border rounded cursor-pointer"
+            />
+          </div>
+        ) : (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Gradasi Warna</label>
+            <div className="flex gap-2">
+              <input
+                type="color"
+                value={(form.colorValue as any)?.start}
+                onChange={(e) => handleColorChange("start", e.target.value)}
+                className="w-full h-10 border rounded cursor-pointer"
+              />
+              <input
+                type="color"
+                value={(form.colorValue as any)?.end}
+                onChange={(e) => handleColorChange("end", e.target.value)}
+                className="w-full h-10 border rounded cursor-pointer"
+              />
+            </div>
+          </div>
+        )}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Pratinjau Warna</label>
           <div
