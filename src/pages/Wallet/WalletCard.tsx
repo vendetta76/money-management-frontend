@@ -11,6 +11,7 @@ interface WalletCardProps {
   showBalance: boolean;
   onEdit: () => void;
   onClick: () => void;
+  showEdit?: boolean; // ⬅️ tambahkan ini
 }
 
 const getContrastColor = (hex: string) => {
@@ -31,6 +32,7 @@ const WalletCard: React.FC<WalletCardProps> = ({
   showBalance,
   onEdit,
   onClick,
+  showEdit = true, // ⬅️ default tetap true
 }) => {
   const pointerDownRef = useRef<number>(0);
 
@@ -69,17 +71,18 @@ const WalletCard: React.FC<WalletCardProps> = ({
         <h3 className="text-lg font-semibold truncate" style={{ color: contrastColor }}>
           {name}
         </h3>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log("EDIT DITEKAN:", name); // ⛳ TEST INI
-            onEdit();
-          }}
-          className="p-1 rounded hover:bg-white/20 focus:outline-none focus:ring-1 focus:ring-white"
-          title={`Edit ${name}`}
-        >
-          <SquarePen size={16} color={contrastColor} />
-        </button>
+        {showEdit && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="p-1 rounded hover:bg-white/20 focus:outline-none focus:ring-1 focus:ring-white"
+            title={`Edit ${name}`}
+          >
+            <SquarePen size={16} color={contrastColor} />
+          </button>
+        )}
       </div>
       <div
         className="mt-auto text-2xl font-bold tracking-widest"
