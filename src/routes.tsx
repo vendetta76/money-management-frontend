@@ -49,6 +49,7 @@ import AdminUsers from "./pages/admin/AdminUsers"
 import AdminTransactions from "./pages/admin/AdminTransactions"
 import AdminReports from "./pages/admin/AdminReports"
 import AdminSettings from "./pages/admin/AdminSettings"
+import AdminWalletPanel from "./pages/admin/AdminWalletPanel"; 
 
 // 404 Page
 import NotFoundPage from './pages/NotFoundPage'
@@ -285,7 +286,16 @@ const routes: RouteObject[] = [
       </PrivateRoute>
     ),
   },
-
+{
+  path: '/admin/wallets',
+  element: (
+    <PrivateRoute requiredRole="Admin">
+      <PageTransition>
+        <AdminWalletPanel />
+      </PageTransition>
+    </PrivateRoute>
+  ),
+},
   // Catch-all route for 404
   { path: '*', element: <NotFoundPage /> },
 ]

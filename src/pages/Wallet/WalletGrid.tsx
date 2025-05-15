@@ -18,6 +18,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../lib/firebaseClient";
 import useIsMobile from "../../hooks/useIsMobile";
+import { archiveWallet } from "@/lib/archiveWallet"; // Impor dari patch
+import { toast } from "react-hot-toast"; // Impor dari patch
 
 interface WalletEntry {
   id: string;
@@ -41,7 +43,8 @@ const SortableWalletCard: React.FC<{
   showBalance: boolean;
   onEdit: (id: string) => void;
   onClick: (id: string) => void;
-}> = ({ wallet, showBalance, onEdit, onClick }) => {
+  onDelete: (wallet: WalletEntry) => void; // Tambahan untuk hapus
+}> = ({ wallet, showBalance, onEdit, onClick, onDelete }) => {
   const {
     setNodeRef,
     attributes,
@@ -57,17 +60,28 @@ const SortableWalletCard: React.FC<{
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <WalletCard
-        id={wallet.id}
-        name={wallet.name}
-        balance={wallet.balance}
-        currency={wallet.currency}
-        colorStyle={wallet.colorStyle}
-        colorValue={wallet.colorValue}
-        showBalance={showBalance}
-        onEdit={() => onEdit(wallet.id)}
-        onClick={() => onClick(wallet.id)}
-      />
+      <div className="relative">
+        <WalletCard
+          id={wallet.id}
+          name={wallet.name}
+          balance={wallet.balance}
+          currency={wallet.currency}
+          colorStyle={wallet.colorStyle}
+          colorValue={wallet.colorValue}
+          showBalance={showBalance}
+          onEdit={() => onEdit(wallet.id)}
+          onClick={() => onClick(wallet.id)}
+        />
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(wallet);
+          }}
+          className="absolute top-2 right-2 text-red-500 text-xs hover:underline"
+        >
+          Hapus
+        </button>
+      </div>
     </div>
   );
 };
@@ -102,6 +116,19 @@ const WalletGrid: React.FC<WalletGridProps> = ({
     }
   };
 
+  const handleDelete = async (wallet: WalletEntry) => {
+    if (wallet.balance !== 0) {
+      toast.error("Saldo wallet masih ada. Kosongkan dulu sebelum menghapus.");
+      return;
+    }
+    try {
+      await archiveWallet(userId, wallet.id);
+      toast.success("Dompet berhasil dihapus.");
+    } catch {
+      toast.error("Gagal menghapus dompet.");
+    }
+  };
+
   const GridContent = () => (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
       {items.map((id) => {
@@ -110,7 +137,7 @@ const WalletGrid: React.FC<WalletGridProps> = ({
 
         if (isMobile) {
           return (
-            <div key={wallet.id}>
+            <div key={wallet.id} className="relative">
               <WalletCard
                 id={wallet.id}
                 name={wallet.name}
@@ -122,6 +149,15 @@ const WalletGrid: React.FC<WalletGridProps> = ({
                 onEdit={() => onEdit(wallet.id)}
                 onClick={() => onCardClick(wallet.id)}
               />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(wallet);
+                }}
+                className="absolute top-2 right-2 text-red-500 text-xs hover:underline"
+              >
+                Hapus
+              </button>
             </div>
           );
         } else {
@@ -132,6 +168,7 @@ const WalletGrid: React.FC<WalletGridProps> = ({
               showBalance={showBalance}
               onEdit={onEdit}
               onClick={onCardClick}
+              onDelete={handleDelete}
             />
           );
         }

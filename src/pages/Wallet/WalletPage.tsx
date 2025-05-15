@@ -32,6 +32,7 @@ interface WalletData {
   colorStyle: "solid" | "gradient";
   colorValue: string | { start: string; end: string };
   createdAt: any; // Firestore Timestamp or other type
+  status?: string; // Tambahan untuk mendukung arsip
 }
 
 const WalletPage: React.FC = () => {
@@ -94,7 +95,7 @@ const WalletPage: React.FC = () => {
     return () => unsub();
   }, [user?.uid]);
 
-  // Validate currency and expose wallets to window for debugging
+  // Validate currency
   useEffect(() => {
     if (wallets.length === 0) return; // Skip kalau masih loading awal
 
@@ -103,11 +104,6 @@ const WalletPage: React.FC = () => {
         toast.error(`⚠️ Dompet "${w.name}" tidak memiliki currency, silakan perbaiki di Firestore.`);
       }
     });
-
-    // Expose ke window
-    if (typeof window !== "undefined") {
-      window.wallets = wallets;
-    }
   }, [wallets]);
 
   const handleUnlock = () => {
@@ -133,13 +129,13 @@ const WalletPage: React.FC = () => {
     ...wallets.filter((w) => !walletOrder.includes(w.id))
   ];
 
-  const totalsByCurrency = wallets.reduce((acc, w) => {
+  const visibleWallets = orderedWallets.filter((w) => w.status !== "archived");
+
+  const totalsByCurrency = visibleWallets.reduce((acc, w) => {
     const safeBalance = isNaN(w.balance) ? 0 : w.balance;
     acc[w.currency] = (acc[w.currency] || 0) + safeBalance;
     return acc;
   }, {});
-  console.log("Wallets Loaded:", wallets); // Debug sementara
-  console.log("Totals By Currency:", totalsByCurrency); // Debug sementara
 
   return (
     <LayoutShell>
@@ -222,7 +218,7 @@ const WalletPage: React.FC = () => {
               <WalletTotalOverview totalsByCurrency={totalsByCurrency} showBalance={showBalance} />
               <WalletGrid
                 userId={user?.uid || ""}
-                wallets={orderedWallets}
+                wallets={visibleWallets}
                 showBalance={showBalance}
                 isMobile={isMobile}
                 onEdit={(id) => {
@@ -253,7 +249,7 @@ const WalletPage: React.FC = () => {
       {selectedWalletId && (
         <WalletPopupHistory
           walletId={selectedWalletId}
-          wallets={orderedWallets}
+          wallets={visibleWallets}
           isOpen={!!selectedWalletId}
           onClose={() => setSelectedWalletId(null)}
         />

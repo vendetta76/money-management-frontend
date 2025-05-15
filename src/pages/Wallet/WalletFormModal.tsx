@@ -6,17 +6,28 @@ import {
   doc,
   updateDoc,
   addDoc,
-  deleteDoc,
   collection,
   serverTimestamp,
 } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
+import { archiveWallet } from "@/lib/archiveWallet"; // Impor ditambahkan
+
+interface WalletEntry {
+  id: string;
+  name: string;
+  balance: number;
+  currency: string;
+  colorStyle: "solid" | "gradient";
+  colorValue: string | { start: string; end: string };
+  status?: string; // Untuk mendukung arsip
+}
 
 interface WalletFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  editingData?: any;
+  editingData?: WalletEntry;
+  wallets?: WalletEntry[];
 }
 
 const currencyOptions = [
@@ -69,6 +80,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
   isOpen,
   onClose,
   editingData,
+  wallets = [],
 }) => {
   const { user } = useAuth();
   const [form, setForm] = useState({
@@ -100,6 +112,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,7 +120,19 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
     const newErrors: Record<string, string> = {};
     if (!form.name.trim()) newErrors.name = "Nama wallet wajib diisi";
     if (!form.currency) newErrors.currency = "Pilih mata uang";
-    if (Object.keys(newErrors).length) return setErrors(newErrors);
+
+    const isDuplicate = wallets.some(
+      (w) =>
+        w.name.toLowerCase() === form.name.toLowerCase() &&
+        w.status !== "archived" &&
+        (!editingData || w.id !== editingData.id)
+    );
+    if (isDuplicate) newErrors.name = "Nama dompet sudah digunakan";
+
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors);
+      return;
+    }
 
     try {
       const payload = {
@@ -139,16 +164,22 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
 
   const handleDelete = async () => {
     if (!editingData?.id) return;
+
+    if (editingData.balance !== 0) {
+      toast.error("Saldo wallet masih ada. Kosongkan dulu sebelum menghapus.");
+      return;
+    }
+
     const confirm = window.confirm("Yakin ingin menghapus wallet ini?");
     if (!confirm) return;
 
     try {
-      await deleteDoc(doc(db, "users", user!.uid, "wallets", editingData.id));
-      toast.success("Wallet berhasil dihapus");
+      await archiveWallet(user!.uid, editingData.id);
+      toast.success("Wallet berhasil dihapus.");
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error("Gagal menghapus wallet");
+      toast.error("Gagal menghapus wallet.");
     }
   };
 
@@ -216,12 +247,21 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
             }
           />
         </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-        >
-          {editingData ? "Simpan Perubahan" : "Tambah Wallet"}
-        </button>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 rounded"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-purple-600 text-white rounded"
+          >
+            {editingData ? "Simpan" : "Tambah"}
+          </button>
+        </div>
         {editingData?.id && (
           <button
             type="button"
