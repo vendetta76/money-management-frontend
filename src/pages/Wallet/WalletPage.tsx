@@ -50,7 +50,7 @@ const WalletPage: React.FC = () => {
   const [enteredPin, setEnteredPin] = useState("");
   const [pinError, setPinError] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [recalcLoading, setRecalcLoading] = useState(false); // State baru
+  const [recalcLoading, setRecalcLoading] = useState(false);
   const pinInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -117,10 +117,13 @@ const WalletPage: React.FC = () => {
     ...wallets.filter((w) => !walletOrder.includes(w.id))
   ];
 
-  const totalsByCurrency = orderedWallets.reduce((acc, w) => {
-    acc[w.currency] = (acc[w.currency] || 0) + w.balance;
+  const totalsByCurrency = wallets.reduce((acc, w) => {
+    const safeBalance = isNaN(w.balance) ? 0 : w.balance;
+    acc[w.currency] = (acc[w.currency] || 0) + safeBalance;
     return acc;
-  }, {} as Record<string, number>);
+  }, {});
+  console.log("Wallets Loaded:", wallets); // Debug sementara
+  console.log("Totals By Currency:", totalsByCurrency); // Debug sementara
 
   return (
     <LayoutShell>
