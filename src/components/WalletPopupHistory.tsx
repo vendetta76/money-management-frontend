@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import IncomeForm from "../pages/Income/IncomeForm";
 import OutcomeForm from "../pages/Outcome/OutcomeForm";
-import WalletCard from "./WalletCard";
+import WalletCard from "../pages/Wallet/WalletCard";
 
 interface WalletEntry {
   id: string;
