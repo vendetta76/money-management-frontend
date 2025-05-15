@@ -207,14 +207,3 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
 };
 
 export default WalletFormModal;
-
-
-<WalletFormModal
-  isOpen={showForm || !!editingWallet}
-  editingData={editingWallet}
-  onClose={() => {
-    setShowForm(false);
-    setEditingWallet(null);
-    setSelectedWallet(null);
-  }}
-/>
