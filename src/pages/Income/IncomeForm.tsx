@@ -14,9 +14,9 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
-import { formatCurrency } from "../../helpers/formatCurrency";
-import { getCardStyle } from "../../helpers/getCardStyle";
-import { WalletEntry, IncomeEntry } from "../../helpers/types";
+import { formatCurrency } from "../helpers/formatCurrency";
+import { getCardStyle } from "../helpers/getCardStyle";
+import { WalletEntry, IncomeEntry } from "../helpers/types";
 
 interface IncomeFormProps {
   hideCardPreview?: boolean;

@@ -13,9 +13,9 @@ import {
   doc,
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
-import { formatCurrency } from "../../helpers/formatCurrency";
-import { getCardStyle } from "../../helpers/getCardStyle";
-import { WalletEntry, OutcomeEntry } from "../../helpers/types";
+import { formatCurrency } from "../helpers/formatCurrency";
+import { getCardStyle } from "../helpers/getCardStyle";
+import { WalletEntry, OutcomeEntry } from "../helpers/types";
 
 interface OutcomeFormProps {
   hideCardPreview?: boolean;
