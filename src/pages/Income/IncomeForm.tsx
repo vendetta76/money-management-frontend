@@ -243,15 +243,24 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
         {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
         {form.wallet && (
-          <div
-            className="mt-4 rounded-xl text-white p-4 shadow w-full"
-            style={getCardStyle(wallets.find((w) => w.id === form.wallet)!)}
-          >
-            <h3 className="text-sm font-semibold truncate">{getWalletName(form.wallet)}</h3>
-            <p className="text-lg font-bold mt-1">
-              {formatCurrency(getWalletBalance(form.wallet), form.currency)}
-            </p>
-          </div>
+          (() => {
+            const selectedWallet = wallets.find((w) => w.id === form.wallet);
+            return selectedWallet ? (
+              <div
+                className="mt-4 rounded-xl text-white p-4 shadow w-full"
+                style={getCardStyle(selectedWallet)}
+              >
+                <h3 className="text-sm font-semibold truncate">{getWalletName(form.wallet)}</h3>
+                <p className="text-lg font-bold mt-1">
+                  {formatCurrency(getWalletBalance(form.wallet), form.currency)}
+                </p>
+              </div>
+            ) : (
+              <div className="text-center text-sm text-gray-400 my-6 animate-pulse">
+                Memuat dompet...
+              </div>
+            );
+          })()
         )}
       </div>
 
