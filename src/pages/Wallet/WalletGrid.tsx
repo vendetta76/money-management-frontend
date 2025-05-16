@@ -64,8 +64,8 @@ const SortableWalletCard: React.FC<{
         name={wallet.name}
         balance={wallet.balance}
         currency={wallet.currency}
-        colorStyle={wallet.colorStyle}
-        colorValue={wallet.colorValue}
+        colorStyle={wallet.colorStyle || 'solid'}
+        colorValue={wallet.colorValue || '#cccccc'}
         showBalance={showBalance}
         onEdit={() => onEdit(wallet.id)}
         onClick={() => onClick(wallet.id)}
@@ -133,8 +133,8 @@ const WalletGrid: React.FC<WalletGridProps> = ({
               name={wallet.name}
               balance={wallet.balance}
               currency={wallet.currency}
-              colorStyle={wallet.colorStyle}
-              colorValue={wallet.colorValue}
+              colorStyle={wallet.colorStyle || 'solid'}
+              colorValue={wallet.colorValue || '#cccccc'}
               showBalance={showBalance}
               onEdit={() => onEdit(wallet.id)}
               onClick={() => onCardClick(wallet.id)}
