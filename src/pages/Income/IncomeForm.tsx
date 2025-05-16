@@ -19,8 +19,8 @@ import { getCardStyle } from "./helpers/getCardStyle";
 import { WalletEntry, IncomeEntry } from "./types";
 
 interface IncomeFormProps {
-  presetWalletId?: string; // Prop untuk WalletPopupHistory
-  onClose?: () => void; // Prop untuk menutup form dari WalletPopupHistory
+  presetWalletId?: string;
+  onClose?: () => void;
 }
 
 const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
@@ -51,12 +51,14 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
   }, [user]);
 
   useEffect(() => {
-    if (presetWalletId) {
-      const selected = wallets.find((w) => w.id === presetWalletId);
+    if (!presetWalletId || wallets.length === 0) return;
+
+    const selected = wallets.find((w) => w.id === presetWalletId);
+    if (selected) {
       setForm((prev) => ({
         ...prev,
         wallet: presetWalletId,
-        currency: selected?.currency || "",
+        currency: selected.currency,
       }));
     }
   }, [presetWalletId, wallets]);
@@ -138,7 +140,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
       }
 
       if (!editingId) {
-        // Menggunakan logika dari handleAddIncome
         const incomeData = {
           amount: parsedAmount,
           description: form.description,
@@ -151,7 +152,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
           balance: increment(parsedAmount),
         });
       } else {
-        // Logika edit dari versi lengkap
         const old = incomes.find((i) => i.id === editingId);
         if (!old) return;
         await updateDoc(doc(db, "users", user.uid, "incomes", editingId), {
@@ -200,7 +200,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
         return;
       }
 
-      // Menggunakan logika dari handleAddIncome
       const incomeData = {
         amount: parsedAmount,
         description: form.description,
@@ -233,7 +232,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
           name="wallet"
           value={form.wallet}
           onChange={handleWalletChange}
-          disabled={!!presetWalletId} // Nonaktifkan jika presetWalletId ada
+          disabled={!!presetWalletId}
           className={`w-full rounded border px-4 py-2 dark:bg-gray-800 dark:text-white ${errors.wallet && "border-red-500"}`}
         >
           <option value="">-- Pilih Dompet --</option>
