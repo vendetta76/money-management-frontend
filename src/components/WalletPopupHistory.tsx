@@ -214,10 +214,10 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
                   else if (info.offset.x > 50) swipeToTab("right");
                 }}
               >
-                {activeTab === "income" && formReady && (
+                {activeTab === "income" && formReady && wallet && wallet.colorStyle && (
                   <IncomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
                 )}
-                {activeTab === "outcome" && formReady && (
+                {activeTab === "outcome" && formReady && wallet && wallet.colorStyle && (
                   <OutcomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
                 )}
                 {activeTab === "history" && !loading && (
