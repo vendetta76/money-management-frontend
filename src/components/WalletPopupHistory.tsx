@@ -1,10 +1,8 @@
-// WalletPopupHistory.tsx - Versi Swipeable Tabs + Sorted + Pagination + Preset Date Filter
-
 import React, { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format, subDays } from "date-fns";
@@ -100,8 +98,10 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showClose={false}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-lg p-3 sm:p-6 bg-white rounded-xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md rounded-t-xl bg-white p-4 pb-20 shadow-xl max-h-[90vh] overflow-hidden flex flex-col"
       >
+        <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
+
         <button
           onClick={onClose}
           className="absolute right-4 top-4 bg-white border border-gray-300 shadow rounded-full p-1.5 hover:bg-gray-100 z-20"
@@ -109,19 +109,34 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
           <X className="w-4 h-4" />
         </button>
 
-        <div className="flex justify-center mt-4 mb-2">
+        <div className="flex justify-center mt-2 mb-3">
           <WalletCard
             id={activeWallet.id}
             name={activeWallet.name}
             balance={activeWallet.balance}
             currency={activeWallet.currency}
-            colorStyle={activeWallet.colorStyle}
-            colorValue={activeWallet.colorValue}
+            colorStyle={activeWallet.colorStyle || "default"}
+            colorValue={activeWallet.colorValue || "#cccccc"}
             showBalance={showBalance}
             onEdit={() => {}}
             onClick={() => {}}
             showEdit={false}
           />
+        </div>
+
+        <div className="fixed bottom-4 right-4 z-50 flex gap-2">
+          <button
+            onClick={() => setActiveTab("income")}
+            className="p-3 rounded-full bg-green-500 text-white shadow-lg"
+          >
+            <ArrowDownCircle size={20} />
+          </button>
+          <button
+            onClick={() => setActiveTab("outcome")}
+            className="p-3 rounded-full bg-red-500 text-white shadow-lg"
+          >
+            <ArrowUpCircle size={20} />
+          </button>
         </div>
 
         <div className="flex justify-center gap-2 mt-4 mb-2">
@@ -177,7 +192,6 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
                     />
                   </div>
 
-                  {/* Preset Tanggal */}
                   <div className="flex flex-wrap gap-2">
                     {["today", "yesterday", "last7", "all"].map((preset) => (
                       <button
