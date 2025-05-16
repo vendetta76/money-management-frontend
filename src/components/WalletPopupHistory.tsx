@@ -30,9 +30,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   if (!isOpen || !walletId) return null;
 
   const wallet = useMemo(() => {
-    const foundWallet = wallets.find(w => w?.id === walletId);
-    console.log("💡 WalletPopup | Selected Wallet:", foundWallet);
-    return foundWallet;
+    return wallets.find(w => w?.id === walletId);
   }, [wallets, walletId]);
 
   if (!wallet || !wallet.colorStyle) {
@@ -79,7 +77,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     };
   }, [user, walletId, isOpen]);
 
-
   const handleDatePreset = (preset) => {
     setActivePreset(preset);
     const today = new Date();
@@ -107,16 +104,10 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const totalPages = Math.ceil(allFiltered.length / perPage);
   const paginatedTx = allFiltered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
-  const swipeToTab = (direction) => {
-    const index = tabs.indexOf(activeTab);
-    const next = direction === "left" ? index + 1 : index - 1;
-    if (tabs[next]) setActiveTab(tabs[next]);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md rounded-t-xl bg-white p-4 pb-8 shadow-xl max-h-[95vh] flex flex-col overflow-y-auto"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md md:max-w-xl rounded-t-xl bg-white p-4 pb-8 shadow-xl max-h-[95vh] flex flex-col"
       >
         <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
         <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
@@ -162,7 +153,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-1 min-h-[300px] max-h-[calc(95vh-200px)]">
+        <div className="flex-1 overflow-y-auto px-1 min-h-[300px] max-h-[70vh] md:max-h-[60vh]">
           <AnimatePresence mode="wait">
             {activeTab === "history" && !loading && (
               <motion.div
@@ -172,12 +163,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -100, opacity: 0 }}
                 transition={{ duration: 0.25 }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                onDragEnd={(e, info) => {
-                  if (info.offset.x < -50) swipeToTab("left");
-                  else if (info.offset.x > 50) swipeToTab("right");
-                }}
               >
                 <div className="flex items-center gap-2">
                   <Search size={18} className="text-gray-400" />
@@ -242,6 +227,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 </div>
               </motion.div>
             )}
+
             {activeTab === "income" && (
               <motion.div
                 key="income-form"
@@ -253,6 +239,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
               </motion.div>
             )}
+
             {activeTab === "outcome" && (
               <motion.div
                 key="outcome-form"

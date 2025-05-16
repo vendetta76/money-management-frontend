@@ -69,6 +69,7 @@ const currencyOptions = [
   { value: "ARS", label: "ARS - Argentine Peso" },
   { value: "CLP", label: "CLP - Chilean Peso" },
   { value: "COP", label: "COP - Colombian Peso" },
+  { value: "USDT", label: "USDT - Tether (Stablecoin)" },
 ];
 
 const colorStyleOptions = [
