@@ -167,7 +167,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-1">
+        <div className="flex-1 overflow-y-auto px-1 min-h-[300px]">
           <AnimatePresence mode="wait">
             {activeTab === "history" && !loading && (
               <motion.div
@@ -247,21 +247,29 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 </div>
               </motion.div>
             )}
+            {activeTab === "income" && formReady && (
+              <motion.div
+                key="income-form"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+              </motion.div>
+            )}
+            {activeTab === "outcome" && formReady && (
+              <motion.div
+                key="outcome-form"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+              </motion.div>
+            )}
           </AnimatePresence>
-
-          {activeTab === "income" && formReady && (
-            <>
-              {console.log("✅ Rendering IncomeForm")}
-              <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
-            </>
-          )}
-
-          {activeTab === "outcome" && formReady && (
-            <>
-              {console.log("✅ Rendering OutcomeForm")}
-              <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
-            </>
-          )}
         </div>
 
         <div className="fixed bottom-4 right-4 z-50 flex gap-2">
