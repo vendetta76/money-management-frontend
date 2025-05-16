@@ -16,6 +16,7 @@ import { Loader2 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 import { getCardStyle } from "../helpers/getCardStyle";
 import { WalletEntry, OutcomeEntry } from "../helpers/types";
+import { toast } from "react-toastify"; // Added for toast notifications
 
 interface OutcomeFormProps {
   hideCardPreview?: boolean;
@@ -52,8 +53,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
 
   useEffect(() => {
     if (!presetWalletId || wallets.length === 0) return;
-
-    const selected = wallets.find((w) => w.id === presetWalletId);
+    const selected = wallets.find(w => w.id === presetWalletId && w.status !== "archived");
     if (selected) {
       setForm((prev) => ({
         ...prev,
@@ -124,6 +124,14 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
       return;
     }
     if (!user) return;
+
+    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    if (!selectedWallet) {
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -134,9 +142,8 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
         return;
       }
 
-      const selectedWallet = wallets.find((w) => w.id === form.wallet);
       if (selectedWallet && selectedWallet.balance < parsedAmount) {
-        alert("Saldo tidak cukup.");
+        toast.error("Saldo tidak cukup.");
         setLoading(false);
         return;
       }
@@ -187,6 +194,14 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
       return;
     }
     if (!user) return;
+
+    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    if (!selectedWallet) {
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -197,9 +212,8 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
         return;
       }
 
-      const selectedWallet = wallets.find((w) => w.id === form.wallet);
       if (selectedWallet && selectedWallet.balance < parsedAmount) {
-        alert("Saldo tidak cukup.");
+        toast.error("Saldo tidak cukup.");
         setLoading(false);
         return;
       }
@@ -262,23 +276,31 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
             }`}
           >
             <option value="">-- Pilih Dompet --</option>
-            {wallets.map((w) => (
-              <option key={w.id} value={w.id}>{w.name}</option>
-            ))}
+            {wallets
+              .filter(w => w.status !== "archived")
+              .map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
           </select>
           {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
-          {form.wallet && !hideCardPreview && (
-            <div
-              className="mt-4 rounded-xl text-white p-4 shadow w-full"
-              style={getCardStyle(wallets.find((w) => w.id === form.wallet)!)}
-            >
-              <h3 className="text-sm font-semibold truncate">{getWalletName(form.wallet)}</h3>
-              <p className="text-lg font-bold mt-1">
-                {formatCurrency(getWalletBalance(form.wallet), form.currency)}
-              </p>
-            </div>
-          )}
+          {form.wallet && !hideCardPreview && (() => {
+            const selectedWallet = wallets.find(
+              (w) => w.id === form.wallet && w.status !== "archived"
+            );
+            if (!selectedWallet) return null;
+            return (
+              <div
+                className="mt-4 rounded-xl text-white p-4 shadow w-full"
+                style={getCardStyle(selectedWallet)}
+              >
+                <h3 className="text-sm font-semibold truncate">{selectedWallet.name}</h3>
+                <p className="text-lg font-bold mt-1">
+                  {formatCurrency(selectedWallet.balance || 0, selectedWallet.currency)}
+                </p>
+              </div>
+            );
+          })()}
         </div>
 
         <div>

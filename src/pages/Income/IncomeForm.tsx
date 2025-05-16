@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 import { getCardStyle } from "../helpers/getCardStyle";
 import { WalletEntry, IncomeEntry } from "../helpers/types";
+import { toast } from "react-toastify"; // Added for toast notifications
 
 interface IncomeFormProps {
   hideCardPreview?: boolean;
@@ -53,8 +54,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
 
   useEffect(() => {
     if (!presetWalletId || wallets.length === 0) return;
-
-    const selected = wallets.find((w) => w.id === presetWalletId);
+    const selected = wallets.find((w) => w.id === presetWalletId && w.status !== "archived");
     if (selected) {
       setForm((prev) => ({
         ...prev,
@@ -130,6 +130,14 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
       return;
     }
     if (!user) return;
+
+    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    if (!selectedWallet) {
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -191,6 +199,14 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
       return;
     }
     if (!user) return;
+
+    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    if (!selectedWallet) {
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -237,15 +253,19 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
           className={`w-full rounded border px-4 py-2 dark:bg-gray-800 dark:text-white ${errors.wallet && "border-red-500"}`}
         >
           <option value="">-- Pilih Dompet --</option>
-          {wallets.map((w) => (
-            <option key={w.id} value={w.id}>{w.name}</option>
-          ))}
+          {wallets
+            .filter(w => w.status !== "archived")
+            .map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name}
+              </option>
+            ))}
         </select>
         {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
         {form.wallet && !hideCardPreview && (
           (() => {
-            const selectedWallet = wallets.find((w) => w.id === form.wallet);
+            const selectedWallet = wallets.find((w) => w.id === form.wallet && w.status !== "archived");
             return selectedWallet ? (
               <div
                 className="mt-4 rounded-xl text-white p-4 shadow w-full"
