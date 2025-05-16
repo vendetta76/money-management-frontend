@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -30,15 +30,19 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
 
   if (!isOpen || !walletId) return null;
 
-  console.log("Wallets:", wallets); // Debug logging
-  const wallet = wallets.find(w => w?.id === walletId);
-  console.log("Wallet:", wallet); // Debug logging
+  // Memoize the wallet to prevent it from becoming undefined during re-renders
+  const wallet = useMemo(() => {
+    console.log("Wallets:", wallets); // Debug logging
+    const foundWallet = wallets.find(w => w?.id === walletId);
+    console.log("Wallet:", foundWallet); // Debug logging
+    return foundWallet;
+  }, [wallets, walletId]);
 
   // Ensure wallet exists before accessing properties
   if (!wallet) {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="p-6 text-center text-gray-500">
+        <DialogContent className="p-6 text-center text-gray-500" aria-describedby="loading-description">
           <DialogDescription id="loading-description">
             Memuat data dompet...
           </DialogDescription>
@@ -51,7 +55,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   if (!walletReady) {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="p-6 text-center text-gray-500">
+        <DialogContent className="p-6 text-center text-gray-500" aria-describedby="loading-description">
           <DialogDescription id="loading-description">
             Memuat data dompet...
           </DialogDescription>
