@@ -11,9 +11,9 @@ import {
   updateDoc,
   increment,
 } from "firebase/firestore";
-import { OutcomeEntry, WalletEntry } from "./types";
+import { OutcomeEntry, WalletEntry } from "../../helpers/types";
 import { Pencil, Trash } from "lucide-react";
-import { formatCurrency } from "./helpers/formatCurrency";
+import { formatCurrency } from "../../helpers/formatCurrency";
 
 const RecentOutcomeTransactions = () => {
   const { user } = useAuth();
