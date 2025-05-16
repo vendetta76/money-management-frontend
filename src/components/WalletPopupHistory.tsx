@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format, subDays } from "date-fns";
@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 const tabs = ["income", "outcome", "history"];
 
-const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
+const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
@@ -30,14 +30,31 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
 
   if (!isOpen || !walletId) return null;
 
-  const wallet = wallets?.find(w => w?.id === walletId);
-  const walletReady = wallet && wallet.colorStyle;
+  console.log("Wallets:", wallets); // Debug logging
+  const wallet = wallets.find(w => w?.id === walletId);
+  console.log("Wallet:", wallet); // Debug logging
 
+  // Ensure wallet exists before accessing properties
+  if (!wallet) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="p-6 text-center text-gray-500">
+          <DialogDescription id="loading-description">
+            Memuat data dompet...
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const walletReady = wallet.colorStyle ? true : false;
   if (!walletReady) {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="p-6 text-center text-gray-500">
-          Memuat data dompet...
+          <DialogDescription id="loading-description">
+            Memuat data dompet...
+          </DialogDescription>
         </DialogContent>
       </Dialog>
     );
@@ -134,8 +151,12 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
       <DialogContent
         showClose={false}
         className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md rounded-t-xl bg-white p-4 pb-20 shadow-xl max-h-[90vh] overflow-hidden flex flex-col"
+        aria-describedby="dialog-description"
       >
         <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
+        <DialogDescription id="dialog-description" className="sr-only">
+          Dialog untuk melihat detail dompet, termasuk pemasukan, pengeluaran, dan riwayat transaksi.
+        </DialogDescription>
 
         <button
           onClick={onClose}
