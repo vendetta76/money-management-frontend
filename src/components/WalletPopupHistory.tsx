@@ -30,11 +30,11 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
 
   if (!isOpen || !walletId) return null;
 
-  const wallet = wallets.find(w => w.id === walletId);
+  const wallet = wallets?.find(w => w.id === walletId);
   if (!wallet) return <div className="text-center">Memuat dompet...</div>;
 
-  const colorStyle = wallet.colorStyle === "gradient" ? "gradient" : "solid";
-  const colorValue = wallet.colorValue || "#cccccc";
+  const colorStyle = wallet?.colorStyle === "gradient" ? "gradient" : "solid";
+  const colorValue = wallet?.colorValue || "#cccccc";
 
   useEffect(() => {
     if (!user) return;
@@ -130,10 +130,10 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
 
         <div className="flex justify-center mt-2 mb-3">
           <WalletCard
-            id={wallet.id}
-            name={wallet.name}
-            balance={wallet.balance}
-            currency={wallet.currency}
+            id={wallet?.id || ""}
+            name={wallet?.name || "Dompet"}
+            balance={wallet?.balance || 0}
+            currency={wallet?.currency || "IDR"}
             colorStyle={colorStyle}
             colorValue={colorValue}
             showBalance={showBalance}
