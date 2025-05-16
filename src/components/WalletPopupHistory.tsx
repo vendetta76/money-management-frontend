@@ -25,13 +25,16 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState("history");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [formReady, setFormReady] = useState(false);
   const perPage = 5;
 
-  const activeWallet = wallets.find(w => w.id === walletId);
-  if (!isOpen || !walletId || !activeWallet) return null;
+  if (!isOpen || !walletId) return null;
 
-  const colorStyle = activeWallet.colorStyle === "gradient" ? "gradient" : "solid";
-  const colorValue = activeWallet.colorValue || "#cccccc";
+  const wallet = wallets.find(w => w.id === walletId);
+  if (!wallet) return <div className="text-center">Memuat dompet...</div>;
+
+  const colorStyle = wallet.colorStyle === "gradient" ? "gradient" : "solid";
+  const colorValue = wallet.colorValue || "#cccccc";
 
   useEffect(() => {
     if (!user) return;
@@ -63,6 +66,14 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
       unsubIn(); unsubOut(); unsubTransfer();
     };
   }, [user, walletId, isOpen]);
+
+  useEffect(() => {
+    if (activeTab === "income" || activeTab === "outcome") {
+      setTimeout(() => setFormReady(true), 0);
+    } else {
+      setFormReady(false);
+    }
+  }, [activeTab]);
 
   const handleDatePreset = (preset) => {
     setActivePreset(preset);
@@ -119,10 +130,10 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
 
         <div className="flex justify-center mt-2 mb-3">
           <WalletCard
-            id={activeWallet.id}
-            name={activeWallet.name}
-            balance={activeWallet.balance}
-            currency={activeWallet.currency}
+            id={wallet.id}
+            name={wallet.name}
+            balance={wallet.balance}
+            currency={wallet.currency}
             colorStyle={colorStyle}
             colorValue={colorValue}
             showBalance={showBalance}
@@ -186,10 +197,10 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
                 else if (info.offset.x > 50) swipeToTab("right");
               }}
             >
-              {activeTab === "income" && (
+              {activeTab === "income" && formReady && (
                 <IncomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
               )}
-              {activeTab === "outcome" && (
+              {activeTab === "outcome" && formReady && (
                 <OutcomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
               )}
               {activeTab === "history" && !loading && (
