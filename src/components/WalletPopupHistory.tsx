@@ -30,35 +30,17 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
 
   if (!isOpen || !walletId) return null;
 
-  // Memoize the wallet to prevent it from becoming undefined during re-renders
   const wallet = useMemo(() => {
-    console.log("Wallets:", wallets); // Debug logging
     const foundWallet = wallets.find(w => w?.id === walletId);
-    console.log("Wallet:", foundWallet); // Debug logging
+    console.log("💡 WalletPopup | Selected Wallet:", foundWallet);
     return foundWallet;
   }, [wallets, walletId]);
 
-  // Ensure wallet exists before accessing properties
-  if (!wallet) {
+  if (!wallet || !wallet.colorStyle) {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="p-6 text-center text-gray-500" aria-describedby="loading-description">
-          <DialogDescription id="loading-description">
-            Memuat data dompet...
-          </DialogDescription>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const walletReady = wallet.colorStyle ? true : false;
-  if (!walletReady) {
-    return (
-      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="p-6 text-center text-gray-500" aria-describedby="loading-description">
-          <DialogDescription id="loading-description">
-            Memuat data dompet...
-          </DialogDescription>
+        <DialogContent className="p-6 text-center text-gray-500">
+          <DialogDescription>Memuat data dompet...</DialogDescription>
         </DialogContent>
       </Dialog>
     );
@@ -99,31 +81,17 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   }, [user, walletId, isOpen]);
 
   useEffect(() => {
-    console.log(`Active tab changed to: ${activeTab}`);
-    if (activeTab === "income" || activeTab === "outcome") {
-      console.log("Setting formReady to true...");
-      setTimeout(() => {
-        setFormReady(true);
-        console.log("formReady set to true");
-      }, 0);
-    } else {
-      setFormReady(false);
-      console.log("formReady set to false");
-    }
+    console.log("📍 Tab changed:", activeTab);
+    setFormReady(activeTab === "income" || activeTab === "outcome");
   }, [activeTab]);
 
   const handleDatePreset = (preset) => {
     setActivePreset(preset);
     const today = new Date();
-    if (preset === "today") {
-      setDateFilter(format(today, "yyyy-MM-dd"));
-    } else if (preset === "yesterday") {
-      setDateFilter(format(subDays(today, 1), "yyyy-MM-dd"));
-    } else if (preset === "last7") {
-      setDateFilter("last7");
-    } else {
-      setDateFilter("");
-    }
+    if (preset === "today") setDateFilter(format(today, "yyyy-MM-dd"));
+    else if (preset === "yesterday") setDateFilter(format(subDays(today, 1), "yyyy-MM-dd"));
+    else if (preset === "last7") setDateFilter("last7");
+    else setDateFilter("");
   };
 
   const allFiltered = transactions
@@ -152,15 +120,9 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        showClose={false}
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md rounded-t-xl bg-white p-4 pb-20 shadow-xl max-h-[90vh] overflow-hidden flex flex-col"
-        aria-describedby="dialog-description"
-      >
+      <DialogContent className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md rounded-t-xl bg-white p-4 pb-20 shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
-        <DialogDescription id="dialog-description" className="sr-only">
-          Dialog untuk melihat detail dompet, termasuk pemasukan, pengeluaran, dan riwayat transaksi.
-        </DialogDescription>
+        <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
 
         <button
           onClick={onClose}
@@ -169,156 +131,142 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
           <X className="w-4 h-4" />
         </button>
 
-        {walletReady && (
-          <div className="flex justify-center mt-2 mb-3">
-            <WalletCard
-              id={wallet.id}
-              name={wallet.name}
-              balance={wallet.balance}
-              currency={wallet.currency}
-              colorStyle={colorStyle}
-              colorValue={colorValue}
-              showBalance={showBalance}
-              onEdit={() => {}}
-              onClick={() => {}}
-              showEdit={false}
-            />
-          </div>
-        )}
+        <div className="flex justify-center mt-2 mb-3">
+          <WalletCard
+            id={wallet.id}
+            name={wallet.name}
+            balance={wallet.balance}
+            currency={wallet.currency}
+            colorStyle={colorStyle}
+            colorValue={colorValue}
+            showBalance={showBalance}
+            onEdit={() => {}}
+            onClick={() => {}}
+            showEdit={false}
+          />
+        </div>
 
-        {walletReady && (
-          <div className="fixed bottom-4 right-4 z-50 flex gap-2">
+        <div className="fixed bottom-4 right-4 z-50 flex gap-2">
+          <button onClick={() => setActiveTab("income")} className="p-3 rounded-full bg-green-500 text-white shadow-lg">
+            <ArrowDownCircle size={20} />
+          </button>
+          <button onClick={() => setActiveTab("outcome")} className="p-3 rounded-full bg-red-500 text-white shadow-lg">
+            <ArrowUpCircle size={20} />
+          </button>
+        </div>
+
+        <div className="flex justify-center gap-2 mt-4 mb-2">
+          {tabs.map((tab) => (
             <button
-              onClick={() => setActiveTab("income")}
-              className="p-3 rounded-full bg-green-500 text-white shadow-lg"
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab);
+                setCurrentPage(1);
+              }}
+              className={`px-4 py-2 rounded text-sm font-medium ${
+                activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
             >
-              <ArrowDownCircle size={20} />
+              {tab === "income" && "Pemasukan"}
+              {tab === "outcome" && "Pengeluaran"}
+              {tab === "history" && "Riwayat"}
             </button>
-            <button
-              onClick={() => setActiveTab("outcome")}
-              className="p-3 rounded-full bg-red-500 text-white shadow-lg"
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {activeTab === "history" && !loading && (
+            <motion.div
+              key={activeTab + currentPage}
+              className="flex-1 overflow-y-auto space-y-4"
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -100, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50) swipeToTab("left");
+                else if (info.offset.x > 50) swipeToTab("right");
+              }}
             >
-              <ArrowUpCircle size={20} />
-            </button>
-          </div>
-        )}
+              <div className="flex items-center gap-2">
+                <Search size={18} className="text-gray-400" />
+                <Input
+                  placeholder="Cari transaksi..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full"
+                />
+              </div>
 
-        {walletReady && (
-          <div className="flex justify-center gap-2 mt-4 mb-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  setCurrentPage(1);
-                }}
-                className={`px-4 py-2 rounded text-sm font-medium ${
-                  activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {tab === "income" && "Pemasukan"}
-                {tab === "outcome" && "Pengeluaran"}
-                {tab === "history" && "Riwayat"}
-              </button>
-            ))}
-          </div>
-        )}
+              <div className="flex flex-wrap gap-2">
+                {["today", "yesterday", "last7", "all"].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => handleDatePreset(preset)}
+                    className={`px-3 py-1 rounded border text-sm ${
+                      activePreset === preset ? "bg-blue-600 text-white" : "bg-gray-100"
+                    }`}
+                  >
+                    {preset === "today" && "Hari Ini"}
+                    {preset === "yesterday" && "Kemarin"}
+                    {preset === "last7" && "7 Hari"}
+                    {preset === "all" && "Semua"}
+                  </button>
+                ))}
+              </div>
 
-        {walletReady && loading && activeTab === "history" && (
-          <div className="text-center text-sm text-gray-400 my-6 animate-pulse">Loading transaksi...</div>
-        )}
-
-        {walletReady && (
-<div className="mt-2 overflow-y-auto max-h-[65vh] px-1">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab + currentPage}
-                className="w-full h-full overflow-y-auto"
-                initial={{ x: 100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -100, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                onDragEnd={(e, info) => {
-                  if (info.offset.x < -50) swipeToTab("left");
-                  else if (info.offset.x > 50) swipeToTab("right");
-                }}
-              >
-                {activeTab === "income" && formReady && (
-                  <IncomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} hideCardPreview />
-                )}
-                {activeTab === "outcome" && formReady && (
-                  <OutcomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} hideCardPreview />
-                )}
-                {activeTab === "history" && !loading && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Search size={18} className="text-gray-400" />
-                      <Input
-                        placeholder="Cari transaksi..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full"
-                      />
+              {paginatedTx.length ? (
+                paginatedTx.map(tx => (
+                  <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
+                    <div className="flex items-center gap-3">
+                      {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
+                      {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
+                      {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
+                      <span className="font-medium truncate">{tx.description || "Transfer"}</span>
                     </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {["today", "yesterday", "last7", "all"].map((preset) => (
-                        <button
-                          key={preset}
-                          onClick={() => handleDatePreset(preset)}
-                          className={`px-3 py-1 rounded border text-sm ${
-                            activePreset === preset ? "bg-blue-600 text-white" : "bg-gray-100"
-                          }`}
-                        >
-                          {preset === "today" && "Hari Ini"}
-                          {preset === "yesterday" && "Kemarin"}
-                          {preset === "last7" && "7 Hari"}
-                          {preset === "all" && "Semua"}
-                        </button>
-                      ))}
-                    </div>
-
-                    {paginatedTx.length ? (
-                      paginatedTx.map(tx => (
-                        <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
-                          <div className="flex items-center gap-3">
-                            {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
-                            {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
-                            {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                            <span className="font-medium truncate">{tx.description || "Transfer"}</span>
-                          </div>
-                          <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center text-gray-500 pt-4">Tidak ada transaksi ditemukan.</div>
-                    )}
-
-                    <div className="flex justify-between items-center pt-2">
-                      <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
-                        ← Sebelumnya
-                      </button>
-                      <span className="text-sm text-gray-500">Hal {currentPage} dari {totalPages}</span>
-                      <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-                        Selanjutnya →
-                      </button>
-                    </div>
-
-                    <div className="text-center mt-4">
-                      <button
-                        onClick={() => navigate("/history")}
-                        className="text-blue-600 underline text-sm"
-                      >
-                        Lihat Selengkapnya
-                      </button>
-                    </div>
+                    <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
                   </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 pt-4">Tidak ada transaksi ditemukan.</div>
+              )}
+
+              <div className="flex justify-between items-center pt-2">
+                <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+                  ← Sebelumnya
+                </button>
+                <span className="text-sm text-gray-500">Hal {currentPage} dari {totalPages}</span>
+                <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                  Selanjutnya →
+                </button>
+              </div>
+
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => navigate("/history")}
+                  className="text-blue-600 underline text-sm"
+                >
+                  Lihat Selengkapnya
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {activeTab === "income" && formReady && (
+          <>
+            {console.log("✅ Rendering IncomeForm")}
+            <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+          </>
+        )}
+
+        {activeTab === "outcome" && formReady && (
+          <>
+            {console.log("✅ Rendering OutcomeForm")}
+            <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+          </>
         )}
       </DialogContent>
     </Dialog>
