@@ -6,12 +6,12 @@ interface WalletCardProps {
   name: string;
   balance: number;
   currency: string;
-   colorStyle = "solid", // ✅ fallback
-  colorValue = "#999999", // ✅ fallback
+  colorStyle?: "solid" | "gradient";
+  colorValue?: string | { start: string; end: string };
   showBalance: boolean;
   onEdit: () => void;
   onClick: () => void;
-  showEdit?: boolean; // ⬅️ tambahkan ini
+  showEdit?: boolean;
 }
 
 const getContrastColor = (hex: string) => {
@@ -28,12 +28,12 @@ const WalletCard: React.FC<WalletCardProps> = ({
   name,
   balance,
   currency,
-  colorStyle,
-  colorValue,
+  colorStyle = "solid",
+  colorValue = "#999999",
   showBalance,
   onEdit,
   onClick,
-  showEdit = true, // ⬅️ default tetap true
+  showEdit = true,
 }) => {
   const pointerDownRef = useRef<number>(0);
 
