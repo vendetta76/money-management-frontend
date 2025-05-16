@@ -246,10 +246,10 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 }}
               >
                 {activeTab === "income" && formReady && (
-                  <IncomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
+                  <IncomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} hideCardPreview />
                 )}
                 {activeTab === "outcome" && formReady && (
-                  <OutcomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
+                  <OutcomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} hideCardPreview />
                 )}
                 {activeTab === "history" && !loading && (
                   <div className="space-y-4">

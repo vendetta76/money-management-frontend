@@ -19,11 +19,12 @@ import { getCardStyle } from "./helpers/getCardStyle";
 import { WalletEntry, IncomeEntry } from "./types";
 
 interface IncomeFormProps {
+  hideCardPreview?: boolean;
   presetWalletId?: string;
   onClose?: () => void;
 }
 
-const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
+const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCardPreview }) => {
   const { user } = useAuth();
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
@@ -242,7 +243,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose }) => {
         </select>
         {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
-        {form.wallet && (
+        {form.wallet && !hideCardPreview && (
           (() => {
             const selectedWallet = wallets.find((w) => w.id === form.wallet);
             return selectedWallet ? (

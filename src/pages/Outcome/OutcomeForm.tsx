@@ -18,11 +18,12 @@ import { getCardStyle } from "./helpers/getCardStyle";
 import { WalletEntry, OutcomeEntry } from "./types";
 
 interface OutcomeFormProps {
+  hideCardPreview?: boolean;
   presetWalletId?: string;
   onClose?: () => void;
 }
 
-const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose }) => {
+const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hideCardPreview }) => {
   const { user } = useAuth();
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [outcomes, setOutcomes] = useState<OutcomeEntry[]>([]);
@@ -267,7 +268,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose }) =>
           </select>
           {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
-          {form.wallet && (
+          {form.wallet && !hideCardPreview && (
             <div
               className="mt-4 rounded-xl text-white p-4 shadow w-full"
               style={getCardStyle(wallets.find((w) => w.id === form.wallet)!)}
