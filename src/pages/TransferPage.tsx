@@ -133,11 +133,25 @@ const TransferPage: React.FC = () => {
         return;
       }
 
+      // Validate sufficient balance
+      if (fromWallet.balance < parsedAmount) {
+        toast.error("Saldo dompet asal tidak mencukupi untuk transfer ini.");
+        return;
+      }
+
       const fromWalletRef = doc(db, "users", user.uid, "wallets", fromWalletId);
       const toWalletRef = doc(db, "users", user.uid, "wallets", toWalletId);
 
       if (editingTransfer) {
         const previousAmount = editingTransfer.amount;
+
+        const saldoSetelahRollback = fromWallet.balance + previousAmount;
+  if (saldoSetelahRollback < parsedAmount) {
+    toast.error("Saldo tidak cukup untuk memperbarui transfer.");
+    return;
+  }
+}
+
 
         // Rollback saldo lama menggunakan increment
         const fromRef = doc(db, "users", user.uid, "wallets", editingTransfer.fromWalletId);

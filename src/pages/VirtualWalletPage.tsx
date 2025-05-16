@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { useAuth } from "../context/AuthContext";
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "../lib/firebaseClient";
 
 interface VirtualWallet {
   id: string;
@@ -10,96 +20,80 @@ interface VirtualWallet {
   history?: { amount: number; type: "add" | "edit"; timestamp: string }[];
 }
 
-const allowedEmails = [
-  "joeverson.kamantha@gmail.com",
-];
-
 const VirtualWalletPage: React.FC = () => {
   const { user } = useAuth();
   const [wallets, setWallets] = useState<VirtualWallet[]>([]);
   const [form, setForm] = useState({ name: "", currency: "IDR", balance: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [topupAmount, setTopupAmount] = useState("");
+  const [topupAmount, setTopupAmount] = useState<string>("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("virtual-wallets");
-    if (saved) setWallets(JSON.parse(saved));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("virtual-wallets", JSON.stringify(wallets));
-  }, [wallets]);
-
-  useEffect(() => {
-    if (!user || !user.email) return;
-    const email = user.email.toLowerCase();
-    if (!allowedEmails.includes(email)) {
-      alert("Akses ditolak. Halaman ini hanya untuk user tertentu.");
-      window.location.href = "/dashboard";
-    }
-  }, [user]);
+    if (!user?.uid) return;
+    const ref = collection(db, "users", user.uid, "virtualWallets");
+    const unsub = onSnapshot(ref, (snap) => {
+      const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as VirtualWallet[];
+      setWallets(data);
+    });
+    return () => unsub();
+  }, [user?.uid]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAddOrUpdate = () => {
-    if (!form.name || !form.balance) return;
+  const handleAddOrUpdate = async () => {
+    if (!form.name || !form.balance || !user?.uid) return;
     const parsedBalance = parseFloat(form.balance.replace(/,/g, ""));
     const timestamp = new Date().toISOString();
+    const ref = collection(db, "users", user.uid, "virtualWallets");
 
     if (editingId) {
-      setWallets((prev) =>
-        prev.map((w) =>
-          w.id === editingId
-            ? {
-                ...w,
-                name: form.name,
-                currency: form.currency,
-                balance: parsedBalance,
-                history: [
-                  ...(w.history || []),
-                  { amount: parsedBalance, type: "edit", timestamp },
-                ],
-              }
-            : w
-        )
-      );
+      const walletDoc = doc(db, "users", user.uid, "virtualWallets", editingId);
+      const target = wallets.find((w) => w.id === editingId);
+      const newHistory = [
+        ...(target?.history || []),
+        { amount: parsedBalance, type: "edit", timestamp },
+      ];
+      await updateDoc(walletDoc, {
+        name: form.name,
+        currency: form.currency,
+        balance: parsedBalance,
+        history: newHistory,
+      });
       setEditingId(null);
     } else {
-      const newWallet: VirtualWallet = {
-        id: Date.now().toString(),
+      await addDoc(ref, {
         name: form.name,
         currency: form.currency,
         balance: parsedBalance,
         history: [
           { amount: parsedBalance, type: "add", timestamp },
         ],
-      };
-      setWallets((prev) => [...prev, newWallet]);
+        createdAt: serverTimestamp(),
+      });
     }
     setForm({ name: "", currency: "IDR", balance: "" });
   };
 
-  const handleTopup = (id: string) => {
+  const handleTopup = async (id: string) => {
+    if (!user?.uid || !topupAmount) return;
     const parsed = parseFloat(topupAmount.replace(/,/g, ""));
-    if (isNaN(parsed)) return;
+    if (isNaN(parsed) || parsed <= 0) return;
     const timestamp = new Date().toISOString();
-    setWallets((prev) =>
-      prev.map((w) =>
-        w.id === id
-          ? {
-              ...w,
-              balance: w.balance + parsed,
-              history: [
-                ...(w.history || []),
-                { amount: parsed, type: "add", timestamp },
-              ],
-            }
-          : w
-      )
-    );
+    const target = wallets.find((w) => w.id === id);
+    if (!target) return;
+
+    const walletDoc = doc(db, "users", user.uid, "virtualWallets", id);
+    const newBalance = target.balance + parsed;
+    const newHistory = [
+      ...(target.history || []),
+      { amount: parsed, type: "add", timestamp },
+    ];
+    await updateDoc(walletDoc, {
+      balance: newBalance,
+      history: newHistory,
+    });
     setTopupAmount("");
   };
 
@@ -112,8 +106,9 @@ const VirtualWalletPage: React.FC = () => {
     setEditingId(wallet.id);
   };
 
-  const handleDelete = (id: string) => {
-    setWallets((prev) => prev.filter((w) => w.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!user?.uid) return;
+    await deleteDoc(doc(db, "users", user.uid, "virtualWallets", id));
     if (editingId === id) {
       setEditingId(null);
       setForm({ name: "", currency: "IDR", balance: "" });
@@ -124,12 +119,10 @@ const VirtualWalletPage: React.FC = () => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  if (!user) return <LayoutShell><p className="text-center py-10">Loading...</p></LayoutShell>;
-
   return (
     <LayoutShell>
       <div className="max-w-xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">Virtual Wallet (Non-Sync)</h1>
+        <h1 className="text-2xl font-bold mb-6">Virtual Wallet (Firestore)</h1>
 
         <div className="bg-white p-4 rounded-xl shadow space-y-4 mb-6">
           <input
