@@ -62,7 +62,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
         currency: selected.currency,
       }));
     }
-  }, [presetWalletId, wallets]);
+  }, [presetWalletId, wallets.length]);
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {

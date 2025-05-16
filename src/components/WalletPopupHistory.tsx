@@ -229,7 +229,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
         )}
 
         {walletReady && (
-          <div className="mt-2 flex-1 overflow-hidden">
+<div className="mt-2 overflow-y-auto max-h-[65vh] px-1">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab + currentPage}

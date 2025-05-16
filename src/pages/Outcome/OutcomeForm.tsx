@@ -61,7 +61,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
         currency: selected.currency,
       }));
     }
-  }, [presetWalletId, wallets]);
+  }, [presetWalletId, wallets.length]);
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
