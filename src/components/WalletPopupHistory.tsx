@@ -24,13 +24,18 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
   const [showBalance] = useState(true);
   const [activeTab, setActiveTab] = useState("history");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const perPage = 5;
 
   const activeWallet = wallets.find(w => w.id === walletId);
   if (!isOpen || !walletId || !activeWallet) return null;
 
+  const colorStyle = activeWallet.colorStyle === "gradient" ? "gradient" : "solid";
+  const colorValue = activeWallet.colorValue || "#cccccc";
+
   useEffect(() => {
     if (!user) return;
+    setLoading(true);
 
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
@@ -39,16 +44,19 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
     const unsubIn = onSnapshot(incomeQuery, snap => {
       const data = snap.docs.map(d => ({ id: d.id, type: "income", ...d.data() }));
       setTransactions(prev => [...prev.filter(x => x.type !== "income"), ...data]);
+      setLoading(false);
     });
 
     const unsubOut = onSnapshot(outcomeQuery, snap => {
       const data = snap.docs.map(d => ({ id: d.id, type: "outcome", ...d.data() }));
       setTransactions(prev => [...prev.filter(x => x.type !== "outcome"), ...data]);
+      setLoading(false);
     });
 
     const unsubTransfer = onSnapshot(transferQuery, snap => {
       const data = snap.docs.map(d => ({ id: d.id, type: "transfer", ...d.data() }));
       setTransactions(prev => [...prev.filter(x => x.type !== "transfer"), ...data]);
+      setLoading(false);
     });
 
     return () => {
@@ -115,8 +123,8 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
             name={activeWallet.name}
             balance={activeWallet.balance}
             currency={activeWallet.currency}
-            colorStyle={activeWallet.colorStyle || "default"}
-            colorValue={activeWallet.colorValue || "#cccccc"}
+            colorStyle={colorStyle}
+            colorValue={colorValue}
             showBalance={showBalance}
             onEdit={() => {}}
             onClick={() => {}}
@@ -158,6 +166,10 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
           ))}
         </div>
 
+        {loading && activeTab === "history" && (
+          <div className="text-center text-sm text-gray-400 my-6 animate-pulse">Loading transaksi...</div>
+        )}
+
         <div className="mt-2 flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
@@ -180,7 +192,7 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
               {activeTab === "outcome" && (
                 <OutcomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
               )}
-              {activeTab === "history" && (
+              {activeTab === "history" && !loading && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Search size={18} className="text-gray-400" />
