@@ -25,7 +25,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState("history");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [formReady, setFormReady] = useState(false);
   const perPage = 5;
 
   if (!isOpen || !walletId) return null;
@@ -80,10 +79,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     };
   }, [user, walletId, isOpen]);
 
-  useEffect(() => {
-    console.log("📍 Tab changed:", activeTab);
-    setFormReady(activeTab === "income" || activeTab === "outcome");
-  }, [activeTab]);
 
   const handleDatePreset = (preset) => {
     setActivePreset(preset);
@@ -247,7 +242,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 </div>
               </motion.div>
             )}
-            {activeTab === "income" && formReady && (
+            {activeTab === "income" && (
               <motion.div
                 key="income-form"
                 initial={{ opacity: 0 }}
@@ -258,7 +253,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
               </motion.div>
             )}
-            {activeTab === "outcome" && formReady && (
+            {activeTab === "outcome" && (
               <motion.div
                 key="outcome-form"
                 initial={{ opacity: 0 }}
@@ -270,15 +265,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        <div className="fixed bottom-4 right-4 z-50 flex gap-2">
-          <button onClick={() => setActiveTab("income")} className="p-3 rounded-full bg-green-500 text-white shadow-lg">
-            <ArrowDownCircle size={20} />
-          </button>
-          <button onClick={() => setActiveTab("outcome")} className="p-3 rounded-full bg-red-500 text-white shadow-lg">
-            <ArrowUpCircle size={20} />
-          </button>
         </div>
       </DialogContent>
     </Dialog>
