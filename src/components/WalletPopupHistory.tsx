@@ -121,14 +121,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-  className="
-    fixed bottom-0 left-1/2 -translate-x-1/2
-    w-full max-w-md rounded-t-xl
-    bg-white p-4 pb-8
-    shadow-xl
-    max-h-[95vh] overflow-hidden
-    flex flex-col
-  ">
+  className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md rounded-t-xl bg-white p-4 pb-8 shadow-xl max-h-[95vh] flex flex-col overflow-y-auto">
         <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
         <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
 
