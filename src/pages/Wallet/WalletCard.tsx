@@ -36,6 +36,8 @@ const WalletCard: React.FC<WalletCardProps> = ({
   showEdit = true,
 }) => {
   const pointerDownRef = useRef<number>(0);
+  const safeColorStyle = colorStyle || "solid";
+  const safeColorValue = colorValue || "#cccccc";
 
   const handlePointerDown = () => {
     pointerDownRef.current = Date.now();
@@ -48,18 +50,18 @@ const WalletCard: React.FC<WalletCardProps> = ({
   };
 
   const bgStyle =
-    colorStyle === "solid"
-      ? { backgroundColor: colorValue as string }
+    safeColorStyle === "solid"
+      ? { backgroundColor: safeColorValue as string }
       : {
           background: `linear-gradient(to bottom right, ${
-            (colorValue as any)?.start ?? "#9333ea"
-          }, ${(colorValue as any)?.end ?? "#4f46e5"})`,
+            (safeColorValue as any)?.start ?? "#9333ea"
+          }, ${(safeColorValue as any)?.end ?? "#4f46e5"})`,
         };
 
   const contrastColor =
-    colorStyle === "solid"
-      ? getContrastColor(colorValue as string)
-      : getContrastColor((colorValue as any)?.end ?? "#4f46e5");
+    safeColorStyle === "solid"
+      ? getContrastColor(safeColorValue as string)
+      : getContrastColor((safeColorValue as any)?.end ?? "#4f46e5");
 
   return (
     <div
