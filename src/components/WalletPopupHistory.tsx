@@ -121,7 +121,8 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-  className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md rounded-t-xl bg-white p-4 pb-8 shadow-xl max-h-[95vh] flex flex-col overflow-y-auto">
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md rounded-t-xl bg-white p-4 pb-8 shadow-xl max-h-[95vh] flex flex-col"
+      >
         <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
         <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
 
@@ -147,15 +148,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
           />
         </div>
 
-        <div className="fixed bottom-4 right-4 z-50 flex gap-2">
-          <button onClick={() => setActiveTab("income")} className="p-3 rounded-full bg-green-500 text-white shadow-lg">
-            <ArrowDownCircle size={20} />
-          </button>
-          <button onClick={() => setActiveTab("outcome")} className="p-3 rounded-full bg-red-500 text-white shadow-lg">
-            <ArrowUpCircle size={20} />
-          </button>
-        </div>
-
         <div className="flex justify-center gap-2 mt-4 mb-2">
           {tabs.map((tab) => (
             <button
@@ -175,100 +167,111 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
           ))}
         </div>
 
-        <AnimatePresence mode="wait">
-          {activeTab === "history" && !loading && (
-            <motion.div
-              key={activeTab + currentPage}
-              className="flex-1 overflow-y-auto space-y-4"
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -100, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -50) swipeToTab("left");
-                else if (info.offset.x > 50) swipeToTab("right");
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <Search size={18} className="text-gray-400" />
-                <Input
-                  placeholder="Cari transaksi..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full"
-                />
-              </div>
+        <div className="flex-1 overflow-y-auto px-1">
+          <AnimatePresence mode="wait">
+            {activeTab === "history" && !loading && (
+              <motion.div
+                key={activeTab + currentPage}
+                className="space-y-4"
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -100, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                onDragEnd={(e, info) => {
+                  if (info.offset.x < -50) swipeToTab("left");
+                  else if (info.offset.x > 50) swipeToTab("right");
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Search size={18} className="text-gray-400" />
+                  <Input
+                    placeholder="Cari transaksi..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
 
-              <div className="flex flex-wrap gap-2">
-                {["today", "yesterday", "last7", "all"].map((preset) => (
-                  <button
-                    key={preset}
-                    onClick={() => handleDatePreset(preset)}
-                    className={`px-3 py-1 rounded border text-sm ${
-                      activePreset === preset ? "bg-blue-600 text-white" : "bg-gray-100"
-                    }`}
-                  >
-                    {preset === "today" && "Hari Ini"}
-                    {preset === "yesterday" && "Kemarin"}
-                    {preset === "last7" && "7 Hari"}
-                    {preset === "all" && "Semua"}
-                  </button>
-                ))}
-              </div>
+                <div className="flex flex-wrap gap-2">
+                  {["today", "yesterday", "last7", "all"].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => handleDatePreset(preset)}
+                      className={`px-3 py-1 rounded border text-sm ${
+                        activePreset === preset ? "bg-blue-600 text-white" : "bg-gray-100"
+                      }`}
+                    >
+                      {preset === "today" && "Hari Ini"}
+                      {preset === "yesterday" && "Kemarin"}
+                      {preset === "last7" && "7 Hari"}
+                      {preset === "all" && "Semua"}
+                    </button>
+                  ))}
+                </div>
 
-              {paginatedTx.length ? (
-                paginatedTx.map(tx => (
-                  <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
-                    <div className="flex items-center gap-3">
-                      {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
-                      {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
-                      {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                      <span className="font-medium truncate">{tx.description || "Transfer"}</span>
+                {paginatedTx.length ? (
+                  paginatedTx.map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
+                      <div className="flex items-center gap-3">
+                        {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
+                        {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
+                        {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
+                        <span className="font-medium truncate">{tx.description || "Transfer"}</span>
+                      </div>
+                      <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
                     </div>
-                    <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center text-gray-500 pt-4">Tidak ada transaksi ditemukan.</div>
-              )}
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500 pt-4">Tidak ada transaksi ditemukan.</div>
+                )}
 
-              <div className="flex justify-between items-center pt-2">
-                <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
-                  ← Sebelumnya
-                </button>
-                <span className="text-sm text-gray-500">Hal {currentPage} dari {totalPages}</span>
-                <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-                  Selanjutnya →
-                </button>
-              </div>
+                <div className="flex justify-between items-center pt-2">
+                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+                    ← Sebelumnya
+                  </button>
+                  <span className="text-sm text-gray-500">Hal {currentPage} dari {totalPages}</span>
+                  <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                    Selanjutnya →
+                  </button>
+                </div>
 
-              <div className="text-center mt-4">
-                <button
-                  onClick={() => navigate("/history")}
-                  className="text-blue-600 underline text-sm"
-                >
-                  Lihat Selengkapnya
-                </button>
-              </div>
-            </motion.div>
+                <div className="text-center mt-4">
+                  <button
+                    onClick={() => navigate("/history")}
+                    className="text-blue-600 underline text-sm"
+                  >
+                    Lihat Selengkapnya
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {activeTab === "income" && formReady && (
+            <>
+              {console.log("✅ Rendering IncomeForm")}
+              <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+            </>
           )}
-        </AnimatePresence>
 
-        {activeTab === "income" && formReady && (
-          <>
-            {console.log("✅ Rendering IncomeForm")}
-            <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
-          </>
-        )}
+          {activeTab === "outcome" && formReady && (
+            <>
+              {console.log("✅ Rendering OutcomeForm")}
+              <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+            </>
+          )}
+        </div>
 
-        {activeTab === "outcome" && formReady && (
-          <>
-            {console.log("✅ Rendering OutcomeForm")}
-            <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
-          </>
-        )}
+        <div className="fixed bottom-4 right-4 z-50 flex gap-2">
+          <button onClick={() => setActiveTab("income")} className="p-3 rounded-full bg-green-500 text-white shadow-lg">
+            <ArrowDownCircle size={20} />
+          </button>
+          <button onClick={() => setActiveTab("outcome")} className="p-3 rounded-full bg-red-500 text-white shadow-lg">
+            <ArrowUpCircle size={20} />
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   );
