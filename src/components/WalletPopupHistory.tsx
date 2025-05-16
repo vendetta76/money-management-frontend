@@ -78,10 +78,16 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
   }, [user, walletId, isOpen]);
 
   useEffect(() => {
+    console.log(`Active tab changed to: ${activeTab}`);
     if (activeTab === "income" || activeTab === "outcome") {
-      setTimeout(() => setFormReady(true), 0);
+      console.log("Setting formReady to true...");
+      setTimeout(() => {
+        setFormReady(true);
+        console.log("formReady set to true");
+      }, 0);
     } else {
       setFormReady(false);
+      console.log("formReady set to false");
     }
   }, [activeTab]);
 
@@ -214,10 +220,10 @@ const WalletPopup = ({ walletId, wallets, isOpen, onClose }) => {
                   else if (info.offset.x > 50) swipeToTab("right");
                 }}
               >
-                {activeTab === "income" && formReady && wallet && wallet.colorStyle && (
+                {activeTab === "income" && formReady && (
                   <IncomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
                 )}
-                {activeTab === "outcome" && formReady && wallet && wallet.colorStyle && (
+                {activeTab === "outcome" && formReady && (
                   <OutcomeForm presetWalletId={walletId} onClose={() => setActiveTab("history")} />
                 )}
                 {activeTab === "history" && !loading && (
