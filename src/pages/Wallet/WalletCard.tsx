@@ -6,8 +6,8 @@ interface WalletCardProps {
   name: string;
   balance: number;
   currency: string;
-  colorStyle: "solid" | "gradient";
-  colorValue: string | { start: string; end: string };
+   colorStyle = "solid", // ✅ fallback
+  colorValue = "#999999", // ✅ fallback
   showBalance: boolean;
   onEdit: () => void;
   onClick: () => void;
