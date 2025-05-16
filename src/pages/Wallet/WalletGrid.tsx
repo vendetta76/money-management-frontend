@@ -64,8 +64,8 @@ const SortableWalletCard: React.FC<{
         name={wallet.name}
         balance={wallet.balance}
         currency={wallet.currency}
-        colorStyle={wallet.colorStyle || 'solid'}
-        colorValue={wallet.colorValue || '#cccccc'}
+        colorStyle={wallet.colorStyle || "solid"}
+        colorValue={wallet.colorValue || "#cccccc"}
         showBalance={showBalance}
         onEdit={() => onEdit(wallet.id)}
         onClick={() => onClick(wallet.id)}
@@ -123,6 +123,10 @@ const WalletGrid: React.FC<WalletGridProps> = ({
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
       {items.map((id) => {
         const wallet = wallets.find((w) => w.id === id);
+        if (!wallet || !wallet.colorStyle || !wallet.colorValue) {
+          console.warn("⚠️ Wallet data invalid or incomplete:", wallet);
+          return null;
+        }
         if (!wallet) return null;
 
         if (isMobile) {
@@ -133,8 +137,8 @@ const WalletGrid: React.FC<WalletGridProps> = ({
               name={wallet.name}
               balance={wallet.balance}
               currency={wallet.currency}
-              colorStyle={wallet.colorStyle || 'solid'}
-              colorValue={wallet.colorValue || '#cccccc'}
+              colorStyle={wallet.colorStyle || "solid"}
+              colorValue={wallet.colorValue || "#cccccc"}
               showBalance={showBalance}
               onEdit={() => onEdit(wallet.id)}
               onClick={() => onCardClick(wallet.id)}
