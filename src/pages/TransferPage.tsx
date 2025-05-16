@@ -150,9 +150,6 @@ const TransferPage: React.FC = () => {
     toast.error("Saldo tidak cukup untuk memperbarui transfer.");
     return;
   }
-}
-
-
         // Rollback saldo lama menggunakan increment
         const fromRef = doc(db, "users", user.uid, "wallets", editingTransfer.fromWalletId);
         const toRef = doc(db, "users", user.uid, "wallets", editingTransfer.toWalletId);
