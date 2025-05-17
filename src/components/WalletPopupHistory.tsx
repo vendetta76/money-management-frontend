@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -17,6 +17,7 @@ const tabs = ["income", "outcome", "history"];
 const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const searchInputRef = useRef(null);
   const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -26,6 +27,14 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const perPage = 5;
+
+  useEffect(() => {
+    if (activeTab === "history") {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [activeTab]);
 
   if (!isOpen || !walletId) return null;
 
@@ -139,7 +148,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 setCurrentPage(1);
               }}
               className={`px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm ${
-                activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                activeTab === tab ? "bg-blue-600 text-white scale-105" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               {tab === "income" && "Pemasukan"}
@@ -154,15 +163,16 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
             {activeTab === "history" && !loading && (
               <motion.div
                 key={activeTab + currentPage}
-                className="space-y-4"
-                initial={{ x: 100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -100, opacity: 0 }}
-                transition={{ duration: 0.25 }}
+                className="space-y-4 min-h-[320px]"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
               >
                 <div className="flex items-center gap-2">
                   <Search size={18} className="text-gray-400" />
                   <Input
+                    ref={searchInputRef}
                     placeholder="Cari transaksi..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -189,7 +199,13 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
 
                 {paginatedTx.length ? (
                   paginatedTx.map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
+                    <motion.div
+                      key={tx.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.25 }}
+                      className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 shadow-sm"
+                    >
                       <div className="flex items-center gap-3">
                         {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
                         {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
@@ -197,10 +213,17 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                         <span className="font-medium truncate">{tx.description || "Transfer"}</span>
                       </div>
                       <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
-                    </div>
+                    </motion.div>
                   ))
                 ) : (
-                  <div className="text-center text-gray-500 pt-4">Tidak ada transaksi ditemukan.</div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-center text-gray-500 py-10"
+                  >
+                    Tidak ada transaksi ditemukan.
+                  </motion.div>
                 )}
 
                 <div className="flex justify-between items-center pt-2">
