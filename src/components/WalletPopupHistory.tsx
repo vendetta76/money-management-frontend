@@ -3,7 +3,7 @@ import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format, subDays } from "date-fns";
 import IncomeForm from "../pages/Income/IncomeForm";
@@ -21,13 +21,19 @@ const containerVariants = {
     opacity: 1,
     transition: {
       staggerChildren: 0.1,
+      ease: "easeOut",
     },
   },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+};
+
+const paginationVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
 };
 
 const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
@@ -137,9 +143,18 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full max-w-md md:max-w-xl rounded-xl bg-white p-4 pb-6 shadow-xl h-[500px] flex flex-col"
+            className="w-full max-w-md md:max-w-xl rounded-xl bg-white p-4 pb-6 shadow-xl h-[650px] flex flex-col"
           >
-            <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
+            <DialogTitle asChild>
+              <motion.h2
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                className="text-center font-bold text-lg mb-2"
+              >
+                Dompet Saya
+              </motion.h2>
+            </DialogTitle>
             <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
 
             <motion.button
@@ -154,7 +169,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
+              transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
               className="flex justify-center mt-2 mb-3"
             >
               <WalletCard
@@ -191,7 +206,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                       layoutId="tab-background"
                       className="absolute inset-0 bg-blue-600 rounded z-[-1]"
                       initial={false}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                     />
                   )}
                   <span className="relative z-10">
@@ -203,16 +218,16 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
               ))}
             </div>
 
-            <motion.div className="px-1 space-y-4 flex-1 overflow-y-auto max-h-[300px]">
+            <motion.div className="px-1 space-y-4 flex-1 overflow-y-auto max-h-[420px]">
               <AnimatePresence mode="wait">
-                {activeTab === "history" && !loading && (
+                {activeTab === "history" && (
                   <motion.div
                     key={activeTab + currentPage}
-                    className="space-y-4 min-h-[320px]"
+                    className="space-y-4"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
                   >
                     <motion.div
                       variants={containerVariants}
@@ -259,53 +274,80 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                       ))}
                     </motion.div>
 
-                    {paginatedTx.length ? (
-                      paginatedTx.map(tx => (
-                        <motion.div
-                          key={tx.id}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.25 }}
-                          className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 shadow-sm"
-                        >
-                          <div className="flex items-center gap-3">
-                            {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
-                            {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
-                            {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                            <span className="font-medium truncate">{tx.description || "Transfer"}</span>
-                          </div>
-                          <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
-                        </motion.div>
-                      ))
-                    ) : (
+                    {loading ? (
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.3 }}
-                        className="text-center text-gray-500 py-10"
+                        className="flex justify-center items-center min-h-[284px]"
                       >
-                        Tidak ada transaksi ditemukan.
+                        <Loader2 className="animate-spin text-gray-500" size={24} />
                       </motion.div>
+                    ) : (
+                      <div className="min-h-[284px] space-y-4">
+                        {paginatedTx.length ? (
+                          paginatedTx.map(tx => (
+                            <motion.div
+                              key={tx.id}
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.25, ease: "easeOut" }}
+                              className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 shadow-sm"
+                              whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", transition: { duration: 0.2, ease: "easeOut" } }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <div className="flex items-center gap-3">
+                                {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
+                                {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
+                                {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
+                                <span className="font-medium truncate">{tx.description || "Transfer"}</span>
+                              </div>
+                              <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
+                            </motion.div>
+                          ))
+                        ) : (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="text-center text-gray-500 py-10 min-h-[284px] flex items-center justify-center"
+                          >
+                            Tidak ada transaksi ditemukan.
+                          </motion.div>
+                        )}
+                      </div>
                     )}
 
-                    <div className="flex justify-between items-center pt-2">
-                      <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
-                        ← Sebelumnya
-                      </button>
-                      <span className="text-sm text-gray-500">Hal {currentPage} dari {totalPages}</span>
-                      <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-                        Selanjutnya →
-                      </button>
-                    </div>
-
-                    <div className="text-center mt-4">
-                      <button
-                        onClick={() => navigate("/history")}
-                        className="text-blue-600 underline text-sm"
+                    <motion.div
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      className="flex justify-between items-center pt-2"
+                    >
+                      <motion.button
+                        variants={paginationVariants}
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(p => p - 1)}
+                        className="text-gray-600 hover:text-blue-600 disabled:text-gray-400"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        Lihat Selengkapnya
-                      </button>
-                    </div>
+                        ← Sebelumnya
+                      </motion.button>
+                      <motion.span variants={paginationVariants} className="text-sm text-gray-500">
+                        Hal {currentPage} dari {totalPages}
+                      </motion.span>
+                      <motion.button
+                        variants={paginationVariants}
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(p => p + 1)}
+                        className="text-gray-600 hover:text-blue-600 disabled:text-gray-400"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Selanjutnya →
+                      </motion.button>
+                    </motion.div>
                   </motion.div>
                 )}
 
@@ -315,7 +357,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                   >
                     <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
                   </motion.div>
@@ -327,7 +369,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                   >
                     <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
                   </motion.div>
@@ -338,7 +380,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
             <motion.div
               initial={{ opacity: 0, x: 20, y: 20 }}
               animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
+              transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
               className="fixed bottom-4 right-4 z-50 flex gap-2"
             >
               <motion.button
