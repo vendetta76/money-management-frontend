@@ -1,410 +1,376 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { db } from "../lib/firebaseClient";
-import { useAuth } from "../context/AuthContext";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { format, subDays } from "date-fns";
-import IncomeForm from "../pages/Income/IncomeForm";
-import OutcomeForm from "../pages/Outcome/OutcomeForm";
-import WalletCard from "../pages/Wallet/WalletCard";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { db } from "../../lib/firebaseClient";
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+  increment,
+  onSnapshot,
+  query,
+  orderBy,
+  doc,
+} from "firebase/firestore";
+import { Loader2 } from "lucide-react";
+import { formatCurrency } from "../helpers/formatCurrency";
+import { getCardStyle } from "../helpers/getCardStyle";
+import { WalletEntry, OutcomeEntry } from "../helpers/types";
+import { toast } from "react-toastify";
 
-const tabs = ["income", "outcome", "history"];
+interface OutcomeFormProps {
+  hideCardPreview?: boolean;
+  presetWalletId?: string;
+  onClose?: () => void;
+}
 
-// Animation variants for staggered effects
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      ease: "easeOut",
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
-};
-
-const paginationVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
-};
-
-const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
+const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hideCardPreview }) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const searchInputRef = useRef(null);
-  const [transactions, setTransactions] = useState([]);
-  const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [activePreset, setActivePreset] = useState("today");
-  const [showBalance] = useState(true);
-  const [activeTab, setActiveTab] = useState("history");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const perPage = 5;
-
-  useEffect(() => {
-    if (activeTab === "history") {
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
-    }
-  }, [activeTab]);
-
-  if (!isOpen || !walletId) return null;
-
-  const wallet = useMemo(() => wallets.find(w => w?.id === walletId), [wallets, walletId]);
-
-  if (!wallet || !wallet.colorStyle) {
-    return (
-      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="p-6 text-center text-gray-500">
-          <DialogDescription>Memuat data dompet...</DialogDescription>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const colorStyle = wallet.colorStyle === "gradient" ? "gradient" : "solid";
-  const colorValue = wallet.colorValue || "#cccccc";
+  const [wallets, setWallets] = useState<WalletEntry[]>([]);
+  const [outcomes, setOutcomes] = useState<OutcomeEntry[]>([]);
+  const [form, setForm] = useState({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const descriptionRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    setLoading(true);
-
-    const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
-    const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
-    const transferQuery = collection(db, "users", user.uid, "transfers");
-
-    const unsubIn = onSnapshot(incomeQuery, snap => {
-      const data = snap.docs.map(d => ({ id: d.id, type: "income", ...d.data() }));
-      setTransactions(prev => [...prev.filter(x => x.type !== "income"), ...data]);
-      setLoading(false);
+    const walletRef = collection(db, "users", user.uid, "wallets");
+    const unsubWallets = onSnapshot(walletRef, (snap) => {
+      setWallets(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[]);
     });
-
-    const unsubOut = onSnapshot(outcomeQuery, snap => {
-      const data = snap.docs.map(d => ({ id: d.id, type: "outcome", ...d.data() }));
-      setTransactions(prev => [...prev.filter(x => x.type !== "outcome"), ...data]);
-      setLoading(false);
+    const outcomeRef = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
+    const unsubOutcomes = onSnapshot(outcomeRef, (snap) => {
+      setOutcomes(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as OutcomeEntry[]);
     });
-
-    const unsubTransfer = onSnapshot(transferQuery, snap => {
-      const data = snap.docs.map(d => ({ id: d.id, type: "transfer", ...d.data() }));
-      setTransactions(prev => [...prev.filter(x => x.type !== "transfer"), ...data]);
-      setLoading(false);
-    });
-
     return () => {
-      unsubIn(); unsubOut(); unsubTransfer();
+      unsubWallets();
+      unsubOutcomes();
     };
-  }, [user, walletId, isOpen]);
+  }, [user]);
 
-  const handleDatePreset = (preset) => {
-    setActivePreset(preset);
-    const today = new Date();
-    if (preset === "today") setDateFilter(format(today, "yyyy-MM-dd"));
-    else if (preset === "yesterday") setDateFilter(format(subDays(today, 1), "yyyy-MM-dd"));
-    else if (preset === "last7") setDateFilter("last7");
-    else setDateFilter("");
+  useEffect(() => {
+    if (!presetWalletId || wallets.length === 0) return;
+    const selected = wallets.find(w => w.id === presetWalletId && w.status !== "archived");
+    if (selected) {
+      setForm((prev) => ({
+        ...prev,
+        wallet: presetWalletId,
+        currency: selected.currency,
+      }));
+    }
+  }, [presetWalletId, wallets.length]);
+
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !editingId && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        const valid = validate();
+        if (Object.keys(valid).length === 0) {
+          (document.activeElement as HTMLElement)?.blur();
+          descriptionRef.current?.form?.requestSubmit();
+        }
+      }
+      if (e.key === "Escape") {
+        setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
+        setEditingId(null);
+        setErrors({});
+        if (onClose) onClose();
+      }
+    };
+    document.addEventListener("keydown", listener);
+    return () => document.removeEventListener("keydown", listener);
+  }, [form, editingId, presetWalletId, onClose]);
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.wallet.trim()) e.wallet = "Dompet wajib dipilih.";
+    if (!form.description.trim()) e.description = "Deskripsi wajib diisi.";
+    if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "")) <= 0)
+      e.amount = "Nominal harus lebih dari 0.";
+    if (!form.currency.trim()) e.currency = "Mata uang wajib dipilih.";
+    return e;
   };
 
-  const allFiltered = transactions
-    .filter(tx => tx.wallet === walletId || tx.from === walletId || tx.to === walletId)
-    .filter(tx => {
-      const matchDesc = !search || tx.description?.toLowerCase().includes(search.toLowerCase());
-      let matchDate = true;
-      if (dateFilter === "last7") {
-        const txDate = new Date(tx.createdAt.seconds * 1000);
-        matchDate = txDate >= subDays(new Date(), 7);
-      } else if (dateFilter) {
-        matchDate = format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter;
-      }
-      return matchDesc && matchDate;
-    })
-    .sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "amount") {
+      const numeric = value.replace(/\D/g, "");
+      const formatted = numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      setForm({ ...form, amount: formatted });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+    setErrors({ ...errors, [name]: "" });
+  };
 
-  const totalPages = Math.ceil(allFiltered.length / perPage);
-  const paginatedTx = allFiltered.slice((currentPage - 1) * perPage, currentPage * perPage);
+  const handleWalletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = wallets.find((w) => w.id === e.target.value);
+    setForm({
+      ...form,
+      wallet: e.target.value,
+      currency: selected?.currency || "",
+    });
+    setErrors({ ...errors, wallet: "", currency: "" });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const v = validate();
+    if (Object.keys(v).length) {
+      setErrors(v);
+      return;
+    }
+    if (!user) return;
+
+    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    if (!selectedWallet) {
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
+      if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        setErrors({ amount: "Nominal harus lebih dari 0." });
+        setLoading(false);
+        return;
+      }
+
+      if (selectedWallet && selectedWallet.balance < parsedAmount) {
+        toast.error("Saldo tidak cukup.");
+        setLoading(false);
+        return;
+      }
+
+      if (!editingId) {
+        const outcomeData = {
+          amount: parsedAmount,
+          description: form.description,
+          wallet: form.wallet,
+          currency: form.currency,
+          createdAt: serverTimestamp(),
+        };
+        await addDoc(collection(db, "users", user.uid, "outcomes"), outcomeData);
+        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+          balance: increment(-parsedAmount),
+        });
+      } else {
+        const old = outcomes.find((o) => o.id === editingId);
+        if (!old) return;
+        await updateDoc(doc(db, "users", user.uid, "outcomes", editingId), {
+          description: form.description,
+          amount: parsedAmount,
+          wallet: form.wallet,
+          currency: form.currency,
+        });
+        const diff = parsedAmount - old.amount;
+        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+          balance: increment(-diff),
+        });
+      }
+
+      setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: form.currency });
+      setEditingId(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+      if (onClose) onClose();
+    } catch (err) {
+      console.error("❌ Gagal simpan:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickSubmit = async () => {
+    const v = validate();
+    if (Object.keys(v).length) {
+      setErrors(v);
+      return;
+    }
+    if (!user) return;
+
+    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    if (!selectedWallet) {
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
+      if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        setErrors({ amount: "Nominal harus lebih dari 0." });
+        setLoading(false);
+        return;
+      }
+
+      if (selectedWallet && selectedWallet.balance < parsedAmount) {
+        toast.error("Saldo tidak cukup.");
+        setLoading(false);
+        return;
+      }
+
+      const outcomeData = {
+        amount: parsedAmount,
+        description: form.description,
+        wallet: form.wallet,
+        currency: form.currency,
+        createdAt: serverTimestamp(),
+      };
+      await addDoc(collection(db, "users", user.uid, "outcomes"), outcomeData);
+      await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+        balance: increment(-parsedAmount),
+      });
+
+      setForm({ wallet: form.wallet, description: "", amount: "", currency: form.currency });
+      setTimeout(() => descriptionRef.current?.focus(), 50);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+    } catch (err) {
+      console.error("❌ Gagal simpan & lanjut:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
+    setEditingId(null);
+    setErrors({});
+    if (onClose) onClose();
+  };
+
+  const getWalletName = (id: string) => wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
+  const getWalletBalance = (id: string) => wallets.find((w) => w.id === id)?.balance || 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <AnimatePresence>
-        {isOpen && (
-          <DialogContent
-            as={motion.div}
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full max-w-md md:max-w-xl rounded-xl bg-white p-4 pb-6 shadow-xl h-[650px] flex flex-col"
+    <div className="max-w-2xl mx-auto px-4 py-6">
+      {success && (
+        <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 rounded-lg border border-green-300 dark:border-green-700 animate-in fade-in duration-300">
+          ✅ {editingId ? "Pengeluaran diperbarui!" : "Pengeluaran disimpan!"}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl shadow w-full">
+        <div>
+          <label className="block mb-1 text-sm font-medium">Pilih Dompet</label>
+          <select
+            name="wallet"
+            value={form.wallet}
+            onChange={handleWalletChange}
+            disabled={!!presetWalletId}
+            className={`w-full rounded border px-4 py-2 dark:bg-gray-800 dark:text-white ${
+              errors.wallet && "border-red-500"
+            }`}
           >
-            <DialogTitle asChild>
-              <motion.h2
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-                className="text-center font-bold text-lg mb-2"
-              >
-                Dompet Saya
-              </motion.h2>
-            </DialogTitle>
-            <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
-
-            <motion.button
-              onClick={onClose}
-              className="absolute right-4 top-4 bg-white border border-gray-300 shadow rounded-full p-1.5 hover:bg-gray-100 z-20"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <X className="w-4 h-4" />
-            </motion.button>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-              className="flex justify-center mt-2 mb-3"
-            >
-              <WalletCard
-                id={wallet.id}
-                name={wallet.name}
-                balance={wallet.balance}
-                currency={wallet.currency}
-                colorStyle={colorStyle}
-                colorValue={colorValue}
-                showBalance={showBalance}
-                onEdit={() => {}}
-                onClick={() => {}}
-                showEdit={false}
-              />
-            </motion.div>
-
-            <div className="sticky top-0 z-10 bg-white py-2 flex justify-center gap-2 border-b mb-2">
-              <motion.div layoutId="tab-underline" className="absolute bottom-0 h-0.5 bg-blue-600" />
-              {tabs.map((tab) => (
-                <motion.button
-                  key={tab}
-                  onClick={() => {
-                    setActiveTab(tab);
-                    setCurrentPage(1);
-                  }}
-                  className={`relative px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm ${
-                    activeTab === tab ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {activeTab === tab && (
-                    <motion.div
-                      layoutId="tab-background"
-                      className="absolute inset-0 bg-blue-600 rounded z-[-1]"
-                      initial={false}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                    />
-                  )}
-                  <span className="relative z-10">
-                    {tab === "income" && "Pemasukan"}
-                    {tab === "outcome" && "Pengeluaran"}
-                    {tab === "history" && "Riwayat"}
-                  </span>
-                </motion.button>
+            <option value="">-- Pilih Dompet --</option>
+            {wallets
+              .filter(w => w.status !== "archived")
+              .map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
               ))}
-            </div>
+          </select>
+          {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
-            <motion.div className="px-1 space-y-4 flex-1 overflow-y-auto max-h-[420px]">
-              <AnimatePresence mode="wait">
-                {activeTab === "history" && (
-                  <motion.div
-                    key={activeTab + currentPage}
-                    className="space-y-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    <motion.div
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="flex items-center gap-2"
-                    >
-                      <motion.div variants={itemVariants}>
-                        <Search size={18} className="text-gray-400" />
-                      </motion.div>
-                      <motion.div variants={itemVariants} className="w-full">
-                        <Input
-                          ref={searchInputRef}
-                          placeholder="Cari transaksi..."
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          className="w-full"
-                        />
-                      </motion.div>
-                    </motion.div>
+          {form.wallet && !hideCardPreview && (() => {
+            const selectedWallet = wallets.find(
+              (w) => w.id === form.wallet && w.status !== "archived"
+            );
+            if (!selectedWallet) return null;
+            return (
+              <div
+                className="mt-4 rounded-xl text-white p-4 shadow w-full"
+                style={getCardStyle(selectedWallet)}
+              >
+                <h3 className="text-sm font-semibold truncate">{selectedWallet.name}</h3>
+                <p className="text-lg font-bold mt-1">
+                  {formatCurrency(selectedWallet.balance || 0, selectedWallet.currency)}
+                </p>
+              </div>
+            );
+          })()}
+        </div>
 
-                    <motion.div
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="flex flex-wrap gap-2"
-                    >
-                      {["today", "yesterday", "last7", "all"].map((preset) => (
-                        <motion.button
-                          key={preset}
-                          variants={itemVariants}
-                          onClick={() => handleDatePreset(preset)}
-                          className={`px-3 py-1 rounded border text-sm ${
-                            activePreset === preset ? "bg-blue-600 text-white" : "bg-gray-100"
-                          }`}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {preset === "today" && "Hari Ini"}
-                          {preset === "yesterday" && "Kemarin"}
-                          {preset === "last7" && "7 Hari"}
-                          {preset === "all" && "Semua"}
-                        </motion.button>
-                      ))}
-                    </motion.div>
+        <div>
+          <label className="block mb-1 text-sm font-medium">Deskripsi</label>
+          <input
+            ref={descriptionRef}
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            className={`w-full rounded border px-4 py-2 dark:bg-gray-800 dark:text-white ${
+              errors.description && "border-red-500"
+            }`}
+          />
+          {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+        </div>
 
-                    {loading ? (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className="flex justify-center items-center min-h-[284px]"
-                      >
-                        <Loader2 className="animate-spin text-gray-500" size={24} />
-                      </motion.div>
-                    ) : (
-                      <div className="min-h-[284px] space-y-4">
-                        {paginatedTx.length ? (
-                          paginatedTx.map(tx => (
-                            <motion.div
-                              key={tx.id}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.25, ease: "easeOut" }}
-                              className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 shadow-sm"
-                              whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", transition: { duration: 0.2, ease: "easeOut" } }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <div className="flex items-center gap-3">
-                                {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
-                                {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
-                                {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                                <span className="font-medium truncate">{tx.description || "Transfer"}</span>
-                              </div>
-                              <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
-                            </motion.div>
-                          ))
-                        ) : (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
-                            className="text-center text-gray-500 py-10 min-h-[284px] flex items-center justify-center"
-                          >
-                            Tidak ada transaksi ditemukan.
-                          </motion.div>
-                        )}
-                      </div>
-                    )}
+        <div>
+          <label className="block mb-1 text-sm font-medium">Nominal</label>
+          <input
+            name="amount"
+            value={form.amount}
+            onChange={handleChange}
+            className={`w-full rounded border px-4 py-2 dark:bg-gray-800 dark:text-white ${
+              errors.amount && "border-red-500"
+            }`}
+          />
+          {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount}</p>}
+        </div>
 
-                    <motion.div
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="flex justify-between items-center pt-2"
-                    >
-                      <motion.button
-                        variants={paginationVariants}
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(p => p - 1)}
-                        className="text-gray-600 hover:text-blue-600 disabled:text-gray-400"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        ← Sebelumnya
-                      </motion.button>
-                      <motion.span variants={paginationVariants} className="text-sm text-gray-500">
-                        Hal {currentPage} dari {totalPages}
-                      </motion.span>
-                      <motion.button
-                        variants={paginationVariants}
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(p => p + 1)}
-                        className="text-gray-600 hover:text-blue-600 disabled:text-gray-400"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Selanjutnya →
-                      </motion.button>
-                    </motion.div>
-                  </motion.div>
-                )}
+        <div>
+          <label className="block mb-1 text-sm font-medium">Mata Uang</label>
+          <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded text-gray-700 dark:text-white">
+            {form.currency || "Mata uang otomatis"}
+          </div>
+          {errors.currency && <p className="text-red-500 text-sm mt-1">{errors.currency}</p>}
+        </div>
 
-                {activeTab === "income" && (
-                  <motion.div
-                    key="income-form"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                  >
-                    <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
-                  </motion.div>
-                )}
-
-                {activeTab === "outcome" && (
-                  <motion.div
-                    key="outcome-form"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                  >
-                    <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20, y: 20 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
-              className="fixed bottom-4 right-4 z-50 flex gap-2"
+        <div className="flex justify-between items-center">
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
             >
-              <motion.button
-                onClick={() => setActiveTab("income")}
-                className="p-3 rounded-full bg-green-500 text-white shadow-lg"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              Batal Edit
+            </button>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading && <Loader2 className="animate-spin" size={18} />}
+              {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
+            </button>
+
+            {!editingId && (
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleQuickSubmit}
+                className="flex items-center gap-2 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
               >
-                <ArrowDownCircle size={20} />
-              </motion.button>
-              <motion.button
-                onClick={() => setActiveTab("outcome")}
-                className="p-3 rounded-full bg-red-500 text-white shadow-lg"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <ArrowUpCircle size={20} />
-              </motion.button>
-            </motion.div>
-          </DialogContent>
-        )}
-      </AnimatePresence>
-    </Dialog>
+                {loading && <Loader2 className="animate-spin" size={18} />}
+                Simpan & Lanjut
+              </button>
+            )}
+          </div>
+        </div>
+      </form>
+    </div>
   );
 };
 
-export default WalletPopup;
+export default OutcomeForm;

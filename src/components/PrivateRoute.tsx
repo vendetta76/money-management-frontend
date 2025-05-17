@@ -24,20 +24,20 @@ const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
     }
   }, [user]);
 
-  if (loading || !userMeta) return <div>Loading...</div>;
+  if (loading || !userMeta) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-purple-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
-  if (!user) {
+  if (!user && !loading) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!user.emailVerified && location.pathname !== "/verify-email-pending") {
-    return (
-      <Navigate
-        to="/verify-email-pending"
-        state={{ email: user.email }}
-        replace
-      />
-    );
+  if (!user?.emailVerified && location.pathname !== "/verify-email-pending") {
+    return <Navigate to="/verify-email-pending" state={{ email: user.email }} replace />;
   }
 
   if (requiredRole && userMeta?.role !== requiredRole) {
