@@ -1,5 +1,5 @@
-// VirtualWalletPage.tsx (patched: +pengeluaran saldo)
-import React, { useState, useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -18,7 +18,13 @@ interface VirtualWallet {
   name: string;
   currency: string;
   balance: number;
-  history?: { amount: number; type: "add" | "edit" | "spend"; timestamp: string; description?: string }[];
+  history?: {
+    id?: string;
+    amount: number;
+    type: "add" | "edit" | "spend";
+    timestamp: string;
+    description?: string;
+  }[];
 }
 
 const VirtualWalletPage: React.FC = () => {
@@ -27,9 +33,12 @@ const VirtualWalletPage: React.FC = () => {
   const [form, setForm] = useState({ name: "", currency: "IDR", balance: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [description, setDescription] = useState<string>("");
-  const [descriptions, setDescriptions] = useState<{ [id: string]: string }>({});
-  const [topupAmount, setTopupAmount] = useState<string>("");
+  const [topupAmounts, setTopupAmounts] = useState<{ [id: string]: string }>({});
   const [spendAmounts, setSpendAmounts] = useState<{ [id: string]: string }>({});
+  const [descriptions, setDescriptions] = useState<{ [id: string]: string }>({});
+  const [editHistory, setEditHistory] = useState<{
+    [walletId: string]: VirtualWallet["history"];
+  }>({});
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -44,6 +53,10 @@ const VirtualWalletPage: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const formatNumber = (value: number | string) => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   const handleAddOrUpdate = async () => {
@@ -78,11 +91,13 @@ const VirtualWalletPage: React.FC = () => {
       });
     }
     setForm({ name: "", currency: "IDR", balance: "" });
+    setDescription("");
   };
 
   const handleTopup = async (id: string) => {
-    if (!user?.uid || !topupAmount) return;
-    const parsed = parseFloat(topupAmount.replace(/,/g, ""));
+    const raw = topupAmounts[id];
+    if (!user?.uid || !raw) return;
+    const parsed = parseFloat(raw.replace(/,/g, ""));
     if (isNaN(parsed) || parsed <= 0) return;
     const timestamp = new Date().toISOString();
     const target = wallets.find((w) => w.id === id);
@@ -92,18 +107,20 @@ const VirtualWalletPage: React.FC = () => {
     const newBalance = target.balance + parsed;
     const newHistory = [
       ...(target.history || []),
-      { amount: parsed, type: "add", timestamp, description },
+      { amount: parsed, type: "add", timestamp, description: descriptions[id] || "" },
     ];
     await updateDoc(walletDoc, {
       balance: newBalance,
       history: newHistory,
     });
-    setTopupAmount("");
+    setTopupAmounts((prev) => ({ ...prev, [id]: "" }));
+    setDescriptions((prev) => ({ ...prev, [id]: "" }));
   };
 
   const handleSpend = async (id: string) => {
-    if (!user?.uid || !spendAmounts[id]) return;
-    const parsed = parseFloat(spendAmounts[id].replace(/,/g, ""));
+    const raw = spendAmounts[id];
+    if (!user?.uid || !raw) return;
+    const parsed = parseFloat(raw.replace(/,/g, ""));
     if (isNaN(parsed) || parsed <= 0) return;
     const timestamp = new Date().toISOString();
     const target = wallets.find((w) => w.id === id);
@@ -122,17 +139,8 @@ const VirtualWalletPage: React.FC = () => {
       balance: newBalance,
       history: newHistory,
     });
-
     setSpendAmounts((prev) => ({ ...prev, [id]: "" }));
-  };
-
-  const handleEdit = (wallet: VirtualWallet) => {
-    setForm({
-      name: wallet.name,
-      currency: wallet.currency,
-      balance: wallet.balance.toString(),
-    });
-    setEditingId(wallet.id);
+    setDescriptions((prev) => ({ ...prev, [id]: "" }));
   };
 
   const handleDelete = async (id: string) => {
@@ -144,28 +152,36 @@ const VirtualWalletPage: React.FC = () => {
     }
   };
 
-          <input
-          placeholder="Deskripsi (opsional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-2 border rounded"
-        />
-
-  const formatNumber = (value: number | string) => {
-    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const handleEdit = (wallet: VirtualWallet) => {
+    setForm({
+      name: wallet.name,
+      currency: wallet.currency,
+      balance: wallet.balance.toString(),
+    });
+    setEditingId(wallet.id);
   };
 
   return (
     <LayoutShell>
-      <div className="max-w-xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">Virtual Wallet (Firestore)</h1>
+      <div className="max-w-xl mx-auto p-4 space-y-6">
+        <h1 className="text-2xl font-bold mb-2">Virtual Wallets</h1>
 
-        <div className="bg-white p-4 rounded-xl shadow space-y-4 mb-6">
+        <div className="bg-white p-4 rounded-xl shadow space-y-4">
           <input
             name="name"
             placeholder="Nama Wallet"
             value={form.name}
             onChange={handleChange}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            name="balance"
+            placeholder="Saldo"
+            value={form.balance}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              setForm((prev) => ({ ...prev, balance: formatNumber(val) }));
+            }}
             className="w-full p-2 border rounded"
           />
           <select
@@ -179,101 +195,95 @@ const VirtualWalletPage: React.FC = () => {
             <option value="THB">THB</option>
           </select>
           <input
-            name="balance"
-            placeholder="Saldo"
-            value={form.balance}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, "");
-              setForm((prev) => ({ ...prev, balance: formatNumber(val) }));
-            }}
+            placeholder="Deskripsi transaksi (opsional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             className="w-full p-2 border rounded"
           />
           <button
             onClick={handleAddOrUpdate}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            {editingId ? "Simpan Perubahan" : "Tambah Virtual Wallet"}
+            {editingId ? "Simpan Perubahan" : "Tambah Wallet"}
           </button>
         </div>
 
-        {wallets.length > 0 && (
-          <div className="space-y-4">
-            {wallets.map((w) => (
-              <div key={w.id} className="bg-gray-50 p-4 rounded border shadow">
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <div className="font-semibold">{w.name} ({w.currency})</div>
-                    <div className="text-xl font-bold text-blue-600">
-                      {formatNumber(w.balance)}
-                    </div>
-                  </div>
-                  <div className="space-x-2">
-                    <button onClick={() => handleEdit(w)} className="text-blue-600 hover:underline">Edit</button>
-                    <button onClick={() => handleDelete(w.id)} className="text-red-600 hover:underline">Hapus</button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    type="text"
-                    placeholder="Jumlah tambah saldo"
-                    value={topupAmount}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      setTopupAmount(formatNumber(val));
-                    }}
-                    className="flex-1 px-3 py-2 border rounded"
-                  />
-                  <button
-                    onClick={() => handleTopup(w.id)}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                  >
-                    Tambah Saldo
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    type="text"
-                    placeholder="Jumlah pengeluaran"
-                    value={spendAmounts[w.id] || ""}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      setSpendAmounts((prev) => ({ ...prev, [w.id]: formatNumber(val) }));
-                      setDescriptions((prev) => ({ ...prev, [w.id]: "" }));
-                    }}
-                    className="flex-1 px-3 py-2 border rounded"
-                  />
-                  <input
-                    placeholder="Deskripsi pengeluaran"
-                    value={descriptions[w.id] || ""}
-                    onChange={(e) => setDescriptions((prev) => ({ ...prev, [w.id]: e.target.value }))}
-                    className="flex-1 px-3 py-2 border rounded"
-                  />
-                  <button
-                    onClick={() => handleSpend(w.id)}
-                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                  >
-                    Kurangi Saldo
-                  </button>
-                </div>
-
-                {w.history && w.history.length > 0 && (
-                  <div className="mt-3 text-sm text-gray-600">
-                    <p className="font-semibold mb-1">Riwayat:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {w.history.map((h, i) => (
-                        <li key={i}>
-                          {h.type === "add" ? "+" : h.type === "edit" ? "→" : "-"} {formatNumber(h.amount)} ({new Date(h.timestamp).toLocaleString("id-ID")})
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+        {wallets.map((w) => (
+          <div key={w.id} className="bg-gray-50 p-4 rounded-xl shadow space-y-2">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-semibold">{w.name} ({w.currency})</h2>
+                <p className="text-xl font-bold text-blue-600">{formatNumber(w.balance)}</p>
               </div>
-            ))}
+              <div className="space-x-2">
+                <button onClick={() => handleEdit(w)} className="text-blue-600 hover:underline">Edit</button>
+                <button onClick={() => handleDelete(w.id)} className="text-red-600 hover:underline">Hapus</button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <input
+                placeholder="Topup"
+                value={topupAmounts[w.id] || ""}
+                onChange={(e) =>
+                  setTopupAmounts((prev) => ({ ...prev, [w.id]: e.target.value }))
+                }
+                className="p-2 border rounded"
+              />
+              <input
+                placeholder="Deskripsi"
+                value={descriptions[w.id] || ""}
+                onChange={(e) =>
+                  setDescriptions((prev) => ({ ...prev, [w.id]: e.target.value }))
+                }
+                className="p-2 border rounded"
+              />
+              <button
+                onClick={() => handleTopup(w.id)}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Tambah Saldo
+              </button>
+
+              <input
+                placeholder="Pengeluaran"
+                value={spendAmounts[w.id] || ""}
+                onChange={(e) =>
+                  setSpendAmounts((prev) => ({ ...prev, [w.id]: e.target.value }))
+                }
+                className="p-2 border rounded"
+              />
+              <input
+                placeholder="Deskripsi"
+                value={descriptions[w.id] || ""}
+                onChange={(e) =>
+                  setDescriptions((prev) => ({ ...prev, [w.id]: e.target.value }))
+                }
+                className="p-2 border rounded"
+              />
+              <button
+                onClick={() => handleSpend(w.id)}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Kurangi Saldo
+              </button>
+            </div>
+
+            {w.history && (
+              <div className="text-sm text-gray-600 mt-2">
+                <p className="font-semibold">Riwayat:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  {w.history.map((h, i) => (
+                    <li key={i}>
+                      {h.type === "add" ? "+" : h.type === "edit" ? "→" : "-"} {formatNumber(h.amount)} 
+                      {h.description ? ` - ${h.description}` : ""} ({new Date(h.timestamp).toLocaleString("id-ID")})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-        )}
+        ))}
       </div>
     </LayoutShell>
   );
