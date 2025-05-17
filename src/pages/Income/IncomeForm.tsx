@@ -89,22 +89,18 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
     };
     document.addEventListener("keydown", listener);
     return () => document.removeEventListener("keydown", listener);
-  }, 
+  }, [form, editingId, loading, presetWalletId, onClose]);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
     if (name === "amount") {
-      // izinkan angka, titik, dan koma
       let cleaned = value.replace(/[^0-9.,]/g, "");
-
-      // normalize multiple comma
       const parts = cleaned.split(",");
       if (parts.length > 2) {
         cleaned = parts[0] + "," + parts.slice(1).join("").replace(/,/g, "");
       }
-
       setForm({ ...form, amount: cleaned });
     } else {
       setForm({ ...form, [name]: value });
@@ -112,19 +108,9 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
 
     setErrors({ ...errors, [name]: "" });
   };
-[form, editingId, loading, presetWalletId, onClose]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === "amount") {
-      const numeric = value.replace(/\D/g, "");
-      const formatted = numeric.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-      setForm({ ...form, amount: formatted });
-    } else {
-      setForm({ ...form, [name]: value });
-    }
-    setErrors({ ...errors, [name]: "" });
-  };
+
+  
 
   const handleWalletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = wallets.find((w) => w.id === e.target.value);
