@@ -1,3 +1,4 @@
+import { formatCurrency } from "../helpers/formatCurrency";
 import { useEffect, useState } from "react"
 import { DndContext, closestCenter } from "@dnd-kit/core"
 import {
@@ -191,9 +192,9 @@ export default function MoneySplitAdvanced() {
             <label className="block text-sm font-medium mb-1">
               Total Uang ({selectedCurrency})
             </label>
-            <Input
-              type="text"
-              value={total.toLocaleString("id-ID")}
+           <Input
+  type="text"
+  value={formatCurrency(total, selectedCurrency)}
               onChange={(e) => {
                 const raw = e.target.value.replace(/\D/g, "")
                 setTotal(Number(raw))

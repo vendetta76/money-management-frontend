@@ -1,3 +1,4 @@
+import { formatCurrency } from "../helpers/formatCurrency";
 import React, { useEffect, useState } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { db } from "../lib/firebaseClient";
@@ -283,7 +284,7 @@ const TransferPage: React.FC = () => {
                 <option value="">Pilih Dompet</option>
                 {wallets.map((wallet) => (
                   <option key={wallet.id} value={wallet.id}>
-                    {wallet.name} ({formatNominal(wallet.balance, wallet.currency)})
+                    {wallet.name} ({formatCurrency(wallet.balance, wallet.currency)})
                   </option>
                 ))}
               </select>
@@ -298,7 +299,7 @@ const TransferPage: React.FC = () => {
                 <option value="">Pilih Dompet</option>
                 {wallets.map((wallet) => (
                   <option key={wallet.id} value={wallet.id}>
-                    {wallet.name} ({formatNominal(wallet.balance, wallet.currency)})
+                    {wallet.name} ({formatCurrency(wallet.balance, wallet.currency)})
                   </option>
                 ))}
               </select>
@@ -353,7 +354,7 @@ const TransferPage: React.FC = () => {
                         <div className="text-xs text-gray-500">{entry.description}</div>
                       </div>
                       <div className="text-sm font-bold text-blue-600">
-                        {formatNominal(entry.amount, entry.currency)}
+                        {formatCurrency(entry.amount, entry.currency)}
                       </div>
                     </div>
                     <div className="flex justify-between items-center mt-1 text-xs text-gray-400">

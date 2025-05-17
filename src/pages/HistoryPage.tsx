@@ -1,3 +1,4 @@
+import { formatCurrency } from "../helpers/formatCurrency";
 import { useState, useEffect } from "react"
 import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
@@ -329,7 +330,7 @@ const HistoryPage = () => {
                             {item.type === "income" && <ArrowDownCircle size={16} />}
                             {item.type === "outcome" && <ArrowUpCircle size={16} />}
                             {item.type === "transfer" && <Repeat2 size={16} />}
-                            {item.currency} {item.amount.toLocaleString("id-ID")}
+                            {formatCurrency(item.amount, item.currency)}
                           </span>
                           <div className="absolute top-1 right-1 text-gray-400 dark:text-gray-500">
                             {expandedId === item.id ? (
@@ -358,7 +359,7 @@ const HistoryPage = () => {
                                 {item.editHistory.map((log, i) => (
                                   <li key={i}>
                                     {new Date(log.editedAt?.toDate?.() ?? log.editedAt).toLocaleString("id-ID")}: {log.description} - Rp{" "}
-                                    {log.amount.toLocaleString("id-ID")}
+                                    {formatCurrency(log.amount, item.currency)}
                                   </li>
                                 ))}
                               </ul>
