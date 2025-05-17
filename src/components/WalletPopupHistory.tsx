@@ -11,6 +11,7 @@ import OutcomeForm from "../pages/Outcome/OutcomeForm";
 import WalletCard from "../pages/Wallet/WalletCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "../helpers/formatCurrency";
 
 const tabs = ["income", "outcome", "history"];
 
@@ -302,7 +303,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                                 {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
                                 <span className="font-medium truncate">{tx.description || "Transfer"}</span>
                               </div>
-                              <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
+                              <span className="font-semibold">{formatCurrency(tx.amount, tx.currency)}</span>
                             </motion.div>
                           ))
                         ) : (
