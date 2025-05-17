@@ -52,11 +52,7 @@ const CardBalance = ({
   }, [])
 
   const formatCurrency = (amount: number, currencyCode: string, localeStr: string) => {
-    return new Intl.NumberFormat(localeStr, {
-      style: "currency",
-      currency: currencyCode,
-      minimumFractionDigits: 0,
-    }).format(amount)
+    return formatCurrency(amount, currency)
   }
 
   const filteredCurrencies = currencies.filter((c) =>
