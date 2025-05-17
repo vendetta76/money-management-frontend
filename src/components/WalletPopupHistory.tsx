@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
 import { useAuth } from "../context/AuthContext";
-import { Dialog, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowDownCircle, ArrowUpCircle, Repeat2, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format, subDays } from "date-fns";
@@ -13,6 +13,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 const tabs = ["income", "outcome", "history"];
+
+// Animation variants for staggered effects
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 },
+};
 
 const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const { user } = useAuth();
@@ -40,27 +56,45 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
 
   const wallet = useMemo(() => wallets.find(w => w?.id === walletId), [wallets, walletId]);
 
+  if (!wallet || !wallet.colorStyle) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="p-6 text-center text-gray-500">
+          <DialogDescription>Memuat data dompet...</DialogDescription>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const colorStyle = wallet.colorStyle === "gradient" ? "gradient" : "solid";
+  const colorValue = wallet.colorValue || "#cccccc";
+
   useEffect(() => {
     if (!user) return;
     setLoading(true);
+
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
     const transferQuery = collection(db, "users", user.uid, "transfers");
+
     const unsubIn = onSnapshot(incomeQuery, snap => {
       const data = snap.docs.map(d => ({ id: d.id, type: "income", ...d.data() }));
       setTransactions(prev => [...prev.filter(x => x.type !== "income"), ...data]);
       setLoading(false);
     });
+
     const unsubOut = onSnapshot(outcomeQuery, snap => {
       const data = snap.docs.map(d => ({ id: d.id, type: "outcome", ...d.data() }));
       setTransactions(prev => [...prev.filter(x => x.type !== "outcome"), ...data]);
       setLoading(false);
     });
+
     const unsubTransfer = onSnapshot(transferQuery, snap => {
       const data = snap.docs.map(d => ({ id: d.id, type: "transfer", ...d.data() }));
       setTransactions(prev => [...prev.filter(x => x.type !== "transfer"), ...data]);
       setLoading(false);
     });
+
     return () => {
       unsubIn(); unsubOut(); unsubTransfer();
     };
@@ -95,110 +129,238 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <motion.div
-        key="wallet-popup"
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="w-full max-w-md md:max-w-xl rounded-xl bg-white p-4 pb-6 shadow-xl"
-      >
-        <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
-        <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
-        <button onClick={onClose} className="absolute right-4 top-4 bg-white border border-gray-300 shadow rounded-full p-1.5 hover:bg-gray-100 z-20">
-          <X className="w-4 h-4" />
-        </button>
+      <AnimatePresence>
+        {isOpen && (
+          <DialogContent
+            as={motion.div}
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="w-full max-w-md md:max-w-xl rounded-xl bg-white p-4 pb-6 shadow-xl"
+          >
+            <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
+            <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
 
-        <div className="flex justify-center mt-2 mb-3">
-          <WalletCard {...wallet} showBalance={showBalance} onEdit={() => {}} onClick={() => {}} showEdit={false} />
-        </div>
-
-        <div className="sticky top-0 z-10 bg-white py-2 flex justify-center gap-2 border-b mb-2">
-          {tabs.map((tab) => (
             <motion.button
-              layoutId="wallet-tab-highlight"
-              key={tab}
-              onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
-              className={`px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm ${
-                activeTab === tab ? "bg-blue-600 text-white scale-105" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+              onClick={onClose}
+              className="absolute right-4 top-4 bg-white border border-gray-300 shadow rounded-full p-1.5 hover:bg-gray-100 z-20"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              {tab === "income" && "Pemasukan"}
-              {tab === "outcome" && "Pengeluaran"}
-              {tab === "history" && "Riwayat"}
+              <X className="w-4 h-4" />
             </motion.button>
-          ))}
-        </div>
 
-        <div className="px-1 space-y-4">
-          <AnimatePresence mode="wait">
-            {activeTab === "history" && !loading && (
-              <motion.div key={activeTab + currentPage} className="space-y-4 min-h-[320px]" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <div className="flex items-center gap-2">
-                  <Search size={18} className="text-gray-400" />
-                  <Input ref={searchInputRef} placeholder="Cari transaksi..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {["today", "yesterday", "last7", "all"].map((preset) => (
-                    <button key={preset} onClick={() => handleDatePreset(preset)} className={`px-3 py-1 rounded border text-sm ${
-                      activePreset === preset ? "bg-blue-600 text-white" : "bg-gray-100"
-                    }`}>
-                      {preset === "today" ? "Hari Ini" : preset === "yesterday" ? "Kemarin" : preset === "last7" ? "7 Hari" : "Semua"}
-                    </button>
-                  ))}
-                </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="flex justify-center mt-2 mb-3"
+            >
+              <WalletCard
+                id={wallet.id}
+                name={wallet.name}
+                balance={wallet.balance}
+                currency={wallet.currency}
+                colorStyle={colorStyle}
+                colorValue={colorValue}
+                showBalance={showBalance}
+                onEdit={() => {}}
+                onClick={() => {}}
+                showEdit={false}
+              />
+            </motion.div>
 
-                {paginatedTx.length ? (
-                  paginatedTx.map(tx => (
-                    <motion.div key={tx.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25 }}
-                      className={`flex items-center justify-between p-3 border rounded-lg shadow-sm ${
-                        tx.type === "income" ? "bg-green-50" : tx.type === "outcome" ? "bg-red-50" : "bg-blue-50"
-                      }`}>
-                      <div className="flex items-center gap-3">
-                        {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
-                        {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
-                        {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                        <span className="font-medium truncate">{tx.description || "Transfer"}</span>
-                      </div>
-                      <span className={`font-semibold ${
-                        tx.type === "income" ? "text-green-600" : tx.type === "outcome" ? "text-red-600" : "text-blue-600"
-                      }`}>
-                        {tx.currency} {tx.amount.toLocaleString()}
-                      </span>
+            <div className="sticky top-0 z-10 bg-white py-2 flex justify-center gap-2 border-b mb-2">
+              <motion.div layoutId="tab-underline" className="absolute bottom-0 h-0.5 bg-blue-600" />
+              {tabs.map((tab) => (
+                <motion.button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setCurrentPage(1);
+                  }}
+                  className={`relative px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm ${
+                    activeTab === tab ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {activeTab === tab && (
+                    <motion.div
+                      layoutId="tab-background"
+                      className="absolute inset-0 bg-blue-600 rounded z-[-1]"
+                      initial={false}
+                      transition={{ duration: 0.2 }}
+                    />
+                  )}
+                  <span className="relative z-10">
+                    {tab === "income" && "Pemasukan"}
+                    {tab === "outcome" && "Pengeluaran"}
+                    {tab === "history" && "Riwayat"}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+
+            <div className="px-1 space-y-4">
+              <AnimatePresence mode="wait">
+                {activeTab === "history" && !loading && (
+                  <motion.div
+                    key={activeTab + currentPage}
+                    className="space-y-4 min-h-[320px]"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.div
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      className="flex items-center gap-2"
+                    >
+                      <motion.div variants={itemVariants}>
+                        <Search size={18} className="text-gray-400" />
+                      </motion.div>
+                      <motion.div variants={itemVariants} className="w-full">
+                        <Input
+                          ref={searchInputRef}
+                          placeholder="Cari transaksi..."
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          className="w-full"
+                        />
+                      </motion.div>
                     </motion.div>
-                  ))
-                ) : (
-                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}
-                    className="text-center text-gray-500 py-10">
-                    Tidak ada transaksi ditemukan.
+
+                    <motion.div
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      className="flex flex-wrap gap-2"
+                    >
+                      {["today", "yesterday", "last7", "all"].map((preset) => (
+                        <motion.button
+                          key={preset}
+                          variants={itemVariants}
+                          onClick={() => handleDatePreset(preset)}
+                          className={`px-3 py-1 rounded border text-sm ${
+                            activePreset === preset ? "bg-blue-600 text-white" : "bg-gray-100"
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {preset === "today" && "Hari Ini"}
+                          {preset === "yesterday" && "Kemarin"}
+                          {preset === "last7" && "7 Hari"}
+                          {preset === "all" && "Semua"}
+                        </motion.button>
+                      ))}
+                    </motion.div>
+
+                    {paginatedTx.length ? (
+                      paginatedTx.map(tx => (
+                        <motion.div
+                          key={tx.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.25 }}
+                          className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 shadow-sm"
+                        >
+                          <div className="flex items-center gap-3">
+                            {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
+                            {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
+                            {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
+                            <span className="font-medium truncate">{tx.description || "Transfer"}</span>
+                          </div>
+                          <span className="font-semibold">{tx.currency} {tx.amount.toLocaleString()}</span>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-center text-gray-500 py-10"
+                      >
+                        Tidak ada transaksi ditemukan.
+                      </motion.div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-2">
+                      <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+                        ← Sebelumnya
+                      </button>
+                      <span className="text-sm text-gray-500">Hal {currentPage} dari {totalPages}</span>
+                      <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                        Selanjutnya →
+                      </button>
+                    </div>
+
+                    <div className="text-center mt-4">
+                      <button
+                        onClick={() => navigate("/history")}
+                        className="text-blue-600 underline text-sm"
+                      >
+                        Lihat Selengkapnya
+                      </button>
+                    </div>
                   </motion.div>
                 )}
 
-                <div className="flex justify-between items-center pt-2">
-                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>← Sebelumnya</button>
-                  <span className="text-sm text-gray-500">Hal {currentPage} dari {totalPages}</span>
-                  <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Selanjutnya →</button>
-                </div>
+                {activeTab === "income" && (
+                  <motion.div
+                    key="income-form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+                  </motion.div>
+                )}
 
-                <div className="text-center mt-4">
-                  <button onClick={() => navigate("/history")} className="text-blue-600 underline text-sm">Lihat Selengkapnya</button>
-                </div>
-              </motion.div>
-            )}
+                {activeTab === "outcome" && (
+                  <motion.div
+                    key="outcome-form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-            {activeTab === "income" && (
-              <motion.div key="income-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
-              </motion.div>
-            )}
-            {activeTab === "outcome" && (
-              <motion.div key="outcome-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20, y: 20 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="fixed bottom-4 right-4 z-50 flex gap-2"
+            >
+              <motion.button
+                onClick={() => setActiveTab("income")}
+                className="p-3 rounded-full bg-green-500 text-white shadow-lg"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <ArrowDownCircle size={20} />
+              </motion.button>
+              <motion.button
+                onClick={() => setActiveTab("outcome")}
+                className="p-3 rounded-full bg-red-500 text-white shadow-lg"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <ArrowUpCircle size={20} />
+              </motion.button>
+            </motion.div>
+          </DialogContent>
+        )}
+      </AnimatePresence>
     </Dialog>
   );
 };
