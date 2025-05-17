@@ -1,0 +1,26 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "theme",
+          "value": "system"
+        },
+        {
+          "name": "token",
+          "value": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjY3ZDhjZWU0ZTYwYmYwMzYxNmM1ODg4NTJiMjA5MTZkNjRjMzRmYmEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vbW9uaXEtNTYzNTAiLCJhdWQiOiJtb25pcS01NjM1MCIsImF1dGhfdGltZSI6MTc0NzQ4NTE2NywidXNlcl9pZCI6IkhLQm9vZGVydEhjV1BwWlN1ODhmY2g5dE9xcTIiLCJzdWIiOiJIS0Jvb2RlcnRIY1dQcFpTdTg4ZmNoOXRPcXEyIiwiaWF0IjoxNzQ3NDg1MTY5LCJleHAiOjE3NDc0ODg3NjksImVtYWlsIjoiZGlvcnZlbmRldHRhNzZAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiZGlvcnZlbmRldHRhNzZAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.dg2-1SyWUccrLzLAEiZfgepSxnVM_tDOwTZe5DeGj9foK2jTOSYT92Pq3YbHkKnMZCNtzJ_Rfz7CtcFqalcqfSVCJ7j1kB2qqbwIh8cqtpf8isVCHQ3-q6kn4qLf2vHgO5jZIrCq7srxMaq-GxB4DcGfli66jkvAnc5O44JxQY3t_1x5qYzeKZUBp-SmotBJdhUCpgsRs3Vlal7B2xgUgIZC8EuonigEnx6gZiVK4hrtJ7Fx4ZwtRz7g4B7Wv8VPbKVZVMR9cUfhFM2wqnVZbs1BHpWxZHLWIZa-uVSQo1onmqxur3mAyUynC9OaZ7dxRxd93m1IoXEKiYqQJ1qMzw"
+        },
+        {
+          "name": "role",
+          "value": "Tester"
+        },
+        {
+          "name": "user",
+          "value": "{\"uid\":\"HKBoodertHcWPpZSu88fch9tOqq2\",\"email\":\"diorvendetta76@gmail.com\",\"role\":\"Tester\"}"
+        }
+      ]
+    }
+  ]
+}

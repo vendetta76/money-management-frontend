@@ -18,7 +18,7 @@ interface VirtualWallet {
   name: string;
   currency: string;
   balance: number;
-  history?: { amount: number; type: "add" | "edit" | "spend"; timestamp: string }[];
+  history?: { amount: number; type: "add" | "edit" | "spend"; timestamp: string; description?: string }[];
 }
 
 const VirtualWalletPage: React.FC = () => {
@@ -26,6 +26,8 @@ const VirtualWalletPage: React.FC = () => {
   const [wallets, setWallets] = useState<VirtualWallet[]>([]);
   const [form, setForm] = useState({ name: "", currency: "IDR", balance: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [description, setDescription] = useState<string>("");
+  const [descriptions, setDescriptions] = useState<{ [id: string]: string }>({});
   const [topupAmount, setTopupAmount] = useState<string>("");
   const [spendAmounts, setSpendAmounts] = useState<{ [id: string]: string }>({});
 
@@ -55,7 +57,7 @@ const VirtualWalletPage: React.FC = () => {
       const target = wallets.find((w) => w.id === editingId);
       const newHistory = [
         ...(target?.history || []),
-        { amount: parsedBalance, type: "edit", timestamp },
+        { amount: parsedBalance, type: "edit", timestamp, description },
       ];
       await updateDoc(walletDoc, {
         name: form.name,
@@ -70,7 +72,7 @@ const VirtualWalletPage: React.FC = () => {
         currency: form.currency,
         balance: parsedBalance,
         history: [
-          { amount: parsedBalance, type: "add", timestamp },
+          { amount: parsedBalance, type: "add", timestamp, description },
         ],
         createdAt: serverTimestamp(),
       });
@@ -90,7 +92,7 @@ const VirtualWalletPage: React.FC = () => {
     const newBalance = target.balance + parsed;
     const newHistory = [
       ...(target.history || []),
-      { amount: parsed, type: "add", timestamp },
+      { amount: parsed, type: "add", timestamp, description },
     ];
     await updateDoc(walletDoc, {
       balance: newBalance,
@@ -114,7 +116,7 @@ const VirtualWalletPage: React.FC = () => {
     const newBalance = target.balance - parsed;
     const newHistory = [
       ...(target.history || []),
-      { amount: parsed, type: "spend", timestamp },
+      { amount: parsed, type: "spend", timestamp, description: descriptions[id] || "" },
     ];
     await updateDoc(walletDoc, {
       balance: newBalance,
@@ -141,6 +143,13 @@ const VirtualWalletPage: React.FC = () => {
       setForm({ name: "", currency: "IDR", balance: "" });
     }
   };
+
+          <input
+          placeholder="Deskripsi (opsional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full p-2 border rounded"
+        />
 
   const formatNumber = (value: number | string) => {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -231,7 +240,14 @@ const VirtualWalletPage: React.FC = () => {
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
                       setSpendAmounts((prev) => ({ ...prev, [w.id]: formatNumber(val) }));
+                      setDescriptions((prev) => ({ ...prev, [w.id]: "" }));
                     }}
+                    className="flex-1 px-3 py-2 border rounded"
+                  />
+                  <input
+                    placeholder="Deskripsi pengeluaran"
+                    value={descriptions[w.id] || ""}
+                    onChange={(e) => setDescriptions((prev) => ({ ...prev, [w.id]: e.target.value }))}
                     className="flex-1 px-3 py-2 border rounded"
                   />
                   <button
