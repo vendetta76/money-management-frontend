@@ -11,7 +11,7 @@ import OutcomeForm from "../pages/Outcome/OutcomeForm";
 import WalletCard from "../pages/Wallet/WalletCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { formatCurrency } from "../helpers/formatCurrency";
+import { formatCurrency } from "../pages/helpers/formatCurrency";
 
 const tabs = ["income", "outcome", "history"];
 
