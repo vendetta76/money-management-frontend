@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { SquarePen } from "lucide-react";
+import { formatCurrency } from "../helpers/formatCurrency";
 
 interface WalletCardProps {
   id: string;
@@ -91,13 +92,7 @@ const WalletCard: React.FC<WalletCardProps> = ({
         className="mt-auto text-2xl font-bold tracking-widest"
         style={{ color: contrastColor }}
       >
-        {showBalance
-          ? new Intl.NumberFormat("id-ID", {
-              style: "currency",
-              currency,
-              maximumFractionDigits: 0,
-            }).format(balance)
-          : "••••••"}
+        {showBalance ? formatCurrency(balance, currency) : "••••••"}
       </div>
     </div>
   );
