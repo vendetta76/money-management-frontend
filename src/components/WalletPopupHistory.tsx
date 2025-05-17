@@ -151,7 +151,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-1 min-h-[300px] max-h-[65vh]">
+        <div className="flex-1 overflow-y-auto px-1 min-h-[300px] max-h-[65vh] bg-white">
           <AnimatePresence mode="wait">
             {activeTab === "history" && !loading && (
               <motion.div
@@ -162,6 +162,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 exit={{ x: -100, opacity: 0 }}
                 transition={{ duration: 0.25 }}
               >
+                  <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none z-20" />
                 <div className="flex items-center gap-2">
                   <Search size={18} className="text-gray-400" />
                   <Input
