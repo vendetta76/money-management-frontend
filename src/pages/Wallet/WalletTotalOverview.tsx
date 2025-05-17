@@ -1,3 +1,4 @@
+import { formatCurrency } from "../helpers/formatCurrency";
 import React from "react";
 import CountUp from "react-countup";
 
@@ -29,11 +30,7 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
                   duration={1.2}
                   separator="," 
                   decimals={0}
-                  prefix={new Intl.NumberFormat("id-ID", {
-                    style: "currency",
-                    currency,
-                    maximumFractionDigits: 0,
-                  }).format(0).replace(/\d+/, '')} // ambil prefix symbol aja
+                  prefix={formatCurrency(0, currency).replace(/\d+([.,]\d+)?/, "")} // ambil prefix symbol aja
                 />
               ) : (
                 "••••••"
