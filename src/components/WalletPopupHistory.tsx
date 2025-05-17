@@ -137,7 +137,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full max-w-md md:max-w-xl rounded-xl bg-white p-4 pb-6 shadow-xl"
+            className="w-full max-w-md md:max-w-xl rounded-xl bg-white p-4 pb-6 shadow-xl h-[500px] flex flex-col"
           >
             <DialogTitle className="text-center font-bold text-lg mb-2">Dompet Saya</DialogTitle>
             <DialogDescription className="sr-only">Popup riwayat transaksi dan form wallet</DialogDescription>
@@ -203,7 +203,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
               ))}
             </div>
 
-            <div className="px-1 space-y-4">
+            <motion.div className="px-1 space-y-4 flex-1 overflow-y-auto max-h-[300px]">
               <AnimatePresence mode="wait">
                 {activeTab === "history" && !loading && (
                   <motion.div
@@ -333,7 +333,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, x: 20, y: 20 }}
