@@ -1,4 +1,4 @@
-import { formatCurrency } from "../helpers/formatCurrency";
+import { formatCurrency } from "./helpers/formatCurrency";
 import React, { useEffect, useState } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { db } from "../lib/firebaseClient";

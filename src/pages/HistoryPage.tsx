@@ -1,4 +1,4 @@
-import { formatCurrency } from "../helpers/formatCurrency";
+import { formatCurrency } from "./helpers/formatCurrency";
 import { useState, useEffect } from "react"
 import LayoutShell from "../layouts/LayoutShell"
 import { useAuth } from "../context/AuthContext"
