@@ -29,9 +29,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
 
   if (!isOpen || !walletId) return null;
 
-  const wallet = useMemo(() => {
-    return wallets.find(w => w?.id === walletId);
-  }, [wallets, walletId]);
+  const wallet = useMemo(() => wallets.find(w => w?.id === walletId), [wallets, walletId]);
 
   if (!wallet || !wallet.colorStyle) {
     return (
@@ -134,7 +132,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
           />
         </div>
 
-        <div className="flex justify-center gap-2 mt-4 mb-2">
+        <div className="sticky top-0 z-10 bg-white py-2 flex justify-center gap-2 border-b mb-2">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -142,7 +140,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 setActiveTab(tab);
                 setCurrentPage(1);
               }}
-              className={`px-4 py-2 rounded text-sm font-medium ${
+              className={`px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm ${
                 activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
@@ -153,7 +151,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-1 min-h-[300px] max-h-[70vh] md:max-h-[60vh]">
+        <div className="flex-1 overflow-y-auto px-1 min-h-[300px] max-h-[65vh]">
           <AnimatePresence mode="wait">
             {activeTab === "history" && !loading && (
               <motion.div
