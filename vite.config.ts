@@ -1,52 +1,34 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
-import { VitePWA } from 'vite-plugin-pwa' // ✅ Tambahkan ini
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({ // ✅ Aktifkan plugin PWA di sini
+    VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'MoniQ',
+        name: 'MoniQ - Money Manager',
         short_name: 'MoniQ',
+        description: 'Manajemen keuangan dengan gaya!',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
-        theme_color: '#6366F1',
+        theme_color: '#4f46e5',
         icons: [
           {
-            src: '/assets/icon-192x192.png',
+            src: '/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/assets/icon-512x512.png',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           }
         ]
       }
     })
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src')
-    }
-  },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true
-  },
-  server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'https://money-management-backend-f6dg.onrender.com',
-        changeOrigin: true,
-        secure: false
-      }
-    }
-  }
+  ]
 })
