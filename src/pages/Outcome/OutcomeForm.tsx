@@ -16,15 +16,16 @@ import { Loader2 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 import { getCardStyle } from "../helpers/getCardStyle";
 import { WalletEntry, OutcomeEntry } from "../helpers/types";
-import { toast } from "react-toastify"; // Added for toast notifications
+import { toast } from "react-toastify";
 
 interface OutcomeFormProps {
   hideCardPreview?: boolean;
   presetWalletId?: string;
   onClose?: () => void;
+  hideTitle?: boolean; // Added new prop
 }
 
-const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hideCardPreview }) => {
+const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hideCardPreview, hideTitle = true }) => {
   const { user } = useAuth();
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [outcomes, setOutcomes] = useState<OutcomeEntry[]>([]);
@@ -253,9 +254,11 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-        {editingId ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
-      </h1>
+      {!hideTitle && (
+        <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+          {editingId ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
+        </h1>
+      )}
 
       {success && (
         <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 rounded-lg border border-green-300 dark:border-green-700 animate-in fade-in duration-300">

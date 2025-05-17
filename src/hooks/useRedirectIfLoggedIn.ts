@@ -1,14 +1,17 @@
-import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export const useRedirectIfLoggedIn = () => {
-  const { user, loading } = useAuth()
-  const navigate = useNavigate()
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!loading && user && user.emailVerified) {
-      navigate("/dashboard", { replace: true })
+    const isPublicPage = ["/", "/login", "/register"].includes(location.pathname);
+
+    if (!loading && user?.emailVerified && isPublicPage) {
+      navigate("/dashboard", { replace: true });
     }
-  }, [user, loading, navigate])
-}
+  }, [loading, user, location.pathname]);
+};
