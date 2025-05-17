@@ -1,3 +1,4 @@
+// VirtualWalletPage.tsx (patched: +pengeluaran saldo)
 import React, { useState, useEffect } from "react";
 import LayoutShell from "../layouts/LayoutShell";
 import { useAuth } from "../context/AuthContext";
@@ -17,7 +18,7 @@ interface VirtualWallet {
   name: string;
   currency: string;
   balance: number;
-  history?: { amount: number; type: "add" | "edit"; timestamp: string }[];
+  history?: { amount: number; type: "add" | "edit" | "spend"; timestamp: string }[];
 }
 
 const VirtualWalletPage: React.FC = () => {
@@ -26,6 +27,7 @@ const VirtualWalletPage: React.FC = () => {
   const [form, setForm] = useState({ name: "", currency: "IDR", balance: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [topupAmount, setTopupAmount] = useState<string>("");
+  const [spendAmounts, setSpendAmounts] = useState<{ [id: string]: string }>({});
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -95,6 +97,31 @@ const VirtualWalletPage: React.FC = () => {
       history: newHistory,
     });
     setTopupAmount("");
+  };
+
+  const handleSpend = async (id: string) => {
+    if (!user?.uid || !spendAmounts[id]) return;
+    const parsed = parseFloat(spendAmounts[id].replace(/,/g, ""));
+    if (isNaN(parsed) || parsed <= 0) return;
+    const timestamp = new Date().toISOString();
+    const target = wallets.find((w) => w.id === id);
+    if (!target || target.balance < parsed) {
+      alert("Saldo tidak cukup.");
+      return;
+    }
+
+    const walletDoc = doc(db, "users", user.uid, "virtualWallets", id);
+    const newBalance = target.balance - parsed;
+    const newHistory = [
+      ...(target.history || []),
+      { amount: parsed, type: "spend", timestamp },
+    ];
+    await updateDoc(walletDoc, {
+      balance: newBalance,
+      history: newHistory,
+    });
+
+    setSpendAmounts((prev) => ({ ...prev, [id]: "" }));
   };
 
   const handleEdit = (wallet: VirtualWallet) => {
@@ -172,18 +199,8 @@ const VirtualWalletPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="space-x-2">
-                    <button
-                      onClick={() => handleEdit(w)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(w.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Hapus
-                    </button>
+                    <button onClick={() => handleEdit(w)} className="text-blue-600 hover:underline">Edit</button>
+                    <button onClick={() => handleDelete(w.id)} className="text-red-600 hover:underline">Hapus</button>
                   </div>
                 </div>
 
@@ -206,13 +223,32 @@ const VirtualWalletPage: React.FC = () => {
                   </button>
                 </div>
 
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="text"
+                    placeholder="Jumlah pengeluaran"
+                    value={spendAmounts[w.id] || ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      setSpendAmounts((prev) => ({ ...prev, [w.id]: formatNumber(val) }));
+                    }}
+                    className="flex-1 px-3 py-2 border rounded"
+                  />
+                  <button
+                    onClick={() => handleSpend(w.id)}
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  >
+                    Kurangi Saldo
+                  </button>
+                </div>
+
                 {w.history && w.history.length > 0 && (
                   <div className="mt-3 text-sm text-gray-600">
                     <p className="font-semibold mb-1">Riwayat:</p>
                     <ul className="list-disc pl-5 space-y-1">
                       {w.history.map((h, i) => (
                         <li key={i}>
-                          {h.type === "add" ? "+" : "→"} {formatNumber(h.amount)} ({new Date(h.timestamp).toLocaleString("id-ID")})
+                          {h.type === "add" ? "+" : h.type === "edit" ? "→" : "-"} {formatNumber(h.amount)} ({new Date(h.timestamp).toLocaleString("id-ID")})
                         </li>
                       ))}
                     </ul>
