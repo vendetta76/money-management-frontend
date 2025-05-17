@@ -122,10 +122,10 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
       const matchDesc = !search || tx.description?.toLowerCase().includes(search.toLowerCase());
       let matchDate = true;
       if (dateFilter === "last7") {
-        const txDate = new Date(tx.createdAt.seconds * 1000);
+        const txDate = new Date((tx.createdAt?.seconds ?? Date.now() / 1000) * 1000);
         matchDate = txDate >= subDays(new Date(), 7);
       } else if (dateFilter) {
-        matchDate = format(new Date(tx.createdAt.seconds * 1000), "yyyy-MM-dd") === dateFilter;
+        matchDate = format(new Date((tx.createdAt?.seconds ?? Date.now() / 1000) * 1000), "yyyy-MM-dd") === dateFilter;
       }
       return matchDesc && matchDate;
     })
