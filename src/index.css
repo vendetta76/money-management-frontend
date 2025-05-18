@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Root container fix - Ensure the entire app respects dark mode */
+#root {
+  @apply bg-background min-h-screen;
+}
+
+/* Force all main containers to use theme colors */
+main, 
+.main-content, 
+.container, 
+.content-area,
+div[role="main"] {
+  @apply bg-background text-foreground;
+}
+
 /* ================================
    ORIGINAL THEME (Vibrant Gradient) - LIGHT MODE
 ================================= */
@@ -230,6 +244,56 @@ html.original:not(.dark) .text-xs {
   color: #002d2d;
 }
 
+/* ================================
+   CRITICAL DARK MODE FIXES - IMPORTANT OVERRIDES
+================================= */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  @apply bg-background text-foreground;
+}
+
+/* Force dark mode on common containers */
+html.dark #root,
+html.dark main,
+html.dark .main-container,
+html.dark div[class*="container"],
+html.dark div[class*="content"],
+html.dark div[class*="wrapper"] {
+  @apply bg-background text-foreground;
+}
+
+/* Fix for cards in dark mode that might have white backgrounds */
+html.dark .card,
+html.dark div[class*="card"],
+html.dark div[role="dialog"],
+html.dark div[class*="modal"],
+html.dark div[class*="popup"] {
+  @apply bg-card text-card-foreground border-border;
+}
+
+/* Fix for white background elements */
+html.dark div[class*="bg-white"],
+html.dark .bg-white,
+html.dark [style*="background-color: white"],
+html.dark [style*="background-color: #fff"],
+html.dark [style*="background-color: #ffffff"],
+html.dark [style*="background: white"],
+html.dark [style*="background: #fff"],
+html.dark [style*="background: #ffffff"] {
+  @apply bg-background text-foreground;
+}
+
+/* Common UI elements that need dark mode */
+html.dark select,
+html.dark input,
+html.dark textarea,
+html.dark button:not([class*="bg-"]) {
+  @apply bg-input text-foreground border-border;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -293,4 +357,16 @@ html.original:not(.dark) .text-xs {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Fix for Wallet Cards - Keep colorful but adjust text for dark mode */
+.dark [class*="Dompet"] {
+  background-image: var(--wallet-gradient, inherit);
+  filter: brightness(0.8) saturate(0.9);
+}
+
+/* Make sure the balance dots/asterisks are visible in dark mode */
+.dark [class*="Dompet"] .text-black,
+.dark [class*="Wallet"] .text-black {
+  @apply text-white;
 }
