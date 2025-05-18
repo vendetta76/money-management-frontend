@@ -1,5 +1,3 @@
-// src/pages/Dashboard/SurvivabilityScoreBox.tsx
-
 import React, { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -55,14 +53,14 @@ const SurvivabilityScoreBox: React.FC<Props> = ({ income, outcome, wallets }) =>
   }, [survivability.icon]);
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow text-sm text-gray-700">
+    <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow text-sm text-gray-700 dark:text-gray-200">
       <div className="flex justify-between items-center mb-2">
-        <h4 className="text-sm font-semibold text-gray-500">Health Score</h4>
+        <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-300">Health Score</h4>
         <div className="relative group cursor-pointer">
-          <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
           </svg>
-          <div className="absolute z-10 hidden group-hover:block bg-white border text-xs rounded shadow px-3 py-2 top-6 right-0 w-60">
+          <div className="absolute z-10 hidden group-hover:block bg-white dark:bg-gray-800 border text-xs rounded shadow px-3 py-2 top-6 right-0 w-60 text-gray-800 dark:text-gray-100">
             Skor dihitung dari:<br />
             - Rasio Income/Outcome (ideal: 2.0)<br />
             - Rasio Tabungan terhadap Total Saldo (ideal: 30%)
@@ -82,17 +80,17 @@ const SurvivabilityScoreBox: React.FC<Props> = ({ income, outcome, wallets }) =>
       {/* Overall Score */}
       <div className="mb-4">
         <p className="text-xs font-semibold text-center mb-1">Overall Score</p>
-        <div className="w-full bg-gray-100 rounded-full h-4">
+        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4">
           <div className="bg-purple-500 h-4 rounded-full" style={{ width: `${survivability.details.total}%` }}></div>
         </div>
       </div>
 
-      <hr className="my-4" />
+      <hr className="my-4 border-gray-300 dark:border-gray-700" />
 
       {/* Income vs Outcome */}
       <div className="mb-4">
         <p className="text-xs font-semibold mb-1">Income vs Outcome</p>
-        <div className="w-full bg-gray-100 rounded-full h-3">
+        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3">
           <div className="bg-green-500 h-3 rounded-full" style={{ width: `${survivability.details.income.score}%` }}></div>
         </div>
       </div>
@@ -100,7 +98,7 @@ const SurvivabilityScoreBox: React.FC<Props> = ({ income, outcome, wallets }) =>
       {/* Savings Score */}
       <div>
         <p className="text-xs font-semibold mb-1">Savings Score</p>
-        <div className="w-full bg-gray-100 rounded-full h-3">
+        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3">
           <div className="bg-blue-500 h-3 rounded-full" style={{ width: `${survivability.details.savings.score}%` }}></div>
         </div>
       </div>

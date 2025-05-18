@@ -23,9 +23,9 @@ const WalletPieChart: React.FC<Props> = ({ wallets, selectedCurrency }) => {
   const pieData = filteredWallets.map(wallet => ({ name: wallet.name, value: wallet.balance }));
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow">
-      <h2 className="text-sm font-semibold text-gray-500 mb-4">Distribusi Wallet (Pie)</h2>
-      <div className="w-full h-48">
+    <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow text-gray-800 dark:text-gray-100">
+      <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-300 mb-4">Distribusi Wallet (Pie)</h2>
+      <div className="w-full h-48 overflow-x-auto">
         <ResponsiveContainer>
           <PieChart>
             <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80} label>
@@ -44,7 +44,7 @@ const WalletPieChart: React.FC<Props> = ({ wallets, selectedCurrency }) => {
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: COLORS[index % COLORS.length] }}
             ></span>
-            <span className="text-sm text-gray-600">{wallet.name}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">{wallet.name}</span>
           </div>
         ))}
       </div>

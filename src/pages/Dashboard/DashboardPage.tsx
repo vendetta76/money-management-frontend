@@ -1,5 +1,3 @@
-// src/pages/Dashboard/DashboardPage.tsx
-
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
@@ -9,7 +7,6 @@ import LayoutShell from '../../layouts/LayoutShell';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebaseClient';
 
-// Modular Components
 import DashboardHeader from './DashboardHeader';
 import DashboardFilters from './DashboardFilters';
 import MoneySplitSimulator from './MoneySplitSimulator';
@@ -32,7 +29,6 @@ function DashboardPage() {
 
   const prevStatus = useRef(null);
 
-  // Filters
   const [selectedCurrency, setSelectedCurrency] = useState('all');
   const [filterDate, setFilterDate] = useState('all');
   const [filterWallet, setFilterWallet] = useState('all');
@@ -107,8 +103,8 @@ function DashboardPage() {
 
   return (
     <LayoutShell>
-        <main className="min-h-screen w-full px-4 md:px-8 max-w-screen-2xl mx-auto">
-    <DashboardHeader displayName={displayName} />
+      <main className="min-h-screen w-full px-4 md:px-8 max-w-screen-2xl mx-auto bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+        <DashboardHeader displayName={displayName} />
 
         <DashboardFilters
           filterDate={filterDate}
@@ -149,14 +145,14 @@ function DashboardPage() {
         <div className="mt-10">
           <button
             onClick={() => setShowSplit((prev) => !prev)}
-            className="mb-4 inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-4 py-2 rounded hover:bg-purple-200"
+            className="mb-4 inline-flex items-center gap-2 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-4 py-2 rounded hover:bg-purple-200 dark:hover:bg-purple-800"
           >
             {showSplit ? 'Sembunyikan Split Simulator' : 'Tampilkan Split Simulator'}
           </button>
 
           {showSplit && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              <div className="bg-white p-4 rounded-xl shadow lg:col-span-3">
+              <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow lg:col-span-3">
                 <MoneySplitSimulator />
               </div>
             </div>
