@@ -144,7 +144,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full max-w-md md:max-w-xl rounded-xl bg-white p-4 pb-6 shadow-xl h-[650px] flex flex-col"
+            className="w-full max-w-md md:max-w-xl rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-4 pb-6 shadow-xl h-[650px] flex flex-col"
           >
             <DialogTitle asChild>
               <motion.h2
@@ -160,7 +160,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
 
             <motion.button
               onClick={onClose}
-              className="absolute right-4 top-4 bg-white border border-gray-300 shadow rounded-full p-1.5 hover:bg-gray-100 z-20"
+              className="absolute right-4 top-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 z-20"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -237,7 +237,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                       className="flex items-center gap-2"
                     >
                       <motion.div variants={itemVariants}>
-                        <Search size={18} className="text-gray-400" />
+                        <Search size={18} className="text-gray-400 dark:text-gray-300" />
                       </motion.div>
                       <motion.div variants={itemVariants} className="w-full">
                         <Input
@@ -245,7 +245,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                           placeholder="Cari transaksi..."
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
-                          className="w-full"
+                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                         />
                       </motion.div>
                     </motion.div>
@@ -293,7 +293,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                               initial={{ opacity: 0, scale: 0.95 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ duration: 0.25, ease: "easeOut" }}
-                              className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 shadow-sm"
+                              className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 shadow-sm"
                               whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", transition: { duration: 0.2, ease: "easeOut" } }}
                               whileTap={{ scale: 0.98 }}
                             >
@@ -301,9 +301,9 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                                 {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
                                 {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
                                 {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                                <span className="font-medium truncate">{tx.description || "Transfer"}</span>
+                                <span className="font-medium truncate text-gray-800 dark:text-white">{tx.description || "Transfer"}</span>
                               </div>
-                              <span className="font-semibold">{formatCurrency(tx.amount, tx.currency)}</span>
+                              <span className="font-semibold text-gray-700 dark:text-white">{formatCurrency(tx.amount, tx.currency)}</span>
                             </motion.div>
                           ))
                         ) : (
@@ -329,7 +329,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                         variants={paginationVariants}
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage(p => p - 1)}
-                        className="text-gray-600 hover:text-blue-600 disabled:text-gray-400"
+                        className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400"
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -342,7 +342,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                         variants={paginationVariants}
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage(p => p + 1)}
-                        className="text-gray-600 hover:text-blue-600 disabled:text-gray-400"
+                        className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400"
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -386,7 +386,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
             >
               <motion.button
                 onClick={() => setActiveTab("income")}
-                className="p-3 rounded-full bg-green-500 text-white shadow-lg"
+                className="p-3 rounded-full bg-green-500 text-white dark:shadow-md"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -394,8 +394,8 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
               </motion.button>
               <motion.button
                 onClick={() => setActiveTab("outcome")}
-                className="p-3 rounded-full bg-red-500 text-white shadow-lg"
-                whileHover={{ scale: 1.1 }}
+                className="p-3 rounded-full bg-red-500 text-white dark:shadow-md"
+                whileHover={{ scale:1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <ArrowUpCircle size={20} />

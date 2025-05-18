@@ -203,9 +203,11 @@ const HistoryPage = () => {
   });
 
   const getWalletName = (walletId: string) => {
-    const wallet = wallets.find((w) => w.id === walletId)
-    return wallet ? wallet.name : `${walletId} (Telah dihapus)`
-  }
+  const wallet = wallets.find((w) => w.id === walletId);
+  if (!wallet) return `${walletId} (Tidak ditemukan)`;
+  if (wallet.status === "archived") return `${wallet.name} (Telah dihapus)`;
+  return wallet.name;
+};
 
   const getWalletCurrency = (walletId: string) => {
     const wallet = wallets.find((w) => w.id === walletId)

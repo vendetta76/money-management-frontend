@@ -1,3 +1,4 @@
+// PATCHED FILE: WALLETFORMMODAL WITH DARK MODE SUPPORT
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import Select from "react-select";
@@ -157,16 +158,12 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
       };
 
       if (editingData?.id) {
-        await updateDoc(
-          doc(db, "users", user!.uid, "wallets", editingData.id),
-          payload
-        );
+        await updateDoc(doc(db, "users", user!.uid, "wallets", editingData.id), payload);
         toast.success("Wallet diperbarui");
       } else {
         await addDoc(collection(db, "users", user!.uid, "wallets"), payload);
         toast.success("Wallet ditambahkan");
       }
-
       onClose();
     } catch (err) {
       console.error(err);
@@ -176,15 +173,12 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
 
   const handleDelete = async () => {
     if (!editingData?.id) return;
-
     if (editingData.balance !== 0) {
       toast.error("Saldo wallet masih ada. Kosongkan dulu sebelum menghapus.");
       return;
     }
-
     const confirm = window.confirm("Yakin ingin menghapus wallet ini?");
     if (!confirm) return;
-
     try {
       await archiveWallet(user!.uid, editingData.id);
       toast.success("Wallet berhasil dihapus.");
@@ -198,15 +192,15 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-[9999]">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-[9999]">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-xl max-w-sm w-full relative"
+        className="bg-white dark:bg-gray-900 dark:text-gray-100 p-6 rounded-xl max-w-sm w-full relative"
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3"
+          className="absolute top-3 right-3 text-gray-600 dark:text-gray-300"
         >
           <X size={20} />
         </button>
@@ -219,7 +213,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
             value={form.name}
             onChange={(e) => handleChange("name", e.target.value)}
             placeholder="Nama Wallet"
-            className="w-full px-4 py-2 border rounded"
+            className="w-full px-4 py-2 border rounded bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
           />
           {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
         </div>
@@ -229,21 +223,17 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
             value={currencyOptions.find((o) => o.value === form.currency)}
             onChange={(sel) => handleChange("currency", sel?.value || "")}
             placeholder="Pilih mata uang"
+            classNamePrefix="react-select"
           />
-          {errors.currency && (
-            <p className="text-red-500 text-sm">{errors.currency}</p>
-          )}
+          {errors.currency && <p className="text-red-500 text-sm">{errors.currency}</p>}
         </div>
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Pilih Gaya Warna</label>
           <Select
             options={colorStyleOptions}
-            value={colorStyleOptions.find(
-              (o) => o.value === form.colorStyle
-            )}
-            onChange={(sel) =>
-              handleChange("colorStyle", sel?.value || "gradient")
-            }
+            value={colorStyleOptions.find((o) => o.value === form.colorStyle)}
+            onChange={(sel) => handleChange("colorStyle", sel?.value || "gradient")}
+            classNamePrefix="react-select"
           />
         </div>
         {form.colorStyle === "solid" ? (
@@ -253,7 +243,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
               type="color"
               value={form.colorValue as string}
               onChange={(e) => handleColorChange("", e.target.value)}
-              className="w-full h-10 p-0 border rounded cursor-pointer"
+              className="w-full h-10 border rounded cursor-pointer"
             />
           </div>
         ) : (
@@ -292,7 +282,7 @@ const WalletFormModal: React.FC<WalletFormModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-gray-300 rounded"
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded"
           >
             Batal
           </button>

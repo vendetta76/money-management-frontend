@@ -1,4 +1,3 @@
-// RecalcButtonWithTooltip.tsx
 import React from "react";
 import { toast } from "react-hot-toast";
 import { recalculateAllWalletBalances } from "../../utils/WalletRecalculator";
@@ -27,12 +26,12 @@ const RecalcButtonWithTooltip: React.FC<Props> = ({ userId, setLoading, loading 
     <div className="relative group inline-block">
       <button
         onClick={handleClick}
-        className="text-sm border px-3 py-1 rounded disabled:opacity-50"
+        className="text-sm border px-3 py-1 rounded disabled:opacity-50 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600"
         disabled={loading}
       >
         {loading ? "⏳ Rekalkulasi..." : "⚠️ Rekalkulasi (Eksperimen)"}
       </button>
-      <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10">
+      <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-black dark:bg-gray-200 text-white dark:text-black text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10">
         Fitur eksperimen - gunakan dengan hati-hati
       </div>
     </div>

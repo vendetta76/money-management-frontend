@@ -1,3 +1,4 @@
+// PATCHED TransferPage: Mobile + Dark Mode + Filter Wallet Aktif
 import { formatCurrency } from "./helpers/formatCurrency";
 import React, { useEffect, useState } from "react";
 import LayoutShell from "../layouts/LayoutShell";
@@ -8,10 +9,9 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  getDocs,
+  onSnapshot,
   query,
   orderBy,
-  onSnapshot,
   serverTimestamp,
   increment,
 } from "firebase/firestore";
@@ -25,6 +25,7 @@ interface WalletEntry {
   name: string;
   balance: number;
   currency: string;
+  status?: string;
 }
 
 interface TransferEntry {
@@ -40,19 +41,6 @@ interface TransferEntry {
   description: string;
   createdAt: any;
 }
-
-const formatNominal = (num: number, currency: string) => {
-  const formatted = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  switch (currency) {
-    case "IDR": return `Rp ${formatted}`;
-    case "THB": return `฿ ${formatted}`;
-    case "USD": return `$ ${formatted}`;
-    case "EUR": return `€ ${formatted}`;
-    case "GBP": return `£ ${formatted}`;
-    case "JPY": return `¥ ${formatted}`;
-    default: return `${currency} ${formatted}`;
-  }
-};
 
 const TransferPage: React.FC = () => {
   const { user, userMeta } = useAuth();
@@ -72,7 +60,7 @@ const TransferPage: React.FC = () => {
       collection(db, "users", user.uid, "wallets"),
       (snapshot) => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WalletEntry[];
-        setWallets(data);
+        setWallets(data.filter(w => w.status !== "archived"));
       }
     );
 
@@ -111,12 +99,10 @@ const TransferPage: React.FC = () => {
 
   const handleTransfer = async () => {
     const parsedAmount = Number(amount.replace(/,/g, ""));
-    // Validate mandatory fields
     if (!fromWalletId || !toWalletId || parsedAmount <= 0 || !description.trim()) {
-      toast.error("Lengkapi semua field, jumlah harus positif, dan deskripsi wajib diisi");
+      toast.error("Lengkapi semua field dan jumlah harus valid");
       return;
     }
-    // Validate same wallet
     if (fromWalletId === toWalletId) {
       toast.error("Dompet asal dan tujuan tidak boleh sama");
       return;
@@ -125,52 +111,34 @@ const TransferPage: React.FC = () => {
     try {
       const fromWallet = wallets.find(w => w.id === fromWalletId);
       const toWallet = wallets.find(w => w.id === toWalletId);
-
       if (!fromWallet || !toWallet) throw new Error("Wallet tidak ditemukan");
-
-      // Validate same currency
       if (fromWallet.currency !== toWallet.currency) {
-        toast.error("Transfer hanya diperbolehkan antar dompet dengan mata uang yang sama");
+        toast.error("Hanya bisa transfer antar dompet dengan mata uang yang sama");
         return;
       }
-
-      // Validate sufficient balance
       if (fromWallet.balance < parsedAmount) {
-        toast.error("Saldo dompet asal tidak mencukupi untuk transfer ini.");
+        toast.error("Saldo tidak cukup untuk transfer ini");
         return;
       }
 
-      const fromWalletRef = doc(db, "users", user.uid, "wallets", fromWalletId);
-      const toWalletRef = doc(db, "users", user.uid, "wallets", toWalletId);
+      const fromRef = doc(db, "users", user.uid, "wallets", fromWalletId);
+      const toRef = doc(db, "users", user.uid, "wallets", toWalletId);
 
       if (editingTransfer) {
         const previousAmount = editingTransfer.amount;
+        const rollbackBalance = fromWallet.balance + previousAmount;
+        if (rollbackBalance < parsedAmount) {
+          toast.error("Saldo tidak cukup untuk memperbarui transfer");
+          return;
+        }
+        const prevFromRef = doc(db, "users", user.uid, "wallets", editingTransfer.fromWalletId);
+        const prevToRef = doc(db, "users", user.uid, "wallets", editingTransfer.toWalletId);
 
-        const saldoSetelahRollback = fromWallet.balance + previousAmount;
-  if (saldoSetelahRollback < parsedAmount) {
-    toast.error("Saldo tidak cukup untuk memperbarui transfer.");
-    return;
-  }
-        // Rollback saldo lama menggunakan increment
-        const fromRef = doc(db, "users", user.uid, "wallets", editingTransfer.fromWalletId);
-        const toRef = doc(db, "users", user.uid, "wallets", editingTransfer.toWalletId);
+        await updateDoc(prevFromRef, { balance: increment(previousAmount) });
+        await updateDoc(prevToRef, { balance: increment(-previousAmount) });
+        await updateDoc(fromRef, { balance: increment(-parsedAmount) });
+        await updateDoc(toRef, { balance: increment(parsedAmount) });
 
-        await updateDoc(fromRef, {
-          balance: increment(previousAmount),
-        });
-        await updateDoc(toRef, {
-          balance: increment(-previousAmount),
-        });
-
-        // Update saldo baru menggunakan increment
-        await updateDoc(fromWalletRef, {
-          balance: increment(-parsedAmount),
-        });
-        await updateDoc(toWalletRef, {
-          balance: increment(parsedAmount),
-        });
-
-        // Update dokumen transfer
         await updateDoc(doc(db, "users", user.uid, "transfers", editingTransfer.id), {
           from: fromWallet.name,
           to: toWallet.name,
@@ -183,17 +151,11 @@ const TransferPage: React.FC = () => {
           description,
         });
 
-        toast.success("Transfer berhasil diperbarui!");
+        toast.success("Transfer diperbarui");
         setEditingTransfer(null);
       } else {
-        // Update saldo menggunakan increment
-        await updateDoc(fromWalletRef, {
-          balance: increment(-parsedAmount),
-        });
-        await updateDoc(toWalletRef, {
-          balance: increment(parsedAmount),
-        });
-
+        await updateDoc(fromRef, { balance: increment(-parsedAmount) });
+        await updateDoc(toRef, { balance: increment(parsedAmount) });
         await addDoc(collection(db, "users", user.uid, "transfers"), {
           from: fromWallet.name,
           to: toWallet.name,
@@ -206,52 +168,12 @@ const TransferPage: React.FC = () => {
           description,
           createdAt: serverTimestamp(),
         });
-
         toast.success("Transfer berhasil!");
       }
 
       resetForm();
     } catch (err: any) {
       toast.error("Gagal transfer: " + err.message);
-    }
-  };
-
-  const handleEditTransfer = (entry: TransferEntry) => {
-    setEditingTransfer(entry);
-    setFromWalletId(entry.fromWalletId);
-    setToWalletId(entry.toWalletId);
-    setAmount(entry.amount.toString());
-    setDescription(entry.description);
-  };
-
-  const handleDeleteTransfer = async (entry: TransferEntry) => {
-    if (!user) return;
-    try {
-      const fromWallet = wallets.find(w => w.id === entry.fromWalletId);
-      const toWallet = wallets.find(w => w.id === entry.toWalletId);
-
-      if (!fromWallet || !toWallet) {
-        toast.error("Dompet tidak ditemukan, tidak bisa rollback saldo.");
-        return;
-      }
-
-      const fromRef = doc(db, "users", user.uid, "wallets", entry.fromWalletId);
-      const toRef = doc(db, "users", user.uid, "wallets", entry.toWalletId);
-
-      // Rollback saldo menggunakan increment
-      await updateDoc(fromRef, {
-        balance: increment(entry.amount),
-      });
-      await updateDoc(toRef, {
-        balance: increment(-entry.amount),
-      });
-
-      await deleteDoc(doc(db, "users", user.uid, "transfers", entry.id));
-
-      toast.success("Transaksi transfer berhasil dihapus dan saldo dikembalikan.");
-      resetForm();
-    } catch (err: any) {
-      toast.error("Gagal hapus transaksi: " + err.message);
     }
   };
 
@@ -270,16 +192,15 @@ const TransferPage: React.FC = () => {
           </div>
         )}
         <div className={locked ? "pointer-events-none blur-sm" : "relative z-10"}>
-          <h1 className="text-2xl font-bold mb-4">Transfer Antar Wallet</h1>
+          <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Transfer Antar Wallet</h1>
 
-          {/* Form */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Dari Dompet</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Dari Dompet</label>
               <select
                 value={fromWalletId}
                 onChange={(e) => setFromWalletId(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500"
               >
                 <option value="">Pilih Dompet</option>
                 {wallets.map((wallet) => (
@@ -290,11 +211,11 @@ const TransferPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Ke Dompet</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Ke Dompet</label>
               <select
                 value={toWalletId}
                 onChange={(e) => setToWalletId(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500"
               >
                 <option value="">Pilih Dompet</option>
                 {wallets.map((wallet) => (
@@ -305,23 +226,23 @@ const TransferPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Jumlah</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Jumlah</label>
               <input
                 type="text"
                 value={amount}
                 onChange={handleAmountChange}
                 placeholder="Masukkan jumlah"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Deskripsi *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Deskripsi *</label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Masukkan deskripsi (wajib)"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500"
               />
             </div>
             <button
@@ -333,7 +254,7 @@ const TransferPage: React.FC = () => {
             {editingTransfer && (
               <button
                 onClick={resetForm}
-                className="w-full bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
+                className="w-full bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-white py-2 rounded-md hover:bg-gray-400"
               >
                 Batal Edit
               </button>
@@ -342,22 +263,22 @@ const TransferPage: React.FC = () => {
 
           {transferHistory.length > 0 && (
             <div className="mt-10">
-              <h2 className="text-lg font-semibold mb-2">Riwayat Transfer Terbaru</h2>
+              <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Riwayat Transfer Terbaru</h2>
               <div className="space-y-3">
                 {transferHistory.map((entry) => (
-                  <div key={entry.id} className="p-3 rounded border border-blue-200 bg-blue-50">
+                  <div key={entry.id} className="p-3 rounded border border-blue-200 dark:border-blue-600 bg-blue-50 dark:bg-blue-900">
                     <div className="flex justify-between items-center">
                       <div>
-                        <div className="text-sm font-semibold text-blue-800">
+                        <div className="text-sm font-semibold text-blue-800 dark:text-blue-300">
                           {entry.from} ➡️ {entry.to}
                         </div>
-                        <div className="text-xs text-gray-500">{entry.description}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-300">{entry.description}</div>
                       </div>
-                      <div className="text-sm font-bold text-blue-600">
+                      <div className="text-sm font-bold text-blue-600 dark:text-blue-200">
                         {formatCurrency(entry.amount, entry.currency)}
                       </div>
                     </div>
-                    <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
+                    <div className="flex justify-between items-center mt-1 text-xs text-gray-400 dark:text-gray-300">
                       <span>
                         {new Date(entry.createdAt?.toDate?.() ?? entry.createdAt).toLocaleString("id-ID", {
                           day: "numeric",
