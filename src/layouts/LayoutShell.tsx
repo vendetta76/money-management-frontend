@@ -1,13 +1,28 @@
-import { useState } from "react"
-import Sidebar from "../components/Sidebar"
-import { useTheme } from "../hooks/useThemeAdvanced"
+import { useEffect, useRef, useState } from "react";
+import Sidebar from "../components/Sidebar";
+import { useTheme } from "../hooks/useThemeAdvanced";
+import { useGesture } from "@use-gesture/react";
 
 const LayoutShell = ({ children }: { children: React.ReactNode }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { theme } = useTheme()
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { theme } = useTheme();
+
+  const bind = useGesture({
+    onDragEnd: ({ swipe: [x] }) => {
+      if (x === 1 && window.innerWidth <= 768) {
+        setSidebarOpen(true); // swipe right
+      }
+      if (x === -1 && window.innerWidth <= 768) {
+        setSidebarOpen(false); // swipe left
+      }
+    },
+  });
 
   return (
-    <div className="flex relative min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div
+      {...bind()}
+      className="flex relative min-h-screen bg-gray-50 dark:bg-gray-900"
+    >
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {sidebarOpen && (
@@ -33,7 +48,7 @@ const LayoutShell = ({ children }: { children: React.ReactNode }) => {
         </main>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LayoutShell
+export default LayoutShell;

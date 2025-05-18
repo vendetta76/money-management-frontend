@@ -46,10 +46,10 @@ function App() {
             <Toaster position="top-center" reverseOrder={false} />
             <AutoLogoutWrapper>
               {canInstall && (
-                <div className="fixed top-4 right-4 z-50 bg-white border px-4 py-2 rounded-lg shadow-md">
+                <div className="fixed top-4 right-4 z-50 bg-background border border-border px-4 py-2 rounded-lg shadow-md">
                   <button
                     onClick={handleInstall}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+                    className="bg-primary text-primary-foreground px-4 py-1 rounded hover:bg-opacity-90 transition"
                   >
                     Install MoniQ
                   </button>
