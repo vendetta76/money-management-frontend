@@ -1,5 +1,4 @@
 // tailwind.config.js
-
 export default {
   darkMode: 'class',
   content: [
@@ -10,24 +9,18 @@ export default {
     './src/layouts/**/*.{js,ts,jsx,tsx}',
   ],
   safelist: [
+    {
+      pattern: /dark:/,
+    },
     'dark:bg-gray-900',
     'dark:bg-gray-800',
-    'dark:bg-zinc-800',
     'dark:text-white',
-    'dark:text-gray-100',
     'dark:text-gray-300',
-    'dark:border-gray-700',
-    'dark:border-gray-600',
-    'dark:hover:bg-gray-800',
-    'dark:hover:bg-gray-700',
-    'dark:hover:text-white',
-    'dark:text-red-400',
-    'dark:text-blue-300',
-    'dark:text-purple-300',
-    'dark:bg-purple-900',
     'dark:text-gray-200',
-    'dark:text-green-400',
-    'dark:text-yellow-500',
+    'dark:border-gray-600',
+    'dark:border-gray-700',
+    'dark:hover:bg-gray-700',
+    'dark:hover:bg-gray-800',
   ],
   theme: {
     extend: {
@@ -50,4 +43,4 @@ export default {
     },
   },
   plugins: [],
-};
+}
