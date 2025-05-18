@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import logo from "../assets/kucing-cuan.webp"; // Adjust the path as needed
+import { Eye, EyeOff, AlertCircle, Home } from "lucide-react";
+// Using a placeholder for the cat image. Replace with your actual cat image.
+import catMascot from "./assets/cat-hanging.png"; // Adjust path as needed
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -50,40 +51,37 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
+      {/* Back to landing page button */}
+      <button 
+        onClick={() => navigate("/")} 
+        className="absolute top-4 left-4 p-2 rounded-full bg-muted/40 hover:bg-muted text-foreground transition-colors flex items-center gap-2"
+      >
+        <Home size={18} />
+        <span className="text-sm font-medium">Home</span>
+      </button>
+    
       <div 
         className={`w-full max-w-md transition-all duration-500 ${
           formVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
-        <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-lg relative">
-          {/* Cat mascot peeking over the form */}
-          <div className="flex flex-col items-center pb-4">
-            <h1 className="text-2xl font-bold mt-8 mb-2 text-foreground">Welcome to MoniQ</h1>
-            
-            <div className="relative h-40 w-full flex justify-center">
-              {/* This is a placeholder for your cat mascot */}
-              <div className="absolute bottom-0 w-40 h-40">
-                {/* You'd replace this with your actual cat SVG/image */}
-                <svg className="w-full h-full" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="100" cy="100" r="80" fill="#FFA726" />
-                  <circle cx="60" cy="80" r="25" fill="#8D6E63" />
-                  <circle cx="140" cy="80" r="25" fill="#8D6E63" />
-                  <path d="M70 65 L40 40" stroke="#8D6E63" strokeWidth="8" strokeLinecap="round" />
-                  <path d="M130 65 L160 40" stroke="#8D6E63" strokeWidth="8" strokeLinecap="round" />
-                  <circle cx="80" cy="90" r="5" fill="#212121" />
-                  <circle cx="120" cy="90" r="5" fill="#212121" />
-                  <path d="M90 105 Q100 115 110 105" stroke="#212121" strokeWidth="3" />
-                  <path d="M60 75 Q70 85 70 70" fill="#FFC8C8" />
-                  <path d="M140 75 Q130 85 130 70" fill="#FFC8C8" />
-                  <path d="M85 120 L100 110 L115 120" fill="#FFFFFF" stroke="#212121" strokeWidth="2" />
-                  <path d="M160 100 Q190 120 160 140" fill="#8D6E63" stroke="#6D4C41" strokeWidth="2" />
-                </svg>
-              </div>
-            </div>
+        <div className="bg-card border border-border rounded-3xl overflow-visible shadow-lg relative">
+          <h1 className="text-2xl font-bold text-center mt-8 mb-2">Welcome to MoniQ</h1>
+          
+          {/* Cat mascot hanging on top of the form */}
+          <div className="absolute -top-24 left-1/2 transform -translate-x-1/2 w-40 h-40 z-10">
+            <img 
+              src={catMascot} 
+              alt="MoniQ Cat" 
+              className="w-full h-full object-contain"
+            />
           </div>
+          
+          {/* Horizontal line that cat is hanging on */}
+          <div className="absolute -top-2 left-0 right-0 h-2 z-0"></div>
 
-          <div className="px-8 pb-8 pt-0">
+          <div className="px-8 pb-8 pt-4">
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 mb-4 animate-shake">
                 <AlertCircle size={16} />
