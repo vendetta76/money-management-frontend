@@ -50,6 +50,11 @@ const LoginPage = () => {
     }
   };
 
+  // Handle reset password request
+  const handleResetPassword = () => {
+    navigate("/reset-password", { state: { email } });
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
       {/* Back to landing page button */}
@@ -62,26 +67,23 @@ const LoginPage = () => {
       </button>
     
       <div 
-        className={`w-full max-w-md transition-all duration-500 ${
+        className={`w-full max-w-md transition-all duration-500 mt-16 ${
           formVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
-        <div className="bg-card border border-border rounded-3xl overflow-visible shadow-lg relative">
-          <h1 className="text-2xl font-bold text-center mt-8 mb-2">Welcome to MoniQ</h1>
-          
-          {/* Cat mascot hanging on top of the form */}
-          <div className="absolute -top-24 left-1/2 transform -translate-x-1/2 w-40 h-40 z-10">
-            <img 
-              src={catMascot} 
-              alt="MoniQ Cat" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-          
-          {/* Horizontal line that cat is hanging on */}
-          <div className="absolute -top-2 left-0 right-0 h-2 z-0"></div>
+        {/* Cat mascot hanging on top of the form */}
+        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-56 h-56 z-10 pointer-events-none">
+          <img 
+            src={catMascot} 
+            alt="MoniQ Cat" 
+            className="w-full h-full object-contain"
+          />
+        </div>
+        
+        <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-lg relative pt-10">
+          <h1 className="text-2xl font-bold text-center mt-4 mb-2">Welcome to MoniQ</h1>
 
-          <div className="px-8 pb-8 pt-4">
+          <div className="px-8 pb-8 pt-2">
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 mb-4 animate-shake">
                 <AlertCircle size={16} />
@@ -112,9 +114,18 @@ const LoginPage = () => {
                   className="transition-all duration-300 delay-200"
                   style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
                 >
-                  <label className="block text-sm font-medium mb-1.5" htmlFor="password">
-                    Password
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-sm font-medium" htmlFor="password">
+                      Password
+                    </label>
+                    <button 
+                      type="button" 
+                      onClick={handleResetPassword}
+                      className="text-sm text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <div className="relative">
                     <input
                       id="password"
