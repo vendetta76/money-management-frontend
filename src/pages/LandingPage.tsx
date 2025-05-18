@@ -1,4 +1,5 @@
-import { useBlockLandingIfLoggedIn } from "../hooks/useBlockLandingIfLoggedIn";
+import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn";
+import { useAuth } from "@/context/AuthContext";
 import { ArrowRight } from "lucide-react";
 
 export const metadata = {
@@ -7,7 +8,17 @@ export const metadata = {
 };
 
 const LandingPage = () => {
-  useBlockLandingIfLoggedIn();
+  const { loading } = useAuth();
+
+  useRedirectIfLoggedIn();
+
+  if (loading) {
+    return (
+      <div className="h-screen bg-background text-foreground flex items-center justify-center">
+        Memuat...
+      </div>
+    );
+  }
 
   return (
     <div className="dark:text-white dark:bg-gray-900 flex flex-col min-h-screen bg-gradient-to-br from-blue-500 to-purple-700 text-white">
