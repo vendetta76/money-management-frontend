@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, Home } from "lucide-react";
 // Using a placeholder for the cat image. Replace with your actual cat image.
-import catMascot from "./assets/cat-hanging.png"; // Adjust path as needed
+import catMascot from "/assets/cat-hanging.png"; // Adjust path as needed
 
 const LoginPage = () => {
   const navigate = useNavigate();

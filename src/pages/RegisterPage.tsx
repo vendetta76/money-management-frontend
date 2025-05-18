@@ -10,7 +10,7 @@ import { auth, db } from "../lib/firebaseClient";
 import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn";
 import { Eye, EyeOff, ArrowLeft, User, Mail, Lock, CheckCircle, AlertCircle } from "lucide-react";
 import { logActivity } from "../utils/logActivity";
-import logo from "./assets/kucing-cuan.webp"; // Adjust path as needed
+import logo from "/assets/kucing-cuan.webp"; // Adjust path as needed
 
 const RegisterPage = () => {
   useRedirectIfLoggedIn();
