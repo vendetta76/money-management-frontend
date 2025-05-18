@@ -1,33 +1,56 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import path from 'path'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'MoniQ - Money Manager',
+        name: 'MoniQ: Money Manager',
         short_name: 'MoniQ',
-        description: 'Manajemen keuangan dengan gaya!',
+        description: 'Kelola keuangan pribadi & dompet digital dengan gaya!',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#4f46e5',
+        orientation: 'portrait',
         icons: [
           {
-            src: '/pwa-192x192.png',
+            src: '/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           }
-        ]
+        ],
+screenshots: [
+  {
+    src: "/screenshots/1.png",
+    type: "image/png",
+    sizes: "540x720",
+    form_factor: "wide" // sudah ada
+  },
+  {
+    src: "/screenshots/2.png",
+    type: "image/png",
+    sizes: "540x720",
+    form_factor: "narrow" // ✅ ini bikin warning hilang
+  }
+]
       }
     })
   ]
