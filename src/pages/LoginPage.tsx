@@ -67,23 +67,24 @@ const LoginPage = () => {
       </button>
     
       <div 
-        className={`w-full max-w-md transition-all duration-500 mt-16 ${
+        className={`w-full max-w-md transition-all duration-500 pt-14 ${
           formVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
-        {/* Cat mascot hanging on top of the form */}
-        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-56 h-56 z-10 pointer-events-none">
-          <img 
-            src={catMascot} 
-            alt="MoniQ Cat" 
-            className="w-full h-full object-contain"
-          />
-        </div>
-        
-        <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-lg relative pt-10">
-          <h1 className="text-2xl font-bold text-center mt-4 mb-2">Welcome to MoniQ</h1>
-
-          <div className="px-8 pb-8 pt-2">
+        <div className="bg-card border border-border rounded-3xl overflow-visible shadow-lg relative">
+          {/* Cat mascot peeking over the form */}
+          <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 w-60 pointer-events-none">
+            <img 
+              src={catMascot} 
+              alt="MoniQ Cat" 
+              className="w-full object-contain"
+            />
+          </div>
+          
+          <div className="pt-20 pb-8 px-8">
+            {/* Title is positioned below where the cat image appears */}
+            <h1 className="text-2xl font-bold text-center mb-6">Welcome to MoniQ</h1>
+            
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 mb-4 animate-shake">
                 <AlertCircle size={16} />
@@ -168,11 +169,11 @@ const LoginPage = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center justify-center"
+                    className="w-full bg-black hover:bg-black/90 text-white font-medium py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center justify-center"
                   >
                     {isLoading ? (
                       <div className="flex items-center justify-center">
-                        <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2"></div>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                         <span>Logging in...</span>
                       </div>
                     ) : (
