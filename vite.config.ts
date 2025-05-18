@@ -18,7 +18,8 @@ export default defineConfig({
         name: 'MoniQ: Money Manager',
         short_name: 'MoniQ',
         description: 'Kelola keuangan pribadi & dompet digital dengan gaya!',
-        start_url: '/',
+        id: "/",
+        start_url: "/",
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#4f46e5',
@@ -37,21 +38,21 @@ export default defineConfig({
             purpose: 'any'
           }
         ],
-screenshots: [
-  {
-    src: "/screenshots/1.png",
-    type: "image/png",
-    sizes: "540x720",
-    form_factor: "wide" // sudah ada
-  },
-  {
-    src: "/screenshots/2.png",
-    type: "image/png",
-    sizes: "540x720",
-    form_factor: "narrow" // ✅ ini bikin warning hilang
-  }
-]
+        screenshots: [
+          {
+            src: "/screenshots/1.png",
+            type: "image/png",
+            sizes: "540x720",
+            form_factor: "wide"
+          },
+          {
+            src: "/screenshots/2.png",
+            type: "image/png",
+            sizes: "540x720",
+            form_factor: "narrow"
+          }
+        ]
       }
     })
   ]
-})
+});

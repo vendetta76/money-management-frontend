@@ -1,5 +1,4 @@
 import { useBlockLandingIfLoggedIn } from "../hooks/useBlockLandingIfLoggedIn";
-import InstallButton from "../components/InstallButton";
 import { ArrowRight } from "lucide-react";
 
 export const metadata = {
@@ -14,7 +13,7 @@ const LandingPage = () => {
     <div className="dark:text-white dark:bg-gray-900 flex flex-col min-h-screen bg-gradient-to-br from-blue-500 to-purple-700 text-white">
       {/* Navbar */}
       <header className="flex justify-between items-center p-6 shadow-sm bg-white/10 backdrop-blur">
-        <h1 className="text-2xl font-extrabold tracking-wide">MoniQ</h1>
+        <h1 className="text-2xl font-extrabold tracking-wide">MeowIQ</h1>
         <nav className="space-x-4 text-sm">
           <a href="/login" className="hover:underline">Login</a>
           <a href="/register" className="hover:underline">Register</a>
@@ -22,37 +21,27 @@ const LandingPage = () => {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col justify-center items-center text-center px-6">
-        <div className="max-w-md w-full">
-          <img
-            src="/assets/finance-animation.gif"
-            alt="Ilustrasi animasi keuangan"
-            className="w-full h-auto mb-6 rounded-lg shadow-md"
-          />
-        </div>
+      <main className="flex-1 flex flex-col justify-center items-center text-center px-6 py-12">
         <h2 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-          💸 Kelola Keuanganmu dengan Gaya!
+          💸 Kelola Keuanganmu Untuk Masa Depanmu
         </h2>
         <p className="text-lg md:text-xl mb-8 max-w-2xl">
-          MoniQ adalah platform manajemen keuangan yang bantu kamu melacak pemasukan, pengeluaran, dan tabungan dengan tampilan modern & fitur pintar.
+          Aplikasi PWA ringan & pintar yang bantu kamu kelola dompet, transaksi, dan lihat laporan keuangan real-time.
         </p>
 
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex gap-4 flex-wrap justify-center">
-            <a
-              href="/login"
-              className="px-6 py-3 bg-white text-blue-700 font-semibold rounded-lg shadow hover:bg-gray-100 transition"
-            >
-              Masuk Sekarang
-            </a>
-            <a
-              href="/register"
-              className="px-6 py-3 bg-yellow-400 text-white font-semibold rounded-lg shadow hover:bg-yellow-500 transition"
-            >
-              Daftar Gratis
-            </a>
-          </div>
-          <InstallButton />
+        <div className="flex gap-4 flex-wrap justify-center">
+          <a
+            href="/login"
+            className="px-6 py-3 bg-white text-blue-700 font-semibold rounded-full shadow hover:bg-gray-100 transition"
+          >
+            Masuk
+          </a>
+          <a
+            href="/register"
+            className="px-6 py-3 bg-yellow-400 text-white font-semibold rounded-full shadow hover:bg-yellow-500 transition"
+          >
+            Daftar Gratis
+          </a>
         </div>
       </main>
 
@@ -97,18 +86,18 @@ const LandingPage = () => {
 
       {/* CTA Section */}
       <section className="bg-purple-900 text-white py-12 px-6 text-center">
-        <h3 className="text-2xl font-bold mb-4">Mulai atur keuanganmu sekarang 🚀</h3>
+        <h3 className="text-2xl font-bold mb-4">Yuk mulai kelola uangmu sekarang!</h3>
         <a
           href="/register"
-          className="inline-flex items-center gap-2 bg-yellow-400 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-yellow-500 transition"
+          className="inline-flex items-center gap-2 bg-yellow-400 text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-yellow-500 transition"
         >
-          Daftar Gratis <ArrowRight size={18} />
+          Daftar Sekarang <ArrowRight size={18} />
         </a>
       </section>
 
       {/* Footer */}
       <footer className="text-center text-sm py-4 bg-white/10 backdrop-blur border-t border-white/20">
-        © 2025 MoniQ. Dibuat dengan ❤️ oleh Developer Bro.
+        © 2025 MoniQ. Dibuat dengan ❤️
       </footer>
     </div>
   );
