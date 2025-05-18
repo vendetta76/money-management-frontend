@@ -1,21 +1,20 @@
 import { formatCurrency } from "../helpers/formatCurrency";
-import { useEffect, useState } from "react"
-import { DndContext, closestCenter } from "@dnd-kit/core"
+import { useEffect, useState } from "react";
+import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-// UI Components
 const Input = ({ ...props }) => (
   <input
     {...props}
-    className="px-3 py-2 border rounded w-full focus:outline-none focus:ring"
+    className="px-3 py-2 border rounded w-full focus:outline-none focus:ring bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
   />
-)
+);
 
 const Button = ({ children, className = "", ...props }) => (
   <button
@@ -24,7 +23,7 @@ const Button = ({ children, className = "", ...props }) => (
   >
     {children}
   </button>
-)
+);
 
 function SortableItem({ id, item, onChange, onRemove, isOverLimit }) {
   const {
@@ -36,63 +35,65 @@ function SortableItem({ id, item, onChange, onRemove, isOverLimit }) {
   } = useSortable({
     id,
     transition: { duration: 250, easing: "ease" }
-  })
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition
-  }
+  };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="flex gap-2 items-center mb-2"
+      className="flex flex-col sm:flex-row gap-2 items-start sm:items-center mb-2"
     >
       <Input
         value={item.name}
         onChange={(e) => onChange(id, "name", e.target.value)}
         placeholder="Nama Pos"
       />
-      <div className="relative w-20">
+      <div className="relative w-full sm:w-20">
         <Input
           type="text"
           value={item.percent}
           onChange={(e) => {
-            const raw = e.target.value.replace(/\D/g, "")
-            const clean = raw.replace(/^0+/, "")
-            onChange(id, "percent", clean)
+            const raw = e.target.value.replace(/\D/g, "");
+            const clean = raw.replace(/^0+/, "");
+            onChange(id, "percent", clean);
           }}
-          className={`text-right ${isOverLimit ? "border-red-500 text-red-600" : ""}`}
+          className={`text-right ${isOverLimit ? "border-red-500 text-red-600 dark:text-red-400" : ""}`}
         />
-        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500">%</span>
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">%</span>
       </div>
-      <button
-        onClick={() => onRemove(id)}
-        className="text-red-600 px-2 py-1 rounded hover:bg-red-100"
-        title="Hapus Pos"
-      >
-        ❌
-      </button>
-      <span
-        {...listeners}
-        className="cursor-grab text-gray-400 hover:text-gray-600"
-        title="Drag Posisi"
-      >
-        ≡
-      </span>
+      <div className="flex gap-2 w-full sm:w-auto">
+        <button
+          onClick={() => onRemove(id)}
+          className="text-red-600 dark:text-red-400 px-2 py-1 rounded hover:bg-red-100 dark:hover:bg-red-900"
+          title="Hapus Pos"
+        >
+          ❌
+        </button>
+        <span
+          {...listeners}
+          className="cursor-grab text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          title="Drag Posisi"
+        >
+          ≡
+        </span>
+      </div>
     </div>
-  )
+  );
 }
 
 export default function MoneySplitAdvanced() {
-  const availableCurrencies = ["IDR", "USD", "THB"]
-  const [selectedCurrency, setSelectedCurrency] = useState("")
-  const [total, setTotal] = useState(0)
+  const availableCurrencies = ["IDR", "USD", "THB"];
+  const [selectedCurrency, setSelectedCurrency] = useState("");
+  const [total, setTotal] = useState(0);
 
   const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem("moneySplitCategories")
+    const saved = localStorage.getItem("moneySplitCategories");
     return saved
       ? JSON.parse(saved)
       : [
@@ -101,16 +102,16 @@ export default function MoneySplitAdvanced() {
           { id: "3", name: "Kebutuhan", percent: 35 },
           { id: "4", name: "Hiburan", percent: 5 },
           { id: "5", name: "Lainnya", percent: 5 },
-        ]
-  })
+        ];
+  });
 
-  const [prevCategories, setPrevCategories] = useState(null)
-  const totalPercent = categories.reduce((sum, item) => sum + item.percent, 0)
-  const isOverLimit = totalPercent !== 100 // Define isOverLimit based on totalPercent
+  const [prevCategories, setPrevCategories] = useState(null);
+  const totalPercent = categories.reduce((sum, item) => sum + item.percent, 0);
+  const isOverLimit = totalPercent !== 100;
 
   useEffect(() => {
-    localStorage.setItem("moneySplitCategories", JSON.stringify(categories))
-  }, [categories])
+    localStorage.setItem("moneySplitCategories", JSON.stringify(categories));
+  }, [categories]);
 
   const handleChange = (id, field, value) => {
     const updated = categories.map((cat) =>
@@ -120,51 +121,51 @@ export default function MoneySplitAdvanced() {
             [field]: field === "percent" ? parseFloat(value) || 0 : value,
           }
         : cat
-    )
-    setPrevCategories(categories)
-    setCategories(updated)
-  }
+    );
+    setPrevCategories(categories);
+    setCategories(updated);
+  };
 
   const handleAdd = () => {
-    setPrevCategories(categories)
+    setPrevCategories(categories);
     setCategories([
       ...categories,
       { id: Date.now().toString(), name: "Baru", percent: 0 },
-    ])
-  }
+    ]);
+  };
 
   const handleRemove = (id) => {
-    setPrevCategories(categories)
-    setCategories(categories.filter((cat) => cat.id !== id))
-  }
+    setPrevCategories(categories);
+    setCategories(categories.filter((cat) => cat.id !== id));
+  };
 
   const handleReset = () => {
-    setPrevCategories(categories)
-    setCategories([])
-  }
+    setPrevCategories(categories);
+    setCategories([]);
+  };
 
   const handleUndo = () => {
     if (prevCategories) {
-      setCategories(prevCategories)
-      setPrevCategories(null)
+      setCategories(prevCategories);
+      setPrevCategories(null);
     }
-  }
+  };
 
   const handleDragEnd = ({ active, over }) => {
-    if (!over || active.id === over.id) return
-    const oldIndex = categories.findIndex((c) => c.id === active.id)
-    const newIndex = categories.findIndex((c) => c.id === over.id)
-    setPrevCategories(categories)
-    setCategories(arrayMove(categories, oldIndex, newIndex))
-  }
+    if (!over || active.id === over.id) return;
+    const oldIndex = categories.findIndex((c) => c.id === active.id);
+    const newIndex = categories.findIndex((c) => c.id === over.id);
+    setPrevCategories(categories);
+    setCategories(arrayMove(categories, oldIndex, newIndex));
+  };
 
   const result = categories.map((cat) => {
-    const value = (total * cat.percent) / 100
-    return { ...cat, value }
-  })
+    const value = (total * cat.percent) / 100;
+    return { ...cat, value };
+  });
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow rounded-xl">
+    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white dark:bg-gray-900 shadow rounded-xl text-gray-800 dark:text-gray-100">
       <h2 className="text-2xl font-bold mb-4">Money Split Simulator</h2>
 
       <div className="mb-4">
@@ -172,10 +173,10 @@ export default function MoneySplitAdvanced() {
         <select
           value={selectedCurrency}
           onChange={(e) => {
-            setSelectedCurrency(e.target.value)
-            setTotal(0)
+            setSelectedCurrency(e.target.value);
+            setTotal(0);
           }}
-          className="px-4 py-2 border rounded w-full"
+          className="px-4 py-2 border rounded w-full bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
         >
           <option value="">-- Pilih Mata Uang --</option>
           {availableCurrencies.map((cur) => (
@@ -192,12 +193,12 @@ export default function MoneySplitAdvanced() {
             <label className="block text-sm font-medium mb-1">
               Total Uang ({selectedCurrency})
             </label>
-           <Input
-  type="text"
-  value={formatCurrency(total, selectedCurrency)}
+            <Input
+              type="text"
+              value={formatCurrency(total, selectedCurrency)}
               onChange={(e) => {
-                const raw = e.target.value.replace(/\D/g, "")
-                setTotal(Number(raw))
+                const raw = e.target.value.replace(/\D/g, "");
+                setTotal(Number(raw));
               }}
             />
           </div>
@@ -231,7 +232,7 @@ export default function MoneySplitAdvanced() {
             </SortableContext>
           </DndContext>
 
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-4 flex-wrap">
             <Button onClick={handleAdd} className="bg-green-600 hover:bg-green-700">
               ➕ Tambah Pos
             </Button>
@@ -246,11 +247,11 @@ export default function MoneySplitAdvanced() {
           <h4 className="font-semibold text-sm mt-6 mb-2">Hasil Split</h4>
           <div className="space-y-4">
             {result.map((cat, idx) => (
-              <div key={idx} className="border rounded p-3">
+              <div key={idx} className="border rounded p-3 bg-white dark:bg-gray-800">
                 <div className="font-semibold mb-2">
                   💼 {cat.name} ({cat.percent}%)
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-gray-700 dark:text-gray-200">
                   {cat.value.toLocaleString("id-ID", {
                     style: "currency",
                     currency: selectedCurrency,
@@ -264,5 +265,5 @@ export default function MoneySplitAdvanced() {
         </>
       )}
     </div>
-  )
+  );
 }

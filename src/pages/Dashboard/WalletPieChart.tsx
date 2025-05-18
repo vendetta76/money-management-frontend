@@ -16,38 +16,52 @@ interface Props {
 }
 
 const WalletPieChart: React.FC<Props> = ({ wallets, selectedCurrency }) => {
+  const cleanedWallets = wallets.filter(w => typeof w.balance === 'number' && w.balance > 0);
+
   const filteredWallets = selectedCurrency === 'all'
-    ? wallets
-    : wallets.filter(w => w.currency === selectedCurrency);
+    ? cleanedWallets
+    : cleanedWallets.filter(w => w.currency === selectedCurrency);
 
   const pieData = filteredWallets.map(wallet => ({ name: wallet.name, value: wallet.balance }));
+
+  const isEmpty = pieData.length === 0;
 
   return (
     <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow text-gray-800 dark:text-gray-100">
       <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-300 mb-4">Distribusi Wallet (Pie)</h2>
-      <div className="w-full h-48 overflow-x-auto">
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80} label>
-              {pieData.map((_, i) => (
-                <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <RechartsTooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="flex flex-wrap justify-center gap-4 mt-4">
-        {filteredWallets.map((wallet, index) => (
-          <div key={wallet.id} className="flex items-center gap-2">
-            <span
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: COLORS[index % COLORS.length] }}
-            ></span>
-            <span className="text-sm text-gray-600 dark:text-gray-300">{wallet.name}</span>
+
+      {isEmpty ? (
+        <p className="text-sm text-gray-400 dark:text-gray-500">Tidak ada data untuk ditampilkan.</p>
+      ) : (
+        <>
+          <div className="w-full h-48 overflow-x-auto">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={80} label={({ name, value }) => `${name}: ${value.toLocaleString('id-ID')}`}>
+                  {pieData.map((_, i) => (
+                    <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip
+                  formatter={(value: number) => value.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        ))}
-      </div>
+
+          <div className="flex flex-wrap justify-center gap-4 mt-4">
+            {filteredWallets.map((wallet, index) => (
+              <div key={wallet.id} className="flex items-center gap-2">
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                ></span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">{wallet.name}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };

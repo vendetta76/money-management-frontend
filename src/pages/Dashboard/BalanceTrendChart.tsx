@@ -1,4 +1,12 @@
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip
+} from 'recharts';
 import { format, subDays, subMonths, subYears } from 'date-fns';
 import WalletLegend from './WalletLegend';
 
@@ -42,7 +50,7 @@ const BalanceTrendChart: React.FC<Props> = ({
     .filter(tx => selectedCurrency === 'all' || tx.currency === selectedCurrency);
 
   const groupedByDate: Record<string, number> = {};
-  filteredTx.forEach((tx) => {
+  filteredTx.forEach(tx => {
     const dateKey = format(tx.createdAt.toDate(), 'dd MMM');
     if (!groupedByDate[dateKey]) groupedByDate[dateKey] = 0;
     groupedByDate[dateKey] += tx.amount || 0;
@@ -53,9 +61,10 @@ const BalanceTrendChart: React.FC<Props> = ({
     value
   }));
 
-  const filteredWallets = selectedCurrency === 'all'
+  const filteredWallets = (selectedCurrency === 'all'
     ? wallets
-    : wallets.filter(w => w.currency === selectedCurrency);
+    : wallets.filter(w => w.currency === selectedCurrency)
+  ).filter(w => typeof w.balance === 'number' && w.balance > 0);
 
   return (
     <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow mb-6 text-gray-800 dark:text-gray-100">
@@ -69,14 +78,15 @@ const BalanceTrendChart: React.FC<Props> = ({
             <XAxis dataKey="name" stroke="#9ca3af" />
             <YAxis
               tickFormatter={(value) =>
-                new Intl.NumberFormat('id-ID', {
-                  style: 'decimal',
-                  maximumFractionDigits: 0
-                }).format(value)
+                value.toLocaleString('id-ID')
               }
               stroke="#9ca3af"
             />
-            <RechartsTooltip />
+            <RechartsTooltip
+              formatter={(value: number) =>
+                value.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })
+              }
+            />
             <Line type="monotone" dataKey="value" stroke="#6366F1" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
