@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, Home } from "lucide-react";
-// Using a placeholder for the cat image. Replace with your actual cat image.
-import catMascot from "/assets/cat-hanging.png"; // Adjust path as needed
+import catMascot from "/assets/cat-hanging.png";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebaseClient";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -13,51 +14,43 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formVisible, setFormVisible] = useState(false);
-  
+
   useEffect(() => {
-    // Stagger animation of form elements
     setTimeout(() => setFormVisible(true), 100);
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     if (!email || !password) {
       setError("Email and password are required");
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
-      // Simulating a login delay for animation
-      setTimeout(() => {
-        // Your actual login logic would be here
-        // For "remember me" functionality:
-        if (rememberMe) {
-          localStorage.setItem("authToken", "example-auth-token");
-        } else {
-          sessionStorage.setItem("authToken", "example-auth-token");
-        }
-        
-        navigate("/dashboard");
-      }, 1500);
-      
+
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      if (rememberMe) {
+        localStorage.setItem("remember", "true");
+      }
+
+      navigate("/dashboard");
     } catch (err) {
-      setError("Invalid email or password");
+      console.error(err);
+      setError("Email atau password salah.");
       setIsLoading(false);
     }
   };
 
-  // Handle reset password request
   const handleResetPassword = () => {
     navigate("/reset-password", { state: { email } });
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
-      {/* Back to landing page button */}
       <button 
         onClick={() => navigate("/")} 
         className="absolute top-4 left-4 p-2 rounded-full bg-muted/40 hover:bg-muted text-foreground transition-colors flex items-center gap-2"
@@ -65,14 +58,13 @@ const LoginPage = () => {
         <Home size={18} />
         <span className="text-sm font-medium">Home</span>
       </button>
-    
+
       <div 
         className={`w-full max-w-md transition-all duration-500 pt-14 ${
           formVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
         <div className="bg-card border border-border rounded-3xl overflow-visible shadow-lg relative">
-          {/* Cat mascot peeking over the form */}
           <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 w-60 pointer-events-none">
             <img 
               src={catMascot} 
@@ -80,18 +72,17 @@ const LoginPage = () => {
               className="w-full object-contain"
             />
           </div>
-          
+
           <div className="pt-20 pb-8 px-8">
-            {/* Title is positioned below where the cat image appears */}
             <h1 className="text-2xl font-bold text-center mb-6">Welcome to MoniQ</h1>
-            
+
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 mb-4 animate-shake">
                 <AlertCircle size={16} />
                 <span>{error}</span>
               </div>
             )}
-            
+
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div 
@@ -110,7 +101,7 @@ const LoginPage = () => {
                     placeholder="Email"
                   />
                 </div>
-                
+
                 <div 
                   className="transition-all duration-300 delay-200"
                   style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
@@ -161,7 +152,7 @@ const LoginPage = () => {
                     Remember me
                   </label>
                 </div>
-                
+
                 <div 
                   className="pt-2 transition-all duration-300 delay-300"
                   style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
@@ -183,7 +174,7 @@ const LoginPage = () => {
                 </div>
               </div>
             </form>
-            
+
             <div 
               className="text-center pt-4 text-sm transition-all duration-300 delay-400"
               style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
