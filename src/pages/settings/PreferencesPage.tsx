@@ -1,81 +1,115 @@
+import React from 'react';
+import {
+  Container,
+  Typography,
+  Paper,
+  Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Box,
+  CircularProgress,
+} from '@mui/material';
+import { toast } from 'react-hot-toast';
+import { SelectChangeEvent } from '@mui/material/Select';
+import { useLogoutTimeout } from '../context/LogoutTimeoutContext';
 
-import React, { useState, useEffect } from 'react'
-import LayoutShell from '../../layouts/LayoutShell'
-import { toast } from 'react-hot-toast'
-import { usePinLock } from '../../context/PinLockContext';
+const logoutOptions = [
+  { label: 'Off', value: 0 },
+  { label: '5 menit', value: 300000 },
+  { label: '10 menit', value: 600000 },
+  { label: '15 menit', value: 900000 },
+  { label: '30 menit', value: 1800000 },
+];
 
 const PreferencesPage: React.FC = () => {
-  const { autoLockMinutes, setAutoLockMinutes } = usePinLock();
-  const initialTimeout = Number(localStorage.getItem('logoutTimeout')) || 0
-  const [pendingLogoutTimeout, setPendingLogoutTimeout] = useState<number>(initialTimeout)
-  const [applied, setApplied] = useState(true)
+  const { logoutTimeout, setLogoutTimeout, isLoading } = useLogoutTimeout();
+  const [pendingLogoutTimeout, setPendingLogoutTimeout] = React.useState<number>(logoutTimeout);
 
-  useEffect(() => {
-    setApplied(pendingLogoutTimeout === initialTimeout)
-  }, [pendingLogoutTimeout, initialTimeout])
+  // Update pendingLogoutTimeout when logoutTimeout changes
+  React.useEffect(() => {
+    setPendingLogoutTimeout(logoutTimeout);
+  }, [logoutTimeout]);
 
-  const handleApply = () => {
+  const applied = pendingLogoutTimeout === logoutTimeout;
+
+  const handleApply = async () => {
     if (isNaN(pendingLogoutTimeout)) {
-      toast.error("Waktu logout tidak valid");
+      toast.error('Waktu logout tidak valid');
       return;
     }
-    localStorage.setItem('logoutTimeout', pendingLogoutTimeout.toString())
-    setApplied(true)
-    toast.success('Preferensi berhasil diterapkan')
+    
+    try {
+      await setLogoutTimeout(pendingLogoutTimeout);
+      toast.success('Preferensi berhasil disimpan');
+    } catch (error) {
+      toast.error('Gagal menyimpan preferensi');
+      console.error('Error saving preferences:', error);
+    }
+  };
+
+  const handleChange = (e: SelectChangeEvent<number>) => {
+    setPendingLogoutTimeout(Number(e.target.value));
+  };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 6, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography mt={2}>Memuat preferensi...</Typography>
+      </Container>
+    );
   }
 
   return (
-    <LayoutShell>
-      <main className="px-4 py-6 max-w-screen-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6">⚙️ Preferensi</h1>
+    <Container maxWidth="sm" sx={{ mt: 6 }}>
+      <Paper elevation={4} sx={{ p: 4 }}>
+        <Typography variant="h4" mb={4} fontWeight="bold">
+          ⚙️ Preferensi Logout Otomatis
+        </Typography>
+        <Stack spacing={4}>
+          <FormControl fullWidth>
+            <InputLabel id="logout-select-label">Durasi Logout Otomatis</InputLabel>
+            <Select
+              labelId="logout-select-label"
+              value={pendingLogoutTimeout}
+              label="Durasi Logout Otomatis"
+              onChange={handleChange}
+              disabled={isLoading}
+            >
+              {logoutOptions.map(({ label, value }) => (
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Box display="flex" justifyContent="flex-end">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleApply}
+              disabled={applied || isLoading}
+              size="large"
+            >
+              {isLoading ? (
+                <>
+                  <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                  Menyimpan...
+                </>
+              ) : applied ? (
+                'Tersimpan'
+              ) : (
+                'Simpan'
+              )}
+            </Button>
+          </Box>
+        </Stack>
+      </Paper>
+    </Container>
+  );
+};
 
-        <div className="flex items-center justify-between mb-6">
-          <span>Durasi Logout Otomatis</span>
-          <select
-            value={pendingLogoutTimeout}
-            onChange={e => setPendingLogoutTimeout(Number(e.target.value))}
-            className="border rounded px-3 py-1"
-          >
-            <option value={0}>Off</option>
-            <option value={300000}>5 menit</option>
-            <option value={600000}>10 menit</option>
-            <option value={900000}>15 menit</option>
-            <option value={1800000}>30 menit</option>
-          </select>
-        </div>
-
-        <div className="flex items-center justify-between mb-6">
-          <span>Durasi Auto-Lock PIN</span>
-          <select
-            value={autoLockMinutes}
-            onChange={(e) => setAutoLockMinutes(Number(e.target.value))}
-            className="border rounded px-3 py-1"
-          >
-            <option value={0}>Off</option>
-            <option value={1}>1 menit</option>
-            <option value={5}>5 menit</option>
-            <option value={10}>10 menit</option>
-            <option value={15}>15 menit</option>
-            <option value={30}>30 menit</option>
-          </select>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            onClick={handleApply}
-            disabled={applied}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              applied
-                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {applied ? 'Applied' : 'Apply'}
-          </button>
-        </div>
-      </main>
-    </LayoutShell>
-  )
-}
-
-export default PreferencesPage
+export default PreferencesPage;
