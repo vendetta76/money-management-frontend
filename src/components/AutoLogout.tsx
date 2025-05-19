@@ -33,15 +33,12 @@ const AutoLogout: React.FC = () => {
   const logoutScheduledRef = useRef<boolean>(false);
   const logoutTimeRef = useRef<number>(0);
 
-  // Cek apakah user sedang di halaman auth (login, register, dll)
   const isAuthPage = useCallback(() => {
     const authPages = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email-pending'];
     return authPages.some(path => location.pathname.includes(path));
   }, [location]);
 
-  // Clear all logout schedules
   const clearAllLogoutSchedules = useCallback(() => {
-    // Clear all timers
     if (warningIntervalRef.current) {
       clearInterval(warningIntervalRef.current);
       warningIntervalRef.current = null;
@@ -57,107 +54,68 @@ const AutoLogout: React.FC = () => {
       absoluteTimerRef.current = null;
     }
     
-    // Reset references
     logoutScheduledRef.current = false;
     logoutTimeRef.current = 0;
     
-    // Clear localStorage items
     localStorage.removeItem('logoutScheduledTime');
-    
-    console.log("🧹 Cleared all logout schedules");
   }, []);
 
-  // Debug logging
   useEffect(() => {
-    // Only initialize if user is logged in and not on auth pages
     if (!user || isAuthPage()) {
       clearAllLogoutSchedules();
       return;
     }
     
-    console.log("🕒 Auto Logout initialized with timeout:", logoutTimeout);
-    console.log("Current auto logout settings:");
-    console.log("- Value in context:", logoutTimeout);
-    console.log("- localStorage value:", localStorage.getItem('logoutTimeout'));
-    console.log("- Current path:", location.pathname);
-    console.log("- User authenticated:", !!user);
-
-    // Reset states
     logoutTimeRef.current = 0;
     logoutScheduledRef.current = false;
-
-    return () => {
-      console.log("🕒 Auto Logout component effect cleanup");
-    };
   }, [logoutTimeout, user, isAuthPage, location.pathname, clearAllLogoutSchedules]);
 
-  // Schedule absolute timeout - logout akan terjadi pada waktu tertentu
-  // tidak peduli apakah tab aktif atau tidak
   const scheduleAbsoluteLogout = useCallback(() => {
-    // Skip if on auth pages or no user
     if (isAuthPage() || !user) {
-      console.log("⏭️ Skipping logout schedule (on auth page or no user)");
       clearAllLogoutSchedules();
       return;
     }
     
-    // If timeout is 0, auto logout is disabled
     if (!logoutTimeout || logoutTimeout === 0) {
-      console.log("⏭️ Auto logout disabled (timeout=0)");
       clearAllLogoutSchedules();
       return;
     }
     
-    // Clear previous timer if exists
     if (absoluteTimerRef.current) {
       clearTimeout(absoluteTimerRef.current);
       absoluteTimerRef.current = null;
     }
     
-    // Set absolute logout time
     const now = Date.now();
     const logoutTime = now + logoutTimeout;
     logoutTimeRef.current = logoutTime;
     logoutScheduledRef.current = true;
     
-    console.log(`⏰ Logout absolut dijadwalkan pada: ${new Date(logoutTime).toLocaleTimeString()}`);
-    
-    // Calculate time to warning
     const timeToWarning = logoutTimeout - AUTO_LOGOUT_WARNING_TIME;
     
-    // Set timer for warning
     setTimeout(() => {
-      // Skip if not applicable anymore
       if (!user || isAuthPage()) return;
       
       if (!showWarning && logoutScheduledRef.current) {
-        // Show warning if still active and visible
         if (document.visibilityState === 'visible') {
-          console.log("⚠️ Menampilkan peringatan logout (absolute timer)");
           showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
         }
       }
     }, timeToWarning);
     
-    // Set absolute timer for logout
     absoluteTimerRef.current = window.setTimeout(() => {
-      // Skip if not applicable anymore
       if (!user || isAuthPage()) return;
       
       if (logoutScheduledRef.current) {
-        console.log("⏰ Logout absolut berjalan pada:", new Date().toLocaleTimeString());
         handleLogout();
       }
     }, logoutTimeout);
     
-    // Save scheduled time to localStorage for cross-tab sync
     localStorage.setItem('logoutScheduledTime', logoutTime.toString());
     
   }, [logoutTimeout, showWarning, user, isAuthPage, clearAllLogoutSchedules]);
 
-  // Reset activity timer when user interacts
   const resetActivityTimer = useCallback(() => {
-    // Skip if on auth pages or no user
     if (isAuthPage() || !user) return;
     
     const now = Date.now();
@@ -165,11 +123,9 @@ const AutoLogout: React.FC = () => {
     lastActivityRef.current = now;
     setShowWarning(false);
     
-    // Reset absolute logout schedule
     logoutScheduledRef.current = false;
     scheduleAbsoluteLogout();
     
-    // Clear any existing warning interval
     if (warningIntervalRef.current) {
       clearInterval(warningIntervalRef.current);
       warningIntervalRef.current = null;
@@ -184,11 +140,8 @@ const AutoLogout: React.FC = () => {
     const now = Date.now();
     
     if (document.visibilityState === 'visible') {
-      console.log("🟢 Tab menjadi terlihat pada:", new Date(now).toLocaleTimeString());
-      
       // Check if absolute logout time has passed
       if (logoutScheduledRef.current && now >= logoutTimeRef.current) {
-        console.log("⏰ Logout dijalankan karena waktu absolut sudah terlewat");
         handleLogout();
         return;
       }
@@ -196,11 +149,9 @@ const AutoLogout: React.FC = () => {
       // Calculate remaining time until logout
       if (logoutScheduledRef.current && logoutTimeRef.current > 0) {
         const remainingMs = logoutTimeRef.current - now;
-        console.log(`⏳ Waktu tersisa sampai logout: ${Math.round(remainingMs/1000)} detik`);
         
         // Show warning if time is running short
         if (remainingMs <= AUTO_LOGOUT_WARNING_TIME) {
-          console.log("⚠️ Menampilkan peringatan logout (saat tab kembali aktif)");
           showLogoutWarning(remainingMs);
         }
       }
@@ -211,8 +162,6 @@ const AutoLogout: React.FC = () => {
       }
       
     } else {
-      console.log("🔴 Tab menjadi tersembunyi pada:", new Date(now).toLocaleTimeString());
-      
       // Save timestamp for later calculations
       visibilityChangeRef.current = now;
       
@@ -263,11 +212,10 @@ const AutoLogout: React.FC = () => {
     clearAllLogoutSchedules();
     
     try {
-      console.log("🚪 Executing auto logout");
       await signOut();
       navigate('/login', { replace: true });
     } catch (error) {
-      console.error('Error logging out:', error);
+      // Error silenced
     }
   }, [signOut, navigate, isAuthPage, user, clearAllLogoutSchedules]);
 
@@ -281,12 +229,9 @@ const AutoLogout: React.FC = () => {
     
     // If timeout is 0, auto logout is disabled
     if (!logoutTimeout || logoutTimeout === 0) {
-      console.log("⚙️ Auto logout is disabled (timeout=0)");
       clearAllLogoutSchedules();
       return () => {};
     }
-
-    console.log("⚙️ Auto logout is enabled with timeout:", logoutTimeout, "ms");
 
     // Set up initial absolute timer
     scheduleAbsoluteLogout();
@@ -299,7 +244,6 @@ const AutoLogout: React.FC = () => {
       
       // If scheduled time has passed, logout
       if (scheduledTime && scheduledTime <= now) {
-        console.log("⏰ Jadwal logout dari tab lain sudah terlewat, logout sekarang");
         handleLogout();
       }
       // If scheduled time is in the future, use it
@@ -309,7 +253,6 @@ const AutoLogout: React.FC = () => {
         
         // Calculate remaining time
         const remainingTime = scheduledTime - now;
-        console.log(`⏳ Menggunakan jadwal logout dari tab lain, tersisa: ${Math.round(remainingTime/1000)} detik`);
         
         // Set timer for warning
         if (remainingTime > AUTO_LOGOUT_WARNING_TIME) {
@@ -350,7 +293,6 @@ const AutoLogout: React.FC = () => {
       // Check if absolute logout time has passed
       const now = Date.now();
       if (logoutScheduledRef.current && logoutTimeRef.current > 0 && now >= logoutTimeRef.current) {
-        console.log("⏰ Waktu logout absolut terdeteksi terlewati saat pengecekan periodik");
         handleLogout();
         return;
       }
@@ -398,8 +340,6 @@ const AutoLogout: React.FC = () => {
       return;
     }
 
-    console.log("👂 Setting up activity event listeners");
-
     // Track user activity
     const activityEvents = [
       'mousedown', 'mousemove', 'keydown',
@@ -441,7 +381,6 @@ const AutoLogout: React.FC = () => {
   // Route change effect - clear schedules when navigating to auth pages
   useEffect(() => {
     if (isAuthPage()) {
-      console.log("🔄 Navigated to auth page, clearing logout schedules");
       clearAllLogoutSchedules();
     }
   }, [location.pathname, isAuthPage, clearAllLogoutSchedules]);
