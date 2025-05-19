@@ -1,5 +1,5 @@
 import { doc, updateDoc, increment, deleteDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "../../../lib/firebaseClient";
+import { db } from ".../../lib/firebaseClient";
 import { toast } from "react-hot-toast";
 import { TransferEntry, WalletEntry } from "./transferTypes";
 

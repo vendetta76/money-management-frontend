@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { db } from "../../../lib/firebaseClient";
+import { db } from ".../../lib/firebaseClient";
 import {
   collection,
   onSnapshot,
