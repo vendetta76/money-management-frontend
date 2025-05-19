@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import {
   updatePassword,
@@ -8,7 +7,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
-import { usePinLock } from "../../context/PinLockContext";
 import LayoutShell from "../../layouts/LayoutShell";
 
 const SecurityPage: React.FC = () => {
@@ -20,13 +18,6 @@ const SecurityPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loadingPwd, setLoadingPwd] = useState(false);
-
-  // PIN related state
-  const [newPin, setNewPin] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [resetPinVal, setResetPinVal] = useState("");
-
-  const { pin, setPin, resetPin, removePin } = usePinLock();
 
   useEffect(() => {
     if (user?.email) setEmail(user.email);
@@ -52,24 +43,6 @@ const SecurityPage: React.FC = () => {
       alert("Gagal mengganti password: " + err.message);
     }
     setLoadingPwd(false);
-  };
-
-  const handleResetPin = async () => {
-    if (!authPassword) {
-      alert("Mohon isi Password Akun terlebih dahulu.");
-      return;
-    }
-
-    try {
-      const cred = EmailAuthProvider.credential(user?.email!, authPassword);
-      await reauthenticateWithCredential(user!, cred);
-      if (resetPinVal.length < 4) return alert("PIN minimal 4 digit");
-      resetPin(resetPinVal);
-      setResetPinVal("");
-      alert("PIN berhasil di-reset!");
-    } catch (err: any) {
-      alert("Gagal autentikasi: " + err.message);
-    }
   };
 
   return (
@@ -109,77 +82,6 @@ const SecurityPage: React.FC = () => {
             Simpan Password
           </button>
         </form>
-
-        {/* Atur PIN Baru */}
-        {!pin && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-2">🔒 Atur PIN Baru</h2>
-            <input
-              type="password"
-              placeholder="PIN baru"
-              value={newPin}
-              onChange={(e) => setNewPin(e.target.value)}
-              className="border w-full px-3 py-2 mb-2 rounded"
-            />
-            <button
-              onClick={() => {
-                if (newPin.length < 4) return alert("PIN minimal 4 digit");
-                setPin(newPin);
-                setNewPin("");
-                alert("PIN berhasil disimpan!");
-              }}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Simpan PIN
-            </button>
-          </div>
-        )}
-
-        {/* Reset PIN */}
-        {pin && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-2">🔁 Reset PIN (dengan Password)</h2>
-            <input
-              type="password"
-              placeholder="Password Akun"
-              value={authPassword}
-              onChange={(e) => setAuthPassword(e.target.value)}
-              className="border w-full px-3 py-2 mb-2 rounded"
-              required
-            />
-            <input
-              type="password"
-              placeholder="PIN baru"
-              value={resetPinVal}
-              onChange={(e) => setResetPinVal(e.target.value)}
-              className="border w-full px-3 py-2 mb-2 rounded"
-            />
-            <button
-              onClick={handleResetPin}
-              className="bg-yellow-500 text-white px-4 py-2 rounded"
-            >
-              Reset PIN
-            </button>
-          </div>
-        )}
-
-        {/* Hapus PIN */}
-        {pin && (
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-2">🗑️ Hapus PIN</h2>
-            <button
-              onClick={() => {
-                if (window.confirm("Yakin ingin menghapus PIN?")) {
-                  removePin();
-                  alert("PIN berhasil dihapus.");
-                }
-              }}
-              className="bg-red-600 text-white px-4 py-2 rounded"
-            >
-              Hapus PIN
-            </button>
-          </div>
-        )}
       </div>
     </LayoutShell>
   );
