@@ -24,6 +24,15 @@ const getContrastColor = (hex: string) => {
   return brightness > 128 ? "black" : "white";
 };
 
+// Function to determine font size class based on content length
+const getFontSizeClass = (balanceText: string): string => {
+  const length = balanceText.length;
+  
+  if (length > 12) return "text-lg"; // Smallest
+  if (length > 9) return "text-xl";  // Medium
+  return "text-2xl";                 // Default/largest
+};
+
 const WalletCard: React.FC<WalletCardProps> = ({
   id,
   name,
@@ -64,15 +73,19 @@ const WalletCard: React.FC<WalletCardProps> = ({
       ? getContrastColor(safeColorValue as string)
       : getContrastColor((safeColorValue as any)?.end ?? "#4f46e5");
 
+  // Format the balance and determine the appropriate font size
+  const formattedBalance = showBalance ? formatCurrency(balance, currency) : "••••••";
+  const fontSizeClass = getFontSizeClass(formattedBalance);
+
   return (
     <div
-      className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md p-4 transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      className="w-full max-w-[320px] aspect-[16/10] rounded-xl shadow-md p-4 transition-transform duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex flex-col justify-between"
       style={bgStyle}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
     >
       <div className="flex justify-between items-start">
-        <h3 className="text-lg font-semibold truncate" style={{ color: contrastColor }}>
+        <h3 className="text-lg font-semibold truncate max-w-[85%]" style={{ color: contrastColor }}>
           {name}
         </h3>
         {showEdit && (
@@ -88,11 +101,13 @@ const WalletCard: React.FC<WalletCardProps> = ({
           </button>
         )}
       </div>
-      <div
-        className="mt-auto text-2xl font-bold tracking-widest"
+      
+      <div 
+        className={`${fontSizeClass} font-bold tracking-tight overflow-hidden text-ellipsis whitespace-nowrap w-full`}
         style={{ color: contrastColor }}
+        title={formattedBalance} // Add tooltip on hover
       >
-        {showBalance ? formatCurrency(balance, currency) : "••••••"}
+        {formattedBalance}
       </div>
     </div>
   );

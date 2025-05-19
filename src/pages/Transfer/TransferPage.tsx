@@ -6,8 +6,8 @@ import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 import { TransferProvider } from "./TransferContext";
 
 // Lazy loaded components
-const TransferForm = lazy(() => import("./components/TransferForm"));
-const TransferHistory = lazy(() => import("./components/TransferHistory"));
+const TransferForm = lazy(() => import("./TransferForm"));
+const TransferHistory = lazy(() => import("./TransferHistory"));
 
 const TransferPage: React.FC = () => {
   const { user, userMeta } = useAuth();
