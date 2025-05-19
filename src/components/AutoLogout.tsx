@@ -26,8 +26,11 @@ const AutoLogout: React.FC = () => {
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const warningIntervalRef = useRef<number | null>(null);
   const checkIntervalRef = useRef<number | null>(null);
+  const absoluteTimerRef = useRef<number | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const visibilityChangeRef = useRef<number>(0);
+  const logoutScheduledRef = useRef<boolean>(false);
+  const logoutTimeRef = useRef<number>(0);
 
   // Debug logging
   useEffect(() => {
@@ -35,10 +38,62 @@ const AutoLogout: React.FC = () => {
     console.log("Current auto logout settings:");
     console.log("- Value in context:", logoutTimeout);
     console.log("- localStorage value:", localStorage.getItem('logoutTimeout'));
+
+    // Simpan timestamp untuk perhitungan absolut
+    logoutTimeRef.current = 0;
+    logoutScheduledRef.current = false;
+
     return () => {
       console.log("🕒 Auto Logout component unmounted");
     };
   }, [logoutTimeout]);
+
+  // Schedule absolute timeout - logout akan terjadi pada waktu tertentu
+  // tidak peduli apakah tab aktif atau tidak
+  const scheduleAbsoluteLogout = useCallback(() => {
+    // Jika timeout 0, fitur dinonaktifkan
+    if (!logoutTimeout || logoutTimeout === 0) return;
+    
+    // Hapus timer sebelumnya jika ada
+    if (absoluteTimerRef.current) {
+      clearTimeout(absoluteTimerRef.current);
+      absoluteTimerRef.current = null;
+    }
+    
+    // Tetapkan waktu logout absolut
+    const now = Date.now();
+    const logoutTime = now + logoutTimeout;
+    logoutTimeRef.current = logoutTime;
+    logoutScheduledRef.current = true;
+    
+    console.log(`⏰ Logout absolut dijadwalkan pada: ${new Date(logoutTime).toLocaleTimeString()}`);
+    
+    // Hitung selisih waktu untuk warning
+    const timeToWarning = logoutTimeout - AUTO_LOGOUT_WARNING_TIME;
+    
+    // Set timer untuk warning
+    setTimeout(() => {
+      if (!showWarning && logoutScheduledRef.current) {
+        // Tampilkan warning jika masih aktif
+        if (document.visibilityState === 'visible') {
+          console.log("⚠️ Menampilkan peringatan logout (absolute timer)");
+          showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
+        }
+      }
+    }, timeToWarning);
+    
+    // Set absolute timer untuk logout
+    absoluteTimerRef.current = window.setTimeout(() => {
+      if (logoutScheduledRef.current) {
+        console.log("⏰ Logout absolut berjalan pada:", new Date().toLocaleTimeString());
+        handleLogout();
+      }
+    }, logoutTimeout);
+    
+    // Simpan waktu jadwal ke localStorage untuk sinkronisasi antar tab
+    localStorage.setItem('logoutScheduledTime', logoutTime.toString());
+    
+  }, [logoutTimeout, showWarning]);
 
   // Reset activity timer when user interacts
   const resetActivityTimer = useCallback(() => {
@@ -47,51 +102,65 @@ const AutoLogout: React.FC = () => {
     lastActivityRef.current = now;
     setShowWarning(false);
     
+    // Reset jadwal logout absolut
+    logoutScheduledRef.current = false;
+    scheduleAbsoluteLogout();
+    
     // Clear any existing warning interval
     if (warningIntervalRef.current) {
       clearInterval(warningIntervalRef.current);
       warningIntervalRef.current = null;
     }
-  }, []);
+  }, [scheduleAbsoluteLogout]);
 
   // Handle visibility change (tab switch)
   const handleVisibilityChange = useCallback(() => {
     const now = Date.now();
     
     if (document.visibilityState === 'visible') {
-      console.log("🟢 Tab became visible");
+      console.log("🟢 Tab menjadi terlihat pada:", new Date(now).toLocaleTimeString());
       
-      // Calculate how long the tab was hidden
-      const timeHidden = now - visibilityChangeRef.current;
-      console.log(`Tab was hidden for ${timeHidden}ms`);
+      // Cek apakah jadwal logout absolut sudah tiba waktunya
+      if (logoutScheduledRef.current && now >= logoutTimeRef.current) {
+        console.log("⏰ Logout dijalankan karena waktu absolut sudah terlewat");
+        handleLogout();
+        return;
+      }
       
-      // Calculate current inactive time
-      const inactiveTime = now - lastActivityRef.current;
-      console.log(`Inactive time: ${inactiveTime}ms`);
-      
-      // If inactive for too long, show warning or logout
-      if (logoutTimeout > 0) {
-        if (inactiveTime >= logoutTimeout) {
-          console.log("⏰ Inactive time exceeds timeout, logging out");
-          handleLogout();
-        } else if (inactiveTime >= logoutTimeout - AUTO_LOGOUT_WARNING_TIME) {
-          console.log("⚠️ Inactive time exceeds warning threshold, showing warning");
-          showLogoutWarning(inactiveTime);
+      // Hitung waktu yang tersisa sampai logout
+      if (logoutScheduledRef.current && logoutTimeRef.current > 0) {
+        const remainingMs = logoutTimeRef.current - now;
+        console.log(`⏳ Waktu tersisa sampai logout: ${Math.round(remainingMs/1000)} detik`);
+        
+        // Jika waktu tersisa kurang dari warning time, tampilkan warning
+        if (remainingMs <= AUTO_LOGOUT_WARNING_TIME) {
+          console.log("⚠️ Menampilkan peringatan logout (saat tab kembali aktif)");
+          showLogoutWarning(remainingMs);
         }
       }
+      
+      // Jika tidak ada jadwal aktif, tetapkan jadwal baru
+      if (!logoutScheduledRef.current && logoutTimeout > 0) {
+        scheduleAbsoluteLogout();
+      }
+      
     } else {
-      console.log("🔴 Tab became hidden");
+      console.log("🔴 Tab menjadi tersembunyi pada:", new Date(now).toLocaleTimeString());
+      
+      // Jika tab hidden, simpan timestamp untuk perhitungan
       visibilityChangeRef.current = now;
+      
+      // Simpan aktivitas terakhir ke localStorage untuk referensi antar tab
+      localStorage.setItem('lastActivityTime', lastActivityRef.current.toString());
     }
-  }, [logoutTimeout]);
+  }, [logoutTimeout, scheduleAbsoluteLogout]);
   
   // Show logout warning
-  const showLogoutWarning = useCallback((inactiveTime: number) => {
+  const showLogoutWarning = useCallback((timeLeftMs: number) => {
     if (showWarning) return; // Already showing
     
     setShowWarning(true);
-    const timeLeftBeforeLogout = logoutTimeout - inactiveTime;
-    setRemainingTime(Math.max(timeLeftBeforeLogout, 1000)); // At least 1 second
+    setRemainingTime(Math.max(timeLeftMs, 1000)); // At least 1 second
     
     // Start countdown for remaining time
     warningIntervalRef.current = window.setInterval(() => {
@@ -108,7 +177,7 @@ const AutoLogout: React.FC = () => {
         return newTime;
       });
     }, 1000);
-  }, [showWarning, logoutTimeout]);
+  }, [showWarning]);
 
   // Handle continue session from warning dialog
   const handleContinueSession = useCallback(() => {
@@ -118,10 +187,26 @@ const AutoLogout: React.FC = () => {
   // Handle logout from warning dialog
   const handleLogout = useCallback(async () => {
     setShowWarning(false);
+    
+    // Hentikan semua timer
     if (warningIntervalRef.current) {
       clearInterval(warningIntervalRef.current);
       warningIntervalRef.current = null;
     }
+    
+    if (checkIntervalRef.current) {
+      clearInterval(checkIntervalRef.current);
+      checkIntervalRef.current = null;
+    }
+    
+    if (absoluteTimerRef.current) {
+      clearTimeout(absoluteTimerRef.current);
+      absoluteTimerRef.current = null;
+    }
+    
+    // Reset jadwal
+    logoutScheduledRef.current = false;
+    localStorage.removeItem('logoutScheduledTime');
     
     try {
       console.log("🚪 Executing auto logout");
@@ -146,29 +231,78 @@ const AutoLogout: React.FC = () => {
           clearInterval(warningIntervalRef.current);
           warningIntervalRef.current = null;
         }
+        if (absoluteTimerRef.current) {
+          clearTimeout(absoluteTimerRef.current);
+          absoluteTimerRef.current = null;
+        }
       };
     }
 
     console.log("⚙️ Auto logout is enabled with timeout:", logoutTimeout, "ms");
 
+    // Set up initial absolute timer
+    scheduleAbsoluteLogout();
+
+    // Check if there's a schedule from other tabs
+    const storedScheduleTime = localStorage.getItem('logoutScheduledTime');
+    if (storedScheduleTime) {
+      const scheduledTime = parseInt(storedScheduleTime, 10);
+      const now = Date.now();
+      
+      // If time already passed, logout
+      if (scheduledTime && scheduledTime <= now) {
+        console.log("⏰ Jadwal logout dari tab lain sudah terlewat, logout sekarang");
+        handleLogout();
+      }
+      // If time is in the future, use it
+      else if (scheduledTime && scheduledTime > now) {
+        logoutTimeRef.current = scheduledTime;
+        logoutScheduledRef.current = true;
+        
+        // Set remaining time
+        const remainingTime = scheduledTime - now;
+        console.log(`⏳ Menggunakan jadwal logout dari tab lain, tersisa: ${Math.round(remainingTime/1000)} detik`);
+        
+        // Set timer for warning
+        if (remainingTime > AUTO_LOGOUT_WARNING_TIME) {
+          setTimeout(() => {
+            if (!showWarning && logoutScheduledRef.current) {
+              if (document.visibilityState === 'visible') {
+                showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
+              }
+            }
+          }, remainingTime - AUTO_LOGOUT_WARNING_TIME);
+        }
+        else if (document.visibilityState === 'visible') {
+          showLogoutWarning(remainingTime);
+        }
+        
+        // Set timer for logout
+        absoluteTimerRef.current = window.setTimeout(() => {
+          if (logoutScheduledRef.current) {
+            handleLogout();
+          }
+        }, remainingTime);
+      }
+    }
+
+    // Periodic check pada tab yang aktif
     const checkInactivity = () => {
+      // Skip if not visible
       if (document.visibilityState !== 'visible') {
-        // Skip check when tab is not visible, we'll check when it becomes visible
         return;
       }
       
-      const currentTime = Date.now();
-      const inactiveTime = currentTime - lastActivityRef.current;
-      const timeUntilWarning = logoutTimeout - AUTO_LOGOUT_WARNING_TIME;
-
-      // Show warning dialog if inactive for (timeout - warningTime)
-      if (inactiveTime >= timeUntilWarning && !showWarning) {
-        console.log(`⚠️ Inactive for ${inactiveTime}ms, showing warning`);
-        showLogoutWarning(inactiveTime);
+      // Cek apakah waktu absolut sudah terlewati
+      const now = Date.now();
+      if (logoutScheduledRef.current && logoutTimeRef.current > 0 && now >= logoutTimeRef.current) {
+        console.log("⏰ Waktu logout absolut terdeteksi terlewati saat pengecekan periodik");
+        handleLogout();
+        return;
       }
     };
 
-    // Start checking inactivity
+    // Start periodic checking
     checkIntervalRef.current = window.setInterval(checkInactivity, 5000); // Check every 5 seconds
     
     // Set up visibility change listener
@@ -184,9 +318,13 @@ const AutoLogout: React.FC = () => {
         clearInterval(warningIntervalRef.current);
         warningIntervalRef.current = null;
       }
+      if (absoluteTimerRef.current) {
+        clearTimeout(absoluteTimerRef.current);
+        absoluteTimerRef.current = null;
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [logoutTimeout, showWarning, handleVisibilityChange, showLogoutWarning, resetActivityTimer]);
+  }, [logoutTimeout, showWarning, handleVisibilityChange, showLogoutWarning, resetActivityTimer, handleLogout, scheduleAbsoluteLogout]);
 
   // Register user activity event listeners
   useEffect(() => {
@@ -216,6 +354,11 @@ const AutoLogout: React.FC = () => {
     window.addEventListener('beforeunload', () => {
       // Store last activity time in localStorage for cross-tab detection
       localStorage.setItem('lastActivityTime', lastActivityRef.current.toString());
+      
+      // Store scheduled time for other tabs
+      if (logoutScheduledRef.current && logoutTimeRef.current > 0) {
+        localStorage.setItem('logoutScheduledTime', logoutTimeRef.current.toString());
+      }
     });
 
     // Clean up event listeners
