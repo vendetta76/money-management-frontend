@@ -105,7 +105,6 @@ const TransferPage: React.FC = () => {
     setDescription(transfer.description);
   };
 
-  // Add handleDeleteTransfer function
   const handleDeleteTransfer = async (transfer: TransferEntry) => {
     if (!user) return;
     
