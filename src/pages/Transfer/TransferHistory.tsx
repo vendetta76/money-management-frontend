@@ -1,4 +1,4 @@
-import { formatCurrency } from "../../../helpers/formatCurrency";
+import { formatCurrency } from "../../helpers/formatCurrency";
 import { useTransfer } from "./TransferContext";
 import { useAuth } from "../../context/AuthContext";
 import { handleDeleteTransfer, handleEditTransfer } from "./transferUtils";
