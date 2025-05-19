@@ -11,7 +11,7 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import { useLogoutTimeout } from './context/LogoutTimeoutContext';
+import { useLogoutTimeout } from '../context/LogoutTimeoutContext';
 import { useAuth } from '../context/AuthContext';
 
 const AUTO_LOGOUT_WARNING_TIME = 60000; // 1 minute warning before logout
