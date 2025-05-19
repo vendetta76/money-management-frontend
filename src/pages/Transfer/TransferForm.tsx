@@ -1,6 +1,6 @@
 import { formatCurrency } from "../../../helpers/formatCurrency";
 import { useTransfer } from "./TransferContext";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { formatAmountWithThousandSeparator, processTransfer } from "./transferUtils";
 
 const TransferForm: React.FC = () => {

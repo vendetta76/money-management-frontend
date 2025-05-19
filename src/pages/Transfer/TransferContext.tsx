@@ -6,7 +6,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { WalletEntry, TransferEntry } from "./transferTypes";
 
 interface TransferContextType {

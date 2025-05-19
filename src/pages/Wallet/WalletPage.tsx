@@ -9,7 +9,7 @@ import {
 import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import LayoutShell from "../../layouts/LayoutShell";
-import { Plus, Eye, EyeOff } from "lucide-react";
+import { Plus, Eye, EyeOff, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import WalletPopupHistory from "../../components/WalletPopupHistory";
@@ -19,6 +19,7 @@ import WalletFormModal from "./WalletFormModal";
 import { useIsBypassed } from "../../hooks/useIsBypassed";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 import RecalcButtonWithTooltip from "./RecalcButtonWithTooltip";
+import WalletSearchBar from "./WalletSearchBar";
 
 interface WalletData {
   id: string;
@@ -44,6 +45,8 @@ const WalletPage: React.FC = () => {
   const [showBalance, setShowBalance] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [recalcLoading, setRecalcLoading] = useState(false);
+  // Add search state
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const handleResize = () => {
@@ -95,12 +98,25 @@ const WalletPage: React.FC = () => {
   ];
 
   const visibleWallets = orderedWallets.filter((w) => w.status !== "archived");
+  
+  // Filter wallets based on search term
+  const filteredWallets = searchTerm.trim() === "" 
+    ? visibleWallets 
+    : visibleWallets.filter(wallet => 
+        wallet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        wallet.currency.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-  const totalsByCurrency = visibleWallets.reduce((acc, w) => {
+  const totalsByCurrency = filteredWallets.reduce((acc, w) => {
     const safeBalance = isNaN(w.balance) ? 0 : w.balance;
     acc[w.currency] = (acc[w.currency] || 0) + safeBalance;
     return acc;
   }, {});
+
+  // Handle search
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+  };
 
   return (
     <LayoutShell>
@@ -108,7 +124,7 @@ const WalletPage: React.FC = () => {
         className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300"
       >
         {(locked && !isBypassed) && (
-          <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
+          <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 dark:bg-black/50 flex items-center justify-center">
             <PageLockAnnouncement
               locked={true}
               message={message}
@@ -120,12 +136,12 @@ const WalletPage: React.FC = () => {
         )}
 
         <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
-            <h1 className="text-xl sm:text-2xl font-bold">Dompet Saya</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Dompet Saya</h1>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 onClick={() => setShowBalance(!showBalance)}
-                className="text-sm underline flex items-center gap-1"
+                className="text-sm underline flex items-center gap-1 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
               >
                 {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
               </button>
@@ -136,11 +152,31 @@ const WalletPage: React.FC = () => {
               />
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-purple-600 text-white px-4 py-2 rounded text-sm sm:text-base flex items-center gap-2"
+                className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm sm:text-base flex items-center gap-2 transition-colors shadow-sm"
               >
                 <Plus size={16} /> Tambah Wallet
               </button>
             </div>
+          </div>
+
+          {/* Search Bar Integration */}
+          <div className="mb-6">
+            <div className="relative">
+              <WalletSearchBar
+                searchTerm={searchTerm}
+                onSearchChange={handleSearchChange}
+              />
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-gray-400" />
+              </div>
+            </div>
+            {searchTerm.trim() !== "" && (
+              <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {filteredWallets.length > 0 
+                  ? `Menampilkan ${filteredWallets.length} dari ${visibleWallets.length} dompet` 
+                  : "Tidak ada dompet yang cocok dengan pencarian Anda"}
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -155,21 +191,31 @@ const WalletPage: React.FC = () => {
           ) : (
             <>
               <WalletTotalOverview totalsByCurrency={totalsByCurrency} showBalance={showBalance} />
-              <WalletGrid
-                userId={user?.uid || ""}
-                wallets={visibleWallets}
-                showBalance={showBalance}
-                isMobile={isMobile}
-                onEdit={(id) => {
-                  setSelectedWalletId(null);
-                  setEditingWallet(walletMap[id]);
-                  setShowForm(true);
-                }}
-                onCardClick={(id) => {
-                  if (editingWallet || showForm) return;
-                  setSelectedWalletId(id);
-                }}
-              />
+              {filteredWallets.length === 0 && searchTerm.trim() !== "" ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Search size={48} className="text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Tidak ada hasil</h3>
+                  <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                    Tidak ada dompet yang cocok dengan pencarian "{searchTerm}". Coba kata kunci lain atau tambahkan dompet baru.
+                  </p>
+                </div>
+              ) : (
+                <WalletGrid
+                  userId={user?.uid || ""}
+                  wallets={filteredWallets}
+                  showBalance={showBalance}
+                  isMobile={isMobile}
+                  onEdit={(id) => {
+                    setSelectedWalletId(null);
+                    setEditingWallet(walletMap[id]);
+                    setShowForm(true);
+                  }}
+                  onCardClick={(id) => {
+                    if (editingWallet || showForm) return;
+                    setSelectedWalletId(id);
+                  }}
+                />
+              )}
             </>
           )}
         </div>
