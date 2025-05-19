@@ -40,3 +40,5 @@ const WalletSearchBar: React.FC<WalletSearchBarProps> = ({
     </div>
   );
 };
+
+export default WalletSearchBar;
