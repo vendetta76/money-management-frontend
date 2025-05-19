@@ -20,7 +20,7 @@ import DashboardPage from './pages/Dashboard/DashboardPage'
 import WalletPage from './pages/Wallet/WalletPage'
 import IncomePage from './pages/Income/IncomePage'
 import OutcomePage from './pages/Outcome/OutcomePage'
-import TransferPage from './pages/TransferPage'
+import TransferPage from './pages/Transfer/TransferPage'
 import HistoryPage from './pages/HistoryPage'
 
 // Virtual Wallet
