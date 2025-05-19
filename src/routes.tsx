@@ -13,7 +13,7 @@ import LandingPage from './pages/LandingPage'
 
 // PIN Reset Pages
 import ForgotPinPage from './pages/ForgotPinPage'
-import ResetPinPage from './pages/ResetPinPage'
+// Hapus import ResetPinPage
 
 // Core Pages
 import DashboardPage from './pages/Dashboard/DashboardPage'
@@ -64,7 +64,7 @@ const routes: RouteObject[] = [
 
   // PIN reset flow
   { path: '/forgot-pin', element: <ForgotPinPage /> },
-  { path: '/reset-pin', element: <ResetPinPage /> },
+  // Hapus route '/reset-pin'
 
   {
     path: '/dashboard',
