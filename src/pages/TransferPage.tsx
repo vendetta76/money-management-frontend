@@ -1,4 +1,3 @@
-// PATCHED TransferPage: Mobile + Dark Mode + Filter Wallet Aktif
 import { formatCurrency } from "./helpers/formatCurrency";
 import React, { useEffect, useState } from "react";
 import LayoutShell from "../layouts/LayoutShell";
@@ -95,6 +94,45 @@ const TransferPage: React.FC = () => {
     setFromWalletId("");
     setToWalletId("");
     setEditingTransfer(null);
+  };
+
+  // Add handleEditTransfer function
+  const handleEditTransfer = (transfer: TransferEntry) => {
+    setEditingTransfer(transfer);
+    setFromWalletId(transfer.fromWalletId);
+    setToWalletId(transfer.toWalletId);
+    setAmount(transfer.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+    setDescription(transfer.description);
+  };
+
+  // Add handleDeleteTransfer function
+  const handleDeleteTransfer = async (transfer: TransferEntry) => {
+    if (!user) return;
+    
+    if (!window.confirm(`Anda yakin ingin menghapus transfer ini dari ${transfer.from} ke ${transfer.to}?`)) {
+      return;
+    }
+
+    try {
+      // Revert the balance changes
+      const fromRef = doc(db, "users", user.uid, "wallets", transfer.fromWalletId);
+      const toRef = doc(db, "users", user.uid, "wallets", transfer.toWalletId);
+      
+      await updateDoc(fromRef, { 
+        balance: increment(transfer.amount) 
+      });
+      
+      await updateDoc(toRef, { 
+        balance: increment(-transfer.amount) 
+      });
+      
+      // Delete the transfer document
+      await deleteDoc(doc(db, "users", user.uid, "transfers", transfer.id));
+      
+      toast.success("Transfer berhasil dihapus");
+    } catch (err: any) {
+      toast.error("Gagal menghapus transfer: " + err.message);
+    }
   };
 
   const handleTransfer = async () => {

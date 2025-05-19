@@ -30,13 +30,10 @@ const LoginPage = () => {
 
     try {
       setIsLoading(true);
-
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-
       if (rememberMe) {
         localStorage.setItem("remember", "true");
       }
-
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
@@ -59,131 +56,114 @@ const LoginPage = () => {
         <span className="text-sm font-medium">Home</span>
       </button>
 
-      <div 
-        className={`w-full max-w-md transition-all duration-500 pt-14 ${
-          formVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
-        }`}
-      >
-        <div className="bg-card border border-border rounded-3xl overflow-visible shadow-lg relative">
-          <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 w-60 pointer-events-none">
-            <img 
-              src={catMascot} 
-              alt="MoniQ Cat" 
-              className="w-full object-contain"
-            />
-          </div>
+      <div className={`relative w-full max-w-sm mx-auto mt-28 transition-all duration-500 ${
+        formVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+      }`}>
+        {/* Maskot di luar form */}
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 z-10">
+          <img
+            src={catMascot}
+            alt="Maskot"
+            className="w-36 h-auto pointer-events-none"
+          />
+        </div>
 
-          <div className="pt-20 pb-8 px-8">
-            <h1 className="text-2xl font-bold text-center mb-6">Welcome to MoniQ</h1>
+        {/* Login Card */}
+        <div className="relative z-0 bg-card border border-border shadow-lg rounded-xl px-6 py-8">
+          <h2 className="text-xl font-bold text-center mb-4 mt-2">Welcome to MoniQ</h2>
 
-            {error && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 mb-4 animate-shake">
-                <AlertCircle size={16} />
-                <span>{error}</span>
+          {error && (
+            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 mb-4 animate-shake">
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5" htmlFor="email">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-background border border-input rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+                  placeholder="Email"
+                />
               </div>
-            )}
 
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div 
-                  className="transition-all duration-300 delay-100"
-                  style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
-                >
-                  <label className="block text-sm font-medium mb-1.5" htmlFor="email">
-                    Email
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-sm font-medium" htmlFor="password">
+                    Password
                   </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 bg-background border border-input rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
-                    placeholder="Email"
-                  />
-                </div>
-
-                <div 
-                  className="transition-all duration-300 delay-200"
-                  style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
-                >
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="block text-sm font-medium" htmlFor="password">
-                      Password
-                    </label>
-                    <button 
-                      type="button" 
-                      onClick={handleResetPassword}
-                      className="text-sm text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-4 pr-10 py-3 bg-background border border-input rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div 
-                  className="flex items-center transition-all duration-300 delay-250"
-                  style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
-                >
-                  <input
-                    id="remember"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <label htmlFor="remember" className="ml-2 block text-sm">
-                    Remember me
-                  </label>
-                </div>
-
-                <div 
-                  className="pt-2 transition-all duration-300 delay-300"
-                  style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
-                >
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-black hover:bg-black/90 text-white font-medium py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center justify-center"
+                  <button 
+                    type="button" 
+                    onClick={handleResetPassword}
+                    className="text-sm text-primary hover:text-primary/80 transition-colors"
                   >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        <span>Logging in...</span>
-                      </div>
-                    ) : (
-                      <span>Login</span>
-                    )}
+                    Forgot password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-4 pr-10 py-3 bg-background border border-input rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
-            </form>
 
-            <div 
-              className="text-center pt-4 text-sm transition-all duration-300 delay-400"
-              style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
-            >
-              <span className="text-muted-foreground">Don't have an account?</span>{" "}
-              <a href="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
-                Sign up
-              </a>
+              <div className="flex items-center">
+                <input
+                  id="remember"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <label htmlFor="remember" className="ml-2 block text-sm">
+                  Remember me
+                </label>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-black hover:bg-black/90 text-white font-medium py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 flex items-center justify-center"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <span>Logging in...</span>
+                    </div>
+                  ) : (
+                    <span>Login</span>
+                  )}
+                </button>
+              </div>
             </div>
+          </form>
+
+          <div className="text-center pt-4 text-sm">
+            <span className="text-muted-foreground">Don't have an account?</span>{" "}
+            <a href="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
+              Sign up
+            </a>
           </div>
         </div>
       </div>
