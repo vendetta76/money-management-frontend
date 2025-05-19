@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { toast } from 'react-hot-toast';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { useLogoutTimeout } from '../context/LogoutTimeoutContext';
+import { useLogoutTimeout } from '../../context/LogoutTimeoutContext';
 
 const logoutOptions = [
   { label: 'Off', value: 0 },
