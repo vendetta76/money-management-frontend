@@ -1,17 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebaseClient';
 import { useAuth } from './AuthContext';
 
 interface LogoutTimeoutContextType {
   logoutTimeout: number;
-  setLogoutTimeout: (timeout: number) => void;
+  setLogoutTimeout: (timeout: number) => Promise<void>;
   isLoading: boolean;
 }
 
 const LogoutTimeoutContext = createContext<LogoutTimeoutContextType>({
   logoutTimeout: 0,
-  setLogoutTimeout: () => {},
+  setLogoutTimeout: async () => {},
   isLoading: false,
 });
 
@@ -26,10 +26,12 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Fungsi untuk menyimpan timeout ke Firestore dan localStorage
-  const setLogoutTimeout = async (timeout: number) => {
+  const setLogoutTimeout = async (timeout: number): Promise<void> => {
     setIsLoading(true);
     
     try {
+      console.log("LogoutTimeoutContext: Saving timeout value:", timeout);
+      
       // Simpan ke localStorage
       localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
       setLogoutTimeoutState(timeout);
@@ -37,12 +39,24 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
       // Simpan ke Firestore jika user login
       if (user) {
         const userDocRef = doc(db, 'users', user.uid);
-        await updateDoc(userDocRef, {
-          logoutTimeout: timeout,
-        });
+        
+        // Periksa dulu apakah dokumen ada
+        const docSnap = await getDoc(userDocRef);
+        
+        if (docSnap.exists()) {
+          console.log("LogoutTimeoutContext: User document exists, updating...");
+          await updateDoc(userDocRef, { logoutTimeout: timeout });
+          console.log("LogoutTimeoutContext: Successfully saved to Firestore");
+        } else {
+          console.error("LogoutTimeoutContext: User document does not exist");
+          throw new Error("User document does not exist");
+        }
+      } else {
+        console.log("LogoutTimeoutContext: No user logged in, saving only to localStorage");
       }
     } catch (error) {
-      console.error('Error saving logout timeout:', error);
+      console.error('LogoutTimeoutContext: Error saving logout timeout:', error);
+      throw error; // Re-throw untuk handling di UI
     } finally {
       setIsLoading(false);
     }
@@ -51,35 +65,63 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
   // Load timeout dari Firestore ketika user berubah
   useEffect(() => {
     if (!user) {
+      console.log("LogoutTimeoutContext: No user logged in");
       return;
     }
 
+    console.log("LogoutTimeoutContext: User logged in, loading timeout from Firestore");
     setIsLoading(true);
     const userDocRef = doc(db, 'users', user.uid);
     
+    // Gunakan getDoc untuk mendapatkan nilai awal
+    getDoc(userDocRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.logoutTimeout !== undefined) {
+          const timeout = data.logoutTimeout;
+          console.log("LogoutTimeoutContext: Initial timeout value from Firestore:", timeout);
+          setLogoutTimeoutState(timeout);
+          localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
+        } else {
+          console.log("LogoutTimeoutContext: No logoutTimeout field in user document");
+        }
+      } else {
+        console.log("LogoutTimeoutContext: User document does not exist");
+      }
+      setIsLoading(false);
+    }).catch((error) => {
+      console.error("LogoutTimeoutContext: Error loading initial timeout:", error);
+      setIsLoading(false);
+    });
+    
+    // Setup listener for real-time updates
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (data.logoutTimeout !== undefined) {
           const timeout = data.logoutTimeout;
+          console.log("LogoutTimeoutContext: Real-time update from Firestore:", timeout);
           setLogoutTimeoutState(timeout);
           localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
         }
       }
-      setIsLoading(false);
     }, (error) => {
-      console.error('Error loading logout timeout:', error);
-      setIsLoading(false);
+      console.error('LogoutTimeoutContext: Error in real-time listener:', error);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log("LogoutTimeoutContext: Cleanup listener");
+      unsubscribe();
+    };
   }, [user]);
 
   // Sync dengan localStorage jika diubah di tab lain
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === LOCAL_STORAGE_KEY && e.newValue !== null) {
-        setLogoutTimeoutState(parseInt(e.newValue, 10));
+        const newTimeout = parseInt(e.newValue, 10);
+        console.log("LogoutTimeoutContext: localStorage updated in another tab:", newTimeout);
+        setLogoutTimeoutState(newTimeout);
       }
     };
 

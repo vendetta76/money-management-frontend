@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Container,
   Typography,
-  Paper,
   Stack,
   FormControl,
   InputLabel,
@@ -17,7 +16,7 @@ import {
   CardContent,
   Tooltip,
   IconButton,
-  useTheme
+  Snackbar
 } from '@mui/material';
 import { toast } from 'react-hot-toast';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -28,6 +27,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SecurityIcon from '@mui/icons-material/Security';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
 
 const logoutOptions = [
   { label: 'Off', value: 0 },
@@ -41,10 +41,12 @@ const PreferencesPage: React.FC = () => {
   const { logoutTimeout, setLogoutTimeout, isLoading } = useLogoutTimeout();
   const [pendingLogoutTimeout, setPendingLogoutTimeout] = React.useState<number>(logoutTimeout);
   const [saveSuccess, setSaveSuccess] = React.useState<boolean>(false);
-  const theme = useTheme();
+  const [saveError, setSaveError] = React.useState<boolean>(false);
+  const [firebaseStatus, setFirebaseStatus] = React.useState<string>('');
 
   // Update pendingLogoutTimeout when logoutTimeout changes
   React.useEffect(() => {
+    console.log("Timeout value from Firestore:", logoutTimeout);
     setPendingLogoutTimeout(logoutTimeout);
   }, [logoutTimeout]);
 
@@ -67,18 +69,33 @@ const PreferencesPage: React.FC = () => {
     }
     
     try {
+      setFirebaseStatus('saving');
+      console.log("Menyimpan pengaturan ke Firebase:", pendingLogoutTimeout);
+      
       await setLogoutTimeout(pendingLogoutTimeout);
+      
+      console.log("Berhasil menyimpan pengaturan ke Firebase");
       toast.success('Preferensi berhasil disimpan');
       setSaveSuccess(true);
+      setFirebaseStatus('success');
+      
+      // For debugging - log to console
+      console.log("Current auto logout settings:");
+      console.log("- Value in state:", pendingLogoutTimeout);
+      console.log("- Value in context:", logoutTimeout);
+      console.log("- localStorage value:", localStorage.getItem('logoutTimeout'));
     } catch (error) {
+      console.error("Error menyimpan ke Firebase:", error);
       toast.error('Gagal menyimpan preferensi');
-      console.error('Error saving preferences:', error);
+      setSaveError(true);
+      setFirebaseStatus('error');
     }
   };
 
   const handleChange = (e: SelectChangeEvent<number>) => {
     setPendingLogoutTimeout(Number(e.target.value));
     setSaveSuccess(false);
+    setSaveError(false);
   };
 
   const renderContent = () => {
@@ -184,7 +201,25 @@ const PreferencesPage: React.FC = () => {
                   }
                 }}
               >
-                Pengaturan logout otomatis berhasil disimpan!
+                <Typography variant="body2">
+                  Pengaturan logout otomatis berhasil disimpan ke database!
+                </Typography>
+                <Typography variant="caption" className="block mt-1">
+                  Durasi: {logoutOptions.find(opt => opt.value === pendingLogoutTimeout)?.label || 'Custom'}
+                </Typography>
+              </Alert>
+            )}
+
+            {saveError && (
+              <Alert 
+                icon={<ErrorIcon fontSize="inherit" />}
+                severity="error" 
+                className="mb-3 animate-fadeIn dark:bg-red-800 dark:text-white"
+                sx={{ mb: 3 }}
+              >
+                <Typography variant="body2">
+                  Gagal menyimpan pengaturan ke database. Silakan coba lagi.
+                </Typography>
               </Alert>
             )}
 
@@ -193,7 +228,15 @@ const PreferencesPage: React.FC = () => {
               sx={{ p: 2, borderRadius: 1, mb: 3 }}
             >
               <Typography variant="body2" className="text-gray-600 dark:text-gray-300">
-                Fitur ini akan melakukan logout otomatis ketika tidak ada aktivitas (mouse, keyboard, touch) selama periode waktu tertentu. Sangat disarankan untuk keamanan data Anda.
+                Fitur ini akan melakukan logout otomatis ketika tidak ada aktivitas (mouse, keyboard, touch) selama periode waktu tertentu. Fitur ini akan tetap berfungsi bahkan saat Anda beralih ke tab lain.
+              </Typography>
+              
+              <Typography variant="caption" className="block mt-2 text-gray-500 dark:text-gray-400">
+                Status saat ini: {
+                  logoutTimeout === 0 
+                    ? 'Off (tidak aktif)' 
+                    : `Aktif - ${logoutOptions.find(opt => opt.value === logoutTimeout)?.label || 'Custom'}`
+                }
               </Typography>
             </Box>
             
@@ -243,14 +286,11 @@ const PreferencesPage: React.FC = () => {
                 onClick={handleApply}
                 disabled={applied || isLoading}
                 size="large"
-                startIcon={applied ? <CheckCircleIcon /> : <SaveIcon />}
+                startIcon={isLoading ? <CircularProgress size={20} /> : (applied ? <CheckCircleIcon /> : <SaveIcon />)}
                 className="px-5 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 dark:bg-purple-600 dark:hover:bg-purple-700"
               >
                 {isLoading ? (
-                  <>
-                    <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                    Menyimpan...
-                  </>
+                  'Menyimpan...'
                 ) : applied ? (
                   'Tersimpan'
                 ) : (
@@ -260,6 +300,17 @@ const PreferencesPage: React.FC = () => {
             </Box>
           </CardContent>
         </Card>
+        
+        {/* Debug Info (only visible in development) */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="mt-4 dark:bg-gray-800 dark:text-white p-4">
+            <Typography variant="h6">Debug Info</Typography>
+            <Typography variant="body2">logoutTimeout (context): {logoutTimeout}</Typography>
+            <Typography variant="body2">pendingLogoutTimeout (state): {pendingLogoutTimeout}</Typography>
+            <Typography variant="body2">localStorage value: {localStorage.getItem('logoutTimeout')}</Typography>
+            <Typography variant="body2">Firebase status: {firebaseStatus}</Typography>
+          </Card>
+        )}
       </>
     );
   };
