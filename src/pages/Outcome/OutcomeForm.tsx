@@ -89,7 +89,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     const e: Record<string, string> = {};
     if (!form.wallet.trim()) e.wallet = "Dompet wajib dipilih.";
     if (!form.description.trim()) e.description = "Deskripsi wajib diisi.";
-    if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "")) <= 0)
+    if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "").replace(",", ".")) <= 0)
       e.amount = "Nominal harus lebih dari 0.";
     if (!form.currency.trim()) e.currency = "Mata uang wajib dipilih.";
     return e;
@@ -100,16 +100,30 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     const { name, value } = e.target;
 
     if (name === "amount") {
-      // izinkan angka, titik, dan koma
+      // First, clean the input to only allow digits, commas, and dots
       let cleaned = value.replace(/[^0-9.,]/g, "");
-
-      // normalize multiple comma
+      
+      // Handle decimal part (using comma as decimal separator)
       const parts = cleaned.split(",");
       if (parts.length > 2) {
         cleaned = parts[0] + "," + parts.slice(1).join("").replace(/,/g, "");
       }
-
-      setForm({ ...form, amount: cleaned });
+      
+      // Remove existing thousand separators (dots) to work with raw number
+      const numberWithoutSeparator = parts[0].replace(/\./g, "");
+      
+      // Add thousand separators
+      let formattedInteger = "";
+      if (numberWithoutSeparator.length > 0) {
+        formattedInteger = numberWithoutSeparator.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+      
+      // Combine the formatted integer with decimal part if exists
+      const finalValue = parts.length > 1 
+        ? formattedInteger + "," + parts[1] 
+        : formattedInteger;
+        
+      setForm({ ...form, amount: finalValue });
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -337,6 +351,9 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
             name="amount"
             value={form.amount}
             onChange={handleChange}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9.,]*"
             className={`w-full rounded border px-4 py-2 dark:bg-gray-800 dark:text-white ${
               errors.amount && "border-red-500"
             }`}
