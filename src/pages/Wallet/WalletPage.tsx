@@ -159,27 +159,29 @@ const WalletPage: React.FC = () => {
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Dompet Saya</h1>
-            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* Show/Hide Balance Button */}
               <button
                 onClick={() => setShowBalance(!showBalance)}
-                className="text-sm underline flex items-center gap-1 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+                className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
               >
-                {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
+                {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+                <span className="text-sm">{showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}</span>
               </button>
               
-              {/* Lock icon button - Always visible but only active when PIN is verified */}
+              {/* Lock Button - Always show it */}
               <button
                 onClick={handleManualLock}
                 disabled={!isPinVerified || pinTimeout === 0}
-                className={`${
-                  !isPinVerified || pinTimeout === 0 
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
-                } p-2 rounded-md text-gray-700 dark:text-gray-300 transition-colors`}
-                title="Kunci Dompet"
+                className={`flex items-center border border-gray-300 rounded-md py-1 px-2 ${
+                  isPinVerified && pinTimeout !== 0
+                    ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
+                    : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                }`}
+                title={isPinVerified && pinTimeout !== 0 ? "Kunci Dompet" : "PIN tidak aktif"}
                 aria-label="Kunci Dompet"
               >
-                <Lock size={18} />
+                <Lock size={16} />
               </button>
               
               <RecalcButtonWithTooltip
