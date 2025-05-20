@@ -105,6 +105,7 @@ const WalletPage: React.FC = () => {
   // Handle manual lock
   const handleManualLock = () => {
     lockPin();
+    toast.success("Dompet terkunci");
   };
 
   const walletMap = Object.fromEntries(wallets.map((w) => [w.id, w]));
@@ -159,7 +160,7 @@ const WalletPage: React.FC = () => {
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Dompet Saya</h1>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
                 onClick={() => setShowBalance(!showBalance)}
                 className="text-sm underline flex items-center gap-1 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
@@ -167,13 +168,15 @@ const WalletPage: React.FC = () => {
                 {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
               </button>
               
-              {/* Manual Lock Button */}
+              {/* Manual Lock Button - Icon Only */}
               {isPinVerified && pinTimeout !== 0 && (
                 <button
                   onClick={handleManualLock}
-                  className="text-sm underline flex items-center gap-1 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+                  title="Kunci Dompet"
+                  aria-label="Kunci Dompet"
                 >
-                  <Lock size={16} /> Kunci Dompet
+                  <Lock size={18} />
                 </button>
               )}
               
