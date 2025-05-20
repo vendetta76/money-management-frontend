@@ -102,10 +102,9 @@ const WalletPage: React.FC = () => {
     verifyPin();
   };
 
-  // Handle manual lock
+  // Handle manual lock - just lock without toast
   const handleManualLock = () => {
     lockPin();
-    toast.success("Dompet terkunci");
   };
 
   const walletMap = Object.fromEntries(wallets.map((w) => [w.id, w]));
@@ -160,7 +159,7 @@ const WalletPage: React.FC = () => {
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Dompet Saya</h1>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setShowBalance(!showBalance)}
                 className="text-sm underline flex items-center gap-1 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
@@ -168,17 +167,20 @@ const WalletPage: React.FC = () => {
                 {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
               </button>
               
-              {/* Manual Lock Button - Icon Only */}
-              {isPinVerified && pinTimeout !== 0 && (
-                <button
-                  onClick={handleManualLock}
-                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
-                  title="Kunci Dompet"
-                  aria-label="Kunci Dompet"
-                >
-                  <Lock size={18} />
-                </button>
-              )}
+              {/* Lock icon button - Always visible but only active when PIN is verified */}
+              <button
+                onClick={handleManualLock}
+                disabled={!isPinVerified || pinTimeout === 0}
+                className={`${
+                  !isPinVerified || pinTimeout === 0 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
+                } p-2 rounded-md text-gray-700 dark:text-gray-300 transition-colors`}
+                title="Kunci Dompet"
+                aria-label="Kunci Dompet"
+              >
+                <Lock size={18} />
+              </button>
               
               <RecalcButtonWithTooltip
                 userId={user?.uid || ""}
