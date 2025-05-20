@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Container,
   Typography,
-  Stack,
   FormControl,
   InputLabel,
   Select,
@@ -16,7 +15,6 @@ import {
   CardContent,
   Tooltip,
   IconButton,
-  Snackbar
 } from '@mui/material';
 import { toast } from 'react-hot-toast';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -123,69 +121,76 @@ const PreferencesPage: React.FC = () => {
             variant="h4" 
             fontWeight="bold" 
             color="primary" 
-            className="dark:text-purple-300 flex items-center"
-            sx={{ display: 'flex', alignItems: 'center' }}
+            sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
+            className="dark:text-purple-300"
           >
             <AccessTimeIcon fontSize="large" sx={{ mr: 1.5 }} />
             Preferensi
           </Typography>
           <Typography 
             variant="subtitle1" 
-            className="dark:text-gray-300 mt-1"
-            mt={1}
+            color="text.secondary"
+            className="dark:text-gray-300"
           >
             Kelola pengaturan aplikasi Anda untuk pengalaman yang lebih personal
           </Typography>
-          <Divider sx={{ mt: 2 }} className="dark:border-gray-700" />
+          <Divider sx={{ mt: 2, mb: 4 }} className="dark:border-gray-700" />
         </Box>
 
         <Card 
           elevation={3} 
-          className="rounded-xl overflow-visible relative transition-all duration-300 hover:shadow-lg dark:bg-gray-800 dark:border dark:border-gray-700"
           sx={{ 
+            borderRadius: 2,
             position: 'relative',
             transition: 'all 0.3s ease',
+            '&:hover': {
+              boxShadow: '0 8px 16px 0 rgba(0,0,0,0.1)'
+            },
+            mb: 4
           }}
+          className="dark:bg-gray-800 dark:border dark:border-gray-700"
         >
           <Box 
-            className="absolute -top-5 left-5 bg-purple-600 dark:bg-purple-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-md"
             sx={{ 
               position: 'absolute', 
               top: -20, 
               left: 20, 
+              bgcolor: 'secondary.main',
+              color: 'white',
               width: 40,
               height: 40,
+              borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: 3
             }}
+            className="bg-purple-600 dark:bg-purple-500"
           >
             <SecurityIcon />
           </Box>
 
-          <CardContent sx={{ pt: 4, pb: 3 }} className="dark:text-white">
-            <Box mb={3}>
+          <CardContent sx={{ pt: 4, pb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <Typography 
                 variant="h5" 
-                fontWeight="bold" 
-                className="flex items-center dark:text-white"
-                sx={{ display: 'flex', alignItems: 'center' }}
+                fontWeight="bold"
+                sx={{ mr: 1 }}
+                className="dark:text-white"
               >
                 Logout Otomatis
-                <Tooltip title="Fitur ini akan secara otomatis logout pengguna setelah tidak aktif selama waktu yang ditentukan, membantu meningkatkan keamanan akun Anda.">
-                  <IconButton size="small" sx={{ ml: 1 }} className="dark:text-gray-300">
-                    <InfoOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
               </Typography>
+              <Tooltip title="Fitur ini akan secara otomatis logout pengguna setelah tidak aktif selama waktu yang ditentukan, membantu meningkatkan keamanan akun Anda.">
+                <IconButton size="small" className="dark:text-gray-300">
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
 
             {saveSuccess && (
               <Alert 
                 icon={<CheckCircleIcon fontSize="inherit" />}
                 severity="success" 
-                className="mb-3 animate-fadeIn dark:bg-green-800 dark:text-white"
                 sx={{ 
                   mb: 3, 
                   animation: 'fadeIn 0.5s', 
@@ -200,11 +205,12 @@ const PreferencesPage: React.FC = () => {
                     },
                   }
                 }}
+                className="dark:bg-green-800 dark:text-white"
               >
                 <Typography variant="body2">
                   Pengaturan logout otomatis berhasil disimpan ke database!
                 </Typography>
-                <Typography variant="caption" className="block mt-1">
+                <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
                   Durasi: {logoutOptions.find(opt => opt.value === pendingLogoutTimeout)?.label || 'Custom'}
                 </Typography>
               </Alert>
@@ -214,8 +220,8 @@ const PreferencesPage: React.FC = () => {
               <Alert 
                 icon={<ErrorIcon fontSize="inherit" />}
                 severity="error" 
-                className="mb-3 animate-fadeIn dark:bg-red-800 dark:text-white"
                 sx={{ mb: 3 }}
+                className="dark:bg-red-800 dark:text-white"
               >
                 <Typography variant="body2">
                   Gagal menyimpan pengaturan ke database. Silakan coba lagi.
@@ -224,14 +230,24 @@ const PreferencesPage: React.FC = () => {
             )}
 
             <Box 
-              className="bg-blue-50 dark:bg-gray-700 p-4 rounded mb-3"
-              sx={{ p: 2, borderRadius: 1, mb: 3 }}
+              sx={{ 
+                bgcolor: 'info.lighter', 
+                p: 2, 
+                borderRadius: 1, 
+                mb: 3 
+              }}
+              className="bg-blue-50 dark:bg-gray-700 dark:text-gray-300"
             >
-              <Typography variant="body2" className="text-gray-600 dark:text-gray-300">
+              <Typography variant="body2" color="text.secondary" className="dark:text-gray-300">
                 Fitur ini akan melakukan logout otomatis ketika tidak ada aktivitas (mouse, keyboard, touch) selama periode waktu tertentu. Fitur ini akan tetap berfungsi bahkan saat Anda beralih ke tab lain.
               </Typography>
               
-              <Typography variant="caption" className="block mt-2 text-gray-500 dark:text-gray-400">
+              <Typography 
+                variant="caption" 
+                color="text.secondary" 
+                sx={{ display: 'block', mt: 1.5 }}
+                className="dark:text-gray-400"
+              >
                 Status saat ini: {
                   logoutTimeout === 0 
                     ? 'Off (tidak aktif)' 
@@ -244,7 +260,6 @@ const PreferencesPage: React.FC = () => {
               fullWidth 
               variant="outlined" 
               sx={{ mb: 3 }}
-              className="dark:bg-gray-800"
             >
               <InputLabel 
                 id="logout-select-label"
@@ -261,13 +276,13 @@ const PreferencesPage: React.FC = () => {
                 className="dark:text-white dark:border-gray-600"
                 sx={{
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.23)'
+                    borderColor: 'rgba(0, 0, 0, 0.23)'
                   },
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)'
+                    borderColor: 'rgba(0, 0, 0, 0.87)'
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#9575cd'
+                    borderColor: 'primary.main'
                   }
                 }}
               >
@@ -282,19 +297,31 @@ const PreferencesPage: React.FC = () => {
             <Box display="flex" justifyContent="flex-end">
               <Button
                 variant="contained"
-                color="primary"
+                color={applied ? "success" : "primary"}
                 onClick={handleApply}
                 disabled={applied || isLoading}
                 size="large"
-                startIcon={isLoading ? <CircularProgress size={20} /> : (applied ? <CheckCircleIcon /> : <SaveIcon />)}
-                className="px-5 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 dark:bg-purple-600 dark:hover:bg-purple-700"
+                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : (applied ? <CheckCircleIcon /> : <SaveIcon />)}
+                sx={{
+                  py: 1,
+                  px: 3,
+                  borderRadius: 1.5,
+                  fontWeight: 'medium',
+                  transition: 'all 0.3s',
+                  boxShadow: 2,
+                  '&:hover': {
+                    boxShadow: 4,
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+                className="dark:bg-purple-600 dark:hover:bg-purple-700"
               >
                 {isLoading ? (
                   'Menyimpan...'
                 ) : applied ? (
-                  'Tersimpan'
+                  'TERSIMPAN'
                 ) : (
-                  'Simpan'
+                  'SIMPAN'
                 )}
               </Button>
             </Box>
@@ -303,7 +330,7 @@ const PreferencesPage: React.FC = () => {
         
         {/* Debug Info (only visible in development) */}
         {process.env.NODE_ENV === 'development' && (
-          <Card className="mt-4 dark:bg-gray-800 dark:text-white p-4">
+          <Card className="mt-4 dark:bg-gray-800 dark:text-white" sx={{ p: 2 }}>
             <Typography variant="h6">Debug Info</Typography>
             <Typography variant="body2">logoutTimeout (context): {logoutTimeout}</Typography>
             <Typography variant="body2">pendingLogoutTimeout (state): {pendingLogoutTimeout}</Typography>
