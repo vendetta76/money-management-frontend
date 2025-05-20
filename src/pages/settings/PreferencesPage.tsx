@@ -1,28 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Container,
+  Box,
   Typography,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Button,
-  Box,
   CircularProgress,
-  Divider,
-  Tooltip,
-  IconButton,
-  Grid,
   Paper,
-  useTheme
+  Grid,
+  IconButton,
+  Tooltip,
+  Divider,
+  Container
 } from '@mui/material';
-import { toast } from 'react-hot-toast';
 import { SelectChangeEvent } from '@mui/material/Select';
+import { toast } from 'react-hot-toast';
 import { useLogoutTimeout } from '../../context/LogoutTimeoutContext';
-import LayoutShell from '../../layouts/LayoutShell';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import LayoutShell from '../../layouts/LayoutShell';
 
 const logoutOptions = [
   { label: 'Off', value: 0 },
@@ -32,20 +31,132 @@ const logoutOptions = [
   { label: '30 menit', value: 1800000 },
 ];
 
-const PreferencesPage: React.FC = () => {
-  const theme = useTheme();
-  const { logoutTimeout, setLogoutTimeout, isLoading } = useLogoutTimeout();
-  const [pendingLogoutTimeout, setPendingLogoutTimeout] = React.useState<number>(logoutTimeout);
-  const [saveSuccess, setSaveSuccess] = React.useState<boolean>(false);
-  const [saveError, setSaveError] = React.useState<boolean>(false);
+// Interface for LogoutSetting props
+interface LogoutSettingProps {
+  value: number;
+  onChange: (value: number) => void;
+  isDisabled?: boolean;
+}
 
-  // Update pendingLogoutTimeout when logoutTimeout changes
-  React.useEffect(() => {
-    setPendingLogoutTimeout(logoutTimeout);
+// Simple component for the logout setting
+const LogoutSetting: React.FC<LogoutSettingProps> = ({ value, onChange, isDisabled }) => {
+  const handleChange = (e: SelectChangeEvent<number>) => {
+    onChange(Number(e.target.value));
+  };
+
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 4,
+        border: '2px solid #e0e0e0',
+        p: 1.5,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        mb: 2,
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 500,
+            fontSize: '1.1rem',
+            textTransform: 'uppercase',
+          }}
+        >
+          Logout Otomatis
+        </Typography>
+        <Tooltip 
+          title="Fitur ini akan melakukan logout otomatis ketika tidak ada aktivitas (mouse, keyboard, touch) selama periode waktu tertentu. Fitur ini akan tetap berfungsi bahkan saat Anda beralih ke tab lain."
+          placement="top"
+        >
+          <IconButton size="small" sx={{ ml: 0.5 }}>
+            <InfoOutlinedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+      
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <FormControl 
+          variant="outlined" 
+          size="small"
+          sx={{ width: 180 }}
+        >
+          <InputLabel id="logout-select-label" sx={{ fontSize: '0.9rem' }}>
+            Durasi Logout
+          </InputLabel>
+          <Select
+            labelId="logout-select-label"
+            value={value}
+            label="Durasi Logout"
+            onChange={handleChange}
+            disabled={isDisabled}
+          >
+            {logoutOptions.map(({ label, value }) => (
+              <MenuItem key={value} value={value}>
+                {label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+    </Paper>
+  );
+};
+
+// Add more setting components as needed
+// Example:
+/*
+interface OtherSettingProps {
+  value: string;
+  onChange: (value: string) => void;
+  isDisabled?: boolean;
+}
+
+const OtherSetting: React.FC<OtherSettingProps> = ({ value, onChange, isDisabled }) => {
+  // Implementation
+};
+*/
+
+// Main preferences page with global state management
+const PreferencesPage: React.FC = () => {
+  const { logoutTimeout, setLogoutTimeout, isLoading } = useLogoutTimeout();
+  
+  // Global state for all settings
+  const [settings, setSettings] = useState({
+    logoutTimeout: logoutTimeout || 0,
+    // Add more settings here as you implement new features
+    // example: theme: 'light',
+    // example: notifications: true,
+  });
+  
+  // Track if settings have changed from saved values
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Update settings when initial values load
+  useEffect(() => {
+    if (logoutTimeout !== undefined) {
+      setSettings(prev => ({
+        ...prev,
+        logoutTimeout
+      }));
+    }
   }, [logoutTimeout]);
 
-  // Effect to hide success message after 3 seconds
-  React.useEffect(() => {
+  // Update hasChanges when settings change
+  useEffect(() => {
+    if (logoutTimeout !== undefined) {
+      setHasChanges(settings.logoutTimeout !== logoutTimeout);
+    }
+  }, [settings, logoutTimeout]);
+
+  // Reset success message after delay
+  useEffect(() => {
     if (saveSuccess) {
       const timer = setTimeout(() => {
         setSaveSuccess(false);
@@ -54,35 +165,40 @@ const PreferencesPage: React.FC = () => {
     }
   }, [saveSuccess]);
 
-  const applied = pendingLogoutTimeout === logoutTimeout;
-
-  const handleApply = async () => {
-    if (isNaN(pendingLogoutTimeout)) {
-      toast.error('Waktu logout tidak valid');
-      return;
-    }
-    
-    try {
-      await setLogoutTimeout(pendingLogoutTimeout);
-      toast.success('Preferensi berhasil disimpan');
-      setSaveSuccess(true);
-    } catch (error) {
-      console.error("Error menyimpan ke Firebase:", error);
-      toast.error('Gagal menyimpan preferensi');
-      setSaveError(true);
-    }
+  // Handle setting changes
+  const handleLogoutTimeoutChange = (value: number) => {
+    setSettings(prev => ({
+      ...prev,
+      logoutTimeout: value
+    }));
   };
 
-  const handleChange = (e: SelectChangeEvent<number>) => {
-    setPendingLogoutTimeout(Number(e.target.value));
-    setSaveSuccess(false);
-    setSaveError(false);
+  // Handle save all settings
+  const handleSaveAll = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Save logout timeout
+      await setLogoutTimeout(settings.logoutTimeout);
+      
+      // Save other settings as you add them
+      // await setOtherSetting(settings.otherSetting);
+      
+      toast.success('Semua preferensi berhasil disimpan');
+      setSaveSuccess(true);
+      setHasChanges(false);
+    } catch (error) {
+      console.error("Error menyimpan preferensi:", error);
+      toast.error('Gagal menyimpan preferensi');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading && logoutTimeout === undefined) {
     return (
       <LayoutShell>
-        <Container maxWidth="md" sx={{ py: 5 }}>
+        <Container maxWidth="md">
           <Box sx={{ 
             display: 'flex', 
             flexDirection: 'column', 
@@ -102,184 +218,75 @@ const PreferencesPage: React.FC = () => {
 
   return (
     <LayoutShell>
-      <Container 
-        maxWidth="md" 
-        sx={{ 
-          py: 5,
-          "& .MuiTypography-root": {
-            fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif"
-          }
-        }}
-      >
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <AccessTimeIcon 
-              sx={{ 
-                mr: 2, 
-                fontSize: 32, 
-                color: theme.palette.primary.main
-              }} 
-            />
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontWeight: 500, 
-                color: theme.palette.primary.main,
-                fontSize: '1.75rem'
-              }}
-            >
-              Preferensi
-            </Typography>
-          </Box>
-          
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              color: 'text.secondary',
-              ml: 0.5,
-              mb: 2,
-              fontSize: '0.95rem'
-            }}
-          >
-            Kelola pengaturan aplikasi Anda untuk pengalaman yang lebih personal
-          </Typography>
-          
-          <Divider />
-        </Box>
-
-        {/* Settings Fields Container */}
-        <Paper 
-          elevation={0} 
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Typography 
+          variant="h4" 
           sx={{ 
-            border: '1px solid',
-            borderColor: theme.palette.divider,
-            borderRadius: 1,
-            overflow: 'hidden',
+            fontWeight: 500, 
+            mb: 2 
           }}
         >
-          {/* Security Settings Section */}
-          <Box sx={{ 
-            bgcolor: theme.palette.background.default,
+          Preferensi
+        </Typography>
+        
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            color: 'text.secondary',
+            mb: 4,
+          }}
+        >
+          Kelola pengaturan aplikasi Anda untuk pengalaman yang lebih personal
+        </Typography>
+        
+        <Divider sx={{ mb: 4 }} />
+        
+        <Box sx={{ mb: 4 }}>
+          {/* Logout setting */}
+          <LogoutSetting 
+            value={settings.logoutTimeout} 
+            onChange={handleLogoutTimeoutChange}
+            isDisabled={isSaving}
+          />
+          
+          {/* Add more settings here as you implement them */}
+          {/* <OtherSetting value={settings.otherValue} onChange={handleOtherChange} isDisabled={isSaving} /> */}
+        </Box>
+        
+        {/* Fixed action bar at the bottom */}
+        <Paper 
+          elevation={3}
+          sx={{
+            position: 'sticky',
+            bottom: 20,
+            left: 0,
+            right: 0,
             p: 2,
-            borderBottom: '1px solid',
-            borderColor: theme.palette.divider
-          }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-              Pengaturan Keamanan
-            </Typography>
-          </Box>
-
-          {/* Fields */}
-          <Box sx={{ px: 2 }}>
-            {/* Auto Logout Field */}
-            <Box 
-              sx={{ 
-                py: 3, 
-                borderBottom: '1px solid',
-                borderColor: theme.palette.divider,
-              }}
-            >
-              <Grid container spacing={2} alignItems="flex-start">
-                <Grid item xs={12} md={4}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography 
-                      sx={{ 
-                        fontWeight: 500,
-                        color: 'text.primary',
-                        fontSize: '0.95rem'
-                      }}
-                    >
-                      Logout Otomatis
-                    </Typography>
-                    <Tooltip 
-                      title="Fitur ini akan melakukan logout otomatis ketika tidak ada aktivitas (mouse, keyboard, touch) selama periode waktu tertentu."
-                      placement="top"
-                    >
-                      <IconButton size="small" sx={{ ml: 0.5, color: 'text.secondary' }}>
-                        <InfoOutlinedIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{ mt: 0.5, fontSize: '0.85rem' }}
-                  >
-                    Fitur ini akan tetap berfungsi bahkan saat Anda beralih ke tab lain.
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={8}>
-                  <Box sx={{ bgcolor: 'info.lighter', p: 2, borderRadius: 1, mb: 2 }}>
-                    <Typography variant="caption" sx={{ display: 'block' }}>
-                      Status saat ini: {
-                        logoutTimeout === 0 
-                          ? 'Off (tidak aktif)' 
-                          : `Aktif - ${logoutOptions.find(opt => opt.value === logoutTimeout)?.label || 'Custom'}`
-                      }
-                    </Typography>
-                  </Box>
-                  <FormControl 
-                    variant="outlined" 
-                    size="small"
-                    sx={{ 
-                      width: { xs: '100%', md: '60%' },
-                      mr: 2
-                    }}
-                  >
-                    <InputLabel id="logout-select-label">
-                      Durasi Logout Otomatis
-                    </InputLabel>
-                    <Select
-                      labelId="logout-select-label"
-                      value={pendingLogoutTimeout}
-                      label="Durasi Logout Otomatis"
-                      onChange={handleChange}
-                      disabled={isLoading}
-                    >
-                      {logoutOptions.map(({ label, value }) => (
-                        <MenuItem key={value} value={value}>
-                          {label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-            </Box>
-
-            {/* You can add more settings fields here */}
-            {/* Each field would follow the same pattern as above */}
-          </Box>
-
-          {/* Action Buttons */}
-          <Box sx={{ 
-            p: 2, 
-            bgcolor: theme.palette.action.hover,
-            borderTop: '1px solid',
-            borderColor: theme.palette.divider,
             display: 'flex',
-            justifyContent: 'flex-end'
-          }}>
-            <Button
-              variant="contained"
-              color={applied ? "success" : "primary"}
-              onClick={handleApply}
-              disabled={applied || isLoading}
-              startIcon={isLoading ? 
-                <CircularProgress size={16} color="inherit" /> : 
-                (applied ? <CheckCircleIcon /> : null)
-              }
-              sx={{
-                textTransform: 'uppercase',
-                fontSize: '0.85rem',
-                px: 3,
-                fontWeight: 500
-              }}
-            >
-              {isLoading ? 'Menyimpan...' : applied ? 'TERSIMPAN' : 'SIMPAN'}
-            </Button>
-          </Box>
+            justifyContent: 'flex-end',
+            borderRadius: 2,
+            zIndex: 10,
+            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={handleSaveAll}
+            disabled={!hasChanges || isSaving}
+            size="large"
+            sx={{
+              textTransform: 'uppercase',
+              minWidth: 120,
+              px: 3,
+              py: 1
+            }}
+            startIcon={isSaving ? 
+              <CircularProgress size={20} color="inherit" /> : 
+              (saveSuccess ? <CheckCircleIcon /> : <SaveIcon />)
+            }
+          >
+            {isSaving ? 'Menyimpan...' : saveSuccess ? 'TERSIMPAN' : 'SIMPAN'}
+          </Button>
         </Paper>
       </Container>
     </LayoutShell>
