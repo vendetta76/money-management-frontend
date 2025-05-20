@@ -1,22 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import path from 'path'
+import tsconfigPaths from 'vite-tsconfig-paths'; // ⬅️ Tambahan penting
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
-  },
   plugins: [
     react(),
+    tsconfigPaths(), // ⬅️ Tambahkan ini biar semua alias di tsconfig.json dikenali
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'MoniQ: Money Manager',
-        short_name: 'MoniQ',
+        name: 'MeowIQ: Money Manager',
+        short_name: 'MeowIQ',
         description: 'Kelola keuangan pribadi & dompet digital dengan gaya!',
         id: "/",
         start_url: "/",

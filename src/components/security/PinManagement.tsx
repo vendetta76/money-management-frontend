@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { usePinTimeout } from '../context/PinTimeoutContext';
+import { usePinTimeout } from '@context/PinTimeoutContext';
 import {
   Box,
   Button,

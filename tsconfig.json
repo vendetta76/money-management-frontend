@@ -17,7 +17,26 @@
     "jsx": "react-jsx",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@context/*": ["src/context/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@lib/*": ["src/lib/*"],
+      "@pages/*": ["src/pages/*"],
+      "@utils/*": ["src/utils/*"],
+      "@admin/*": ["src/components/admin/*"],
+      "@security/*": ["src/components/security/*"],
+      "@dashboard/*": ["src/pages/Dashboard/*"],
+      "@wallet/*": ["src/pages/Wallet/*"],
+      "@income/*": ["src/pages/Income/*"],
+      "@outcome/*": ["src/pages/Outcome/*"],
+      "@transfer/*": ["src/pages/Transfer/*"],
+      "@settings/*": ["src/pages/settings/*"],
+      "@auth/*": ["src/pages/auth/*"],
+      "@about/*": ["src/pages/about/*"],
+      "@adminPages/*": ["src/pages/admin/*"],
+      "@helpers/*": ["src/pages/helpers/*"]
     }
   },
   "include": ["src"]
