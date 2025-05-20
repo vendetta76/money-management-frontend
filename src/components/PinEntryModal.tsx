@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { usePinTimeout } from '../../context/PinTimeoutContext';
+import { usePinTimeout } from '../context/PinTimeoutContext';
 
 type PinEntryModalProps = {
   onBack?: () => void;
