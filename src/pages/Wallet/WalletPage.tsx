@@ -9,7 +9,7 @@ import {
 import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import LayoutShell from "../../layouts/LayoutShell";
-import { Plus, Eye, EyeOff, Search } from "lucide-react";
+import { Plus, Eye, EyeOff, Search, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import WalletPopupHistory from "../../components/WalletPopupHistory";
@@ -20,6 +20,8 @@ import { useIsBypassed } from "../../hooks/useIsBypassed";
 import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 import RecalcButtonWithTooltip from "./RecalcButtonWithTooltip";
 import WalletSearchBar from "./WalletSearchBar";
+import { usePinTimeout } from "../../context/PinTimeoutContext";
+import PinEntryModal from "./PinEntryModal"; // Import the PIN entry component
 
 interface WalletData {
   id: string;
@@ -36,6 +38,11 @@ const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, userMeta } = useAuth();
   const { locked, message, isBypassed } = useIsBypassed("wallet");
+  
+  // Use the PIN timeout context
+  const { pinTimeout, isPinVerified, verifyPin, lockPin } = usePinTimeout();
+  
+  // Original wallet state
   const [wallets, setWallets] = useState<WalletData[]>([]);
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -45,7 +52,6 @@ const WalletPage: React.FC = () => {
   const [showBalance, setShowBalance] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [recalcLoading, setRecalcLoading] = useState(false);
-  // Add search state
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -91,6 +97,16 @@ const WalletPage: React.FC = () => {
     });
   }, [wallets]);
 
+  // Handle PIN verification
+  const handlePinVerify = () => {
+    verifyPin();
+  };
+
+  // Handle manual lock
+  const handleManualLock = () => {
+    lockPin();
+  };
+
   const walletMap = Object.fromEntries(wallets.map((w) => [w.id, w]));
   const orderedWallets = [
     ...walletOrder.map((id) => walletMap[id]).filter(Boolean),
@@ -123,6 +139,11 @@ const WalletPage: React.FC = () => {
       <main
         className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300"
       >
+        {/* PIN Lock Overlay - Show when PIN is not verified */}
+        {!isPinVerified && pinTimeout !== 0 && (
+          <PinEntryModal onPinVerify={handlePinVerify} />
+        )}
+      
         {(locked && !isBypassed) && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 dark:bg-black/50 flex items-center justify-center">
             <PageLockAnnouncement
@@ -145,6 +166,17 @@ const WalletPage: React.FC = () => {
               >
                 {showBalance ? <EyeOff size={16} /> : <Eye size={16} />} {showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
               </button>
+              
+              {/* Manual Lock Button */}
+              {isPinVerified && pinTimeout !== 0 && (
+                <button
+                  onClick={handleManualLock}
+                  className="text-sm underline flex items-center gap-1 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+                >
+                  <Lock size={16} /> Kunci Dompet
+                </button>
+              )}
+              
               <RecalcButtonWithTooltip
                 userId={user?.uid || ""}
                 setLoading={setRecalcLoading}

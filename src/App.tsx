@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LogoutTimeoutProvider } from './context/LogoutTimeoutContext';
+import { PinTimeoutProvider } from './context/PinTimeoutContext'; // Import the PinTimeoutProvider
 import { LanguageProvider } from './context/LanguageContext';
 import routes from './routes';
 import { Toaster } from 'react-hot-toast';
@@ -41,27 +42,29 @@ function App() {
   return (
     <AuthProvider>
       <LogoutTimeoutProvider>
-        <LanguageProvider>
-          <Router>
-            <Toaster position="top-center" reverseOrder={false} />
-            {canInstall && (
-              <div className="fixed top-4 right-4 z-50 bg-background border border-border px-4 py-2 rounded-lg shadow-md">
-                <button
-                  onClick={handleInstall}
-                  className="bg-primary text-primary-foreground px-4 py-1 rounded hover:bg-opacity-90 transition"
-                >
-                  Install MoniQ
-                </button>
-              </div>
-            )}
+        <PinTimeoutProvider> {/* Add PinTimeoutProvider here */}
+          <LanguageProvider>
+            <Router>
+              <Toaster position="top-center" reverseOrder={false} />
+              {canInstall && (
+                <div className="fixed top-4 right-4 z-50 bg-background border border-border px-4 py-2 rounded-lg shadow-md">
+                  <button
+                    onClick={handleInstall}
+                    className="bg-primary text-primary-foreground px-4 py-1 rounded hover:bg-opacity-90 transition"
+                  >
+                    Install MoniQ
+                  </button>
+                </div>
+              )}
 
-            {/* AutoLogout Component */}
-            <AutoLogout />
+              {/* AutoLogout Component */}
+              <AutoLogout />
 
-            {/* Main Routes */}
-            <AppRoutes />
-          </Router>
-        </LanguageProvider>
+              {/* Main Routes */}
+              <AppRoutes />
+            </Router>
+          </LanguageProvider>
+        </PinTimeoutProvider> {/* Close PinTimeoutProvider */}
       </LogoutTimeoutProvider>
     </AuthProvider>
   );
