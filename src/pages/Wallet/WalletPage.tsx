@@ -21,7 +21,7 @@ import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 import RecalcButtonWithTooltip from "./RecalcButtonWithTooltip";
 import WalletSearchBar from "./WalletSearchBar";
 import { usePinTimeout } from "../../context/PinTimeoutContext";
-import PinEntryModal from "./PinEntryModal"; // Import the PIN entry component
+import PinEntryModal from "../../components/PinEntryModal"; // Import the PIN entry component
 
 interface WalletData {
   id: string;
