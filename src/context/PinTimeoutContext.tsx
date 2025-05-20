@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebaseClient';
 import { useAuth } from './AuthContext';
 import CryptoJS from 'crypto-js'; // For client-side PIN hashing
@@ -22,7 +22,7 @@ interface PinTimeoutContextType {
   createPin: (pin: string) => Promise<boolean>;
   changePin: (oldPin: string, newPin: string) => Promise<boolean>;
   deletePin: (pin: string) => Promise<boolean>;
-  resetPinAttempts: () => void;
+  resetPinAttempts: () => Promise<void>;
   
   // PIN attempt tracking
   pinAttempts: number;
@@ -33,7 +33,7 @@ interface PinTimeoutContextType {
 const PinTimeoutContext = createContext<PinTimeoutContextType | undefined>(undefined);
 
 export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, user } = useAuth();
   
   // PIN timeout configuration
   const [pinTimeout, setPinTimeoutState] = useState<number | undefined>(undefined);
@@ -60,9 +60,23 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // PIN lock duration in milliseconds (15 minutes)
   const PIN_LOCK_DURATION = 15 * 60 * 1000;
 
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    // Use both currentUser and user to be safe
+    return !!(currentUser || user);
+  };
+
+  // Get current user ID safely
+  const getUserId = () => {
+    if (currentUser?.uid) return currentUser.uid;
+    if (user?.uid) return user.uid;
+    return null;
+  };
+
   // Load PIN configurations from Firestore
   useEffect(() => {
-    if (!currentUser) {
+    const userId = getUserId();
+    if (!userId) {
       setPinTimeoutState(undefined);
       setHasPin(false);
       setPinHash(null);
@@ -76,7 +90,7 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setIsLoading(true);
         setError(null);
         
-        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDocRef = doc(db, 'users', userId);
         const userDoc = await getDoc(userDocRef);
         
         if (userDoc.exists()) {
@@ -101,12 +115,16 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             setIsPinLocked(true);
           } else if (userPin.lockExpiry) {
             // Reset lock if expired
-            await updateDoc(userDocRef, {
-              'pinSettings.lockExpiry': null,
-              'pinSettings.attempts': 0
-            });
-            setIsPinLocked(false);
-            setPinAttempts(0);
+            try {
+              await updateDoc(userDocRef, {
+                'pinSettings.lockExpiry': null,
+                'pinSettings.attempts': 0
+              });
+              setIsPinLocked(false);
+              setPinAttempts(0);
+            } catch (err) {
+              console.error("Error resetting lock:", err);
+            }
           }
           
           // Auto verify if no PIN is set or PIN timeout is 0
@@ -114,7 +132,24 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             setIsPinVerified(true);
           }
         } else {
-          // Default values for new users
+          // Default values for new users - create the document if it doesn't exist
+          try {
+            await setDoc(userDocRef, {
+              preferences: {
+                pinTimeout: 0
+              },
+              pinSettings: {
+                hash: null,
+                salt: null,
+                attempts: 0,
+                lockExpiry: null,
+                lastChanged: null
+              }
+            }, { merge: true });
+          } catch (err) {
+            console.error("Error creating initial user pin settings:", err);
+          }
+          
           setPinTimeoutState(0);
           setHasPin(false);
           setIsPinVerified(true);
@@ -128,7 +163,7 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
 
     loadPinSettings();
-  }, [currentUser]);
+  }, [currentUser, user]);
 
   // Generate a random salt
   const generateSalt = (length = 16) => {
@@ -142,54 +177,108 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Save PIN settings to Firestore
   const savePinSettings = async (hash: string | null, salt: string | null) => {
-    if (!currentUser) throw new Error('User not authenticated');
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
     
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    
-    await updateDoc(userDocRef, {
-      'pinSettings': {
-        hash,
-        salt,
-        lastChanged: hash ? Date.now() : null,
-        attempts: 0,
-        lockExpiry: null
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      
+      // Check if document exists first
+      const docSnap = await getDoc(userDocRef);
+      
+      if (docSnap.exists()) {
+        // Update existing document
+        await updateDoc(userDocRef, {
+          'pinSettings.hash': hash,
+          'pinSettings.salt': salt,
+          'pinSettings.lastChanged': hash ? Date.now() : null,
+          'pinSettings.attempts': 0,
+          'pinSettings.lockExpiry': null
+        });
+      } else {
+        // Create document if it doesn't exist
+        await setDoc(userDocRef, {
+          preferences: {
+            pinTimeout: pinTimeout || 0
+          },
+          pinSettings: {
+            hash,
+            salt,
+            lastChanged: hash ? Date.now() : null,
+            attempts: 0,
+            lockExpiry: null
+          }
+        }, { merge: true });
       }
-    });
-    
-    setHasPin(!!hash);
-    setPinHash(hash);
-    setPinSalt(salt);
-    setPinAttempts(0);
-    setIsPinLocked(false);
-    setPinLockExpiry(null);
+      
+      setHasPin(!!hash);
+      setPinHash(hash);
+      setPinSalt(salt);
+      setPinAttempts(0);
+      setIsPinLocked(false);
+      setPinLockExpiry(null);
+    } catch (err) {
+      console.error("Error saving PIN settings:", err);
+      throw err;
+    }
   };
 
   // Update PIN attempts in Firestore
   const updatePinAttempts = async (attempts: number, lockExpiry: number | null = null) => {
-    if (!currentUser) return;
+    const userId = getUserId();
+    if (!userId) return;
     
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    
-    await updateDoc(userDocRef, {
-      'pinSettings.attempts': attempts,
-      'pinSettings.lockExpiry': lockExpiry
-    });
-    
-    setPinAttempts(attempts);
-    setPinLockExpiry(lockExpiry);
-    setIsPinLocked(!!lockExpiry && lockExpiry > Date.now());
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      
+      // Check if document exists first
+      const docSnap = await getDoc(userDocRef);
+      
+      if (docSnap.exists()) {
+        await updateDoc(userDocRef, {
+          'pinSettings.attempts': attempts,
+          'pinSettings.lockExpiry': lockExpiry
+        });
+      } else {
+        // Create document with default values if it doesn't exist
+        await setDoc(userDocRef, {
+          preferences: {
+            pinTimeout: pinTimeout || 0
+          },
+          pinSettings: {
+            hash: null,
+            salt: null,
+            lastChanged: null,
+            attempts: attempts,
+            lockExpiry: lockExpiry
+          }
+        }, { merge: true });
+      }
+      
+      setPinAttempts(attempts);
+      setPinLockExpiry(lockExpiry);
+      setIsPinLocked(!!lockExpiry && lockExpiry > Date.now());
+    } catch (err) {
+      console.error("Error updating PIN attempts:", err);
+    }
   };
 
   // Reset PIN attempts
   const resetPinAttempts = async () => {
-    if (!currentUser) return;
+    const userId = getUserId();
+    if (!userId) return;
     
     await updatePinAttempts(0, null);
   };
 
   // Create a new PIN
   const createPin = async (pin: string): Promise<boolean> => {
-    if (!currentUser) throw new Error('User not authenticated');
+    if (!isAuthenticated()) {
+      setError('User not authenticated');
+      return false;
+    }
     
     try {
       const salt = generateSalt();
@@ -209,7 +298,10 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Change existing PIN
   const changePin = async (oldPin: string, newPin: string): Promise<boolean> => {
-    if (!currentUser || !pinHash || !pinSalt) return false;
+    if (!isAuthenticated() || !pinHash || !pinSalt) {
+      setError('User not authenticated or PIN not set');
+      return false;
+    }
     
     try {
       // Verify old PIN
@@ -244,7 +336,10 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Delete PIN
   const deletePin = async (pin: string): Promise<boolean> => {
-    if (!currentUser || !pinHash || !pinSalt) return false;
+    if (!isAuthenticated() || !pinHash || !pinSalt) {
+      setError('User not authenticated or PIN not set');
+      return false;
+    }
     
     try {
       // Verify PIN before deletion
@@ -278,7 +373,10 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Verify a PIN value
   const verifyPinValue = async (pin: string): Promise<boolean> => {
-    if (!currentUser || !pinHash || !pinSalt) return false;
+    if (!isAuthenticated() || !pinHash || !pinSalt) {
+      setError('User not authenticated or PIN not set');
+      return false;
+    }
     
     // Check if PIN is locked
     if (isPinLocked) {
@@ -335,7 +433,8 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Save PIN timeout to Firestore
   const setPinTimeout = async (timeout: number) => {
-    if (!currentUser) {
+    const userId = getUserId();
+    if (!userId) {
       throw new Error('User not authenticated');
     }
     
@@ -343,10 +442,30 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setIsLoading(true);
       setError(null);
       
-      const userDocRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userDocRef, {
-        'preferences.pinTimeout': timeout
-      });
+      const userDocRef = doc(db, 'users', userId);
+      
+      // Check if document exists
+      const docSnap = await getDoc(userDocRef);
+      
+      if (docSnap.exists()) {
+        await updateDoc(userDocRef, {
+          'preferences.pinTimeout': timeout
+        });
+      } else {
+        // Create document if it doesn't exist
+        await setDoc(userDocRef, {
+          preferences: {
+            pinTimeout: timeout
+          },
+          pinSettings: {
+            hash: null,
+            salt: null,
+            attempts: 0,
+            lockExpiry: null,
+            lastChanged: null
+          }
+        }, { merge: true });
+      }
       
       setPinTimeoutState(timeout);
       
@@ -359,8 +478,6 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (isPinVerified && pinVerifiedAt) {
         setPinVerifiedAt(Date.now());
       }
-      
-      return;
     } catch (err) {
       console.error('Error saving PIN timeout:', err);
       setError('Failed to save PIN settings');
