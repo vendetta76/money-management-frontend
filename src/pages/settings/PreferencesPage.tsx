@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, createContext } from 'react';
 import {
   Box,
   Typography,
@@ -9,7 +9,6 @@ import {
   Button,
   CircularProgress,
   Paper,
-  Grid,
   IconButton,
   Tooltip,
   Divider,
@@ -17,11 +16,15 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { toast } from 'react-hot-toast';
-import { useLogoutTimeout } from '../../context/LogoutTimeoutContext';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LayoutShell from '../../layouts/LayoutShell';
+
+// Firebase imports
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { useAuth } from '../../context/AuthContext';
 
 const logoutOptions = [
   { label: 'Off', value: 0 },
@@ -31,19 +34,199 @@ const logoutOptions = [
   { label: '30 menit', value: 1800000 },
 ];
 
-// Interface for LogoutSetting props
-interface LogoutSettingProps {
-  value: number;
-  onChange: (value: number) => void;
-  isDisabled?: boolean;
+// Preferences state interface
+interface PreferencesState {
+  logoutTimeout: number;
+  // Add more preferences here as needed
 }
 
-// Simple component for the logout setting
-const LogoutSetting: React.FC<LogoutSettingProps> = ({ value, onChange, isDisabled }) => {
-  const handleChange = (e: SelectChangeEvent<number>) => {
-    onChange(Number(e.target.value));
-  };
+// Context type definition
+interface PreferencesContextType {
+  preferences: PreferencesState;
+  updatePreference: (key: keyof PreferencesState, value: any) => void;
+  saveAllPreferences: () => Promise<void>;
+  isSaving: boolean;
+  isLoading: boolean;
+  hasChanges: boolean;
+  saveSuccess: boolean;
+}
 
+// Create context
+const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
+
+// Provider component
+const PreferencesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentUser } = useAuth();
+  
+  // Default preferences
+  const defaultPreferences: PreferencesState = {
+    logoutTimeout: 0,
+  };
+  
+  // State
+  const [preferences, setPreferences] = useState<PreferencesState>(defaultPreferences);
+  const [originalPreferences, setOriginalPreferences] = useState<PreferencesState>(defaultPreferences);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  // Check for changes
+  const hasChanges = JSON.stringify(preferences) !== JSON.stringify(originalPreferences);
+
+  // Load preferences from Firestore
+  useEffect(() => {
+    const loadPreferences = async () => {
+      if (!currentUser) return;
+      
+      try {
+        setIsLoading(true);
+        
+        // Get user document from Firestore
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const userPrefs = userData.preferences || defaultPreferences;
+          
+          setPreferences(userPrefs);
+          setOriginalPreferences(userPrefs);
+        } else {
+          // Create default preferences if user doc doesn't exist
+          console.log("User document not found, using defaults");
+          setPreferences(defaultPreferences);
+          setOriginalPreferences(defaultPreferences);
+        }
+      } catch (error) {
+        console.error("Error loading preferences:", error);
+        toast.error("Gagal memuat preferensi");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadPreferences();
+  }, [currentUser]);
+  
+  // Clear success message after delay
+  useEffect(() => {
+    if (saveSuccess) {
+      const timer = setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveSuccess]);
+  
+  // Update single preference
+  const updatePreference = (key: keyof PreferencesState, value: any) => {
+    setPreferences(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+  
+  // Save all preferences to Firestore
+  const saveAllPreferences = async () => {
+    if (!currentUser || !hasChanges) return;
+    
+    setIsSaving(true);
+    
+    try {
+      // Reference to user document
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      
+      // Update preferences in Firestore
+      await updateDoc(userDocRef, {
+        preferences: preferences
+      });
+      
+      // Update local state
+      setOriginalPreferences({...preferences});
+      setSaveSuccess(true);
+      toast.success("Preferensi berhasil disimpan");
+      
+      // Setup auto logout if enabled
+      setupAutoLogout(preferences.logoutTimeout);
+      
+    } catch (error) {
+      console.error("Error saving preferences:", error);
+      toast.error("Gagal menyimpan preferensi");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  // Helper to set up auto logout
+  const setupAutoLogout = (timeout: number) => {
+    if (window.logoutTimer) {
+      clearTimeout(window.logoutTimer);
+      window.logoutTimer = null;
+    }
+    
+    // Remove existing listeners
+    ["mousedown", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
+      document.removeEventListener(event, window.resetLogoutTimer, true);
+    });
+    
+    // Only set up new timer if timeout is positive
+    if (timeout > 0) {
+      window.resetLogoutTimer = function() {
+        if (window.logoutTimer) {
+          clearTimeout(window.logoutTimer);
+        }
+        window.logoutTimer = setTimeout(() => {
+          // Call your logout function here
+          // For example: auth.signOut();
+          console.log("Auto logout triggered after inactivity");
+        }, timeout);
+      };
+      
+      // Initial setup
+      window.resetLogoutTimer();
+      
+      // Add event listeners
+      ["mousedown", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
+        document.addEventListener(event, window.resetLogoutTimer, true);
+      });
+    }
+  };
+  
+  // Context value
+  const contextValue: PreferencesContextType = {
+    preferences,
+    updatePreference,
+    saveAllPreferences,
+    isSaving,
+    isLoading,
+    hasChanges,
+    saveSuccess
+  };
+  
+  return (
+    <PreferencesContext.Provider value={contextValue}>
+      {children}
+    </PreferencesContext.Provider>
+  );
+};
+
+// Custom hook
+const usePreferences = () => {
+  const context = useContext(PreferencesContext);
+  if (context === undefined) {
+    throw new Error('usePreferences must be used within a PreferencesProvider');
+  }
+  return context;
+};
+
+// Logout Setting Component
+const LogoutSetting: React.FC = () => {
+  const { preferences, updatePreference, isLoading } = usePreferences();
+  
+  const handleChange = (e: SelectChangeEvent<number>) => {
+    updatePreference('logoutTimeout', Number(e.target.value));
+  };
+  
   return (
     <Paper
       elevation={0}
@@ -90,10 +273,10 @@ const LogoutSetting: React.FC<LogoutSettingProps> = ({ value, onChange, isDisabl
           </InputLabel>
           <Select
             labelId="logout-select-label"
-            value={value}
+            value={preferences.logoutTimeout}
             label="Durasi Logout"
             onChange={handleChange}
-            disabled={isDisabled}
+            disabled={isLoading}
           >
             {logoutOptions.map(({ label, value }) => (
               <MenuItem key={value} value={value}>
@@ -107,190 +290,94 @@ const LogoutSetting: React.FC<LogoutSettingProps> = ({ value, onChange, isDisabl
   );
 };
 
-// Add more setting components as needed
-// Example:
-/*
-interface OtherSettingProps {
-  value: string;
-  onChange: (value: string) => void;
-  isDisabled?: boolean;
-}
-
-const OtherSetting: React.FC<OtherSettingProps> = ({ value, onChange, isDisabled }) => {
-  // Implementation
-};
-*/
-
-// Main preferences page with global state management
-const PreferencesPage: React.FC = () => {
-  const { logoutTimeout, setLogoutTimeout, isLoading } = useLogoutTimeout();
+// Global Save Button
+const GlobalSaveButton: React.FC = () => {
+  const { saveAllPreferences, isSaving, hasChanges, saveSuccess } = usePreferences();
   
-  // Global state for all settings
-  const [settings, setSettings] = useState({
-    logoutTimeout: logoutTimeout || 0,
-    // Add more settings here as you implement new features
-    // example: theme: 'light',
-    // example: notifications: true,
-  });
-  
-  // Track if settings have changed from saved values
-  const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // Update settings when initial values load
-  useEffect(() => {
-    if (logoutTimeout !== undefined) {
-      setSettings(prev => ({
-        ...prev,
-        logoutTimeout
-      }));
-    }
-  }, [logoutTimeout]);
-
-  // Update hasChanges when settings change
-  useEffect(() => {
-    if (logoutTimeout !== undefined) {
-      setHasChanges(settings.logoutTimeout !== logoutTimeout);
-    }
-  }, [settings, logoutTimeout]);
-
-  // Reset success message after delay
-  useEffect(() => {
-    if (saveSuccess) {
-      const timer = setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [saveSuccess]);
-
-  // Handle setting changes
-  const handleLogoutTimeoutChange = (value: number) => {
-    setSettings(prev => ({
-      ...prev,
-      logoutTimeout: value
-    }));
-  };
-
-  // Handle save all settings
-  const handleSaveAll = async () => {
-    setIsSaving(true);
-    
-    try {
-      // Save logout timeout
-      await setLogoutTimeout(settings.logoutTimeout);
-      
-      // Save other settings as you add them
-      // await setOtherSetting(settings.otherSetting);
-      
-      toast.success('Semua preferensi berhasil disimpan');
-      setSaveSuccess(true);
-      setHasChanges(false);
-    } catch (error) {
-      console.error("Error menyimpan preferensi:", error);
-      toast.error('Gagal menyimpan preferensi');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (isLoading && logoutTimeout === undefined) {
-    return (
-      <LayoutShell>
-        <Container maxWidth="md">
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            minHeight: '50vh' 
-          }}>
-            <CircularProgress size={60} thickness={4} />
-            <Typography variant="h6" mt={3} color="text.secondary">
-              Memuat preferensi...
-            </Typography>
-          </Box>
-        </Container>
-      </LayoutShell>
-    );
-  }
-
   return (
-    <LayoutShell>
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Typography 
-          variant="h4" 
-          sx={{ 
-            fontWeight: 500, 
-            mb: 2 
-          }}
-        >
-          Preferensi
-        </Typography>
-        
-        <Typography 
-          variant="subtitle1" 
-          sx={{ 
-            color: 'text.secondary',
-            mb: 4,
-          }}
-        >
-          Kelola pengaturan aplikasi Anda untuk pengalaman yang lebih personal
-        </Typography>
-        
-        <Divider sx={{ mb: 4 }} />
-        
-        <Box sx={{ mb: 4 }}>
-          {/* Logout setting */}
-          <LogoutSetting 
-            value={settings.logoutTimeout} 
-            onChange={handleLogoutTimeoutChange}
-            isDisabled={isSaving}
-          />
-          
-          {/* Add more settings here as you implement them */}
-          {/* <OtherSetting value={settings.otherValue} onChange={handleOtherChange} isDisabled={isSaving} /> */}
-        </Box>
-        
-        {/* Fixed action bar at the bottom */}
-        <Paper 
-          elevation={3}
-          sx={{
-            position: 'sticky',
-            bottom: 20,
-            left: 0,
-            right: 0,
-            p: 2,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            borderRadius: 2,
-            zIndex: 10,
-            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={handleSaveAll}
-            disabled={!hasChanges || isSaving}
-            size="large"
-            sx={{
-              textTransform: 'uppercase',
-              minWidth: 120,
-              px: 3,
-              py: 1
-            }}
-            startIcon={isSaving ? 
-              <CircularProgress size={20} color="inherit" /> : 
-              (saveSuccess ? <CheckCircleIcon /> : <SaveIcon />)
-            }
-          >
-            {isSaving ? 'Menyimpan...' : saveSuccess ? 'TERSIMPAN' : 'SIMPAN'}
-          </Button>
-        </Paper>
-      </Container>
-    </LayoutShell>
+    <Paper 
+      elevation={3}
+      sx={{
+        position: 'sticky',
+        bottom: 20,
+        left: 0,
+        right: 0,
+        p: 2,
+        display: 'flex',
+        justifyContent: 'flex-end',
+        borderRadius: 2,
+        zIndex: 10,
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+      }}
+    >
+      <Button
+        variant="contained"
+        onClick={saveAllPreferences}
+        disabled={!hasChanges || isSaving}
+        size="large"
+        sx={{
+          textTransform: 'uppercase',
+          minWidth: 120,
+          px: 3,
+          py: 1
+        }}
+        startIcon={isSaving ? 
+          <CircularProgress size={20} color="inherit" /> : 
+          (saveSuccess ? <CheckCircleIcon /> : <SaveIcon />)
+        }
+      >
+        {isSaving ? 'Menyimpan...' : saveSuccess ? 'TERSIMPAN' : 'SIMPAN'}
+      </Button>
+    </Paper>
   );
 };
+
+// Main Preferences Page
+const PreferencesPage: React.FC = () => {
+  return (
+    <PreferencesProvider>
+      <LayoutShell>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              fontWeight: 500, 
+              mb: 2 
+            }}
+          >
+            Preferensi
+          </Typography>
+          
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              color: 'text.secondary',
+              mb: 4,
+            }}
+          >
+            Kelola pengaturan aplikasi Anda untuk pengalaman yang lebih personal
+          </Typography>
+          
+          <Divider sx={{ mb: 4 }} />
+          
+          <Box sx={{ mb: 4 }}>
+            <LogoutSetting />
+            {/* Add more settings here as needed */}
+          </Box>
+          
+          <GlobalSaveButton />
+        </Container>
+      </LayoutShell>
+    </PreferencesProvider>
+  );
+};
+
+// TypeScript type declarations
+declare global {
+  interface Window {
+    logoutTimer: ReturnType<typeof setTimeout> | null;
+    resetLogoutTimer: () => void;
+  }
+}
 
 export default PreferencesPage;
