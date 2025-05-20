@@ -40,7 +40,10 @@ const WalletPage: React.FC = () => {
   const { locked, message, isBypassed } = useIsBypassed("wallet");
   
   // Use the PIN timeout context
-  const { pinTimeout, isPinVerified, verifyPin, lockPin } = usePinTimeout();
+  const { pinTimeout, isPinVerified, verifyPin, lockPin, hasPin } = usePinTimeout();
+  
+  // State to control whether the PIN is currently verified (session-based)
+  const [canLock, setCanLock] = useState(false);
   
   // Original wallet state
   const [wallets, setWallets] = useState<WalletData[]>([]);
@@ -53,6 +56,15 @@ const WalletPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [recalcLoading, setRecalcLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Update canLock state when PIN status changes
+  useEffect(() => {
+    // Can lock if:
+    // 1. PIN is set (hasPin) 
+    // 2. PIN timeout is enabled (pinTimeout > 0)
+    // 3. PIN has been verified in this session (isPinVerified)
+    setCanLock(hasPin && pinTimeout !== 0 && pinTimeout !== undefined && isPinVerified);
+  }, [hasPin, pinTimeout, isPinVerified]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -97,14 +109,19 @@ const WalletPage: React.FC = () => {
     });
   }, [wallets]);
 
-  // Handle PIN verification
+  // Handle PIN verification - also update canLock
   const handlePinVerify = () => {
     verifyPin();
+    setCanLock(true);
   };
 
-  // Handle manual lock - just lock without toast
+  // Handle manual lock
   const handleManualLock = () => {
-    lockPin();
+    if (canLock) {
+      lockPin();
+      setCanLock(false);
+      console.log("Manual lock triggered");
+    }
   };
 
   const walletMap = Object.fromEntries(wallets.map((w) => [w.id, w]));
@@ -140,7 +157,7 @@ const WalletPage: React.FC = () => {
         className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300"
       >
         {/* PIN Lock Overlay - Show when PIN is not verified */}
-        {!isPinVerified && pinTimeout !== 0 && (
+        {!isPinVerified && hasPin && pinTimeout !== 0 && (
           <PinEntryModal onPinVerify={handlePinVerify} />
         )}
       
@@ -169,20 +186,22 @@ const WalletPage: React.FC = () => {
                 <span className="text-sm">{showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}</span>
               </button>
               
-              {/* Lock Button - Always show it */}
-              <button
-                onClick={handleManualLock}
-                disabled={!isPinVerified || pinTimeout === 0}
-                className={`flex items-center border border-gray-300 rounded-md py-1 px-2 ${
-                  isPinVerified && pinTimeout !== 0
-                    ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
-                    : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                }`}
-                title={isPinVerified && pinTimeout !== 0 ? "Kunci Dompet" : "PIN tidak aktif"}
-                aria-label="Kunci Dompet"
-              >
-                <Lock size={16} />
-              </button>
+              {/* Lock Button - Only show if PIN is set */}
+              {hasPin && (
+                <button
+                  onClick={handleManualLock}
+                  disabled={!canLock}
+                  className={`flex items-center border rounded-md py-1 px-2 ${
+                    canLock
+                      ? 'border-gray-300 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
+                      : 'border-gray-200 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                  }`}
+                  title={canLock ? "Kunci Dompet" : "Dompet terkunci atau PIN tidak aktif"}
+                  aria-label="Kunci Dompet"
+                >
+                  <Lock size={16} />
+                </button>
+              )}
               
               <RecalcButtonWithTooltip
                 userId={user?.uid || ""}
