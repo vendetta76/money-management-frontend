@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import LayoutShell from "../../layouts/LayoutShell";
-import PinManagement from "../components/security/PinManagement";
+import PinManagement from "./components/security/PinManagement";
 import {
   Box,
   Button,
