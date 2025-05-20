@@ -23,15 +23,27 @@
 
     <!-- Inject class dark SEBELUM React jalan -->
     <script>
-      try {
-        const theme = localStorage.getItem("theme");
-        if (theme === "dark") {
-          document.documentElement.classList.add("dark");
-        }
-      } catch (e) {
-        console.warn("Gagal baca tema dari localStorage:", e);
+  try {
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (savedTheme === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      // fallback: baca preferensi dari sistem
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
       }
-    </script>
+    }
+  } catch (e) {
+    console.warn("Gagal baca tema dari localStorage:", e);
+  }
+</script>
+
 
     <script type="module" src="/src/main.tsx"></script>
   </body>

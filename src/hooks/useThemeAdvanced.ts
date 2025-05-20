@@ -4,36 +4,46 @@ export type ThemeMode = "system" | "light" | "dark" | "original" | "warm"
 
 export const useTheme = () => {
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    return (localStorage.getItem("theme") as ThemeMode) || "system"
+    try {
+      return (localStorage.getItem("theme") as ThemeMode) || "system"
+    } catch (e) {
+      console.warn("⚠️ Gagal ambil theme dari localStorage:", e)
+      return "system"
+    }
   })
 
   useEffect(() => {
     const root = document.documentElement
 
-    // Reset all theme classes first
-    root.classList.remove("original", "warm", "dark")
+    // Reset semua class theme
+    root.classList.remove("original", "warm", "dark", "system")
 
-    // Apply theme-specific classes
-    if (theme === "system") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      root.classList.toggle("dark", prefersDark)
-    } else {
-      // Apply dark class explicitly for dark theme
-      if (theme === "dark") {
-        root.classList.add("dark")
+    const applyTheme = (mode: ThemeMode) => {
+      if (mode === "system") {
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+        root.classList.add("system") // optional class, bisa dihapus kalau nggak perlu
+        root.classList.toggle("dark", prefersDark)
+        return
       }
-      
-      // Apply theme-specific classes
-      if (theme === "original") root.classList.add("original")
-      if (theme === "warm") root.classList.add("warm")
+
+      if (mode === "dark") root.classList.add("dark")
+      if (mode === "original") root.classList.add("original")
+      if (mode === "warm") root.classList.add("warm")
+      // "light" mode: no class added
     }
 
-    // Force a repaint to ensure all elements update
-    document.body.style.display = 'none'
-    document.body.offsetHeight // Trigger a reflow
-    document.body.style.display = ''
+    applyTheme(theme)
 
-    localStorage.setItem("theme", theme)
+    // Tailwind repaint fix
+    document.body.style.display = "none"
+    document.body.offsetHeight
+    document.body.style.display = ""
+
+    try {
+      localStorage.setItem("theme", theme)
+    } catch (e) {
+      console.warn("⚠️ Gagal simpan theme ke localStorage:", e)
+    }
   }, [theme])
 
   const setThemeMode = (mode: ThemeMode) => {
