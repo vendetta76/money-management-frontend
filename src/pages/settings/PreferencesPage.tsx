@@ -21,7 +21,7 @@ import LayoutShell from '../../layouts/LayoutShell';
 
 // Firebase imports
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { db } from './../lib/firebaseClient';
 import { useAuth } from '../../context/AuthContext';
 
 // Styled components
