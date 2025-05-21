@@ -205,18 +205,9 @@ const LoginPage = () => {
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-sm font-medium" htmlFor="password">
-                    Password
-                  </label>
-                  <button 
-                    type="button" 
-                    onClick={handleResetPassword}
-                    className="text-sm text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
+                <label className="block text-sm font-medium mb-1.5" htmlFor="password">
+                  Password
+                </label>
                 <div className="relative">
                   <input
                     id="password"
@@ -269,10 +260,21 @@ const LoginPage = () => {
           </form>
 
           <div className="text-center pt-4 text-sm">
-            <span className="text-muted-foreground">Don't have an account?</span>{" "}
-            <a href="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
-              Sign up
-            </a>
+            <div className="mb-2">
+              <span className="text-muted-foreground">Don't have an account?</span>{" "}
+              <a href="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
+                Sign up
+              </a>
+            </div>
+            <div>
+              <button 
+                type="button" 
+                onClick={handleResetPassword}
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
         </div>
       </div>
