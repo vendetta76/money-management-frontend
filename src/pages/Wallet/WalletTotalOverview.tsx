@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { formatCurrency } from "@helpers/formatCurrency";
-import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard } from "lucide-react";
+import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Star, StarOff, Settings, Loader } from "lucide-react";
 import CountUp from "react-countup";
+import { useAuth } from "@context/AuthContext";
+import { db } from "@lib/firebaseClient";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { toast } from "react-hot-toast";
 
 interface WalletTotalOverviewProps {
   totalsByCurrency: Record<string, number>;
@@ -12,8 +16,11 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   totalsByCurrency,
   showBalance,
 }) => {
+  const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   // Sort currencies by balance
   const sortedCurrencies = Object.entries(totalsByCurrency)
@@ -22,16 +29,98 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   // Get total count of currencies
   const currencyCount = sortedCurrencies.length;
   
-  // Get dominant currency
-  const dominantCurrency = sortedCurrencies[0]?.[0] || "";
-  const dominantAmount = sortedCurrencies[0]?.[1] || 0;
+  // Default to highest balance currency
+  const defaultCurrency = sortedCurrencies[0]?.[0] || "";
+  
+  // State for primary currency
+  const [primaryCurrency, setPrimaryCurrency] = useState<string>(defaultCurrency);
+  
+  // Load primary currency preference from Firestore on mount
+  useEffect(() => {
+    const loadPrimaryCurrency = async () => {
+      if (!user?.uid) return;
+      
+      try {
+        setLoading(true);
+        const userPrefsRef = doc(db, "users", user.uid, "preferences", "currency");
+        const prefsSnap = await getDoc(userPrefsRef);
+        
+        if (prefsSnap.exists()) {
+          const { primaryCurrency } = prefsSnap.data();
+          // Only set if the currency still exists in the wallet
+          if (primaryCurrency && totalsByCurrency[primaryCurrency] !== undefined) {
+            setPrimaryCurrency(primaryCurrency);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading primary currency:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadPrimaryCurrency();
+  }, [user?.uid, totalsByCurrency]);
+  
+  // Update primary currency whenever totalsByCurrency changes and current selection is no longer valid
+  useEffect(() => {
+    if (sortedCurrencies.length > 0 && !totalsByCurrency[primaryCurrency]) {
+      setPrimaryCurrency(sortedCurrencies[0][0]);
+      savePrimaryCurrency(sortedCurrencies[0][0]);
+    }
+  }, [totalsByCurrency, primaryCurrency]);
+  
+  // Save primary currency preference to Firestore
+  const savePrimaryCurrency = async (currency: string) => {
+    if (!user?.uid) return;
+    
+    try {
+      setLoading(true);
+      const userPrefsRef = doc(db, "users", user.uid, "preferences", "currency");
+      
+      await setDoc(userPrefsRef, {
+        primaryCurrency: currency,
+        updatedAt: new Date()
+      }, { merge: true });
+      
+    } catch (error) {
+      console.error("Error saving primary currency:", error);
+      toast.error("Gagal menyimpan pengaturan mata uang");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Get primary currency amount
+  const primaryAmount = totalsByCurrency[primaryCurrency] || 0;
   
   // Create currency groups for compact display
-  const mainCurrencies = sortedCurrencies.slice(0, 3);
-  const otherCurrencies = sortedCurrencies.slice(3);
+  const getPrimaryCurrencyIndex = () => {
+    return sortedCurrencies.findIndex(([curr]) => curr === primaryCurrency);
+  };
+  
+  // Reorder currencies to show primary currency first, then others by balance
+  const reorderedCurrencies = [...sortedCurrencies];
+  const primaryIndex = getPrimaryCurrencyIndex();
+  
+  if (primaryIndex > 0) {
+    const [primaryItem] = reorderedCurrencies.splice(primaryIndex, 1);
+    reorderedCurrencies.unshift(primaryItem);
+  }
+  
+  const mainCurrencies = reorderedCurrencies.slice(0, 3);
+  const otherCurrencies = reorderedCurrencies.slice(3);
   
   // Compute total of all currencies
   const totalSum = Object.values(totalsByCurrency).reduce((sum, val) => sum + val, 0);
+  
+  // Handle primary currency change
+  const handleSetPrimary = (currency: string) => {
+    setPrimaryCurrency(currency);
+    savePrimaryCurrency(currency);
+    // Close settings after change
+    setShowSettings(false);
+  };
   
   if (isMinimized) {
     return (
@@ -52,11 +141,11 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
               <div className="text-lg font-bold">
                 <span className="text-gray-400 dark:text-gray-500 mr-1">~</span>
                 <CountUp
-                  end={dominantAmount}
+                  end={primaryAmount}
                   duration={1.2}
                   separator="," 
                   decimals={0}
-                  prefix={formatCurrency(0, dominantCurrency).replace(/\d+([.,]\d+)?/, "")}
+                  prefix={formatCurrency(0, primaryCurrency).replace(/\d+([.,]\d+)?/, "")}
                 />
                 <span className="text-sm text-gray-500 dark:text-gray-400 ml-1 font-normal">
                   + {currencyCount - 1} more
@@ -72,17 +161,79 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   }
   
   return (
-    <div className="mb-6">
+    <div className="mb-6 relative">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">💰 Total Saldo per Mata Uang</h2>
-        <button 
-          onClick={() => setIsMinimized(true)}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          title="Minimize to floating widget"
-        >
-          <X size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowSettings(!showSettings)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            title="Currency Settings"
+          >
+            <Settings size={18} />
+          </button>
+          <button 
+            onClick={() => setIsMinimized(true)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            title="Minimize to floating widget"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
+      
+      {/* Currency Settings Popover */}
+      {showSettings && (
+        <div className="absolute right-0 top-12 w-72 bg-white dark:bg-zinc-800 shadow-lg rounded-lg z-10 border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <h3 className="font-medium text-gray-700 dark:text-gray-200">Currency Settings</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Set your primary currency for summaries
+            </p>
+          </div>
+          
+          <div className="p-2 max-h-60 overflow-y-auto">
+            {sortedCurrencies.map(([currency, amount]) => (
+              <div 
+                key={currency}
+                className={`flex justify-between items-center p-2 rounded-md cursor-pointer
+                  ${currency === primaryCurrency 
+                    ? 'bg-indigo-50 dark:bg-indigo-900/30' 
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                onClick={() => handleSetPrimary(currency)}
+              >
+                <div className="flex items-center">
+                  {currency === primaryCurrency ? (
+                    <Star size={16} className="text-yellow-500 mr-2" />
+                  ) : (
+                    <StarOff size={16} className="text-gray-400 mr-2" />
+                  )}
+                  <span className="font-medium">{currency}</span>
+                </div>
+                {showBalance && (
+                  <span className="text-gray-600 dark:text-gray-300 text-sm">
+                    {formatCurrency(amount, currency)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <div className="p-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+            {loading && (
+              <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                <Loader size={12} className="animate-spin mr-1" /> Saving...
+              </div>
+            )}
+            <button 
+              className="ml-auto py-1.5 px-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              onClick={() => setShowSettings(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Main summary card */}
       <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-md overflow-hidden">
@@ -99,35 +250,50 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
           </div>
           
           {/* Primary currency highlight */}
-          {dominantCurrency && (
-            <div className="mt-2">
-              <div className="text-xs font-medium text-indigo-200">Primary Currency</div>
-              <div className="flex items-baseline">
-                <div className="text-2xl font-bold mr-2">
-                  {dominantCurrency}
+          {primaryCurrency && (
+            <div className="mt-3 p-3 bg-white/10 backdrop-blur-sm rounded-lg">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center">
+                    <Star size={14} className="text-yellow-300 mr-1.5" />
+                    <div className="text-xs font-medium text-indigo-200">Primary Currency</div>
+                  </div>
+                  <div className="text-2xl font-bold mt-1">
+                    {primaryCurrency}
+                  </div>
                 </div>
+                
                 {showBalance ? (
                   <div className="text-xl font-medium">
                     <CountUp
-                      end={dominantAmount}
+                      end={primaryAmount}
                       duration={1.2}
                       separator="," 
                       decimals={0}
-                      prefix={formatCurrency(0, dominantCurrency).replace(/\d+([.,]\d+)?/, "")}
+                      prefix={formatCurrency(0, primaryCurrency).replace(/\d+([.,]\d+)?/, "")}
                     />
                   </div>
                 ) : (
                   <div className="text-xl font-medium">••••••</div>
                 )}
               </div>
+              
+              {showBalance && (
+                <div className="mt-2 text-xs text-indigo-200">
+                  {Math.round((primaryAmount / totalSum) * 100)}% of your total balance
+                </div>
+              )}
             </div>
           )}
           
           {/* Quick totals */}
           {mainCurrencies.length > 1 && (
             <div className="flex flex-wrap gap-2 mt-3">
-              {mainCurrencies.slice(1, 3).map(([currency, total]) => (
-                <div key={currency} className="bg-white/10 rounded-lg px-3 py-1">
+              {mainCurrencies
+                .filter(([currency]) => currency !== primaryCurrency)
+                .slice(0, 2)
+                .map(([currency, total]) => (
+                <div key={currency} className="bg-white/10 rounded-lg px-3 py-1.5 flex-1">
                   <div className="text-xs font-medium">{currency}</div>
                   {showBalance ? (
                     <div className="text-sm font-bold">
@@ -146,7 +312,7 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
               ))}
               
               {otherCurrencies.length > 0 && (
-                <div className="bg-white/10 rounded-lg px-3 py-1">
+                <div className="bg-white/10 rounded-lg px-3 py-1.5 flex-1">
                   <div className="text-xs font-medium">Others</div>
                   {showBalance ? (
                     <div className="text-sm font-bold">
@@ -184,15 +350,39 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
                 {sortedCurrencies.map(([currency, total]) => (
                   <div 
                     key={currency}
-                    className="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className={`flex justify-between items-center p-2 rounded-lg ${
+                      currency === primaryCurrency 
+                        ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800' 
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
                   >
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 mr-3">
-                        {currency.slice(0, 1)}
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                        currency === primaryCurrency
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                      }`}>
+                        {currency === primaryCurrency ? (
+                          <Star size={16} />
+                        ) : (
+                          currency.slice(0, 1)
+                        )}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
+                        <div className="font-medium text-gray-900 dark:text-white flex items-center">
                           {currency}
+                          {currency !== primaryCurrency && (
+                            <button
+                              className="ml-2 p-1 text-gray-400 hover:text-yellow-500 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSetPrimary(currency);
+                              }}
+                              title="Set as primary currency"
+                            >
+                              <StarOff size={14} />
+                            </button>
+                          )}
                         </div>
                         {showBalance && (
                           <div className="text-xs text-gray-500 dark:text-gray-400">
