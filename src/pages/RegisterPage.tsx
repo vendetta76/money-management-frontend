@@ -70,22 +70,24 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div
-        className={`w-full max-w-xl transition-all duration-500 ${
+        className={`w-full max-w-md transition-all duration-500 ${
           formVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
         <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-lg">
-          {/* Gambar atas full lebar */}
-          <div className="w-full h-52 sm:h-64 md:h-72 lg:h-80 bg-muted overflow-hidden">
-            <img
-              src="/assets/kucing-cuan.webp" // <- Ganti path sesuai file kamu
-              alt="MoniQ Banner"
-              className="w-full h-full object-cover"
-            />
+          {/* Cat image in the middle top */}
+          <div className="flex justify-center mt-6 mb-2">
+            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-background">
+              <img
+                src="/assets/attack-on catan.png"
+                alt="MoniQ Cat"
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
 
           {/* Form Section */}
-          <div className="p-8">
+          <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <button
                 onClick={() => navigate(-1)}
@@ -112,7 +114,7 @@ const RegisterPage = () => {
               </div>
             )}
 
-            <form onSubmit={handleRegister} className="space-y-5">
+            <form onSubmit={handleRegister} className="space-y-4">
               {/* Full Name Field */}
               <div
                 className="transition-all duration-300 delay-100"
