@@ -29,14 +29,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userMeta, setUserMeta] = useState<UserMeta | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Refs for tracking listeners that need cleanup
-  const firestoreListenersRef = useRef<Array<() => void>>([]);
-  const authListenerRef = useRef<() => void | null>(null);
+  // State to track sign-out sequence
   const isSigningOutRef = useRef(false);
-  
-  // Track whether component is mounted
+  const lastSignOutTimeRef = useRef(0);
+  const authStateChangedTimeRef = useRef(0);
+  const firestoreListenersRef = useRef<Array<() => void>>([]);
+  const authListenerRef = useRef<(() => void) | null>(null);
   const isMountedRef = useRef(true);
-
+  const authDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Clean up function for all listeners
   const cleanupAllListeners = () => {
     console.log("🧹 Cleaning up all listeners");
@@ -51,113 +52,85 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
     firestoreListenersRef.current = [];
     
-    // Clear Auth listener
-    if (authListenerRef.current) {
-      try {
-        authListenerRef.current();
-        authListenerRef.current = null;
-      } catch (e) {
-        console.error("Error unsubscribing from Auth:", e);
-      }
+    // Clear auth state change debounce timer
+    if (authDebounceTimerRef.current) {
+      clearTimeout(authDebounceTimerRef.current);
+      authDebounceTimerRef.current = null;
     }
   };
 
-  useEffect(() => {
-    // Set mounted flag
-    isMountedRef.current = true;
+  // Process user data from Firestore with better error handling
+  const processUserData = async (userId: string, hasAdminClaim: boolean) => {
+    if (!isMountedRef.current) return;
     
-    // Set up auth change listener
-    authListenerRef.current = onAuthStateChanged(auth, async (currentUser) => {
-      if (!isMountedRef.current) return;
+    try {
+      const userDocRef = doc(db, "users", userId);
       
-      // If we're in the process of signing out, don't process auth changes
-      if (isSigningOutRef.current) {
-        console.log("🚫 Ignoring auth change during signout");
-        return;
-      }
+      // Get initial data
+      const docSnap = await getDoc(userDocRef);
+      let userData: any = null;
       
-      if (currentUser) {
-        try {
-          await currentUser.reload();
-          const tokenResult = await currentUser.getIdTokenResult(true);
-          console.log("💠 Custom claims:", tokenResult.claims);
-          const hasAdminClaim = tokenResult.claims?.Admin === true;
-
-          if (isMountedRef.current) {
-            setUser(currentUser);
-            window.firebaseUser = currentUser;
-          }
-
-          const docRef = doc(db, "users", currentUser.uid);
-
-          try {
-            // First get initial data
-            const docSnap = await getDoc(docRef);
+      // Process user document
+      if (docSnap.exists()) {
+        userData = docSnap.data();
+        
+        // Set up real-time listener with a reference so we can clean it up
+        const unsubscribe = onSnapshot(
+          userDocRef,
+          (docSnap) => {
+            if (!isMountedRef.current) return;
             
             if (docSnap.exists()) {
-              processUserData(docSnap.data(), hasAdminClaim);
+              setUserMetaFromData(docSnap.data(), hasAdminClaim);
             } else {
-              console.log("✅ [AuthContext] new user, creating document");
-              const initialRole = hasAdminClaim ? "Admin" : "Regular";
-              await setDoc(docRef, { role: initialRole }, { merge: true });
-              if (isMountedRef.current) {
-                setUserMeta({ role: initialRole });
-              }
+              setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
             }
-            
-            // Then set up real-time listener
-            const unsubscribe = onSnapshot(
-              docRef,
-              (docSnap) => {
-                if (docSnap.exists()) {
-                  processUserData(docSnap.data(), hasAdminClaim);
-                } else {
-                  if (isMountedRef.current) {
-                    setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
-                  }
-                }
-              },
-              (error) => {
-                console.error("🔥 [AuthContext] Firestore listener error:", error);
-                if (isMountedRef.current) {
-                  setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
-                  setLoading(false);
-                }
-              }
-            );
-            
-            // Store the unsubscribe function
-            firestoreListenersRef.current.push(unsubscribe);
-          } catch (err) {
-            console.error("Error loading userMeta:", err);
+          },
+          (error) => {
+            console.error('🔥 [AuthContext] Firestore listener error:', error);
             if (isMountedRef.current) {
-              setUserMeta({ role: "Regular" });
+              setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
               setLoading(false);
             }
           }
-        } catch (err) {
-          console.error("Error refreshing user:", err);
+        );
+        
+        // Store the unsubscribe function
+        firestoreListenersRef.current.push(unsubscribe);
+        
+        // Process data initially
+        setUserMetaFromData(userData, hasAdminClaim);
+      } else {
+        // Create user document if it doesn't exist
+        const initialRole = hasAdminClaim ? "Admin" : "Regular";
+        try {
+          await setDoc(userDocRef, { role: initialRole }, { merge: true });
           if (isMountedRef.current) {
-            setUserMeta({ role: "Regular" });
+            setUserMeta({ role: initialRole });
+            setLoading(false);
+          }
+        } catch (err) {
+          console.error("Error creating user document:", err);
+          if (isMountedRef.current) {
+            setUserMeta({ role: initialRole });
             setLoading(false);
           }
         }
-      } else {
-        // Clean up listeners when user is null
-        cleanupAllListeners();
-        
-        if (isMountedRef.current) {
-          setUser(null);
-          setUserMeta(null);
-          setLoading(false);
-        }
       }
-    });
-
-    // Process user data from Firestore
-    const processUserData = (data: any, hasAdminClaim: boolean) => {
-      if (!isMountedRef.current) return;
-      
+    } catch (err) {
+      console.error("Error processing user data:", err);
+      if (isMountedRef.current) {
+        setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
+        setLoading(false);
+      }
+    }
+  };
+  
+  // Helper function to set user meta from Firestore data
+  const setUserMetaFromData = (data: any, hasAdminClaim: boolean) => {
+    if (!isMountedRef.current) return;
+    
+    try {
       let role: UserMeta["role"] = hasAdminClaim ? "Admin" : "Regular";
 
       const firestoreRole = data.role || "Regular";
@@ -165,10 +138,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (hasAdminClaim) {
         role = "Admin";
-        if (firestoreRole !== "Admin") {
-          setDoc(docRef, { role: "Admin" }, { merge: true })
-            .catch(err => console.error("Error updating admin role:", err));
-        }
       } else {
         role = allowedRoles.includes(firestoreRole) ? firestoreRole : "Regular";
       }
@@ -187,29 +156,133 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       console.log("✅ [AuthContext] user data processed:", { role, daysLeft });
       
-      if (isMountedRef.current) {
-        setUserMeta({ role, premiumStartDate, premiumEndDate, daysLeft, preferredCurrency });
-        setLoading(false);
-      }
-    };
+      setUserMeta({ role, premiumStartDate, premiumEndDate, daysLeft, preferredCurrency });
+      setLoading(false);
+    } catch (err) {
+      console.error("Error setting user meta:", err);
+      setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
+      setLoading(false);
+    }
+  };
 
-    // Cleanup function for component unmount
+  // Set up auth state change listener with debounce
+  useEffect(() => {
+    console.log("🔄 Setting up auth state change listener");
+    isMountedRef.current = true;
+    
+    // Clear any residual state
+    if (authListenerRef.current) {
+      authListenerRef.current();
+      authListenerRef.current = null;
+    }
+    
+    // Set up auth change listener with debounce
+    const handleAuthStateChanged = async (currentUser: User | null) => {
+      if (!isMountedRef.current) return;
+      
+      // Get the current time for debouncing
+      const now = Date.now();
+      authStateChangedTimeRef.current = now;
+      
+      // If we're signing out, don't process auth changes
+      if (isSigningOutRef.current) {
+        console.log("🚫 Ignoring auth state change during signout");
+        return;
+      }
+      
+      // Check if we processed a sign out recently to prevent bounce-back
+      if (lastSignOutTimeRef.current > 0 && now - lastSignOutTimeRef.current < 2000) {
+        console.log("⏳ Recent signout detected, debouncing auth state change");
+        return;
+      }
+      
+      // Clear previous debounce timer
+      if (authDebounceTimerRef.current) {
+        clearTimeout(authDebounceTimerRef.current);
+      }
+      
+      // Debounce auth state changes
+      authDebounceTimerRef.current = setTimeout(async () => {
+        // Make sure this is still the most recent auth state change
+        if (authStateChangedTimeRef.current !== now) return;
+        
+        if (currentUser) {
+          try {
+            // Set loading state while we process
+            if (isMountedRef.current) {
+              setLoading(true);
+            }
+            
+            await currentUser.reload();
+            const tokenResult = await currentUser.getIdTokenResult(true);
+            console.log("💠 Custom claims:", tokenResult.claims);
+            const hasAdminClaim = tokenResult.claims?.Admin === true;
+
+            if (isMountedRef.current) {
+              setUser(currentUser);
+              window.firebaseUser = currentUser;
+            }
+
+            // Process user data with new function
+            await processUserData(currentUser.uid, hasAdminClaim);
+          } catch (err) {
+            console.error("Error refreshing user:", err);
+            if (isMountedRef.current) {
+              setUserMeta({ role: "Regular" });
+              setLoading(false);
+            }
+          }
+        } else {
+          // Clean up listeners when user is null
+          cleanupAllListeners();
+          
+          if (isMountedRef.current) {
+            setUser(null);
+            setUserMeta(null);
+            setLoading(false);
+          }
+        }
+      }, 300); // Small debounce to prevent rapid changes
+    };
+    
+    // Set up the auth state listener
+    authListenerRef.current = onAuthStateChanged(auth, handleAuthStateChanged);
+    
+    // Cleanup on unmount
     return () => {
+      console.log("♻️ Component unmounted, cleanup");
       isMountedRef.current = false;
+      
+      // Clean up auth listener
+      if (authListenerRef.current) {
+        authListenerRef.current();
+        authListenerRef.current = null;
+      }
+      
+      // Clean up all Firestore listeners
       cleanupAllListeners();
     };
   }, []);
 
+  // Improved sign out function with rate limiting and better cleanup
   const signOut = async () => {
     console.log("🚪 [AuthContext] Sign out initiated");
     
-    // Prevent re-entrant signout
+    // Prevent multiple concurrent signouts
     if (isSigningOutRef.current) {
       console.log("🚫 Already signing out, ignoring duplicate request");
       return;
     }
     
+    // Rate limit sign outs to prevent rapid sign out/sign in cycles
+    const now = Date.now();
+    if (now - lastSignOutTimeRef.current < 2000) {
+      console.log("⏳ Sign out rate limited, too soon after previous sign out");
+      return;
+    }
+    
     isSigningOutRef.current = true;
+    lastSignOutTimeRef.current = now;
     
     try {
       // Store logout reason before clearing storage
@@ -223,23 +296,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.removeItem("lastActivityTime");
       localStorage.removeItem("logoutScheduledTime");
       
-      // Re-set the logout reason in case it was cleared
-      sessionStorage.setItem('logoutReason', reason);
-      
       // Clean up all listeners
       cleanupAllListeners();
       
-      // Small delay to ensure cleanup completes
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait a moment to ensure cleanup completes
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Re-set the logout reason in case it was cleared
+      sessionStorage.setItem('logoutReason', reason);
       
       // Sign out from Firebase auth
       await firebaseSignOut(auth);
+      
+      // Set user to null right away for more responsive UI
+      if (isMountedRef.current) {
+        setUser(null);
+        setUserMeta(null);
+      }
       
       console.log("✅ [AuthContext] Sign out completed successfully");
     } catch (err) {
       console.error("❌ [AuthContext] Error during sign out:", err);
       
-      // Try to clean up even if sign out fails
+      // Last resort cleanup
       try {
         cleanupAllListeners();
         await firebaseSignOut(auth);
@@ -247,7 +326,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error("Failed final cleanup attempt:", e);
       }
     } finally {
-      isSigningOutRef.current = false;
+      // Give enough time before allowing another sign-out
+      setTimeout(() => {
+        isSigningOutRef.current = false;
+      }, 1000);
     }
   };
 

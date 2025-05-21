@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, Home } from "lucide-react";
 import catMascot from "/assets/cat-hanging.png";
@@ -16,73 +16,94 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [formVisible, setFormVisible] = useState(false);
   const [isTimeoutLogout, setIsTimeoutLogout] = useState(false);
-  const [loginAttempts, setLoginAttempts] = useState(0);
-
+  const loginAttemptRef = useRef(0);
+  const processingAuthRef = useRef(false);
+  
+  // Clear session storage on component mount to break infinite loops
   useEffect(() => {
-    setTimeout(() => setFormVisible(true), 100);
+    // Reset any logout loop by clearing session storage
+    sessionStorage.clear();
+    localStorage.removeItem('logoutScheduledTime');
+    localStorage.removeItem('lastActivityTime');
     
-    // Check if the user was logged out due to timeout
+    // Now check if there was a timeout logout
     const logoutReason = sessionStorage.getItem('logoutReason');
     if (logoutReason === 'timeout') {
+      console.log("Detected timeout logout, resetting...");
       setError("Your session expired. Please login again.");
       setIsTimeoutLogout(true);
       sessionStorage.removeItem('logoutReason');
     }
+
+    setTimeout(() => setFormVisible(true), 100);
+    
+    // Ensure auth is in a clean state
+    return () => {
+      processingAuthRef.current = false;
+    };
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent multiple submission
+    if (processingAuthRef.current) {
+      console.log("Login already in progress, ignoring duplicate request");
+      return;
+    }
+
     setError("");
 
     if (!email || !password) {
       setError("Email and password are required");
       return;
     }
-
+    
     try {
-      // Set loading state before starting
+      // Set processing flag
+      processingAuthRef.current = true;
       setIsLoading(true);
       
-      // Implement increasing delay for each login attempt to prevent race conditions
-      // This helps ensure Firebase has time to clean up previous sessions
-      if (loginAttempts > 0 || isTimeoutLogout) {
-        const delay = Math.min(loginAttempts * 200 + (isTimeoutLogout ? 1000 : 0), 2000);
-        console.log(`Delaying login attempt by ${delay}ms`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+      // Increment login attempt counter
+      loginAttemptRef.current += 1;
       
-      // If we were logged out due to timeout, make sure all Firebase listeners are cleaned up
-      if (isTimeoutLogout) {
-        // Force a browser gc if possible
-        try {
-          if (window.gc) {
-            window.gc();
-          }
-        } catch (e) {
-          // Ignore if gc is not available
-        }
-        
-        // Clear auth state to ensure fresh auth
+      // Calculate delay based on attempts (increasing backoff)
+      const attemptDelay = Math.min(loginAttemptRef.current * 300, 2000);
+      console.log(`Login attempt ${loginAttemptRef.current} - Delaying by ${attemptDelay}ms`);
+      
+      // Delay to ensure Firebase state is settled
+      await new Promise(resolve => setTimeout(resolve, attemptDelay));
+      
+      // Force signOut to ensure clean state
+      try {
         await auth.signOut();
+        console.log("Forced clean signOut before login attempt");
+      } catch (e) {
+        console.log("No active session to clear");
       }
       
-      // Attempt to sign in
+      // Additional delay after signOut
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Attempt login with Firebase
+      console.log("Attempting login with Firebase");
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       if (rememberMe) {
         localStorage.setItem("remember", "true");
       }
       
-      // Track the login attempt
-      setLoginAttempts(prev => prev + 1);
+      // Wait for auth to fully establish
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Add a small delay before navigating to ensure auth state is fully established
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Navigate to dashboard
-      navigate("/dashboard");
+      console.log("Login successful, navigating to dashboard");
+      processingAuthRef.current = false;
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("Login error:", err);
+      
+      // Clear the processing flag
+      processingAuthRef.current = false;
       
       // Handle different error codes
       if (err.code === 'auth/network-request-failed') {
@@ -94,11 +115,7 @@ const LoginPage = () => {
       } else {
         setError("Email atau password salah.");
       }
-      
-      // Track the failed login attempt
-      setLoginAttempts(prev => prev + 1);
-      
-      // Always release loading state
+    } finally {
       setIsLoading(false);
     }
   };

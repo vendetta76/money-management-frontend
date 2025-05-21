@@ -41,6 +41,14 @@ const WalletPage: React.FC = () => {
   
   // Use the PIN timeout context
   const { pinTimeout, isPinVerified, verifyPin, lockPin, hasPin } = usePinTimeout();
+
+  console.log('PIN State Debug:', {
+  hasPin, // Should be true if you have a PIN set
+  pinTimeout, // Should be > 0 if timeout is enabled
+  isPinVerified, // Should be true if the wallet is unlocked
+  shouldShowLockButton: hasPin && pinTimeout !== 0 && isPinVerified
+});
+
   
   // State for PIN entry modal
   const [showPinDialog, setShowPinDialog] = useState(false);
