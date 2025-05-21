@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, AlertTriangle } from 'lucide-react';
+import { Lock, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePinTimeout } from '../context/PinTimeoutContext';
 
-type PinEntryModalProps = {
+interface PinEntryModalProps {
+  open?: boolean;
+  onPinVerify?: () => void;
+  onClose?: () => void;
   onBack?: () => void;
-};
+}
 
-const PinEntryModal: React.FC<PinEntryModalProps> = ({ onBack }) => {
+const PinEntryModal: React.FC<PinEntryModalProps> = ({ 
+  open = true, // Default to true for backwards compatibility
+  onPinVerify,
+  onClose,
+  onBack 
+}) => {
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [showPin, setShowPin] = useState<boolean>(false);
   const navigate = useNavigate();
   
   const { 
@@ -17,7 +26,8 @@ const PinEntryModal: React.FC<PinEntryModalProps> = ({ onBack }) => {
     pinAttempts, 
     isPinLocked, 
     pinLockExpiry,
-    hasPin
+    hasPin,
+    isPinVerified
   } = usePinTimeout();
 
   // Calculate remaining lock time
@@ -32,6 +42,33 @@ const PinEntryModal: React.FC<PinEntryModalProps> = ({ onBack }) => {
     
     return `${minutes}m ${seconds}s`;
   };
+
+  // Reset pin on open
+  useEffect(() => {
+    if (open) {
+      setPin('');
+      setError('');
+    }
+  }, [open]);
+
+  // Don't show if already verified
+  useEffect(() => {
+    if (isPinVerified && open && onClose) {
+      onClose();
+    }
+  }, [isPinVerified, open, onClose]);
+
+  // Auto-focus the PIN input
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        const pinInput = document.getElementById('wallet-pin-input');
+        if (pinInput) {
+          pinInput.focus();
+        }
+      }, 100);
+    }
+  }, [open]);
 
   // Update remaining time every second if PIN is locked
   useEffect(() => {
@@ -91,6 +128,16 @@ const PinEntryModal: React.FC<PinEntryModalProps> = ({ onBack }) => {
         // PIN verified successfully
         setPin('');
         setError('');
+        
+        // Call onPinVerify callback if provided
+        if (onPinVerify) {
+          onPinVerify();
+        }
+        
+        // Close the modal if onClose is provided
+        if (onClose) {
+          onClose();
+        }
       } else {
         if (isPinLocked) {
           const remaining = getRemainingLockTime();
@@ -109,15 +156,17 @@ const PinEntryModal: React.FC<PinEntryModalProps> = ({ onBack }) => {
   };
   
   const handleBack = () => {
-    if (onBack) {
+    if (onClose) {
+      onClose();
+    } else if (onBack) {
       onBack();
     } else {
       navigate(-1);
     }
   };
 
-  // If user doesn't have a PIN set, don't show the modal
-  if (!hasPin) {
+  // If user doesn't have a PIN set, or the modal is closed, don't show it
+  if (!hasPin || !open) {
     return null;
   }
   
@@ -137,9 +186,10 @@ const PinEntryModal: React.FC<PinEntryModalProps> = ({ onBack }) => {
         </div>
         
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+          <div className="mb-4 relative">
             <input
-              type="password"
+              id="wallet-pin-input"
+              type={showPin ? "text" : "password"}
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={6}
@@ -150,6 +200,15 @@ const PinEntryModal: React.FC<PinEntryModalProps> = ({ onBack }) => {
               className="w-full p-3 text-center text-2xl tracking-widest border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:text-gray-400 disabled:dark:text-gray-500"
               placeholder="• • • • • •"
             />
+            <button
+              type="button"
+              onClick={() => setShowPin(!showPin)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              tabIndex={-1}
+            >
+              {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+            
             {error && (
               <div className="mt-2 text-sm text-red-500 flex items-start">
                 <AlertTriangle size={16} className="mr-1 flex-shrink-0 mt-0.5" />
@@ -157,6 +216,21 @@ const PinEntryModal: React.FC<PinEntryModalProps> = ({ onBack }) => {
               </div>
             )}
           </div>
+          
+          {pinAttempts > 0 && !isPinLocked && (
+            <div className="mb-4">
+              <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
+                <span>Percobaan gagal: {pinAttempts}/5</span>
+                <span>{5 - pinAttempts} kesempatan tersisa</span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-amber-500 transition-all"
+                  style={{ width: `${(pinAttempts / 5) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
           
           <button
             type="submit"

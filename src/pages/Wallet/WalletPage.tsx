@@ -42,8 +42,8 @@ const WalletPage: React.FC = () => {
   // Use the PIN timeout context
   const { pinTimeout, isPinVerified, verifyPin, lockPin, hasPin } = usePinTimeout();
   
-  // Separate state for PIN lock management (local to this component)
-  const [isLocalLocked, setIsLocalLocked] = useState(false);
+  // State for PIN entry modal
+  const [showPinDialog, setShowPinDialog] = useState(false);
   
   // Original wallet state
   const [wallets, setWallets] = useState<WalletData[]>([]);
@@ -57,42 +57,28 @@ const WalletPage: React.FC = () => {
   const [recalcLoading, setRecalcLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Debug state to help troubleshoot PIN lock issues
-  const [debugState, setDebugState] = useState({
-    hasPin,
-    pinTimeout,
-    isPinVerified,
-    isLocalLocked
-  });
+  // Determine if wallet content should be shown based on PIN state
+  const shouldShowWalletContent = !hasPin || isPinVerified || pinTimeout === 0;
 
-  // Update debug state when dependencies change
+  // Check if PIN verification is needed and show the dialog
   useEffect(() => {
-    setDebugState({
-      hasPin,
-      pinTimeout,
-      isPinVerified,
-      isLocalLocked
-    });
-    
-    // Log changes to help with debugging
-    console.log("PIN Lock state updated:", {
-      hasPin,
-      pinTimeout,
-      isPinVerified,
-      isLocalLocked,
-      canLockManually: hasPin && pinTimeout !== 0 && isPinVerified
-    });
-  }, [hasPin, pinTimeout, isPinVerified, isLocalLocked]);
-
-  // Sync PIN verification state from context to local
-  useEffect(() => {
-    // We need to track if PIN is verified
-    if (!isPinVerified && hasPin && pinTimeout !== 0) {
-      setIsLocalLocked(true);
+    if (hasPin && !isPinVerified && pinTimeout !== 0) {
+      setShowPinDialog(true);
     } else {
-      setIsLocalLocked(false);
+      setShowPinDialog(false);
     }
-  }, [isPinVerified, hasPin, pinTimeout]);
+  }, [hasPin, isPinVerified, pinTimeout]);
+
+  // Log status changes to help with debugging
+  useEffect(() => {
+    console.log("Wallet lock status:", {
+      hasPin,
+      pinTimeout,
+      isPinVerified,
+      shouldShowWalletContent,
+      showPinDialog
+    });
+  }, [hasPin, pinTimeout, isPinVerified, shouldShowWalletContent, showPinDialog]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -140,25 +126,14 @@ const WalletPage: React.FC = () => {
   // Handle PIN verification
   const handlePinVerify = () => {
     verifyPin();
-    setIsLocalLocked(false);
+    setShowPinDialog(false);
   };
 
-  // Forcefully lock the wallet (both in context and locally)
+  // Forcefully lock the wallet
   const handleManualLock = () => {
-    console.log("Manual lock attempt triggered with state:", { 
-      hasPin, 
-      pinTimeout, 
-      isLocalLocked, 
-      isPinVerified 
-    });
-    
-    // Call context lock function to update global state
+    console.log("Manual lock triggered");
     lockPin();
-    
-    // Also update local state
-    setIsLocalLocked(true);
-    
-    console.log("Manual lock completed, new state:", { isLocalLocked: true });
+    setShowPinDialog(true);
   };
 
   const walletMap = Object.fromEntries(wallets.map((w) => [w.id, w]));
@@ -188,9 +163,8 @@ const WalletPage: React.FC = () => {
     setSearchTerm(term);
   };
 
-  // Can the wallet be locked manually? - FIXED CONDITION
-  // The key fix: We want to show this button when user has a PIN AND timeout is enabled AND
-  // wallet is currently UNLOCKED (which means isPinVerified is true)
+  // Can the wallet be locked manually?
+  // Show lock button when user has a PIN AND timeout is enabled AND wallet is currently unlocked
   const canLockManually = hasPin && pinTimeout !== 0 && isPinVerified;
 
   return (
@@ -198,10 +172,12 @@ const WalletPage: React.FC = () => {
       <main
         className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300"
       >
-        {/* PIN Lock Overlay - Show based on local lock state */}
-        {isLocalLocked && hasPin && pinTimeout !== 0 && (
-          <PinEntryModal onPinVerify={handlePinVerify} />
-        )}
+        {/* PIN Entry Modal */}
+        <PinEntryModal
+          open={showPinDialog}
+          onPinVerify={handlePinVerify}
+          onClose={() => setShowPinDialog(false)}
+        />
       
         {(locked && !isBypassed) && (
           <div className="absolute inset-0 z-40 backdrop-blur-sm bg-black/30 dark:bg-black/50 flex items-center justify-center">
@@ -217,7 +193,20 @@ const WalletPage: React.FC = () => {
 
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Dompet Saya</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              Dompet Saya
+              {/* Lock status indicator */}
+              {hasPin && pinTimeout !== 0 && (
+                <span className={`inline-flex items-center text-sm font-medium rounded-full px-2 py-0.5 ${
+                  isPinVerified 
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" 
+                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                }`}>
+                  <Lock size={14} className="mr-1" />
+                  {isPinVerified ? "Terbuka" : "Terkunci"}
+                </span>
+              )}
+            </h1>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               {/* Show/Hide Balance Button */}
               <button
@@ -228,15 +217,16 @@ const WalletPage: React.FC = () => {
                 <span className="text-sm">{showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}</span>
               </button>
               
-              {/* Lock Button - Only show if PIN is set - FIXED CONDITION */}
+              {/* Lock Button - Only show if PIN is set and verified */}
               {canLockManually && (
                 <button
                   onClick={handleManualLock}
-                  className="flex items-center border rounded-md py-1 px-2 border-gray-300 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                  className="flex items-center border rounded-md py-1 px-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer gap-1"
                   title="Kunci Dompet"
                   aria-label="Kunci Dompet"
                 >
                   <Lock size={16} />
+                  <span className="text-sm hidden sm:inline">Kunci Dompet</span>
                 </button>
               )}
               
@@ -274,44 +264,70 @@ const WalletPage: React.FC = () => {
             )}
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-24 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse"
-                ></div>
-              ))}
-            </div>
-          ) : (
+          {/* Show wallet content or locked message based on PIN verification state */}
+          {shouldShowWalletContent ? (
+            // Normal wallet content
             <>
-              <WalletTotalOverview totalsByCurrency={totalsByCurrency} showBalance={showBalance} />
-              {filteredWallets.length === 0 && searchTerm.trim() !== "" ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Search size={48} className="text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Tidak ada hasil</h3>
-                  <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                    Tidak ada dompet yang cocok dengan pencarian "{searchTerm}". Coba kata kunci lain atau tambahkan dompet baru.
-                  </p>
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-24 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse"
+                    ></div>
+                  ))}
                 </div>
               ) : (
-                <WalletGrid
-                  userId={user?.uid || ""}
-                  wallets={filteredWallets}
-                  showBalance={showBalance}
-                  isMobile={isMobile}
-                  onEdit={(id) => {
-                    setSelectedWalletId(null);
-                    setEditingWallet(walletMap[id]);
-                    setShowForm(true);
-                  }}
-                  onCardClick={(id) => {
-                    if (editingWallet || showForm) return;
-                    setSelectedWalletId(id);
-                  }}
-                />
+                <>
+                  <WalletTotalOverview totalsByCurrency={totalsByCurrency} showBalance={showBalance} />
+                  {filteredWallets.length === 0 && searchTerm.trim() !== "" ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Search size={48} className="text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Tidak ada hasil</h3>
+                      <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                        Tidak ada dompet yang cocok dengan pencarian "{searchTerm}". Coba kata kunci lain atau tambahkan dompet baru.
+                      </p>
+                    </div>
+                  ) : (
+                    <WalletGrid
+                      userId={user?.uid || ""}
+                      wallets={filteredWallets}
+                      showBalance={showBalance}
+                      isMobile={isMobile}
+                      onEdit={(id) => {
+                        setSelectedWalletId(null);
+                        setEditingWallet(walletMap[id]);
+                        setShowForm(true);
+                      }}
+                      onCardClick={(id) => {
+                        if (editingWallet || showForm) return;
+                        setSelectedWalletId(id);
+                      }}
+                    />
+                  )}
+                </>
               )}
             </>
+          ) : (
+            // Locked wallet content
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-6">
+                <Lock size={36} className="text-red-600 dark:text-red-300" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+                Dompet Terkunci
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 max-w-md mb-6">
+                Untuk alasan keamanan, dompet Anda terkunci. 
+                Masukkan PIN untuk mengakses saldo dan riwayat transaksi Anda.
+              </p>
+              <button
+                onClick={() => setShowPinDialog(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2"
+              >
+                <Lock size={18} /> Buka Dompet
+              </button>
+            </div>
           )}
         </div>
       </main>
