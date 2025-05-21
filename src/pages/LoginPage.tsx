@@ -16,6 +16,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [formVisible, setFormVisible] = useState(false);
   const [isTimeoutLogout, setIsTimeoutLogout] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
 
   useEffect(() => {
     setTimeout(() => setFormVisible(true), 100);
@@ -39,18 +40,46 @@ const LoginPage = () => {
     }
 
     try {
+      // Set loading state before starting
       setIsLoading(true);
       
-      // Add a small delay before login attempt if coming from timeout logout
-      // This gives Firebase time to fully complete the previous signOut operation
-      if (isTimeoutLogout) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      // Implement increasing delay for each login attempt to prevent race conditions
+      // This helps ensure Firebase has time to clean up previous sessions
+      if (loginAttempts > 0 || isTimeoutLogout) {
+        const delay = Math.min(loginAttempts * 200 + (isTimeoutLogout ? 1000 : 0), 2000);
+        console.log(`Delaying login attempt by ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
       
+      // If we were logged out due to timeout, make sure all Firebase listeners are cleaned up
+      if (isTimeoutLogout) {
+        // Force a browser gc if possible
+        try {
+          if (window.gc) {
+            window.gc();
+          }
+        } catch (e) {
+          // Ignore if gc is not available
+        }
+        
+        // Clear auth state to ensure fresh auth
+        await auth.signOut();
+      }
+      
+      // Attempt to sign in
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
       if (rememberMe) {
         localStorage.setItem("remember", "true");
       }
+      
+      // Track the login attempt
+      setLoginAttempts(prev => prev + 1);
+      
+      // Add a small delay before navigating to ensure auth state is fully established
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Navigate to dashboard
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
@@ -60,10 +89,16 @@ const LoginPage = () => {
         setError("Network error. Please check your connection.");
       } else if (err.code === 'auth/too-many-requests') {
         setError("Too many failed login attempts. Please try again later.");
+      } else if (err.code === 'auth/invalid-credential') {
+        setError("Invalid email or password.");
       } else {
         setError("Email atau password salah.");
       }
       
+      // Track the failed login attempt
+      setLoginAttempts(prev => prev + 1);
+      
+      // Always release loading state
       setIsLoading(false);
     }
   };

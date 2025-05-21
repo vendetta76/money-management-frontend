@@ -32,6 +32,7 @@ const AutoLogout: React.FC = () => {
   const visibilityChangeRef = useRef<number>(0);
   const logoutScheduledRef = useRef<boolean>(false);
   const logoutTimeRef = useRef<number>(0);
+  const isLoggingOutRef = useRef<boolean>(false); // New ref to track logout state
 
   const isAuthPage = useCallback(() => {
     const authPages = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email-pending'];
@@ -71,7 +72,7 @@ const AutoLogout: React.FC = () => {
   }, [logoutTimeout, user, isAuthPage, location.pathname, clearAllLogoutSchedules]);
 
   const scheduleAbsoluteLogout = useCallback(() => {
-    if (isAuthPage() || !user) {
+    if (isAuthPage() || !user || isLoggingOutRef.current) {
       clearAllLogoutSchedules();
       return;
     }
@@ -94,7 +95,7 @@ const AutoLogout: React.FC = () => {
     const timeToWarning = logoutTimeout - AUTO_LOGOUT_WARNING_TIME;
     
     setTimeout(() => {
-      if (!user || isAuthPage()) return;
+      if (!user || isAuthPage() || isLoggingOutRef.current) return;
       
       if (!showWarning && logoutScheduledRef.current) {
         if (document.visibilityState === 'visible') {
@@ -104,10 +105,10 @@ const AutoLogout: React.FC = () => {
     }, timeToWarning);
     
     absoluteTimerRef.current = window.setTimeout(() => {
-      if (!user || isAuthPage()) return;
+      if (!user || isAuthPage() || isLoggingOutRef.current) return;
       
       if (logoutScheduledRef.current) {
-        handleLogout();
+        handleLogout('timeout');
       }
     }, logoutTimeout);
     
@@ -116,7 +117,7 @@ const AutoLogout: React.FC = () => {
   }, [logoutTimeout, showWarning, user, isAuthPage, clearAllLogoutSchedules]);
 
   const resetActivityTimer = useCallback(() => {
-    if (isAuthPage() || !user) return;
+    if (isAuthPage() || !user || isLoggingOutRef.current) return;
     
     const now = Date.now();
     setLastActivity(now);
@@ -135,14 +136,14 @@ const AutoLogout: React.FC = () => {
   // Handle visibility change (tab switch)
   const handleVisibilityChange = useCallback(() => {
     // Skip if on auth pages or no user
-    if (isAuthPage() || !user) return;
+    if (isAuthPage() || !user || isLoggingOutRef.current) return;
     
     const now = Date.now();
     
     if (document.visibilityState === 'visible') {
       // Check if absolute logout time has passed
       if (logoutScheduledRef.current && now >= logoutTimeRef.current) {
-        handleLogout();
+        handleLogout('timeout');
         return;
       }
       
@@ -173,7 +174,7 @@ const AutoLogout: React.FC = () => {
   // Show logout warning
   const showLogoutWarning = useCallback((timeLeftMs: number) => {
     // Skip if already showing or on auth pages or no user
-    if (showWarning || isAuthPage() || !user) return;
+    if (showWarning || isAuthPage() || !user || isLoggingOutRef.current) return;
     
     setShowWarning(true);
     setRemainingTime(Math.max(timeLeftMs, 1000)); // At least 1 second
@@ -187,7 +188,7 @@ const AutoLogout: React.FC = () => {
             clearInterval(warningIntervalRef.current);
             warningIntervalRef.current = null;
           }
-          handleLogout();
+          handleLogout('timeout');
           return 0;
         }
         return newTime;
@@ -200,22 +201,53 @@ const AutoLogout: React.FC = () => {
     resetActivityTimer();
   }, [resetActivityTimer]);
 
-  // Handle logout from warning dialog
-  const handleLogout = useCallback(async () => {
-    // Skip if already on auth pages or no user
-    if (isAuthPage() || !user) {
+  // Handle logout from warning dialog - UPDATED
+  const handleLogout = useCallback(async (reason: 'timeout' | 'user' = 'user') => {
+    // Skip if already on auth pages or no user or already logging out
+    if (isAuthPage() || !user || isLoggingOutRef.current) {
       clearAllLogoutSchedules();
       return;
     }
+    
+    // Set logout in progress flag to prevent duplicate logout attempts
+    isLoggingOutRef.current = true;
     
     setShowWarning(false);
     clearAllLogoutSchedules();
     
     try {
+      // Store the logout reason before signing out
+      sessionStorage.setItem('logoutReason', reason);
+      
+      // Clear all local references to the user that might cause permission issues
+      localStorage.removeItem('lastActivityTime');
+      localStorage.removeItem('logoutScheduledTime');
+      
+      // Force all listeners to be cleaned up
+      window.dispatchEvent(new Event('beforeunload'));
+      
+      // Give time for listeners to clean up before signing out
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Sign out
       await signOut();
+      
+      // Navigate with replace to prevent back navigation to protected content
       navigate('/login', { replace: true });
     } catch (error) {
-      // Error silenced
+      console.error("Error during logout:", error);
+      
+      // Even if there's an error, try to clean up and redirect
+      try {
+        sessionStorage.setItem('logoutReason', reason);
+        navigate('/login', { replace: true });
+      } catch (e) {
+        // Last resort: reload the page
+        window.location.href = '/login';
+      }
+    } finally {
+      // Reset logout in progress flag
+      isLoggingOutRef.current = false;
     }
   }, [signOut, navigate, isAuthPage, user, clearAllLogoutSchedules]);
 
@@ -244,7 +276,7 @@ const AutoLogout: React.FC = () => {
       
       // If scheduled time has passed, logout
       if (scheduledTime && scheduledTime <= now) {
-        handleLogout();
+        handleLogout('timeout');
       }
       // If scheduled time is in the future, use it
       else if (scheduledTime && scheduledTime > now) {
@@ -257,7 +289,7 @@ const AutoLogout: React.FC = () => {
         // Set timer for warning
         if (remainingTime > AUTO_LOGOUT_WARNING_TIME) {
           setTimeout(() => {
-            if (!showWarning && logoutScheduledRef.current && user && !isAuthPage()) {
+            if (!showWarning && logoutScheduledRef.current && user && !isAuthPage() && !isLoggingOutRef.current) {
               if (document.visibilityState === 'visible') {
                 showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
               }
@@ -270,8 +302,8 @@ const AutoLogout: React.FC = () => {
         
         // Set timer for logout
         absoluteTimerRef.current = window.setTimeout(() => {
-          if (logoutScheduledRef.current && user && !isAuthPage()) {
-            handleLogout();
+          if (logoutScheduledRef.current && user && !isAuthPage() && !isLoggingOutRef.current) {
+            handleLogout('timeout');
           }
         }, remainingTime);
       }
@@ -285,7 +317,7 @@ const AutoLogout: React.FC = () => {
       }
       
       // Skip if on auth pages or no user
-      if (isAuthPage() || !user) {
+      if (isAuthPage() || !user || isLoggingOutRef.current) {
         clearAllLogoutSchedules();
         return;
       }
@@ -293,7 +325,7 @@ const AutoLogout: React.FC = () => {
       // Check if absolute logout time has passed
       const now = Date.now();
       if (logoutScheduledRef.current && logoutTimeRef.current > 0 && now >= logoutTimeRef.current) {
-        handleLogout();
+        handleLogout('timeout');
         return;
       }
     };
@@ -347,7 +379,9 @@ const AutoLogout: React.FC = () => {
     ];
 
     const handleActivity = () => {
-      resetActivityTimer();
+      if (!isLoggingOutRef.current) {
+        resetActivityTimer();
+      }
     };
 
     // Add event listeners
@@ -358,7 +392,7 @@ const AutoLogout: React.FC = () => {
     // Track time before page is unloaded
     window.addEventListener('beforeunload', () => {
       // Only save if logged in and not on auth pages
-      if (user && !isAuthPage()) {
+      if (user && !isAuthPage() && !isLoggingOutRef.current) {
         // Store last activity time for cross-tab detection
         localStorage.setItem('lastActivityTime', lastActivityRef.current.toString());
         
@@ -415,7 +449,7 @@ const AutoLogout: React.FC = () => {
         </Box>
       </DialogContent>
       <DialogActions className="dark:bg-gray-800">
-        <Button onClick={handleLogout} color="error" className="dark:text-red-400">
+        <Button onClick={() => handleLogout('user')} color="error" className="dark:text-red-400">
           Logout Sekarang
         </Button>
         <Button onClick={handleContinueSession} color="primary" variant="contained" autoFocus className="dark:bg-blue-600">
