@@ -2,7 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, Home } from "lucide-react";
 import catMascot from "/assets/cat-hanging.png";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  setPersistence, 
+  browserLocalPersistence, 
+  browserSessionPersistence,
+  onAuthStateChanged
+} from "firebase/auth";
 import { auth } from "@/lib/firebaseClient";
 
 // Counter to detect reload loops
@@ -21,6 +28,18 @@ const LoginPage = () => {
   const [formVisible, setFormVisible] = useState(false);
   const processingAuthRef = useRef(false);
   
+  // Check for existing authentication
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is already signed in, redirect to dashboard
+        navigate("/dashboard", { replace: true });
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [navigate]);
+  
   // Check for login loops on page load and reset if needed
   useEffect(() => {
     const resetAllState = async () => {
@@ -36,10 +55,9 @@ const LoginPage = () => {
       
       // Force Firebase signout
       try {
-        console.log("Forcing Firebase signout on page load");
         await signOut(auth);
       } catch (err) {
-        console.log("No active session to clear");
+        // No active session to clear
       }
     };
 
@@ -47,7 +65,6 @@ const LoginPage = () => {
     const loginAttempts = parseInt(localStorage.getItem(LOGIN_LOOP_STORAGE_KEY) || '0', 10);
     if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
       // We're in a loop, do a hard reset
-      console.log("Detected login loop! Performing emergency reset");
       localStorage.clear();
       sessionStorage.clear();
       
@@ -77,7 +94,6 @@ const LoginPage = () => {
     
     // Prevent multiple submission
     if (processingAuthRef.current) {
-      console.log("Login already in progress, ignoring duplicate request");
       return;
     }
 
@@ -93,40 +109,31 @@ const LoginPage = () => {
       processingAuthRef.current = true;
       setIsLoading(true);
       
-      console.log("Preparing for login attempt");
-      
       // Force signout and wait to ensure clean state
       try {
         await signOut(auth);
-        console.log("Pre-login signOut completed");
       } catch (e) {
-        console.log("No active session to sign out from");
+        // No active session to sign out from
       }
       
       // Long delay to ensure Firebase is ready
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Attempt login with Firebase
-      console.log("Starting login attempt");
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // Set the appropriate persistence based on rememberMe
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       
-      if (rememberMe) {
-        localStorage.setItem("remember", "true");
-      }
+      // Attempt login with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       // Reset login attempts counter
       localStorage.setItem(LOGIN_LOOP_STORAGE_KEY, '0');
       
       // Wait for auth to fully establish
-      console.log("Login successful, waiting before navigation");
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Use replace instead of push to break navigation cycles
-      console.log("Navigating to dashboard");
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      console.error("Login error:", err);
-      
       // Handle different error codes
       if (err.code === 'auth/network-request-failed') {
         setError("Network error. Please check your connection.");
