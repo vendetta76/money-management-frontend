@@ -9,7 +9,7 @@ import {
 import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import LayoutShell from "../../layouts/LayoutShell";
-import { Plus, Eye, EyeOff, Search, Lock } from "lucide-react";
+import { Plus, Eye, EyeOff, Search, Lock, Unlock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import WalletPopupHistory from "../../components/WalletPopupHistory";
@@ -42,14 +42,6 @@ const WalletPage: React.FC = () => {
   // Use the PIN timeout context
   const { pinTimeout, isPinVerified, verifyPin, lockPin, hasPin } = usePinTimeout();
 
-  console.log('PIN State Debug:', {
-  hasPin, // Should be true if you have a PIN set
-  pinTimeout, // Should be > 0 if timeout is enabled
-  isPinVerified, // Should be true if the wallet is unlocked
-  shouldShowLockButton: hasPin && pinTimeout !== 0 && isPinVerified
-});
-
-  
   // State for PIN entry modal
   const [showPinDialog, setShowPinDialog] = useState(false);
   
@@ -65,17 +57,18 @@ const WalletPage: React.FC = () => {
   const [recalcLoading, setRecalcLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Determine if wallet content should be shown based on PIN state
-  const shouldShowWalletContent = !hasPin || isPinVerified || pinTimeout === 0;
+  // FIXED: Separate PIN protection from timeout setting
+  // Wallet content should be protected whenever a PIN is set, regardless of timeout
+  const shouldShowWalletContent = !hasPin || isPinVerified;
 
   // Check if PIN verification is needed and show the dialog
   useEffect(() => {
-    if (hasPin && !isPinVerified && pinTimeout !== 0) {
+    if (hasPin && !isPinVerified) {
       setShowPinDialog(true);
     } else {
       setShowPinDialog(false);
     }
-  }, [hasPin, isPinVerified, pinTimeout]);
+  }, [hasPin, isPinVerified]);
 
   // Log status changes to help with debugging
   useEffect(() => {
@@ -171,9 +164,9 @@ const WalletPage: React.FC = () => {
     setSearchTerm(term);
   };
 
-  // Can the wallet be locked manually?
-  // Show lock button when user has a PIN AND timeout is enabled AND wallet is currently unlocked
-  const canLockManually = hasPin && pinTimeout !== 0 && isPinVerified;
+  // FIXED: Show lock button whenever user has a PIN AND wallet is currently unlocked
+  // Removed dependency on PIN timeout setting
+  const canLockManually = hasPin && isPinVerified;
 
   return (
     <LayoutShell>
@@ -203,15 +196,24 @@ const WalletPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
               Dompet Saya
-              {/* Lock status indicator */}
-              {hasPin && pinTimeout !== 0 && (
+              {/* Lock status indicator - ENHANCED to show status more clearly */}
+              {hasPin && (
                 <span className={`inline-flex items-center text-sm font-medium rounded-full px-2 py-0.5 ${
                   isPinVerified 
                     ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" 
                     : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                 }`}>
-                  <Lock size={14} className="mr-1" />
-                  {isPinVerified ? "Terbuka" : "Terkunci"}
+                  {isPinVerified ? (
+                    <>
+                      <Unlock size={14} className="mr-1" />
+                      Terbuka
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={14} className="mr-1" />
+                      Terkunci
+                    </>
+                  )}
                 </span>
               )}
             </h1>
@@ -225,7 +227,7 @@ const WalletPage: React.FC = () => {
                 <span className="text-sm">{showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}</span>
               </button>
               
-              {/* Lock Button - Only show if PIN is set and verified */}
+              {/* Lock Button - FIXED: Show whenever PIN is set and wallet is unlocked */}
               {canLockManually && (
                 <button
                   onClick={handleManualLock}
@@ -272,7 +274,7 @@ const WalletPage: React.FC = () => {
             )}
           </div>
 
-          {/* Show wallet content or locked message based on PIN verification state */}
+          {/* FIXED: Show wallet content based solely on PIN verification, not timeout */}
           {shouldShowWalletContent ? (
             // Normal wallet content
             <>
@@ -317,7 +319,7 @@ const WalletPage: React.FC = () => {
               )}
             </>
           ) : (
-            // Locked wallet content
+            // Locked wallet content - Improved UI with clearer instructions
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-6">
                 <Lock size={36} className="text-red-600 dark:text-red-300" />
@@ -333,7 +335,7 @@ const WalletPage: React.FC = () => {
                 onClick={() => setShowPinDialog(true)}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2"
               >
-                <Lock size={18} /> Buka Dompet
+                <Unlock size={18} /> Buka Dompet
               </button>
             </div>
           )}
