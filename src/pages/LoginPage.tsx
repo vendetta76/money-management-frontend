@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, Home } from "lucide-react";
 import catMascot from "/assets/cat-hanging.png";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebaseClient";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -14,9 +15,18 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formVisible, setFormVisible] = useState(false);
+  const [isTimeoutLogout, setIsTimeoutLogout] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setFormVisible(true), 100);
+    
+    // Check if the user was logged out due to timeout
+    const logoutReason = sessionStorage.getItem('logoutReason');
+    if (logoutReason === 'timeout') {
+      setError("Your session expired. Please login again.");
+      setIsTimeoutLogout(true);
+      sessionStorage.removeItem('logoutReason');
+    }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -30,14 +40,30 @@ const LoginPage = () => {
 
     try {
       setIsLoading(true);
+      
+      // Add a small delay before login attempt if coming from timeout logout
+      // This gives Firebase time to fully complete the previous signOut operation
+      if (isTimeoutLogout) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       if (rememberMe) {
         localStorage.setItem("remember", "true");
       }
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
-      setError("Email atau password salah.");
+      console.error("Login error:", err);
+      
+      // Handle different error codes
+      if (err.code === 'auth/network-request-failed') {
+        setError("Network error. Please check your connection.");
+      } else if (err.code === 'auth/too-many-requests') {
+        setError("Too many failed login attempts. Please try again later.");
+      } else {
+        setError("Email atau password salah.");
+      }
+      
       setIsLoading(false);
     }
   };

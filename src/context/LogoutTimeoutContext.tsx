@@ -40,23 +40,31 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
       if (user) {
         const userDocRef = doc(db, 'users', user.uid);
         
-        // Periksa dulu apakah dokumen ada
-        const docSnap = await getDoc(userDocRef);
-        
-        if (docSnap.exists()) {
-          console.log("LogoutTimeoutContext: User document exists, updating...");
-          await updateDoc(userDocRef, { logoutTimeout: timeout });
-          console.log("LogoutTimeoutContext: Successfully saved to Firestore");
-        } else {
-          console.error("LogoutTimeoutContext: User document does not exist");
-          throw new Error("User document does not exist");
+        try {
+          // Periksa dulu apakah dokumen ada
+          const docSnap = await getDoc(userDocRef);
+          
+          if (docSnap.exists()) {
+            console.log("LogoutTimeoutContext: User document exists, updating...");
+            await updateDoc(userDocRef, { logoutTimeout: timeout });
+            console.log("LogoutTimeoutContext: Successfully saved to Firestore");
+          } else {
+            console.error("LogoutTimeoutContext: User document does not exist");
+            // Instead of throwing an error, log it and continue
+            console.log("LogoutTimeoutContext: User document will be created in AuthContext");
+          }
+        } catch (err) {
+          // Handle permission errors gracefully
+          console.error("LogoutTimeoutContext: Firestore error:", err);
+          // Continue with localStorage only
+          console.log("LogoutTimeoutContext: Continuing with localStorage only");
         }
       } else {
         console.log("LogoutTimeoutContext: No user logged in, saving only to localStorage");
       }
     } catch (error) {
       console.error('LogoutTimeoutContext: Error saving logout timeout:', error);
-      throw error; // Re-throw untuk handling di UI
+      // Don't rethrow - handle gracefully
     } finally {
       setIsLoading(false);
     }
@@ -71,43 +79,70 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
 
     console.log("LogoutTimeoutContext: User logged in, loading timeout from Firestore");
     setIsLoading(true);
-    const userDocRef = doc(db, 'users', user.uid);
     
-    // Gunakan getDoc untuk mendapatkan nilai awal
-    getDoc(userDocRef).then((docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.logoutTimeout !== undefined) {
-          const timeout = data.logoutTimeout;
-          console.log("LogoutTimeoutContext: Initial timeout value from Firestore:", timeout);
-          setLogoutTimeoutState(timeout);
-          localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
+    let unsubscribe = () => {};
+    
+    // Use a more defensive approach
+    const loadTimeout = async () => {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        
+        // Gunakan getDoc untuk mendapatkan nilai awal
+        const docSnap = await getDoc(userDocRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.logoutTimeout !== undefined) {
+            const timeout = data.logoutTimeout;
+            console.log("LogoutTimeoutContext: Initial timeout value from Firestore:", timeout);
+            setLogoutTimeoutState(timeout);
+            localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
+          } else {
+            console.log("LogoutTimeoutContext: No logoutTimeout field in user document");
+          }
         } else {
-          console.log("LogoutTimeoutContext: No logoutTimeout field in user document");
+          console.log("LogoutTimeoutContext: User document does not exist");
         }
-      } else {
-        console.log("LogoutTimeoutContext: User document does not exist");
+        
+        // Setup listener for real-time updates with better error handling
+        unsubscribe = onSnapshot(
+          userDocRef, 
+          (docSnap) => {
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              if (data.logoutTimeout !== undefined) {
+                const timeout = data.logoutTimeout;
+                console.log("LogoutTimeoutContext: Real-time update from Firestore:", timeout);
+                setLogoutTimeoutState(timeout);
+                localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
+              }
+            }
+          }, 
+          (error) => {
+            // Handle permission errors gracefully
+            console.error('LogoutTimeoutContext: Error in real-time listener:', error);
+            // If we get a permission error, still use localStorage
+            console.log('LogoutTimeoutContext: Using localStorage value instead');
+            const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedTimeout) {
+              setLogoutTimeoutState(parseInt(savedTimeout, 10));
+            }
+          }
+        );
+        
+      } catch (error) {
+        console.error("LogoutTimeoutContext: Error loading initial timeout:", error);
+        // Fall back to localStorage
+        const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (savedTimeout) {
+          setLogoutTimeoutState(parseInt(savedTimeout, 10));
+        }
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }).catch((error) => {
-      console.error("LogoutTimeoutContext: Error loading initial timeout:", error);
-      setIsLoading(false);
-    });
+    };
     
-    // Setup listener for real-time updates
-    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.logoutTimeout !== undefined) {
-          const timeout = data.logoutTimeout;
-          console.log("LogoutTimeoutContext: Real-time update from Firestore:", timeout);
-          setLogoutTimeoutState(timeout);
-          localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
-        }
-      }
-    }, (error) => {
-      console.error('LogoutTimeoutContext: Error in real-time listener:', error);
-    });
+    loadTimeout();
 
     return () => {
       console.log("LogoutTimeoutContext: Cleanup listener");
