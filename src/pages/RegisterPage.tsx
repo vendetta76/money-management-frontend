@@ -75,9 +75,9 @@ const RegisterPage = () => {
         }`}
       >
         <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-lg">
-          {/* Cat image in the middle top */}
+          {/* Cat image in the middle top - ENLARGED SIZE */}
           <div className="flex justify-center mt-6 mb-2">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-background">
+            <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-background">
               <img
                 src="/assets/attack-on catan.png"
                 alt="MoniQ Cat"
