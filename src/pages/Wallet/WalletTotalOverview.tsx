@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { formatCurrency } from "@/helpers/formatCurrency";
+import { formatCurrency } from "@helpers/formatCurrency";
 import { Info } from "lucide-react";
 import { Treemap, ResponsiveContainer, Tooltip } from "recharts";
 
