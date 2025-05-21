@@ -127,8 +127,9 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             }
           }
           
-          // Auto verify if no PIN is set or PIN timeout is 0
-          if (!userPin.hash || timeout === 0) {
+          // FIXED: Only auto-verify if no PIN is set
+          // Removed the condition that auto-verifies when timeout is 0
+          if (!userPin.hash) {
             setIsPinVerified(true);
           }
         } else {
@@ -421,6 +422,7 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Lock PIN manually
   const lockPin = () => {
+    console.log("Manual PIN lock triggered");
     setIsPinVerified(false);
     setPinVerifiedAt(null);
     
@@ -469,10 +471,8 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       setPinTimeoutState(timeout);
       
-      // If timeout is set to 0 (disabled), automatically verify PIN
-      if (timeout === 0) {
-        setIsPinVerified(true);
-      }
+      // FIXED: Removed auto-verification when timeout is set to 0
+      // PIN verification state now stays unchanged when changing timeout
       
       // If PIN is verified and timeout changed, reset timer
       if (isPinVerified && pinVerifiedAt) {
@@ -489,7 +489,9 @@ export const PinTimeoutProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Handle PIN expiration based on timeout
   useEffect(() => {
-    // Skip if PIN is already locked or PIN timeout is disabled or not loaded yet
+    // FIXED: Only skip auto-timeout if PIN is not verified, verification time is missing,
+    // timeout is undefined, or timeout is explicitly set to 0
+    // Manual locking still works even when timeout=0
     if (!isPinVerified || !pinVerifiedAt || pinTimeout === undefined || pinTimeout === 0) {
       return;
     }
