@@ -23,9 +23,8 @@ const RegisterPage = () => {
   const [redirecting, setRedirecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formVisible, setFormVisible] = useState(false);
-  
+
   useEffect(() => {
-    // Stagger animation of form elements
     setTimeout(() => setFormVisible(true), 100);
   }, []);
 
@@ -70,28 +69,35 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div 
+      <div
         className={`w-full max-w-xl transition-all duration-500 ${
           formVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
         <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-lg">
+          {/* Gambar atas full lebar */}
+          <div className="w-full h-52 sm:h-64 md:h-72 lg:h-80 bg-muted overflow-hidden">
+            <img
+              src="/assets/kucing-cuan.webp" // <- Ganti path sesuai file kamu
+              alt="MoniQ Banner"
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Form Section */}
           <div className="p-8">
-            {/* Header with back button */}
             <div className="flex items-center justify-between mb-6">
-              <button 
-                onClick={() => navigate(-1)} 
+              <button
+                onClick={() => navigate(-1)}
                 className="text-muted-foreground hover:text-foreground transition-colors p-2 -ml-2 rounded-full hover:bg-muted"
                 aria-label="Back"
               >
                 <ArrowLeft size={20} />
               </button>
-              
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold bg-gradient-to-r from-primary to-purple-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                  MoniQ
-                </h2>
-              </div>
+
+              <h2 className="text-lg font-bold bg-gradient-to-r from-primary to-purple-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                MoniQ
+              </h2>
             </div>
 
             <h1 className="text-2xl font-bold mb-1">Daftar Akun</h1>
@@ -108,9 +114,12 @@ const RegisterPage = () => {
 
             <form onSubmit={handleRegister} className="space-y-5">
               {/* Full Name Field */}
-              <div 
+              <div
                 className="transition-all duration-300 delay-100"
-                style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
+                style={{
+                  opacity: formVisible ? 1 : 0,
+                  transform: formVisible ? "translateY(0)" : "translateY(10px)",
+                }}
               >
                 <label htmlFor="name" className="block text-sm font-medium mb-1.5">
                   Nama Lengkap
@@ -132,9 +141,12 @@ const RegisterPage = () => {
               </div>
 
               {/* Email Field */}
-              <div 
+              <div
                 className="transition-all duration-300 delay-150"
-                style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
+                style={{
+                  opacity: formVisible ? 1 : 0,
+                  transform: formVisible ? "translateY(0)" : "translateY(10px)",
+                }}
               >
                 <label htmlFor="email" className="block text-sm font-medium mb-1.5">
                   Email
@@ -156,9 +168,12 @@ const RegisterPage = () => {
               </div>
 
               {/* Password Field */}
-              <div 
+              <div
                 className="transition-all duration-300 delay-200"
-                style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
+                style={{
+                  opacity: formVisible ? 1 : 0,
+                  transform: formVisible ? "translateY(0)" : "translateY(10px)",
+                }}
               >
                 <label htmlFor="password" className="block text-sm font-medium mb-1.5">
                   Password
@@ -190,9 +205,12 @@ const RegisterPage = () => {
               </div>
 
               {/* Submit Button */}
-              <div 
+              <div
                 className="pt-2 transition-all duration-300 delay-300"
-                style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
+                style={{
+                  opacity: formVisible ? 1 : 0,
+                  transform: formVisible ? "translateY(0)" : "translateY(10px)",
+                }}
               >
                 <button
                   type="submit"
@@ -219,9 +237,12 @@ const RegisterPage = () => {
               </div>
             </form>
 
-            <div 
+            <div
               className="text-center pt-6 text-sm transition-all duration-300 delay-400"
-              style={{ opacity: formVisible ? 1 : 0, transform: formVisible ? 'translateY(0)' : 'translateY(10px)' }}
+              style={{
+                opacity: formVisible ? 1 : 0,
+                transform: formVisible ? "translateY(0)" : "translateY(10px)",
+              }}
             >
               <span className="text-muted-foreground">Sudah punya akun?</span>{" "}
               <a href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">
