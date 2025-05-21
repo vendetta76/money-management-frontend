@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LogoutTimeoutProvider } from './context/LogoutTimeoutContext';
-import { PinTimeoutProvider } from './context/PinTimeoutContext'; // Import the PinTimeoutProvider
+import { PinTimeoutProvider } from './context/PinTimeoutContext';
 import { LanguageProvider } from './context/LanguageContext';
 import routes from './routes';
 import { Toaster } from 'react-hot-toast';
@@ -41,8 +41,11 @@ function App() {
 
   return (
     <AuthProvider>
-      <LogoutTimeoutProvider>
-        <PinTimeoutProvider> {/* Add PinTimeoutProvider here */}
+      {/* AuthProvider must be outermost, as other providers depend on it */}
+      <PinTimeoutProvider>
+        {/* PinTimeoutProvider depends on AuthProvider, but LogoutTimeoutProvider depends on it */}
+        <LogoutTimeoutProvider>
+          {/* LogoutTimeoutProvider should be after PinTimeoutProvider */}
           <LanguageProvider>
             <Router>
               <Toaster position="top-center" reverseOrder={false} />
@@ -64,8 +67,8 @@ function App() {
               <AppRoutes />
             </Router>
           </LanguageProvider>
-        </PinTimeoutProvider> {/* Close PinTimeoutProvider */}
-      </LogoutTimeoutProvider>
+        </LogoutTimeoutProvider>
+      </PinTimeoutProvider>
     </AuthProvider>
   );
 }
