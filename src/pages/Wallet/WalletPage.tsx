@@ -42,8 +42,8 @@ const WalletPage: React.FC = () => {
   // Use the PIN timeout context
   const { pinTimeout, isPinVerified, verifyPin, lockPin, hasPin } = usePinTimeout();
   
-  // State to control whether the PIN is currently verified (session-based)
-  const [canLock, setCanLock] = useState(false);
+  // Separate state for PIN lock management (local to this component)
+  const [isLocalLocked, setIsLocalLocked] = useState(false);
   
   // Original wallet state
   const [wallets, setWallets] = useState<WalletData[]>([]);
@@ -57,14 +57,15 @@ const WalletPage: React.FC = () => {
   const [recalcLoading, setRecalcLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Update canLock state when PIN status changes
+  // Sync PIN verification state from context to local
   useEffect(() => {
-    // Can lock if:
-    // 1. PIN is set (hasPin) 
-    // 2. PIN timeout is enabled (pinTimeout > 0)
-    // 3. PIN has been verified in this session (isPinVerified)
-    setCanLock(hasPin && pinTimeout !== 0 && pinTimeout !== undefined && isPinVerified);
-  }, [hasPin, pinTimeout, isPinVerified]);
+    // We need to track if PIN is verified
+    if (!isPinVerified && hasPin && pinTimeout !== 0) {
+      setIsLocalLocked(true);
+    } else {
+      setIsLocalLocked(false);
+    }
+  }, [isPinVerified, hasPin, pinTimeout]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -109,18 +110,23 @@ const WalletPage: React.FC = () => {
     });
   }, [wallets]);
 
-  // Handle PIN verification - also update canLock
+  // Handle PIN verification
   const handlePinVerify = () => {
     verifyPin();
-    setCanLock(true);
+    setIsLocalLocked(false);
   };
 
-  // Handle manual lock
+  // Forcefully lock the wallet (both in context and locally)
   const handleManualLock = () => {
-    if (canLock) {
-      lockPin();
-      setCanLock(false);
+    // Only allow locking if PIN is set, timeout is enabled, and wallet is currently unlocked
+    if (hasPin && pinTimeout !== 0 && !isLocalLocked) {
       console.log("Manual lock triggered");
+      
+      // Call context lock function to update global state
+      lockPin();
+      
+      // Also update local state
+      setIsLocalLocked(true);
     }
   };
 
@@ -151,13 +157,16 @@ const WalletPage: React.FC = () => {
     setSearchTerm(term);
   };
 
+  // Can the wallet be locked manually?
+  const canLockManually = hasPin && pinTimeout !== 0 && !isLocalLocked;
+
   return (
     <LayoutShell>
       <main
         className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300"
       >
-        {/* PIN Lock Overlay - Show when PIN is not verified */}
-        {!isPinVerified && hasPin && pinTimeout !== 0 && (
+        {/* PIN Lock Overlay - Show based on local lock state */}
+        {isLocalLocked && hasPin && pinTimeout !== 0 && (
           <PinEntryModal onPinVerify={handlePinVerify} />
         )}
       
@@ -187,16 +196,16 @@ const WalletPage: React.FC = () => {
               </button>
               
               {/* Lock Button - Only show if PIN is set */}
-              {hasPin && (
+              {hasPin && pinTimeout !== 0 && (
                 <button
                   onClick={handleManualLock}
-                  disabled={!canLock}
+                  disabled={isLocalLocked}
                   className={`flex items-center border rounded-md py-1 px-2 ${
-                    canLock
+                    !isLocalLocked
                       ? 'border-gray-300 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
                       : 'border-gray-200 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                   }`}
-                  title={canLock ? "Kunci Dompet" : "Dompet terkunci atau PIN tidak aktif"}
+                  title={!isLocalLocked ? "Kunci Dompet" : "Dompet sudah terkunci"}
                   aria-label="Kunci Dompet"
                 >
                   <Lock size={16} />
