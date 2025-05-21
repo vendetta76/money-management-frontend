@@ -1,157 +1,276 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { formatCurrency } from "@helpers/formatCurrency";
-import { Info } from "lucide-react";
-import { Treemap, ResponsiveContainer, Tooltip } from "recharts";
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, DollarSign, ArrowRightCircle } from "lucide-react";
+import CountUp from "react-countup";
 
 interface WalletTotalOverviewProps {
   totalsByCurrency: Record<string, number>;
   showBalance: boolean;
 }
 
-// Color palette for the treemap
-const COLORS = [
-  "#4f46e5", "#7c3aed", "#9333ea", "#c026d3", "#db2777",
-  "#e11d48", "#f59e0b", "#d97706", "#84cc16", "#10b981",
-  "#06b6d4", "#3b82f6"
-];
-
 const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   totalsByCurrency,
   showBalance,
 }) => {
-  const [activeIndex, setActiveIndex] = useState<number>(-1);
-
-  // Create data structure for the treemap
-  const data = {
-    name: "Currencies",
-    children: Object.entries(totalsByCurrency)
-      .filter(([_, value]) => value > 0) // Only include positive balances
-      .map(([currency, value], index) => ({
-        name: currency,
-        size: value,
-        value, // Keep the original value for tooltips
-        symbol: formatCurrency(0, currency).replace(/\d+([.,]\d+)?/, ""),
-        color: COLORS[index % COLORS.length]
-      }))
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  
+  // Optional: Add previous data to calculate trends (mock data for demo)
+  const mockTrends = {
+    "USD": 2.5, "IDR": -1.3, "THB": 5.1, "USDT": 0.2, "CNY": -0.8,
+    "JPY": 1.2, "EUR": -2.1, "GBP": 0.9, "SGD": -0.5, "AUD": 2.3
   };
 
-  // Custom content for treemap cells
-  const CustomizedContent = (props: any) => {
-    const { x, y, width, height, index, name, symbol, color } = props;
+  // Get dominant currency (with highest balance)
+  const dominantCurrency = Object.entries(totalsByCurrency)
+    .sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+  
+  // Calculate total across all currencies (simplified, ideally would convert to base currency)
+  const totalBalance = Object.values(totalsByCurrency).reduce((sum, value) => sum + value, 0);
+  
+  // Sort currencies by balance
+  const sortedCurrencies = Object.entries(totalsByCurrency)
+    .sort((a, b) => b[1] - a[1]);
     
-    // Determine text size based on cell dimensions
-    const fontSize = Math.min(width / 6, height / 4, 16);
-    const isActive = activeIndex === index;
+  // Check scroll possibility
+  useEffect(() => {
+    const checkScroll = () => {
+      if (!carouselRef.current) return;
+      
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10); // 10px buffer
+    };
     
-    return (
-      <g>
-        <rect
-          x={x}
-          y={y}
-          width={width}
-          height={height}
-          style={{
-            fill: color,
-            stroke: "#fff",
-            strokeWidth: isActive ? 2 : 0.5,
-            opacity: isActive ? 1 : 0.85,
-          }}
-        />
-        {width > 30 && height > 30 && (
-          <>
-            <text
-              x={x + width / 2}
-              y={y + height / 2 - 10}
-              textAnchor="middle"
-              fill="#fff"
-              fontSize={fontSize}
-              fontWeight="bold"
-            >
-              {name}
-            </text>
-            {showBalance && (
-              <text
-                x={x + width / 2}
-                y={y + height / 2 + 10}
-                textAnchor="middle"
-                fill="#fff"
-                fontSize={fontSize * 0.9}
-              >
-                {`${symbol}...`}
-              </text>
-            )}
-          </>
-        )}
-      </g>
-    );
-  };
-
-  // Custom tooltip for hover details
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length > 0) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
-          <p className="text-sm font-bold">{data.name}</p>
-          {showBalance ? (
-            <p className="text-lg font-bold">
-              {formatCurrency(data.value, data.name)}
-            </p>
-          ) : (
-            <p className="text-lg font-bold">••••••</p>
-          )}
-        </div>
-      );
+    checkScroll();
+    
+    // Add scroll event listener
+    const ref = carouselRef.current;
+    if (ref) {
+      ref.addEventListener('scroll', checkScroll);
+      return () => ref.removeEventListener('scroll', checkScroll);
     }
-    return null;
+  }, [totalsByCurrency]);
+  
+  // Scroll handlers
+  const handleScrollLeft = () => {
+    if (!carouselRef.current) return;
+    carouselRef.current.scrollBy({ left: -300, behavior: 'smooth' });
   };
+  
+  const handleScrollRight = () => {
+    if (!carouselRef.current) return;
+    carouselRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+  };
+  
+  // Get currency with highest positive and negative trends
+  const getTopTrendCurrencies = () => {
+    const trends = Object.entries(mockTrends)
+      .filter(([currency]) => currency in totalsByCurrency);
+    
+    if (trends.length === 0) return { top: null, bottom: null };
+    
+    trends.sort((a, b) => b[1] - a[1]);
+    return {
+      top: trends[0],
+      bottom: trends[trends.length - 1]
+    };
+  };
+  
+  const { top: topTrend, bottom: bottomTrend } = getTopTrendCurrencies();
 
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">💰 Total Saldo per Mata Uang</h2>
-        <div className="tooltip relative group">
-          <Info size={18} className="text-gray-400 cursor-help" />
-          <div className="absolute right-0 top-6 w-64 bg-white dark:bg-gray-800 p-2 rounded shadow-lg border text-sm hidden group-hover:block z-10">
-            Size of each block represents the proportion of your total assets in that currency
+      <h2 className="text-xl font-bold mb-4">💰 Total Saldo per Mata Uang</h2>
+      
+      {/* Insights Panel */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        {/* Dominant Currency */}
+        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg p-4 shadow-md">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-xs font-medium text-indigo-100">Main Currency</p>
+              <h3 className="text-xl font-bold">{dominantCurrency || "No Data"}</h3>
+            </div>
+            <div className="bg-white/20 rounded-full p-2">
+              <DollarSign size={20} className="text-white" />
+            </div>
+          </div>
+          <div className="mt-2">
+            {showBalance && dominantCurrency ? (
+              <div className="text-2xl font-bold">
+                <CountUp
+                  end={totalsByCurrency[dominantCurrency] || 0}
+                  duration={1.2}
+                  separator="," 
+                  decimals={0}
+                  prefix={formatCurrency(0, dominantCurrency).replace(/\d+([.,]\d+)?/, "")}
+                />
+              </div>
+            ) : (
+              <div className="text-2xl font-bold">••••••</div>
+            )}
+            <p className="text-xs mt-1 text-indigo-100">
+              {Object.keys(totalsByCurrency).length > 1 ? 
+                `${Math.round((totalsByCurrency[dominantCurrency] / totalBalance) * 100)}% of your portfolio` : 
+                "100% of your portfolio"}
+            </p>
           </div>
         </div>
+        
+        {/* Rising Currency (if available) */}
+        {topTrend && topTrend[1] > 0 && (
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 shadow-md border-l-4 border-green-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Rising</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{topTrend[0]}</h3>
+              </div>
+              <div className="text-green-500">
+                <TrendingUp size={24} />
+              </div>
+            </div>
+            <div className="mt-2">
+              {showBalance ? (
+                <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <CountUp
+                    end={totalsByCurrency[topTrend[0]] || 0}
+                    duration={1.2}
+                    separator="," 
+                    decimals={0}
+                    prefix={formatCurrency(0, topTrend[0]).replace(/\d+([.,]\d+)?/, "")}
+                  />
+                </div>
+              ) : (
+                <div className="text-lg font-bold text-gray-900 dark:text-white">••••••</div>
+              )}
+              <p className="text-sm text-green-500 font-medium flex items-center mt-1">
+                <TrendingUp size={16} className="mr-1" /> +{topTrend[1]}%
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Falling Currency (if available) */}
+        {bottomTrend && bottomTrend[1] < 0 && (
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 shadow-md border-l-4 border-red-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Falling</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{bottomTrend[0]}</h3>
+              </div>
+              <div className="text-red-500">
+                <TrendingDown size={24} />
+              </div>
+            </div>
+            <div className="mt-2">
+              {showBalance ? (
+                <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <CountUp
+                    end={totalsByCurrency[bottomTrend[0]] || 0}
+                    duration={1.2}
+                    separator="," 
+                    decimals={0}
+                    prefix={formatCurrency(0, bottomTrend[0]).replace(/\d+([.,]\d+)?/, "")}
+                  />
+                </div>
+              ) : (
+                <div className="text-lg font-bold text-gray-900 dark:text-white">••••••</div>
+              )}
+              <p className="text-sm text-red-500 font-medium flex items-center mt-1">
+                <TrendingDown size={16} className="mr-1" /> {bottomTrend[1]}%
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Portfolio Summary (replaces insights if not enough data) */}
+        {(!topTrend || !bottomTrend) && (
+          <div className="bg-white dark:bg-zinc-800 rounded-lg p-4 shadow-md">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Portfolio</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {Object.keys(totalsByCurrency).length} Currencies
+                </h3>
+              </div>
+              <ArrowRightCircle size={24} className="text-gray-400" />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1">
+              {sortedCurrencies.slice(0, 5).map(([currency]) => (
+                <span key={currency} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium">
+                  {currency}
+                </span>
+              ))}
+              {sortedCurrencies.length > 5 && (
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-medium">
+                  +{sortedCurrencies.length - 5} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       
-      <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-4 overflow-hidden">
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <Treemap
-              data={data.children}
-              dataKey="size"
-              aspectRatio={4/3}
-              stroke="#fff"
-              onMouseEnter={(_, index) => setActiveIndex(index)}
-              onMouseLeave={() => setActiveIndex(-1)}
-              content={<CustomizedContent />}
-            >
-              <Tooltip content={<CustomTooltip />} />
-            </Treemap>
-          </ResponsiveContainer>
-        </div>
+      {/* Currency Carousel */}
+      <div className="relative">
+        {canScrollLeft && (
+          <button 
+            onClick={handleScrollLeft}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-800 shadow-md rounded-full p-1 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <ChevronLeft size={24} />
+          </button>
+        )}
         
-        {/* Legend - Bottom summary */}
-        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3">
-          {Object.entries(totalsByCurrency).length > 0 ? (
-            <div className="flex flex-wrap gap-3">
-              {Object.entries(totalsByCurrency).map(([currency], index) => (
-                <div key={currency} className="flex items-center">
-                  <div 
-                    className="w-3 h-3 rounded-full mr-1" 
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-xs font-medium">{currency}</span>
+        {canScrollRight && (
+          <button 
+            onClick={handleScrollRight}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-800 shadow-md rounded-full p-1 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <ChevronRight size={24} />
+          </button>
+        )}
+        
+        <div 
+          ref={carouselRef}
+          className="flex gap-4 overflow-x-auto pb-2 px-1 snap-x scrollbar-hide"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {sortedCurrencies.map(([currency, total]) => (
+            <div
+              key={currency}
+              className="snap-start flex-shrink-0 w-56 bg-white dark:bg-zinc-800 shadow-md rounded-lg p-4 border-t-4 border-indigo-500 hover:shadow-lg transition flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                  {currency}
                 </div>
-              ))}
+                {currency in mockTrends && (
+                  <div className={`text-xs font-medium rounded px-1.5 py-0.5 flex items-center ${
+                    mockTrends[currency] > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {mockTrends[currency] > 0 ? <TrendingUp size={12} className="mr-0.5" /> : <TrendingDown size={12} className="mr-0.5" />}
+                    {mockTrends[currency] > 0 ? '+' : ''}{mockTrends[currency]}%
+                  </div>
+                )}
+              </div>
+              <div className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                {showBalance ? (
+                  <CountUp
+                    end={total}
+                    duration={1.2}
+                    separator="," 
+                    decimals={0}
+                    prefix={formatCurrency(0, currency).replace(/\d+([.,]\d+)?/, "")}
+                  />
+                ) : (
+                  "••••••"
+                )}
+              </div>
             </div>
-          ) : (
-            <div className="text-gray-500 text-sm">No currencies available</div>
-          )}
+          ))}
         </div>
       </div>
     </div>
