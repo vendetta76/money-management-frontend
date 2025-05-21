@@ -4,13 +4,17 @@ import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Star, StarOff, Se
 import CountUp from "react-countup";
 import { useAuth } from "@context/AuthContext";
 import { db } from "@lib/firebaseClient";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { toast } from "react-hot-toast";
 
 interface WalletTotalOverviewProps {
   totalsByCurrency: Record<string, number>;
   showBalance: boolean;
 }
+
+// Constants
+const SETTINGS_DOC_ID = "_currency_settings"; // Prefixed with _ to avoid collisions
+const LOCAL_STORAGE_FALLBACK = "moniq_primary_currency";
 
 const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   totalsByCurrency,
@@ -35,25 +39,46 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   // State for primary currency
   const [primaryCurrency, setPrimaryCurrency] = useState<string>(defaultCurrency);
   
-  // Load primary currency preference from Firestore on mount
+  // Load primary currency preference from Firestore (in wallets collection)
   useEffect(() => {
     const loadPrimaryCurrency = async () => {
       if (!user?.uid) return;
       
       try {
         setLoading(true);
-        const userPrefsRef = doc(db, "users", user.uid, "preferences", "currency");
-        const prefsSnap = await getDoc(userPrefsRef);
+        // Use wallets collection (which already has permissions)
+        const settingsRef = doc(db, "users", user.uid, "wallets", SETTINGS_DOC_ID);
+        const docSnap = await getDoc(settingsRef);
         
-        if (prefsSnap.exists()) {
-          const { primaryCurrency } = prefsSnap.data();
-          // Only set if the currency still exists in the wallet
-          if (primaryCurrency && totalsByCurrency[primaryCurrency] !== undefined) {
-            setPrimaryCurrency(primaryCurrency);
+        let savedCurrency = "";
+        
+        if (docSnap.exists() && docSnap.data().primaryCurrency) {
+          savedCurrency = docSnap.data().primaryCurrency;
+        } else {
+          // Try localStorage as fallback
+          try {
+            const localSaved = localStorage.getItem(LOCAL_STORAGE_FALLBACK);
+            if (localSaved) savedCurrency = localSaved;
+          } catch (e) {
+            console.error("Error reading from localStorage:", e);
           }
+        }
+        
+        // Only set if the currency still exists in the wallet
+        if (savedCurrency && totalsByCurrency[savedCurrency] !== undefined) {
+          setPrimaryCurrency(savedCurrency);
         }
       } catch (error) {
         console.error("Error loading primary currency:", error);
+        // Try localStorage as fallback
+        try {
+          const localSaved = localStorage.getItem(LOCAL_STORAGE_FALLBACK);
+          if (localSaved && totalsByCurrency[localSaved] !== undefined) {
+            setPrimaryCurrency(localSaved);
+          }
+        } catch (e) {
+          console.error("Error reading from localStorage:", e);
+        }
       } finally {
         setLoading(false);
       }
@@ -76,16 +101,33 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
     
     try {
       setLoading(true);
-      const userPrefsRef = doc(db, "users", user.uid, "preferences", "currency");
+      // Use wallets collection (which already has permissions)
+      const settingsRef = doc(db, "users", user.uid, "wallets", SETTINGS_DOC_ID);
       
-      await setDoc(userPrefsRef, {
+      // Save to Firestore
+      await setDoc(settingsRef, {
         primaryCurrency: currency,
+        type: "settings", // Mark this as a settings doc, not a real wallet
         updatedAt: new Date()
       }, { merge: true });
+      
+      // Also save to localStorage as backup
+      try {
+        localStorage.setItem(LOCAL_STORAGE_FALLBACK, currency);
+      } catch (e) {
+        console.error("Error saving to localStorage:", e);
+      }
       
     } catch (error) {
       console.error("Error saving primary currency:", error);
       toast.error("Gagal menyimpan pengaturan mata uang");
+      
+      // Save to localStorage as fallback
+      try {
+        localStorage.setItem(LOCAL_STORAGE_FALLBACK, currency);
+      } catch (e) {
+        console.error("Error saving to localStorage:", e);
+      }
     } finally {
       setLoading(false);
     }
