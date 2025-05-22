@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { formatCurrency } from "@helpers/formatCurrency";
-import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Palette, Eye, EyeOff, Check, Copy } from "lucide-react";
+import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Palette, Eye, EyeOff, Check, Copy, Star } from "lucide-react";
 import CountUp from "react-countup";
 import { useAuth } from "@context/AuthContext";
 import { db } from "@lib/firebaseClient";
