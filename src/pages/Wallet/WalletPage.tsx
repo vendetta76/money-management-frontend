@@ -9,7 +9,7 @@ import {
 import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import LayoutShell from "../../layouts/LayoutShell";
-import { Plus, Eye, EyeOff, Search, Lock, Unlock, MoreVertical } from "lucide-react";
+import { Plus, Eye, EyeOff, Search, Lock, Unlock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import WalletPopupHistory from "../../components/WalletPopupHistory";
@@ -41,7 +41,6 @@ const WalletPage: React.FC = () => {
   
   const { pinTimeout, isPinVerified, verifyPin, lockPin, hasPin } = usePinTimeout();
   const [showPinDialog, setShowPinDialog] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   
   const [wallets, setWallets] = useState<WalletData[]>([]);
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
@@ -77,9 +76,6 @@ const WalletPage: React.FC = () => {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
-      if (window.innerWidth > 768) {
-        setShowMobileMenu(false);
-      }
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -129,7 +125,6 @@ const WalletPage: React.FC = () => {
     console.log("Manual lock triggered");
     lockPin();
     setShowPinDialog(true);
-    setShowMobileMenu(false);
   };
 
   const walletMap = Object.fromEntries(wallets.map((w) => [w.id, w]));
@@ -159,50 +154,6 @@ const WalletPage: React.FC = () => {
 
   const canLockManually = hasPin && isPinVerified;
 
-  // Action buttons component for reusability
-  const ActionButtons = ({ isMobile = false, inDropdown = false }) => (
-    <div className={`flex ${isMobile && !inDropdown ? 'flex-col' : 'flex-row'} items-center gap-2`}>
-      {/* Show/Hide Balance Button */}
-      <button
-        onClick={() => {
-          setShowBalance(!showBalance);
-          if (isMobile) setShowMobileMenu(false);
-        }}
-        className={`flex items-center gap-1.5 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors ${
-          isMobile && !inDropdown ? 'justify-start w-full py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700' : ''
-        }`}
-      >
-        {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
-        <span className="text-sm">{showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}</span>
-      </button>
-      
-      {/* Lock Button */}
-      {canLockManually && (
-        <button
-          onClick={handleManualLock}
-          className={`flex items-center border rounded-md py-1 px-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer gap-1 transition-colors ${
-            isMobile && !inDropdown ? 'justify-start w-full border-0 py-2 px-3 rounded-lg' : ''
-          }`}
-          title="Kunci Dompet"
-          aria-label="Kunci Dompet"
-        >
-          <Lock size={16} />
-          <span className="text-sm">Kunci Dompet</span>
-        </button>
-      )}
-      
-      {/* Recalc Button */}
-      <div className={isMobile && !inDropdown ? 'w-full' : ''}>
-        <RecalcButtonWithTooltip
-          userId={user?.uid || ""}
-          setLoading={setRecalcLoading}
-          loading={recalcLoading}
-          isMobile={isMobile && !inDropdown}
-        />
-      </div>
-    </div>
-  );
-
   return (
     <LayoutShell>
       <main className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300">
@@ -227,80 +178,105 @@ const WalletPage: React.FC = () => {
 
         <div className="relative z-10">
           {/* Header Section */}
-          <div className="mb-6">
-            {/* Title and Status Row */}
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-6 gap-4">
+            {/* Title and Status */}
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
                 Dompet Saya
-                {hasPin && (
-                  <span className={`inline-flex items-center text-sm font-medium rounded-full px-2 py-0.5 ${
-                    isPinVerified 
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" 
-                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                  }`}>
-                    {isPinVerified ? (
-                      <>
-                        <Unlock size={14} className="mr-1" />
-                        Terbuka
-                      </>
-                    ) : (
-                      <>
-                        <Lock size={14} className="mr-1" />
-                        Terkunci
-                      </>
-                    )}
-                  </span>
-                )}
               </h1>
-
-              {/* Desktop Actions */}
-              <div className="hidden md:flex items-center gap-3">
-                <ActionButtons />
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm"
-                >
-                  <Plus size={16} /> Tambah Wallet
-                </button>
-              </div>
-
-              {/* Mobile Menu Button */}
-              <div className="md:hidden relative">
-                <button
-                  onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  aria-label="Menu"
-                >
-                  <MoreVertical size={20} />
-                </button>
-
-                {/* Mobile Dropdown Menu */}
-                {showMobileMenu && (
-                  <>
-                    {/* Backdrop */}
-                    <div 
-                      className="fixed inset-0 z-10 bg-black/20"
-                      onClick={() => setShowMobileMenu(false)}
-                    />
-                    {/* Menu */}
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-20">
-                      <div className="px-3 py-2 space-y-1">
-                        <ActionButtons isMobile={true} inDropdown={true} />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+              {hasPin && (
+                <span className={`inline-flex items-center text-xs sm:text-sm font-medium rounded-full px-2 py-1 ${
+                  isPinVerified 
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" 
+                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                }`}>
+                  {isPinVerified ? (
+                    <>
+                      <Unlock size={12} className="mr-1" />
+                      <span className="hidden sm:inline">Terbuka</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={12} className="mr-1" />
+                      <span className="hidden sm:inline">Terkunci</span>
+                    </>
+                  )}
+                </span>
+              )}
             </div>
 
-            {/* Mobile Add Wallet Button - Prominent placement */}
-            <div className="md:hidden mb-4">
+            {/* Desktop Action Buttons */}
+            <div className="hidden sm:flex items-center gap-3">
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
+              >
+                {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+                <span className="text-sm">{showBalance ? "Sembunyikan" : "Tampilkan"}</span>
+              </button>
+              
+              {canLockManually && (
+                <button
+                  onClick={handleManualLock}
+                  className="flex items-center border rounded-md py-1.5 px-3 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors gap-1.5"
+                  title="Kunci Dompet"
+                >
+                  <Lock size={16} />
+                  <span className="text-sm">Kunci</span>
+                </button>
+              )}
+              
+              <RecalcButtonWithTooltip
+                userId={user?.uid || ""}
+                setLoading={setRecalcLoading}
+                loading={recalcLoading}
+              />
+              
               <button
                 onClick={() => setShowForm(true)}
-                className="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-3 rounded-lg text-base flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
+                className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm"
               >
-                <Plus size={18} /> Tambah Wallet
+                <Plus size={16} /> Tambah Wallet
               </button>
+            </div>
+          </div>
+
+          {/* Mobile Quick Actions - Simple horizontal scroll */}
+          <div className="sm:hidden mb-4">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex-shrink-0 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm font-medium"
+              >
+                <Plus size={16} /> Tambah
+              </button>
+              
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
+              >
+                {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
+                <span>{showBalance ? "Sembunyikan" : "Tampilkan"}</span>
+              </button>
+              
+              {canLockManually && (
+                <button
+                  onClick={handleManualLock}
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
+                >
+                  <Lock size={16} />
+                  <span>Kunci</span>
+                </button>
+              )}
+              
+              <div className="flex-shrink-0">
+                <RecalcButtonWithTooltip
+                  userId={user?.uid || ""}
+                  setLoading={setRecalcLoading}
+                  loading={recalcLoading}
+                  isMobile={true}
+                />
+              </div>
             </div>
           </div>
 
@@ -343,9 +319,15 @@ const WalletPage: React.FC = () => {
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <Search size={48} className="text-gray-400 mb-4" />
                       <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Tidak ada hasil</h3>
-                      <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                      <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6">
                         Tidak ada dompet yang cocok dengan pencarian "{searchTerm}". Coba kata kunci lain atau tambahkan dompet baru.
                       </p>
+                      <button
+                        onClick={() => setShowForm(true)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                      >
+                        <Plus size={16} /> Tambah Wallet Baru
+                      </button>
                     </div>
                   ) : (
                     <WalletGrid
@@ -388,17 +370,6 @@ const WalletPage: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Floating Action Button for Mobile (Alternative approach) */}
-        {isMobile && shouldShowWalletContent && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="fixed bottom-6 right-6 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-30 md:hidden"
-            aria-label="Tambah Wallet"
-          >
-            <Plus size={24} />
-          </button>
-        )}
       </main>
 
       <WalletFormModal
