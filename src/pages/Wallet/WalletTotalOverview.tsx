@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { formatCurrency } from "@helpers/formatCurrency";
-import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Palette, Eye, EyeOff, Check, Copy, Star } from "lucide-react";
+import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Palette, Eye, EyeOff, Check, Copy, Star, StarOff } from "lucide-react";
 import CountUp from "react-countup";
 import { useAuth } from "@context/AuthContext";
 import { db } from "@lib/firebaseClient";
@@ -14,7 +14,8 @@ interface WalletTotalOverviewProps {
 }
 
 // Constants
-const SETTINGS_DOC_ID = "_theme_settings";
+const SETTINGS_DOC_ID = "_currency_settings";
+const LOCAL_STORAGE_FALLBACK = "moniq_primary_currency";
 
 // Modern Material Design Color Themes
 const THEME_PRESETS = [
@@ -52,6 +53,9 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
     end: "#8b5cf6"
   });
   
+  // Primary currency state
+  const [primaryCurrency, setPrimaryCurrency] = useState<string>("");
+  
   // Sort currencies by balance
   const sortedCurrencies = Object.entries(totalsByCurrency)
     .sort((a, b) => b[1] - a[1]);
@@ -59,16 +63,16 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   // Get total count of currencies
   const currencyCount = sortedCurrencies.length;
   
-  // Use the first currency (highest by raw amount) for primary display
-  const primaryCurrency = sortedCurrencies[0]?.[0] || "";
+  // Default to highest balance currency for fallback
+  const defaultCurrency = sortedCurrencies[0]?.[0] || "";
   const primaryAmount = totalsByCurrency[primaryCurrency] || 0;
   
   // Compute total of all currencies
   const totalSum = Object.values(totalsByCurrency).reduce((sum, val) => sum + val, 0);
   
-  // Load theme from Firestore
+  // Load settings from Firestore
   useEffect(() => {
-    const loadTheme = async () => {
+    const loadSettings = async () => {
       if (!user?.uid) return;
       
       try {
@@ -76,30 +80,52 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
         const settingsRef = doc(db, "users", user.uid, "wallets", SETTINGS_DOC_ID);
         const docSnap = await getDoc(settingsRef);
         
-        if (docSnap.exists() && docSnap.data().theme) {
-          const savedTheme = docSnap.data().theme;
-          setCurrentTheme(savedTheme);
-          setCustomColor(savedTheme.start);
-          setCustomEndColor(savedTheme.end);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
           
-          // Convert hex to RGB for inputs
-          const startRgb = hexToRgb(savedTheme.start);
-          const endRgb = hexToRgb(savedTheme.end);
-          if (startRgb) setRgbStart(startRgb);
-          if (endRgb) setRgbEnd(endRgb);
+          // Load theme
+          if (data.theme) {
+            setCurrentTheme(data.theme);
+            setCustomColor(data.theme.start);
+            setCustomEndColor(data.theme.end);
+            
+            // Convert hex to RGB for inputs
+            const startRgb = hexToRgb(data.theme.start);
+            const endRgb = hexToRgb(data.theme.end);
+            if (startRgb) setRgbStart(startRgb);
+            if (endRgb) setRgbEnd(endRgb);
+          }
+          
+          // Load primary currency
+          if (data.primaryCurrency && totalsByCurrency[data.primaryCurrency] !== undefined) {
+            setPrimaryCurrency(data.primaryCurrency);
+          } else {
+            setPrimaryCurrency(defaultCurrency);
+          }
+        } else {
+          setPrimaryCurrency(defaultCurrency);
         }
       } catch (error) {
-        console.error("Error loading theme:", error);
+        console.error("Error loading settings:", error);
+        setPrimaryCurrency(defaultCurrency);
       } finally {
         setLoading(false);
       }
     };
     
-    loadTheme();
-  }, [user?.uid]);
+    loadSettings();
+  }, [user?.uid, totalsByCurrency, defaultCurrency]);
   
-  // Save theme to Firestore
-  const saveTheme = async (theme: { start: string; end: string }) => {
+  // Update primary currency if current selection is no longer valid
+  useEffect(() => {
+    if (sortedCurrencies.length > 0 && !totalsByCurrency[primaryCurrency]) {
+      setPrimaryCurrency(defaultCurrency);
+      savePrimaryCurrency(defaultCurrency);
+    }
+  }, [totalsByCurrency, primaryCurrency, defaultCurrency]);
+  
+  // Save settings to Firestore
+  const saveSettings = async (settings: { theme?: { start: string; end: string }, primaryCurrency?: string }) => {
     if (!user?.uid) return;
     
     try {
@@ -107,19 +133,34 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
       const settingsRef = doc(db, "users", user.uid, "wallets", SETTINGS_DOC_ID);
       
       await setDoc(settingsRef, {
-        theme: theme,
-        type: "theme_settings",
+        ...settings,
+        type: "settings",
         updatedAt: new Date()
       }, { merge: true });
       
-      toast.success("Theme berhasil disimpan!");
+      if (settings.theme) {
+        toast.success("Theme berhasil disimpan!");
+      }
+      if (settings.primaryCurrency) {
+        toast.success("Primary currency updated!");
+      }
       
     } catch (error) {
-      console.error("Error saving theme:", error);
-      toast.error("Gagal menyimpan tema");
+      console.error("Error saving settings:", error);
+      toast.error("Gagal menyimpan pengaturan");
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Save theme to Firestore
+  const saveTheme = async (theme: { start: string; end: string }) => {
+    await saveSettings({ theme });
+  };
+  
+  // Save primary currency
+  const savePrimaryCurrency = async (currency: string) => {
+    await saveSettings({ primaryCurrency: currency });
   };
   
   // Utility functions
@@ -167,6 +208,11 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
     const newTheme = { start: startColor, end: endColor };
     setCurrentTheme(newTheme);
     saveTheme(newTheme);
+  };
+  
+  const handleSetPrimary = (currency: string) => {
+    setPrimaryCurrency(currency);
+    savePrimaryCurrency(currency);
   };
   
   const copyColorToClipboard = (color: string) => {
@@ -551,7 +597,7 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
                 <div>
                   <div className="flex items-center">
                     <Star size={14} className="text-yellow-300 mr-1.5" />
-                    <div className="text-xs font-medium text-indigo-200">Main Currency</div>
+                    <div className="text-xs font-medium text-indigo-200">Primary Currency</div>
                   </div>
                   <div className="text-2xl font-bold mt-1">
                     {primaryCurrency}
@@ -575,7 +621,7 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
               
               {showBalance && (
                 <div className="mt-2 text-xs text-indigo-200">
-                  {Math.round((primaryAmount / totalSum) * 100)}% of your total balance
+                  Your selected primary currency
                 </div>
               )}
             </div>
@@ -642,24 +688,24 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
             <div className="p-4 pt-0 space-y-2 max-h-60 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {sortedCurrencies.map(([currency, total]) => {
-                  const isFirst = currency === primaryCurrency;
+                  const isPrimary = currency === primaryCurrency;
                   
                   return (
                     <div 
                       key={currency}
                       className={`flex justify-between items-center p-2 rounded-lg ${
-                        isFirst 
+                        isPrimary 
                           ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800' 
                           : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       <div className="flex items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                          isFirst
+                          isPrimary
                             ? 'bg-indigo-500 text-white'
                             : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
                         }`}>
-                          {isFirst ? (
+                          {isPrimary ? (
                             <Star size={16} />
                           ) : (
                             currency.slice(0, 1)
@@ -668,12 +714,19 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white flex items-center">
                             {currency}
+                            {!isPrimary && (
+                              <button
+                                className="ml-2 p-1 text-gray-400 hover:text-yellow-500 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSetPrimary(currency);
+                                }}
+                                title="Set as primary currency"
+                              >
+                                <StarOff size={14} />
+                              </button>
+                            )}
                           </div>
-                          {showBalance && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {Math.round((total / totalSum) * 100)}% of total
-                            </div>
-                          )}
                         </div>
                       </div>
                       <div className="font-bold text-gray-900 dark:text-white">
