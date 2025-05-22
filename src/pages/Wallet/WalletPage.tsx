@@ -50,7 +50,6 @@ const WalletPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showBalance, setShowBalance] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [recalcLoading, setRecalcLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const shouldShowWalletContent = !hasPin || isPinVerified;
@@ -210,19 +209,16 @@ const WalletPage: React.FC = () => {
               {canLockManually && (
                 <button
                   onClick={handleManualLock}
-                  className="flex items-center border rounded-md py-1.5 px-3 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors gap-1.5"
-                  title="Kunci Dompet"
+                  className="group relative flex items-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md gap-2"
+                  title="Kunci Dompet untuk Keamanan"
                 >
-                  <Lock size={16} />
-                  <span className="text-sm">Kunci</span>
+                  <div className="relative">
+                    <Lock size={16} className="transition-transform group-hover:scale-110" />
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <span>Kunci Dompet</span>
                 </button>
               )}
-              
-              <RecalcButtonWithTooltip
-                userId={user?.uid || ""}
-                setLoading={setRecalcLoading}
-                loading={recalcLoading}
-              />
               
               <button
                 onClick={() => setShowForm(true)}
@@ -246,21 +242,15 @@ const WalletPage: React.FC = () => {
               {canLockManually && (
                 <button
                   onClick={handleManualLock}
-                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
+                  className="group flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow-sm"
                 >
-                  <Lock size={16} />
+                  <div className="relative">
+                    <Lock size={16} className="transition-transform group-hover:scale-110" />
+                    <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse"></div>
+                  </div>
                   <span>Kunci</span>
                 </button>
               )}
-              
-              <div className="flex-shrink-0">
-                <RecalcButtonWithTooltip
-                  userId={user?.uid || ""}
-                  setLoading={setRecalcLoading}
-                  loading={recalcLoading}
-                  isMobile={true}
-                />
-              </div>
             </div>
           </div>
 
