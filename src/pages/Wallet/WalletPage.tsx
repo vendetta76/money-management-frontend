@@ -207,14 +207,6 @@ const WalletPage: React.FC = () => {
 
             {/* Desktop Action Buttons */}
             <div className="hidden sm:flex items-center gap-3">
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
-              >
-                {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
-                <span className="text-sm">{showBalance ? "Sembunyikan" : "Tampilkan"}</span>
-              </button>
-              
               {canLockManually && (
                 <button
                   onClick={handleManualLock}
@@ -241,7 +233,7 @@ const WalletPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Quick Actions - Simple horizontal scroll */}
+          {/* Mobile Quick Actions */}
           <div className="sm:hidden mb-4">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
               <button
@@ -249,14 +241,6 @@ const WalletPage: React.FC = () => {
                 className="flex-shrink-0 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm font-medium"
               >
                 <Plus size={16} /> Tambah
-              </button>
-              
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
-              >
-                {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
-                <span>{showBalance ? "Sembunyikan" : "Tampilkan"}</span>
               </button>
               
               {canLockManually && (
@@ -314,7 +298,11 @@ const WalletPage: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <WalletTotalOverview totalsByCurrency={totalsByCurrency} showBalance={showBalance} />
+                  <WalletTotalOverview 
+                    totalsByCurrency={totalsByCurrency} 
+                    showBalance={showBalance}
+                    onToggleBalance={() => setShowBalance(!showBalance)}
+                  />
                   {filteredWallets.length === 0 && searchTerm.trim() !== "" ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <Search size={48} className="text-gray-400 mb-4" />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { formatCurrency } from "@helpers/formatCurrency";
-import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Star, StarOff, Settings, Loader } from "lucide-react";
+import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Star, StarOff, Settings, Loader, Eye, EyeOff } from "lucide-react";
 import CountUp from "react-countup";
 import { useAuth } from "@context/AuthContext";
 import { db } from "@lib/firebaseClient";
@@ -10,6 +10,7 @@ import { toast } from "react-hot-toast";
 interface WalletTotalOverviewProps {
   totalsByCurrency: Record<string, number>;
   showBalance: boolean;
+  onToggleBalance: () => void;
 }
 
 // Constants
@@ -19,6 +20,7 @@ const LOCAL_STORAGE_FALLBACK = "moniq_primary_currency";
 const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   totalsByCurrency,
   showBalance,
+  onToggleBalance,
 }) => {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
@@ -207,6 +209,18 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">💰 Summary</h2>
         <div className="flex items-center gap-2">
+          {/* Balance Toggle Button */}
+          <button
+            onClick={onToggleBalance}
+            className="flex items-center gap-1.5 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title={showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
+          >
+            {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+            <span className="text-sm hidden sm:inline">
+              {showBalance ? "Sembunyikan" : "Tampilkan"}
+            </span>
+          </button>
+          
           <button 
             onClick={() => setShowSettings(!showSettings)}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
