@@ -693,40 +693,33 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
                   return (
                     <div 
                       key={currency}
-                      className={`flex justify-between items-center p-2 rounded-lg ${
+                      className={`flex justify-between items-center p-3 rounded-lg ${
                         isPrimary 
                           ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800' 
                           : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       <div className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                          isPrimary
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
-                        }`}>
-                          {isPrimary ? (
-                            <Star size={16} />
-                          ) : (
-                            currency.slice(0, 1)
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white flex items-center">
-                            {currency}
-                            {!isPrimary && (
-                              <button
-                                className="ml-2 p-1 text-gray-400 hover:text-yellow-500 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSetPrimary(currency);
-                                }}
-                                title="Set as primary currency"
-                              >
-                                <StarOff size={14} />
-                              </button>
-                            )}
-                          </div>
+                        {isPrimary ? (
+                          <Star 
+                            size={20} 
+                            className="text-yellow-500 mr-3 flex-shrink-0" 
+                            fill="currentColor"
+                          />
+                        ) : (
+                          <button
+                            className="p-1 text-gray-400 hover:text-yellow-500 transition-colors mr-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSetPrimary(currency);
+                            }}
+                            title="Set as primary currency"
+                          >
+                            <StarOff size={20} />
+                          </button>
+                        )}
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {currency}
                         </div>
                       </div>
                       <div className="font-bold text-gray-900 dark:text-white">
