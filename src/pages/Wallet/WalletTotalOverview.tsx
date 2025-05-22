@@ -205,7 +205,7 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   return (
     <div className="mb-6 relative">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">💰 Total Saldo per Mata Uang</h2>
+        <h2 className="text-xl font-bold">💰 Summary</h2>
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setShowSettings(!showSettings)}

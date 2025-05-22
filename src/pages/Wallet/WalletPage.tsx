@@ -9,7 +9,7 @@ import {
 import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import LayoutShell from "../../layouts/LayoutShell";
-import { Plus, Eye, EyeOff, Search, Lock, Unlock } from "lucide-react";
+import { Plus, Eye, EyeOff, Search, Lock, Unlock, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import WalletPopupHistory from "../../components/WalletPopupHistory";
@@ -21,7 +21,7 @@ import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 import RecalcButtonWithTooltip from "./RecalcButtonWithTooltip";
 import WalletSearchBar from "./WalletSearchBar";
 import { usePinTimeout } from "../../context/PinTimeoutContext";
-import PinEntryModal from "../../components/PinEntryModal"; // Import the PIN entry component
+import PinEntryModal from "../../components/PinEntryModal";
 
 interface WalletData {
   id: string;
@@ -39,13 +39,10 @@ const WalletPage: React.FC = () => {
   const { user, userMeta } = useAuth();
   const { locked, message, isBypassed } = useIsBypassed("wallet");
   
-  // Use the PIN timeout context
   const { pinTimeout, isPinVerified, verifyPin, lockPin, hasPin } = usePinTimeout();
-
-  // State for PIN entry modal
   const [showPinDialog, setShowPinDialog] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   
-  // Original wallet state
   const [wallets, setWallets] = useState<WalletData[]>([]);
   const [walletOrder, setWalletOrder] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -57,11 +54,8 @@ const WalletPage: React.FC = () => {
   const [recalcLoading, setRecalcLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // FIXED: Separate PIN protection from timeout setting
-  // Wallet content should be protected whenever a PIN is set, regardless of timeout
   const shouldShowWalletContent = !hasPin || isPinVerified;
 
-  // Check if PIN verification is needed and show the dialog
   useEffect(() => {
     if (hasPin && !isPinVerified) {
       setShowPinDialog(true);
@@ -70,7 +64,6 @@ const WalletPage: React.FC = () => {
     }
   }, [hasPin, isPinVerified]);
 
-  // Log status changes to help with debugging
   useEffect(() => {
     console.log("Wallet lock status:", {
       hasPin,
@@ -84,6 +77,9 @@ const WalletPage: React.FC = () => {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) {
+        setShowMobileMenu(false);
+      }
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -124,17 +120,16 @@ const WalletPage: React.FC = () => {
     });
   }, [wallets]);
 
-  // Handle PIN verification
   const handlePinVerify = () => {
     verifyPin();
     setShowPinDialog(false);
   };
 
-  // Forcefully lock the wallet
   const handleManualLock = () => {
     console.log("Manual lock triggered");
     lockPin();
     setShowPinDialog(true);
+    setShowMobileMenu(false);
   };
 
   const walletMap = Object.fromEntries(wallets.map((w) => [w.id, w]));
@@ -145,7 +140,6 @@ const WalletPage: React.FC = () => {
 
   const visibleWallets = orderedWallets.filter((w) => w.status !== "archived");
   
-  // Filter wallets based on search term
   const filteredWallets = searchTerm.trim() === "" 
     ? visibleWallets 
     : visibleWallets.filter(wallet => 
@@ -159,20 +153,59 @@ const WalletPage: React.FC = () => {
     return acc;
   }, {});
 
-  // Handle search
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
   };
 
-  // FIXED: Show lock button whenever user has a PIN AND wallet is currently unlocked
-  // Removed dependency on PIN timeout setting
   const canLockManually = hasPin && isPinVerified;
+
+  // Action buttons component for reusability
+  const ActionButtons = ({ isMobile = false, inDropdown = false }) => (
+    <div className={`flex ${isMobile && !inDropdown ? 'flex-col' : 'flex-row'} items-center gap-2`}>
+      {/* Show/Hide Balance Button */}
+      <button
+        onClick={() => {
+          setShowBalance(!showBalance);
+          if (isMobile) setShowMobileMenu(false);
+        }}
+        className={`flex items-center gap-1.5 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors ${
+          isMobile && !inDropdown ? 'justify-start w-full py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700' : ''
+        }`}
+      >
+        {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+        <span className="text-sm">{showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}</span>
+      </button>
+      
+      {/* Lock Button */}
+      {canLockManually && (
+        <button
+          onClick={handleManualLock}
+          className={`flex items-center border rounded-md py-1 px-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer gap-1 transition-colors ${
+            isMobile && !inDropdown ? 'justify-start w-full border-0 py-2 px-3 rounded-lg' : ''
+          }`}
+          title="Kunci Dompet"
+          aria-label="Kunci Dompet"
+        >
+          <Lock size={16} />
+          <span className="text-sm">Kunci Dompet</span>
+        </button>
+      )}
+      
+      {/* Recalc Button */}
+      <div className={isMobile && !inDropdown ? 'w-full' : ''}>
+        <RecalcButtonWithTooltip
+          userId={user?.uid || ""}
+          setLoading={setRecalcLoading}
+          loading={recalcLoading}
+          isMobile={isMobile && !inDropdown}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <LayoutShell>
-      <main
-        className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300"
-      >
+      <main className="relative min-h-screen px-4 sm:px-6 py-6 max-w-6xl mx-auto transition-all duration-300">
         {/* PIN Entry Modal */}
         <PinEntryModal
           open={showPinDialog}
@@ -193,68 +226,85 @@ const WalletPage: React.FC = () => {
         )}
 
         <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-              Dompet Saya
-              {/* Lock status indicator - ENHANCED to show status more clearly */}
-              {hasPin && (
-                <span className={`inline-flex items-center text-sm font-medium rounded-full px-2 py-0.5 ${
-                  isPinVerified 
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" 
-                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                }`}>
-                  {isPinVerified ? (
-                    <>
-                      <Unlock size={14} className="mr-1" />
-                      Terbuka
-                    </>
-                  ) : (
-                    <>
-                      <Lock size={14} className="mr-1" />
-                      Terkunci
-                    </>
-                  )}
-                </span>
-              )}
-            </h1>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              {/* Show/Hide Balance Button */}
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-              >
-                {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
-                <span className="text-sm">{showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}</span>
-              </button>
-              
-              {/* Lock Button - FIXED: Show whenever PIN is set and wallet is unlocked */}
-              {canLockManually && (
+          {/* Header Section */}
+          <div className="mb-6">
+            {/* Title and Status Row */}
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                Dompet Saya
+                {hasPin && (
+                  <span className={`inline-flex items-center text-sm font-medium rounded-full px-2 py-0.5 ${
+                    isPinVerified 
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" 
+                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  }`}>
+                    {isPinVerified ? (
+                      <>
+                        <Unlock size={14} className="mr-1" />
+                        Terbuka
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={14} className="mr-1" />
+                        Terkunci
+                      </>
+                    )}
+                  </span>
+                )}
+              </h1>
+
+              {/* Desktop Actions */}
+              <div className="hidden md:flex items-center gap-3">
+                <ActionButtons />
                 <button
-                  onClick={handleManualLock}
-                  className="flex items-center border rounded-md py-1 px-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer gap-1"
-                  title="Kunci Dompet"
-                  aria-label="Kunci Dompet"
+                  onClick={() => setShowForm(true)}
+                  className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm"
                 >
-                  <Lock size={16} />
-                  <span className="text-sm hidden sm:inline">Kunci Dompet</span>
+                  <Plus size={16} /> Tambah Wallet
                 </button>
-              )}
-              
-              <RecalcButtonWithTooltip
-                userId={user?.uid || ""}
-                setLoading={setRecalcLoading}
-                loading={recalcLoading}
-              />
+              </div>
+
+              {/* Mobile Menu Button */}
+              <div className="md:hidden relative">
+                <button
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="Menu"
+                >
+                  <MoreVertical size={20} />
+                </button>
+
+                {/* Mobile Dropdown Menu */}
+                {showMobileMenu && (
+                  <>
+                    {/* Backdrop */}
+                    <div 
+                      className="fixed inset-0 z-10 bg-black/20"
+                      onClick={() => setShowMobileMenu(false)}
+                    />
+                    {/* Menu */}
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-20">
+                      <div className="px-3 py-2 space-y-1">
+                        <ActionButtons isMobile={true} inDropdown={true} />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile Add Wallet Button - Prominent placement */}
+            <div className="md:hidden mb-4">
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm sm:text-base flex items-center gap-2 transition-colors shadow-sm"
+                className="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-3 rounded-lg text-base flex items-center justify-center gap-2 transition-colors shadow-sm font-medium"
               >
-                <Plus size={16} /> Tambah Wallet
+                <Plus size={18} /> Tambah Wallet
               </button>
             </div>
           </div>
 
-          {/* Search Bar Integration */}
+          {/* Search Bar */}
           <div className="mb-6">
             <div className="relative">
               <WalletSearchBar
@@ -274,9 +324,8 @@ const WalletPage: React.FC = () => {
             )}
           </div>
 
-          {/* FIXED: Show wallet content based solely on PIN verification, not timeout */}
+          {/* Main Content */}
           {shouldShowWalletContent ? (
-            // Normal wallet content
             <>
               {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -319,7 +368,6 @@ const WalletPage: React.FC = () => {
               )}
             </>
           ) : (
-            // Locked wallet content - Improved UI with clearer instructions
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-6">
                 <Lock size={36} className="text-red-600 dark:text-red-300" />
@@ -340,6 +388,17 @@ const WalletPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Floating Action Button for Mobile (Alternative approach) */}
+        {isMobile && shouldShowWalletContent && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="fixed bottom-6 right-6 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-30 md:hidden"
+            aria-label="Tambah Wallet"
+          >
+            <Plus size={24} />
+          </button>
+        )}
       </main>
 
       <WalletFormModal
