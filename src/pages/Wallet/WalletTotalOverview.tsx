@@ -59,7 +59,7 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   // Get total count of currencies
   const currencyCount = sortedCurrencies.length;
   
-  // Default to highest balance currency for primary display
+  // Use the first currency (highest by raw amount) for primary display
   const primaryCurrency = sortedCurrencies[0]?.[0] || "";
   const primaryAmount = totalsByCurrency[primaryCurrency] || 0;
   
@@ -551,7 +551,7 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
                 <div>
                   <div className="flex items-center">
                     <Star size={14} className="text-yellow-300 mr-1.5" />
-                    <div className="text-xs font-medium text-indigo-200">Primary Currency</div>
+                    <div className="text-xs font-medium text-indigo-200">Main Currency</div>
                   </div>
                   <div className="text-2xl font-bold mt-1">
                     {primaryCurrency}
@@ -642,25 +642,25 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
             <div className="p-4 pt-0 space-y-2 max-h-60 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {sortedCurrencies.map(([currency, total]) => {
-                  const isHighest = currency === primaryCurrency;
+                  const isFirst = currency === primaryCurrency;
                   
                   return (
                     <div 
                       key={currency}
                       className={`flex justify-between items-center p-2 rounded-lg ${
-                        isHighest 
+                        isFirst 
                           ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800' 
                           : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       <div className="flex items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                          isHighest
+                          isFirst
                             ? 'bg-indigo-500 text-white'
                             : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
                         }`}>
-                          {isHighest ? (
-                            "👑"
+                          {isFirst ? (
+                            <Star size={16} />
                           ) : (
                             currency.slice(0, 1)
                           )}
@@ -668,11 +668,6 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white flex items-center">
                             {currency}
-                            {isHighest && (
-                              <span className="ml-2 px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                                Highest
-                              </span>
-                            )}
                           </div>
                           {showBalance && (
                             <div className="text-xs text-gray-500 dark:text-gray-400">
