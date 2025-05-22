@@ -63,6 +63,9 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   const primaryCurrency = sortedCurrencies[0]?.[0] || "";
   const primaryAmount = totalsByCurrency[primaryCurrency] || 0;
   
+  // Compute total of all currencies
+  const totalSum = Object.values(totalsByCurrency).reduce((sum, val) => sum + val, 0);
+  
   // Load theme from Firestore
   useEffect(() => {
     const loadTheme = async () => {
@@ -245,254 +248,281 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
       
       {/* Theme Editor */}
       {showThemeEditor && (
-        <div className="absolute right-0 top-12 w-96 bg-white dark:bg-zinc-800 shadow-xl rounded-xl z-20 border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-            <h3 className="font-bold text-lg flex items-center">
-              <Palette size={20} className="mr-2" />
-              Theme Customizer
-            </h3>
-            <p className="text-sm text-purple-100 mt-1">
-              Personalize your wallet summary colors
-            </p>
-          </div>
+        <>
+          {/* Backdrop for easy closing */}
+          <div 
+            className="fixed inset-0 bg-black/20 z-10"
+            onClick={() => setShowThemeEditor(false)}
+          />
           
-          {/* Theme Presets */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-3">Material Design Presets</h4>
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-              {THEME_PRESETS.map((preset, index) => (
+          <div className="absolute right-0 top-12 w-96 bg-white dark:bg-zinc-800 shadow-xl rounded-xl z-20 border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[80vh] flex flex-col">
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-lg flex items-center">
+                    <Palette size={20} className="mr-2" />
+                    Theme Customizer
+                  </h3>
+                  <p className="text-sm text-purple-100 mt-1">
+                    Personalize your wallet summary colors
+                  </p>
+                </div>
                 <button
-                  key={index}
-                  onClick={() => handlePresetSelect(preset)}
-                  className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
-                    currentTheme.start === preset.start && currentTheme.end === preset.end
-                      ? 'border-purple-500 shadow-md'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
-                  }`}
-                  style={{
-                    background: `linear-gradient(135deg, ${preset.start}, ${preset.end})`
-                  }}
+                  onClick={() => setShowThemeEditor(false)}
+                  className="p-1.5 hover:bg-white/10 rounded-full transition-colors"
                 >
-                  <div className="text-white text-xs font-medium">{preset.name}</div>
-                  <div className="text-white/80 text-xs">{preset.description}</div>
-                  {currentTheme.start === preset.start && currentTheme.end === preset.end && (
-                    <Check size={14} className="text-white mt-1" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Custom Color Editor */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-gray-700 dark:text-gray-200">Custom Colors</h4>
-              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-                <button
-                  onClick={() => setColorInputType('hex')}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                    colorInputType === 'hex' 
-                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
-                      : 'text-gray-600 dark:text-gray-400'
-                  }`}
-                >
-                  HEX
-                </button>
-                <button
-                  onClick={() => setColorInputType('rgb')}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                    colorInputType === 'rgb' 
-                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
-                      : 'text-gray-600 dark:text-gray-400'
-                  }`}
-                >
-                  RGB
+                  <X size={18} />
                 </button>
               </div>
             </div>
             
-            {colorInputType === 'hex' ? (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                    Start Color
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={customColor}
-                      onChange={(e) => setCustomColor(e.target.value)}
-                      className="w-12 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={customColor}
-                      onChange={(e) => setCustomColor(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                      placeholder="#3b82f6"
-                    />
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Theme Presets */}
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-3">Material Design Presets</h4>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                  {THEME_PRESETS.map((preset, index) => (
                     <button
-                      onClick={() => copyColorToClipboard(customColor)}
-                      className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      title="Copy to clipboard"
+                      key={index}
+                      onClick={() => handlePresetSelect(preset)}
+                      className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
+                        currentTheme.start === preset.start && currentTheme.end === preset.end
+                          ? 'border-purple-500 shadow-md'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
+                      }`}
+                      style={{
+                        background: `linear-gradient(135deg, ${preset.start}, ${preset.end})`
+                      }}
                     >
-                      <Copy size={16} />
+                      <div className="text-white text-xs font-medium">{preset.name}</div>
+                      <div className="text-white/80 text-xs">{preset.description}</div>
+                      {currentTheme.start === preset.start && currentTheme.end === preset.end && (
+                        <Check size={14} className="text-white mt-1" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Custom Color Editor */}
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-700 dark:text-gray-200">Custom Colors</h4>
+                  <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                    <button
+                      onClick={() => setColorInputType('hex')}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                        colorInputType === 'hex' 
+                          ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      HEX
+                    </button>
+                    <button
+                      onClick={() => setColorInputType('rgb')}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                        colorInputType === 'rgb' 
+                          ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      RGB
                     </button>
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                    End Color
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={customEndColor}
-                      onChange={(e) => setCustomEndColor(e.target.value)}
-                      className="w-12 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={customEndColor}
-                      onChange={(e) => setCustomEndColor(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                      placeholder="#1e3a8a"
-                    />
-                    <button
-                      onClick={() => copyColorToClipboard(customEndColor)}
-                      className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                      title="Copy to clipboard"
-                    >
-                      <Copy size={16} />
-                    </button>
+                {colorInputType === 'hex' ? (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Start Color
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={customColor}
+                          onChange={(e) => setCustomColor(e.target.value)}
+                          className="w-12 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={customColor}
+                          onChange={(e) => setCustomColor(e.target.value)}
+                          className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                          placeholder="#3b82f6"
+                        />
+                        <button
+                          onClick={() => copyColorToClipboard(customColor)}
+                          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                          title="Copy to clipboard"
+                        >
+                          <Copy size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        End Color
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={customEndColor}
+                          onChange={(e) => setCustomEndColor(e.target.value)}
+                          className="w-12 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={customEndColor}
+                          onChange={(e) => setCustomEndColor(e.target.value)}
+                          className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                          placeholder="#1e3a8a"
+                        />
+                        <button
+                          onClick={() => copyColorToClipboard(customEndColor)}
+                          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                          title="Copy to clipboard"
+                        >
+                          <Copy size={16} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                        Start Color (RGB)
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">R</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="255"
+                            value={rgbStart.r}
+                            onChange={(e) => setRgbStart({...rgbStart, r: parseInt(e.target.value) || 0})}
+                            className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">G</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="255"
+                            value={rgbStart.g}
+                            onChange={(e) => setRgbStart({...rgbStart, g: parseInt(e.target.value) || 0})}
+                            className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">B</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="255"
+                            value={rgbStart.b}
+                            onChange={(e) => setRgbStart({...rgbStart, b: parseInt(e.target.value) || 0})}
+                            className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                        End Color (RGB)
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">R</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="255"
+                            value={rgbEnd.r}
+                            onChange={(e) => setRgbEnd({...rgbEnd, r: parseInt(e.target.value) || 0})}
+                            className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">G</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="255"
+                            value={rgbEnd.g}
+                            onChange={(e) => setRgbEnd({...rgbEnd, g: parseInt(e.target.value) || 0})}
+                            className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">B</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="255"
+                            value={rgbEnd.b}
+                            onChange={(e) => setRgbEnd({...rgbEnd, b: parseInt(e.target.value) || 0})}
+                            className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Live Preview */}
+                <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                    Start Color (RGB)
+                    Live Preview
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">R</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgbStart.r}
-                        onChange={(e) => setRgbStart({...rgbStart, r: parseInt(e.target.value) || 0})}
-                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">G</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgbStart.g}
-                        onChange={(e) => setRgbStart({...rgbStart, g: parseInt(e.target.value) || 0})}
-                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">B</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgbStart.b}
-                        onChange={(e) => setRgbStart({...rgbStart, b: parseInt(e.target.value) || 0})}
-                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
-                      />
-                    </div>
+                  <div 
+                    className="h-16 rounded-lg border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white font-medium"
+                    style={{
+                      background: colorInputType === 'hex' 
+                        ? `linear-gradient(135deg, ${customColor}, ${customEndColor})`
+                        : `linear-gradient(135deg, rgb(${rgbStart.r},${rgbStart.g},${rgbStart.b}), rgb(${rgbEnd.r},${rgbEnd.g},${rgbEnd.b}))`
+                    }}
+                  >
+                    Your Wallet Summary
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                    End Color (RGB)
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">R</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgbEnd.r}
-                        onChange={(e) => setRgbEnd({...rgbEnd, r: parseInt(e.target.value) || 0})}
-                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">G</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgbEnd.g}
-                        onChange={(e) => setRgbEnd({...rgbEnd, g: parseInt(e.target.value) || 0})}
-                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">B</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="255"
-                        value={rgbEnd.b}
-                        onChange={(e) => setRgbEnd({...rgbEnd, b: parseInt(e.target.value) || 0})}
-                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
-                      />
-                    </div>
-                  </div>
+                <button
+                  onClick={handleCustomColorChange}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-2 px-4 rounded-lg font-medium mt-4 transition-all disabled:opacity-50"
+                >
+                  {loading ? "Applying..." : "Apply Custom Theme"}
+                </button>
+              </div>
+            </div>
+            
+            {/* Footer - Fixed */}
+            <div className="flex-shrink-0 p-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Current: {currentTheme.start} → {currentTheme.end}
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    className="py-1.5 px-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    onClick={() => setShowThemeEditor(false)}
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
-            )}
-            
-            {/* Live Preview */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                Live Preview
-              </label>
-              <div 
-                className="h-16 rounded-lg border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white font-medium"
-                style={{
-                  background: colorInputType === 'hex' 
-                    ? `linear-gradient(135deg, ${customColor}, ${customEndColor})`
-                    : `linear-gradient(135deg, rgb(${rgbStart.r},${rgbStart.g},${rgbStart.b}), rgb(${rgbEnd.r},${rgbEnd.g},${rgbEnd.b}))`
-                }}
-              >
-                Your Wallet Summary
-              </div>
             </div>
-            
-            <button
-              onClick={handleCustomColorChange}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-2 px-4 rounded-lg font-medium mt-4 transition-all disabled:opacity-50"
-            >
-              {loading ? "Applying..." : "Apply Custom Theme"}
-            </button>
           </div>
-          
-          <div className="p-3 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              Current: {currentTheme.start} → {currentTheme.end}
-            </div>
-            <button 
-              className="py-1.5 px-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-              onClick={() => setShowThemeEditor(false)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        </>
       )}
       
       {/* Main summary card */}
@@ -613,7 +643,6 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {sortedCurrencies.map(([currency, total]) => {
                   const isHighest = currency === primaryCurrency;
-                  const totalSum = Object.values(totalsByCurrency).reduce((sum, val) => sum + val, 0);
                   
                   return (
                     <div 
