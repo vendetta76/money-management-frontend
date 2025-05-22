@@ -14,7 +14,7 @@ const WalletSearchBar: React.FC<WalletSearchBarProps> = ({
     <div className="relative w-full">
       <input
         type="text"
-        placeholder="Cari dompet berdasarkan nama atau mata uang..."
+        placeholder="Nama Dompet atau Mata Uang"
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
         className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm 

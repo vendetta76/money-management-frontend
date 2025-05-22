@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { formatCurrency } from "@helpers/formatCurrency";
-import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Star, StarOff, Settings, Loader, Eye, EyeOff } from "lucide-react";
+import { ChevronDown, ChevronUp, X, Wallet, Globe, CreditCard, Palette, Eye, EyeOff, Check, Copy } from "lucide-react";
 import CountUp from "react-countup";
 import { useAuth } from "@context/AuthContext";
 import { db } from "@lib/firebaseClient";
@@ -14,8 +14,21 @@ interface WalletTotalOverviewProps {
 }
 
 // Constants
-const SETTINGS_DOC_ID = "_currency_settings"; // Prefixed with _ to avoid collisions
-const LOCAL_STORAGE_FALLBACK = "moniq_primary_currency";
+const SETTINGS_DOC_ID = "_theme_settings";
+
+// Modern Material Design Color Themes
+const THEME_PRESETS = [
+  { name: "Ocean Blue", start: "#1e3a8a", end: "#3b82f6", description: "Deep ocean vibes" },
+  { name: "Sunset Orange", start: "#ea580c", end: "#fb923c", description: "Warm sunset glow" },
+  { name: "Forest Green", start: "#166534", end: "#22c55e", description: "Nature inspired" },
+  { name: "Royal Purple", start: "#6b21a8", end: "#a855f7", description: "Elegant luxury" },
+  { name: "Rose Gold", start: "#be185d", end: "#f472b6", description: "Premium rose" },
+  { name: "Midnight Dark", start: "#1f2937", end: "#6b7280", description: "Sleek darkness" },
+  { name: "Coral Reef", start: "#dc2626", end: "#f87171", description: "Vibrant coral" },
+  { name: "Arctic Teal", start: "#0f766e", end: "#2dd4bf", description: "Cool arctic" },
+  { name: "Golden Hour", start: "#d97706", end: "#fbbf24", description: "Warm golden" },
+  { name: "Lavender Dreams", start: "#7c3aed", end: "#c4b5fd", description: "Soft lavender" }
+];
 
 const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   totalsByCurrency,
@@ -25,8 +38,19 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showThemeEditor, setShowThemeEditor] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [customColor, setCustomColor] = useState("#3b82f6");
+  const [customEndColor, setCustomEndColor] = useState("#1e3a8a");
+  const [colorInputType, setColorInputType] = useState<'hex' | 'rgb'>('hex');
+  const [rgbStart, setRgbStart] = useState({ r: 59, g: 130, b: 246 });
+  const [rgbEnd, setRgbEnd] = useState({ r: 30, g: 58, b: 138 });
+  
+  // Theme state
+  const [currentTheme, setCurrentTheme] = useState({
+    start: "#6366f1",
+    end: "#8b5cf6"
+  });
   
   // Sort currencies by balance
   const sortedCurrencies = Object.entries(totalsByCurrency)
@@ -35,135 +59,116 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
   // Get total count of currencies
   const currencyCount = sortedCurrencies.length;
   
-  // Default to highest balance currency
-  const defaultCurrency = sortedCurrencies[0]?.[0] || "";
+  // Default to highest balance currency for primary display
+  const primaryCurrency = sortedCurrencies[0]?.[0] || "";
+  const primaryAmount = totalsByCurrency[primaryCurrency] || 0;
   
-  // State for primary currency
-  const [primaryCurrency, setPrimaryCurrency] = useState<string>(defaultCurrency);
-  
-  // Load primary currency preference from Firestore (in wallets collection)
+  // Load theme from Firestore
   useEffect(() => {
-    const loadPrimaryCurrency = async () => {
+    const loadTheme = async () => {
       if (!user?.uid) return;
       
       try {
         setLoading(true);
-        // Use wallets collection (which already has permissions)
         const settingsRef = doc(db, "users", user.uid, "wallets", SETTINGS_DOC_ID);
         const docSnap = await getDoc(settingsRef);
         
-        let savedCurrency = "";
-        
-        if (docSnap.exists() && docSnap.data().primaryCurrency) {
-          savedCurrency = docSnap.data().primaryCurrency;
-        } else {
-          // Try localStorage as fallback
-          try {
-            const localSaved = localStorage.getItem(LOCAL_STORAGE_FALLBACK);
-            if (localSaved) savedCurrency = localSaved;
-          } catch (e) {
-            console.error("Error reading from localStorage:", e);
-          }
-        }
-        
-        // Only set if the currency still exists in the wallet
-        if (savedCurrency && totalsByCurrency[savedCurrency] !== undefined) {
-          setPrimaryCurrency(savedCurrency);
+        if (docSnap.exists() && docSnap.data().theme) {
+          const savedTheme = docSnap.data().theme;
+          setCurrentTheme(savedTheme);
+          setCustomColor(savedTheme.start);
+          setCustomEndColor(savedTheme.end);
+          
+          // Convert hex to RGB for inputs
+          const startRgb = hexToRgb(savedTheme.start);
+          const endRgb = hexToRgb(savedTheme.end);
+          if (startRgb) setRgbStart(startRgb);
+          if (endRgb) setRgbEnd(endRgb);
         }
       } catch (error) {
-        console.error("Error loading primary currency:", error);
-        // Try localStorage as fallback
-        try {
-          const localSaved = localStorage.getItem(LOCAL_STORAGE_FALLBACK);
-          if (localSaved && totalsByCurrency[localSaved] !== undefined) {
-            setPrimaryCurrency(localSaved);
-          }
-        } catch (e) {
-          console.error("Error reading from localStorage:", e);
-        }
+        console.error("Error loading theme:", error);
       } finally {
         setLoading(false);
       }
     };
     
-    loadPrimaryCurrency();
-  }, [user?.uid, totalsByCurrency]);
+    loadTheme();
+  }, [user?.uid]);
   
-  // Update primary currency whenever totalsByCurrency changes and current selection is no longer valid
-  useEffect(() => {
-    if (sortedCurrencies.length > 0 && !totalsByCurrency[primaryCurrency]) {
-      setPrimaryCurrency(sortedCurrencies[0][0]);
-      savePrimaryCurrency(sortedCurrencies[0][0]);
-    }
-  }, [totalsByCurrency, primaryCurrency]);
-  
-  // Save primary currency preference to Firestore
-  const savePrimaryCurrency = async (currency: string) => {
+  // Save theme to Firestore
+  const saveTheme = async (theme: { start: string; end: string }) => {
     if (!user?.uid) return;
     
     try {
       setLoading(true);
-      // Use wallets collection (which already has permissions)
       const settingsRef = doc(db, "users", user.uid, "wallets", SETTINGS_DOC_ID);
       
-      // Save to Firestore
       await setDoc(settingsRef, {
-        primaryCurrency: currency,
-        type: "settings", // Mark this as a settings doc, not a real wallet
+        theme: theme,
+        type: "theme_settings",
         updatedAt: new Date()
       }, { merge: true });
       
-      // Also save to localStorage as backup
-      try {
-        localStorage.setItem(LOCAL_STORAGE_FALLBACK, currency);
-      } catch (e) {
-        console.error("Error saving to localStorage:", e);
-      }
+      toast.success("Theme berhasil disimpan!");
       
     } catch (error) {
-      console.error("Error saving primary currency:", error);
-      toast.error("Gagal menyimpan pengaturan mata uang");
-      
-      // Save to localStorage as fallback
-      try {
-        localStorage.setItem(LOCAL_STORAGE_FALLBACK, currency);
-      } catch (e) {
-        console.error("Error saving to localStorage:", e);
-      }
+      console.error("Error saving theme:", error);
+      toast.error("Gagal menyimpan tema");
     } finally {
       setLoading(false);
     }
   };
   
-  // Get primary currency amount
-  const primaryAmount = totalsByCurrency[primaryCurrency] || 0;
-  
-  // Create currency groups for compact display
-  const getPrimaryCurrencyIndex = () => {
-    return sortedCurrencies.findIndex(([curr]) => curr === primaryCurrency);
+  // Utility functions
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
   };
   
-  // Reorder currencies to show primary currency first, then others by balance
-  const reorderedCurrencies = [...sortedCurrencies];
-  const primaryIndex = getPrimaryCurrencyIndex();
+  const rgbToHex = (r: number, g: number, b: number) => {
+    return "#" + [r, g, b].map(x => {
+      const hex = x.toString(16);
+      return hex.length === 1 ? "0" + hex : hex;
+    }).join("");
+  };
   
-  if (primaryIndex > 0) {
-    const [primaryItem] = reorderedCurrencies.splice(primaryIndex, 1);
-    reorderedCurrencies.unshift(primaryItem);
-  }
+  const handlePresetSelect = (preset: typeof THEME_PRESETS[0]) => {
+    const newTheme = { start: preset.start, end: preset.end };
+    setCurrentTheme(newTheme);
+    setCustomColor(preset.start);
+    setCustomEndColor(preset.end);
+    
+    const startRgb = hexToRgb(preset.start);
+    const endRgb = hexToRgb(preset.end);
+    if (startRgb) setRgbStart(startRgb);
+    if (endRgb) setRgbEnd(endRgb);
+    
+    saveTheme(newTheme);
+  };
   
-  const mainCurrencies = reorderedCurrencies.slice(0, 3);
-  const otherCurrencies = reorderedCurrencies.slice(3);
+  const handleCustomColorChange = () => {
+    let startColor, endColor;
+    
+    if (colorInputType === 'hex') {
+      startColor = customColor;
+      endColor = customEndColor;
+    } else {
+      startColor = rgbToHex(rgbStart.r, rgbStart.g, rgbStart.b);
+      endColor = rgbToHex(rgbEnd.r, rgbEnd.g, rgbEnd.b);
+    }
+    
+    const newTheme = { start: startColor, end: endColor };
+    setCurrentTheme(newTheme);
+    saveTheme(newTheme);
+  };
   
-  // Compute total of all currencies
-  const totalSum = Object.values(totalsByCurrency).reduce((sum, val) => sum + val, 0);
-  
-  // Handle primary currency change
-  const handleSetPrimary = (currency: string) => {
-    setPrimaryCurrency(currency);
-    savePrimaryCurrency(currency);
-    // Close settings after change
-    setShowSettings(false);
+  const copyColorToClipboard = (color: string) => {
+    navigator.clipboard.writeText(color);
+    toast.success(`Copied ${color} to clipboard!`);
   };
   
   if (isMinimized) {
@@ -222,11 +227,11 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
           </button>
           
           <button 
-            onClick={() => setShowSettings(!showSettings)}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-            title="Currency Settings"
+            onClick={() => setShowThemeEditor(!showThemeEditor)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title="Customize Theme Colors"
           >
-            <Settings size={18} />
+            <Palette size={18} />
           </button>
           <button 
             onClick={() => setIsMinimized(true)}
@@ -238,52 +243,251 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
         </div>
       </div>
       
-      {/* Currency Settings Popover */}
-      {showSettings && (
-        <div className="absolute right-0 top-12 w-72 bg-white dark:bg-zinc-800 shadow-lg rounded-lg z-10 border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <h3 className="font-medium text-gray-700 dark:text-gray-200">Currency Settings</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Set your primary currency for summaries
+      {/* Theme Editor */}
+      {showThemeEditor && (
+        <div className="absolute right-0 top-12 w-96 bg-white dark:bg-zinc-800 shadow-xl rounded-xl z-20 border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+            <h3 className="font-bold text-lg flex items-center">
+              <Palette size={20} className="mr-2" />
+              Theme Customizer
+            </h3>
+            <p className="text-sm text-purple-100 mt-1">
+              Personalize your wallet summary colors
             </p>
           </div>
           
-          <div className="p-2 max-h-60 overflow-y-auto">
-            {sortedCurrencies.map(([currency, amount]) => (
-              <div 
-                key={currency}
-                className={`flex justify-between items-center p-2 rounded-md cursor-pointer
-                  ${currency === primaryCurrency 
-                    ? 'bg-indigo-50 dark:bg-indigo-900/30' 
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                onClick={() => handleSetPrimary(currency)}
-              >
-                <div className="flex items-center">
-                  {currency === primaryCurrency ? (
-                    <Star size={16} className="text-yellow-500 mr-2" />
-                  ) : (
-                    <StarOff size={16} className="text-gray-400 mr-2" />
+          {/* Theme Presets */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-3">Material Design Presets</h4>
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+              {THEME_PRESETS.map((preset, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePresetSelect(preset)}
+                  className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
+                    currentTheme.start === preset.start && currentTheme.end === preset.end
+                      ? 'border-purple-500 shadow-md'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
+                  }`}
+                  style={{
+                    background: `linear-gradient(135deg, ${preset.start}, ${preset.end})`
+                  }}
+                >
+                  <div className="text-white text-xs font-medium">{preset.name}</div>
+                  <div className="text-white/80 text-xs">{preset.description}</div>
+                  {currentTheme.start === preset.start && currentTheme.end === preset.end && (
+                    <Check size={14} className="text-white mt-1" />
                   )}
-                  <span className="font-medium">{currency}</span>
-                </div>
-                {showBalance && (
-                  <span className="text-gray-600 dark:text-gray-300 text-sm">
-                    {formatCurrency(amount, currency)}
-                  </span>
-                )}
-              </div>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
           
-          <div className="p-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
-            {loading && (
-              <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                <Loader size={12} className="animate-spin mr-1" /> Saving...
+          {/* Custom Color Editor */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-gray-700 dark:text-gray-200">Custom Colors</h4>
+              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                <button
+                  onClick={() => setColorInputType('hex')}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    colorInputType === 'hex' 
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  HEX
+                </button>
+                <button
+                  onClick={() => setColorInputType('rgb')}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    colorInputType === 'rgb' 
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  RGB
+                </button>
+              </div>
+            </div>
+            
+            {colorInputType === 'hex' ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Start Color
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      className="w-12 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                      placeholder="#3b82f6"
+                    />
+                    <button
+                      onClick={() => copyColorToClipboard(customColor)}
+                      className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      title="Copy to clipboard"
+                    >
+                      <Copy size={16} />
+                    </button>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    End Color
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={customEndColor}
+                      onChange={(e) => setCustomEndColor(e.target.value)}
+                      className="w-12 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={customEndColor}
+                      onChange={(e) => setCustomEndColor(e.target.value)}
+                      className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                      placeholder="#1e3a8a"
+                    />
+                    <button
+                      onClick={() => copyColorToClipboard(customEndColor)}
+                      className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      title="Copy to clipboard"
+                    >
+                      <Copy size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Start Color (RGB)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">R</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="255"
+                        value={rgbStart.r}
+                        onChange={(e) => setRgbStart({...rgbStart, r: parseInt(e.target.value) || 0})}
+                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">G</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="255"
+                        value={rgbStart.g}
+                        onChange={(e) => setRgbStart({...rgbStart, g: parseInt(e.target.value) || 0})}
+                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">B</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="255"
+                        value={rgbStart.b}
+                        onChange={(e) => setRgbStart({...rgbStart, b: parseInt(e.target.value) || 0})}
+                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    End Color (RGB)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">R</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="255"
+                        value={rgbEnd.r}
+                        onChange={(e) => setRgbEnd({...rgbEnd, r: parseInt(e.target.value) || 0})}
+                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">G</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="255"
+                        value={rgbEnd.g}
+                        onChange={(e) => setRgbEnd({...rgbEnd, g: parseInt(e.target.value) || 0})}
+                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">B</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="255"
+                        value={rgbEnd.b}
+                        onChange={(e) => setRgbEnd({...rgbEnd, b: parseInt(e.target.value) || 0})}
+                        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+            
+            {/* Live Preview */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                Live Preview
+              </label>
+              <div 
+                className="h-16 rounded-lg border border-gray-300 dark:border-gray-600 flex items-center justify-center text-white font-medium"
+                style={{
+                  background: colorInputType === 'hex' 
+                    ? `linear-gradient(135deg, ${customColor}, ${customEndColor})`
+                    : `linear-gradient(135deg, rgb(${rgbStart.r},${rgbStart.g},${rgbStart.b}), rgb(${rgbEnd.r},${rgbEnd.g},${rgbEnd.b}))`
+                }}
+              >
+                Your Wallet Summary
+              </div>
+            </div>
+            
+            <button
+              onClick={handleCustomColorChange}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-2 px-4 rounded-lg font-medium mt-4 transition-all disabled:opacity-50"
+            >
+              {loading ? "Applying..." : "Apply Custom Theme"}
+            </button>
+          </div>
+          
+          <div className="p-3 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Current: {currentTheme.start} → {currentTheme.end}
+            </div>
             <button 
-              className="ml-auto py-1.5 px-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-              onClick={() => setShowSettings(false)}
+              className="py-1.5 px-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              onClick={() => setShowThemeEditor(false)}
             >
               Close
             </button>
@@ -294,7 +498,12 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
       {/* Main summary card */}
       <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-md overflow-hidden">
         {/* Header with summary */}
-        <div className="p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+        <div 
+          className="p-4 text-white"
+          style={{
+            background: `linear-gradient(135deg, ${currentTheme.start}, ${currentTheme.end})`
+          }}
+        >
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Globe size={20} className="mr-2" />
@@ -343,11 +552,10 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
           )}
           
           {/* Quick totals */}
-          {mainCurrencies.length > 1 && (
+          {sortedCurrencies.length > 1 && (
             <div className="flex flex-wrap gap-2 mt-3">
-              {mainCurrencies
-                .filter(([currency]) => currency !== primaryCurrency)
-                .slice(0, 2)
+              {sortedCurrencies
+                .slice(1, 3)
                 .map(([currency, total]) => (
                 <div key={currency} className="bg-white/10 rounded-lg px-3 py-1.5 flex-1">
                   <div className="text-xs font-medium">{currency}</div>
@@ -367,15 +575,15 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
                 </div>
               ))}
               
-              {otherCurrencies.length > 0 && (
+              {sortedCurrencies.length > 3 && (
                 <div className="bg-white/10 rounded-lg px-3 py-1.5 flex-1">
                   <div className="text-xs font-medium">Others</div>
                   {showBalance ? (
                     <div className="text-sm font-bold">
-                      <span>+{otherCurrencies.length}</span>
+                      <span>+{sortedCurrencies.length - 3}</span>
                     </div>
                   ) : (
-                    <div className="text-sm font-bold">+{otherCurrencies.length}</div>
+                    <div className="text-sm font-bold">+{sortedCurrencies.length - 3}</div>
                   )}
                 </div>
               )}
@@ -403,65 +611,63 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
           {expanded && (
             <div className="p-4 pt-0 space-y-2 max-h-60 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {sortedCurrencies.map(([currency, total]) => (
-                  <div 
-                    key={currency}
-                    className={`flex justify-between items-center p-2 rounded-lg ${
-                      currency === primaryCurrency 
-                        ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800' 
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                        currency === primaryCurrency
-                          ? 'bg-indigo-500 text-white'
-                          : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
-                      }`}>
-                        {currency === primaryCurrency ? (
-                          <Star size={16} />
-                        ) : (
-                          currency.slice(0, 1)
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white flex items-center">
-                          {currency}
-                          {currency !== primaryCurrency && (
-                            <button
-                              className="ml-2 p-1 text-gray-400 hover:text-yellow-500 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSetPrimary(currency);
-                              }}
-                              title="Set as primary currency"
-                            >
-                              <StarOff size={14} />
-                            </button>
+                {sortedCurrencies.map(([currency, total]) => {
+                  const isHighest = currency === primaryCurrency;
+                  const totalSum = Object.values(totalsByCurrency).reduce((sum, val) => sum + val, 0);
+                  
+                  return (
+                    <div 
+                      key={currency}
+                      className={`flex justify-between items-center p-2 rounded-lg ${
+                        isHighest 
+                          ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800' 
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                          isHighest
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                        }`}>
+                          {isHighest ? (
+                            "👑"
+                          ) : (
+                            currency.slice(0, 1)
                           )}
                         </div>
-                        {showBalance && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {Math.round((total / totalSum) * 100)}% of total
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white flex items-center">
+                            {currency}
+                            {isHighest && (
+                              <span className="ml-2 px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                                Highest
+                              </span>
+                            )}
                           </div>
+                          {showBalance && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {Math.round((total / totalSum) * 100)}% of total
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="font-bold text-gray-900 dark:text-white">
+                        {showBalance ? (
+                          <CountUp
+                            end={total}
+                            duration={1.2}
+                            separator="," 
+                            decimals={0}
+                            prefix={formatCurrency(0, currency).replace(/\d+([.,]\d+)?/, "")}
+                          />
+                        ) : (
+                          "••••••"
                         )}
                       </div>
                     </div>
-                    <div className="font-bold text-gray-900 dark:text-white">
-                      {showBalance ? (
-                        <CountUp
-                          end={total}
-                          duration={1.2}
-                          separator="," 
-                          decimals={0}
-                          prefix={formatCurrency(0, currency).replace(/\d+([.,]\d+)?/, "")}
-                        />
-                      ) : (
-                        "••••••"
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
