@@ -621,7 +621,7 @@ const WalletTotalOverview: React.FC<WalletTotalOverviewProps> = ({
               
               {showBalance && (
                 <div className="mt-2 text-xs text-indigo-200">
-                  Your selected primary currency
+                  {primaryCurrency} - Primary Currency
                 </div>
               )}
             </div>
