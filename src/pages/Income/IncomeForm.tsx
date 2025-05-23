@@ -12,12 +12,13 @@ import {
   onSnapshot,
   query,
   orderBy,
+  where,
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 import { getCardStyle } from "../helpers/getCardStyle";
 import { WalletEntry, IncomeEntry } from "../helpers/types";
-import { toast } from "react-toastify"; // Added for toast notifications
+import { toast } from "react-toastify";
 
 interface IncomeFormProps {
   hideCardPreview?: boolean;
@@ -38,31 +39,53 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
 
   useEffect(() => {
     if (!user) return;
-    const walletRef = collection(db, "users", user.uid, "wallets");
+    
+    // Query only active wallets (not archived)
+    const walletRef = query(
+      collection(db, "users", user.uid, "wallets"),
+      where("status", "!=", "archived")
+    );
+    
     const unsubWallets = onSnapshot(walletRef, (snap) => {
-      setWallets(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[]);
+      const activeWallets = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[];
+      setWallets(activeWallets);
+      
+      // Check if currently selected wallet is still available
+      if (form.wallet && !activeWallets.find(w => w.id === form.wallet)) {
+        setForm(prev => ({ ...prev, wallet: "", currency: "" }));
+        if (presetWalletId === form.wallet) {
+          toast.error("Dompet yang dipilih sudah dihapus atau diarsipkan.");
+          if (onClose) onClose();
+        }
+      }
     });
+    
     const incomeRef = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
     const unsubIncomes = onSnapshot(incomeRef, (snap) => {
       setIncomes(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as IncomeEntry[]);
     });
+    
     return () => {
       unsubWallets();
       unsubIncomes();
     };
-  }, [user]);
+  }, [user, form.wallet, presetWalletId, onClose]);
 
   useEffect(() => {
     if (!presetWalletId || wallets.length === 0) return;
-    const selected = wallets.find((w) => w.id === presetWalletId && w.status !== "archived");
+    const selected = wallets.find(w => w.id === presetWalletId);
     if (selected) {
       setForm((prev) => ({
         ...prev,
         wallet: presetWalletId,
         currency: selected.currency,
       }));
+    } else if (wallets.length > 0) {
+      // Preset wallet not found in active wallets
+      toast.error("Dompet yang dipilih sudah dihapus atau diarsipkan.");
+      if (onClose) onClose();
     }
-  }, [presetWalletId, wallets.length]);
+  }, [presetWalletId, wallets]);
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
@@ -143,6 +166,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
     if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "").replace(",", ".")) <= 0) 
       e.amount = "Nominal harus lebih dari 0.";
     if (!form.currency.trim()) e.currency = "Mata uang wajib dipilih.";
+    
+    // Additional validation: check if selected wallet still exists
+    if (form.wallet && !wallets.find(w => w.id === form.wallet)) {
+      e.wallet = "Dompet sudah dihapus atau diarsipkan.";
+    }
+    
     return e;
   };
 
@@ -155,7 +184,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
     }
     if (!user) return;
 
-    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    const selectedWallet = wallets.find(w => w.id === form.wallet);
     if (!selectedWallet) {
       toast.error("Dompet sudah dihapus atau diarsipkan.");
       setLoading(false);
@@ -210,7 +239,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
       setTimeout(() => setSuccess(false), 2000);
       if (onClose) onClose();
     } catch (err) {
-      console.error("❌ Gagal simpan:", err);
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -224,7 +253,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
     }
     if (!user) return;
 
-    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    const selectedWallet = wallets.find(w => w.id === form.wallet);
     if (!selectedWallet) {
       toast.error("Dompet sudah dihapus atau diarsipkan.");
       setLoading(false);
@@ -256,7 +285,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
       setForm({ wallet: form.wallet, description: "", amount: "", currency: form.currency });
       setTimeout(() => descriptionRef.current?.focus(), 50);
     } catch (err) {
-      console.error("❌ Gagal simpan & lanjut:", err);
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -277,19 +306,17 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
           className={`w-full rounded border px-4 py-2 dark:bg-gray-800 dark:text-white ${errors.wallet && "border-red-500"}`}
         >
           <option value="">-- Pilih Dompet --</option>
-          {wallets
-            .filter(w => w.status !== "archived")
-            .map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
+          {wallets.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
+          ))}
         </select>
         {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
         {form.wallet && !hideCardPreview && (
           (() => {
-            const selectedWallet = wallets.find((w) => w.id === form.wallet && w.status !== "archived");
+            const selectedWallet = wallets.find((w) => w.id === form.wallet);
             return selectedWallet ? (
               <div
                 className="mt-4 rounded-xl text-white p-4 shadow w-full"

@@ -11,6 +11,7 @@ import {
   query,
   orderBy,
   doc,
+  where,
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
@@ -22,7 +23,7 @@ interface OutcomeFormProps {
   hideCardPreview?: boolean;
   presetWalletId?: string;
   onClose?: () => void;
-  hideTitle?: boolean; // Added new prop
+  hideTitle?: boolean;
 }
 
 const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hideCardPreview, hideTitle = true }) => {
@@ -38,31 +39,53 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
 
   useEffect(() => {
     if (!user) return;
-    const walletRef = collection(db, "users", user.uid, "wallets");
+    
+    // Query only active wallets (not archived)
+    const walletRef = query(
+      collection(db, "users", user.uid, "wallets"),
+      where("status", "!=", "archived")
+    );
+    
     const unsubWallets = onSnapshot(walletRef, (snap) => {
-      setWallets(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[]);
+      const activeWallets = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[];
+      setWallets(activeWallets);
+      
+      // Check if currently selected wallet is still available
+      if (form.wallet && !activeWallets.find(w => w.id === form.wallet)) {
+        setForm(prev => ({ ...prev, wallet: "", currency: "" }));
+        if (presetWalletId === form.wallet) {
+          toast.error("Dompet yang dipilih sudah dihapus atau diarsipkan.");
+          if (onClose) onClose();
+        }
+      }
     });
+    
     const outcomeRef = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
     const unsubOutcomes = onSnapshot(outcomeRef, (snap) => {
       setOutcomes(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as OutcomeEntry[]);
     });
+    
     return () => {
       unsubWallets();
       unsubOutcomes();
     };
-  }, [user]);
+  }, [user, form.wallet, presetWalletId, onClose]);
 
   useEffect(() => {
     if (!presetWalletId || wallets.length === 0) return;
-    const selected = wallets.find(w => w.id === presetWalletId && w.status !== "archived");
+    const selected = wallets.find(w => w.id === presetWalletId);
     if (selected) {
       setForm((prev) => ({
         ...prev,
         wallet: presetWalletId,
         currency: selected.currency,
       }));
+    } else if (wallets.length > 0) {
+      // Preset wallet not found in active wallets
+      toast.error("Dompet yang dipilih sudah dihapus atau diarsipkan.");
+      if (onClose) onClose();
     }
-  }, [presetWalletId, wallets.length]);
+  }, [presetWalletId, wallets]);
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
@@ -92,10 +115,15 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "").replace(",", ".")) <= 0)
       e.amount = "Nominal harus lebih dari 0.";
     if (!form.currency.trim()) e.currency = "Mata uang wajib dipilih.";
+    
+    // Additional validation: check if selected wallet still exists
+    if (form.wallet && !wallets.find(w => w.id === form.wallet)) {
+      e.wallet = "Dompet sudah dihapus atau diarsipkan.";
+    }
+    
     return e;
   };
 
-  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -131,7 +159,6 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     setErrors({ ...errors, [name]: "" });
   };
 
-
   const handleWalletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = wallets.find((w) => w.id === e.target.value);
     setForm({
@@ -151,7 +178,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     }
     if (!user) return;
 
-    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    const selectedWallet = wallets.find(w => w.id === form.wallet);
     if (!selectedWallet) {
       toast.error("Dompet sudah dihapus atau diarsipkan.");
       setLoading(false);
@@ -207,7 +234,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
       setTimeout(() => setSuccess(false), 2000);
       if (onClose) onClose();
     } catch (err) {
-      console.error("❌ Gagal simpan:", err);
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -221,7 +248,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     }
     if (!user) return;
 
-    const selectedWallet = wallets.find(w => w.id === form.wallet && w.status !== "archived");
+    const selectedWallet = wallets.find(w => w.id === form.wallet);
     if (!selectedWallet) {
       toast.error("Dompet sudah dihapus atau diarsipkan.");
       setLoading(false);
@@ -261,7 +288,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
     } catch (err) {
-      console.error("❌ Gagal simpan & lanjut:", err);
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -304,18 +331,14 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
             }`}
           >
             <option value="">-- Pilih Dompet --</option>
-            {wallets
-              .filter(w => w.status !== "archived")
-              .map((w) => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
+            {wallets.map((w) => (
+              <option key={w.id} value={w.id}>{w.name}</option>
+            ))}
           </select>
           {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
           {form.wallet && !hideCardPreview && (() => {
-            const selectedWallet = wallets.find(
-              (w) => w.id === form.wallet && w.status !== "archived"
-            );
+            const selectedWallet = wallets.find((w) => w.id === form.wallet);
             if (!selectedWallet) return null;
             return (
               <div
