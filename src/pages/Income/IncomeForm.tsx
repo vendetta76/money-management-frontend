@@ -12,7 +12,6 @@ import {
   onSnapshot,
   query,
   orderBy,
-  where,
 } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
@@ -40,14 +39,13 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
   useEffect(() => {
     if (!user) return;
     
-    // Query only active wallets (not archived)
-    const walletRef = query(
-      collection(db, "users", user.uid, "wallets"),
-      where("status", "!=", "archived")
-    );
+    // Get all wallets and filter out archived ones
+    const walletRef = collection(db, "users", user.uid, "wallets");
     
     const unsubWallets = onSnapshot(walletRef, (snap) => {
-      const activeWallets = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[];
+      const allWallets = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[];
+      // Filter out archived wallets (only keep wallets that are not archived)
+      const activeWallets = allWallets.filter(w => w.status !== "archived");
       setWallets(activeWallets);
       
       // Check if currently selected wallet is still available
