@@ -40,14 +40,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   
   // Clean up function for all listeners
   const cleanupAllListeners = () => {
-    console.log("🧹 Cleaning up all listeners");
-    
     // Clear Firestore listeners
     firestoreListenersRef.current.forEach(unsubscribe => {
       try {
         unsubscribe();
       } catch (e) {
-        console.error("Error unsubscribing from Firestore:", e);
+        // Handle error silently
       }
     });
     firestoreListenersRef.current = [];
@@ -87,7 +85,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
           },
           (error) => {
-            console.error('🔥 [AuthContext] Firestore listener error:', error);
             if (isMountedRef.current) {
               setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
               setLoading(false);
@@ -110,7 +107,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setLoading(false);
           }
         } catch (err) {
-          console.error("Error creating user document:", err);
           if (isMountedRef.current) {
             setUserMeta({ role: initialRole });
             setLoading(false);
@@ -118,7 +114,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     } catch (err) {
-      console.error("Error processing user data:", err);
       if (isMountedRef.current) {
         setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
         setLoading(false);
@@ -153,13 +148,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const diff = end.getTime() - today.getTime();
         daysLeft = Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 0);
       }
-
-      console.log("✅ [AuthContext] user data processed:", { role, daysLeft });
       
       setUserMeta({ role, premiumStartDate, premiumEndDate, daysLeft, preferredCurrency });
       setLoading(false);
     } catch (err) {
-      console.error("Error setting user meta:", err);
       setUserMeta({ role: hasAdminClaim ? "Admin" : "Regular" });
       setLoading(false);
     }
@@ -167,7 +159,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Set up auth state change listener with debounce
   useEffect(() => {
-    console.log("🔄 Setting up auth state change listener");
     isMountedRef.current = true;
     
     // Clear any residual state
@@ -186,13 +177,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // If we're signing out, don't process auth changes
       if (isSigningOutRef.current) {
-        console.log("🚫 Ignoring auth state change during signout");
         return;
       }
       
       // Check if we processed a sign out recently to prevent bounce-back
       if (lastSignOutTimeRef.current > 0 && now - lastSignOutTimeRef.current < 2000) {
-        console.log("⏳ Recent signout detected, debouncing auth state change");
         return;
       }
       
@@ -215,7 +204,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             await currentUser.reload();
             const tokenResult = await currentUser.getIdTokenResult(true);
-            console.log("💠 Custom claims:", tokenResult.claims);
             const hasAdminClaim = tokenResult.claims?.Admin === true;
 
             if (isMountedRef.current) {
@@ -226,7 +214,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Process user data with new function
             await processUserData(currentUser.uid, hasAdminClaim);
           } catch (err) {
-            console.error("Error refreshing user:", err);
             if (isMountedRef.current) {
               setUserMeta({ role: "Regular" });
               setLoading(false);
@@ -250,7 +237,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     // Cleanup on unmount
     return () => {
-      console.log("♻️ Component unmounted, cleanup");
       isMountedRef.current = false;
       
       // Clean up auth listener
@@ -266,18 +252,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Improved sign out function with rate limiting and better cleanup
   const signOut = async () => {
-    console.log("🚪 [AuthContext] Sign out initiated");
-    
     // Prevent multiple concurrent signouts
     if (isSigningOutRef.current) {
-      console.log("🚫 Already signing out, ignoring duplicate request");
       return;
     }
     
     // Rate limit sign outs to prevent rapid sign out/sign in cycles
     const now = Date.now();
     if (now - lastSignOutTimeRef.current < 2000) {
-      console.log("⏳ Sign out rate limited, too soon after previous sign out");
       return;
     }
     
@@ -314,16 +296,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserMeta(null);
       }
       
-      console.log("✅ [AuthContext] Sign out completed successfully");
     } catch (err) {
-      console.error("❌ [AuthContext] Error during sign out:", err);
-      
       // Last resort cleanup
       try {
         cleanupAllListeners();
         await firebaseSignOut(auth);
       } catch (e) {
-        console.error("Failed final cleanup attempt:", e);
+        // Final cleanup attempt failed
       }
     } finally {
       // Give enough time before allowing another sign-out

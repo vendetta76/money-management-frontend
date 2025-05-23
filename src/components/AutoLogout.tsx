@@ -35,6 +35,7 @@ const AutoLogout: React.FC = () => {
   const warningIntervalRef = useRef<number | null>(null);
   const checkIntervalRef = useRef<number | null>(null);
   const absoluteTimerRef = useRef<number | null>(null);
+  const warningTimerRef = useRef<number | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const lastActivityEventRef = useRef<number>(Date.now());
   const logoutScheduledRef = useRef<boolean>(false);
@@ -59,6 +60,11 @@ const AutoLogout: React.FC = () => {
       clearTimeout(absoluteTimerRef.current);
       absoluteTimerRef.current = null;
     }
+
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+      warningTimerRef.current = null;
+    }
     
     logoutScheduledRef.current = false;
     logoutTimeRef.current = 0;
@@ -67,6 +73,7 @@ const AutoLogout: React.FC = () => {
     localStorage.removeItem('lastActivityTime');
     
     setShowWarning(false);
+    setRemainingTime(0);
   }, []);
 
   // Handle logout with checks for running state
@@ -90,8 +97,6 @@ const AutoLogout: React.FC = () => {
   // Show warning dialog before logout
   const showLogoutWarning = useCallback((timeLeftMs: number) => {
     if (showWarning || isAuthPage || !user || isLoggingOutRef.current) return;
-    
-    console.log(`⚠️ Showing logout warning with ${timeLeftMs / 1000} seconds remaining`);
     
     setShowWarning(true);
     setRemainingTime(Math.max(timeLeftMs, 1000));
@@ -128,9 +133,14 @@ const AutoLogout: React.FC = () => {
       return;
     }
     
+    // Clear any existing timers
     if (absoluteTimerRef.current) {
       clearTimeout(absoluteTimerRef.current);
       absoluteTimerRef.current = null;
+    }
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+      warningTimerRef.current = null;
     }
     
     const now = Date.now();
@@ -138,32 +148,24 @@ const AutoLogout: React.FC = () => {
     logoutTimeRef.current = logoutTime;
     logoutScheduledRef.current = true;
     
-    console.log(`⏰ Logout scheduled at ${new Date(logoutTime).toLocaleTimeString()}, in ${logoutTimeout / 1000} seconds`);
-    
     const timeToWarning = logoutTimeout - AUTO_LOGOUT_WARNING_TIME;
     
-    if (warningIntervalRef.current) {
-      clearInterval(warningIntervalRef.current);
-      warningIntervalRef.current = null;
-    }
-    
+    // Schedule warning if there's enough time
     if (timeToWarning > 0) {
-      setTimeout(() => {
-        if (!user || isAuthPage || isLoggingOutRef.current) return;
+      warningTimerRef.current = window.setTimeout(() => {
+        if (!user || isAuthPage || isLoggingOutRef.current || showWarning) return;
         
-        if (!showWarning && logoutScheduledRef.current) {
-          if (document.visibilityState === 'visible') {
-            showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
-          }
+        if (logoutScheduledRef.current && document.visibilityState === 'visible') {
+          showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
         }
       }, timeToWarning);
     }
     
+    // Schedule absolute logout
     absoluteTimerRef.current = window.setTimeout(() => {
       if (!user || isAuthPage || isLoggingOutRef.current) return;
       
       if (logoutScheduledRef.current) {
-        console.log(`⌛ Logout timer expired at ${new Date().toLocaleTimeString()}`);
         handleLogout('timeout');
       }
     }, logoutTimeout);
@@ -186,10 +188,16 @@ const AutoLogout: React.FC = () => {
     
     lastActivityRef.current = now;
     
+    // Clear warning dialog if showing
     if (showWarning) {
       setShowWarning(false);
+      if (warningIntervalRef.current) {
+        clearInterval(warningIntervalRef.current);
+        warningIntervalRef.current = null;
+      }
     }
     
+    // Reset all timers and schedule new logout
     logoutScheduledRef.current = false;
     scheduleAbsoluteLogout();
     
@@ -204,10 +212,8 @@ const AutoLogout: React.FC = () => {
     const now = Date.now();
     
     if (document.visibilityState === 'visible') {
-      console.log(`👁️ Tab became visible at ${new Date(now).toLocaleTimeString()}`);
       
       if (logoutScheduledRef.current && logoutTimeRef.current > 0 && now >= logoutTimeRef.current) {
-        console.log(`⌛ Logout time has already passed (${new Date(logoutTimeRef.current).toLocaleTimeString()})`);
         handleLogout('timeout');
         return;
       }
@@ -215,25 +221,33 @@ const AutoLogout: React.FC = () => {
       if (logoutScheduledRef.current && logoutTimeRef.current > 0) {
         const remainingMs = logoutTimeRef.current - now;
         
-        if (remainingMs <= AUTO_LOGOUT_WARNING_TIME) {
-          console.log(`⚠️ Showing warning with ${remainingMs / 1000} seconds remaining`);
+        if (remainingMs <= AUTO_LOGOUT_WARNING_TIME && !showWarning) {
           showLogoutWarning(remainingMs);
         }
       }
       
       if (!logoutScheduledRef.current && logoutTimeout > 0) {
-        console.log(`🔄 No active schedule, creating new one`);
         scheduleAbsoluteLogout();
       }
       
     } else {
       localStorage.setItem('lastActivityTime', lastActivityRef.current.toString());
     }
-  }, [logoutTimeout, scheduleAbsoluteLogout, isAuthPage, user, handleLogout, showLogoutWarning]);
+  }, [logoutTimeout, scheduleAbsoluteLogout, isAuthPage, user, handleLogout, showLogoutWarning, showWarning]);
 
   // Handle session continuation
   const handleContinueSession = useCallback(() => {
-    console.log(`✅ User continued session`);
+    // Clear warning immediately
+    setShowWarning(false);
+    setRemainingTime(0);
+    
+    // Clear all warning-related timers
+    if (warningIntervalRef.current) {
+      clearInterval(warningIntervalRef.current);
+      warningIntervalRef.current = null;
+    }
+    
+    // Reset activity and reschedule logout
     resetActivityTimer();
     continueSession();
   }, [resetActivityTimer, continueSession]);
@@ -251,7 +265,6 @@ const AutoLogout: React.FC = () => {
     }
     
     if (!initialTimeoutSetRef.current) {
-      console.log(`📅 Initial logout scheduled in ${logoutTimeout / 1000} seconds`);
       initialTimeoutSetRef.current = true;
       resetActivityTimer();
     }
@@ -287,7 +300,7 @@ const AutoLogout: React.FC = () => {
         const remainingTime = scheduledTime - now;
         
         if (remainingTime > AUTO_LOGOUT_WARNING_TIME) {
-          setTimeout(() => {
+          warningTimerRef.current = window.setTimeout(() => {
             if (!showWarning && logoutScheduledRef.current && user && !isAuthPage && !isLoggingOutRef.current) {
               if (document.visibilityState === 'visible') {
                 showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
@@ -295,7 +308,7 @@ const AutoLogout: React.FC = () => {
             }
           }, remainingTime - AUTO_LOGOUT_WARNING_TIME);
         }
-        else if (document.visibilityState === 'visible') {
+        else if (document.visibilityState === 'visible' && !showWarning) {
           showLogoutWarning(remainingTime);
         }
         
@@ -343,6 +356,7 @@ const AutoLogout: React.FC = () => {
       if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
       if (warningIntervalRef.current) clearInterval(warningIntervalRef.current);
       if (absoluteTimerRef.current) clearTimeout(absoluteTimerRef.current);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [
@@ -403,7 +417,7 @@ const AutoLogout: React.FC = () => {
   }
 
   // Calculate progress percentage for warning dialog
-  const progressPercentage = (remainingTime / AUTO_LOGOUT_WARNING_TIME) * 100;
+  const progressPercentage = Math.max(0, Math.min(100, (remainingTime / AUTO_LOGOUT_WARNING_TIME) * 100));
 
   return (
     <Dialog

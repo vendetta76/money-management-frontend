@@ -30,8 +30,6 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
     setIsLoading(true);
     
     try {
-      console.log("LogoutTimeoutContext: Saving timeout value:", timeout);
-      
       // Simpan ke localStorage
       localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
       setLogoutTimeoutState(timeout);
@@ -45,26 +43,16 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
           const docSnap = await getDoc(userDocRef);
           
           if (docSnap.exists()) {
-            console.log("LogoutTimeoutContext: User document exists, updating...");
             await updateDoc(userDocRef, { logoutTimeout: timeout });
-            console.log("LogoutTimeoutContext: Successfully saved to Firestore");
           } else {
-            console.error("LogoutTimeoutContext: User document does not exist");
-            // Instead of throwing an error, log it and continue
-            console.log("LogoutTimeoutContext: User document will be created in AuthContext");
+            // Document will be created in AuthContext
           }
         } catch (err) {
-          // Handle permission errors gracefully
-          console.error("LogoutTimeoutContext: Firestore error:", err);
-          // Continue with localStorage only
-          console.log("LogoutTimeoutContext: Continuing with localStorage only");
+          // Handle permission errors gracefully - continue with localStorage only
         }
-      } else {
-        console.log("LogoutTimeoutContext: No user logged in, saving only to localStorage");
       }
     } catch (error) {
-      console.error('LogoutTimeoutContext: Error saving logout timeout:', error);
-      // Don't rethrow - handle gracefully
+      // Handle errors gracefully without logging
     } finally {
       setIsLoading(false);
     }
@@ -73,11 +61,9 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
   // Load timeout dari Firestore ketika user berubah
   useEffect(() => {
     if (!user) {
-      console.log("LogoutTimeoutContext: No user logged in");
       return;
     }
 
-    console.log("LogoutTimeoutContext: User logged in, loading timeout from Firestore");
     setIsLoading(true);
     
     let unsubscribe = () => {};
@@ -94,14 +80,9 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
           const data = docSnap.data();
           if (data.logoutTimeout !== undefined) {
             const timeout = data.logoutTimeout;
-            console.log("LogoutTimeoutContext: Initial timeout value from Firestore:", timeout);
             setLogoutTimeoutState(timeout);
             localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
-          } else {
-            console.log("LogoutTimeoutContext: No logoutTimeout field in user document");
           }
-        } else {
-          console.log("LogoutTimeoutContext: User document does not exist");
         }
         
         // Setup listener for real-time updates with better error handling
@@ -112,17 +93,13 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
               const data = docSnap.data();
               if (data.logoutTimeout !== undefined) {
                 const timeout = data.logoutTimeout;
-                console.log("LogoutTimeoutContext: Real-time update from Firestore:", timeout);
                 setLogoutTimeoutState(timeout);
                 localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
               }
             }
           }, 
           (error) => {
-            // Handle permission errors gracefully
-            console.error('LogoutTimeoutContext: Error in real-time listener:', error);
-            // If we get a permission error, still use localStorage
-            console.log('LogoutTimeoutContext: Using localStorage value instead');
+            // Handle permission errors gracefully - use localStorage
             const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
             if (savedTimeout) {
               setLogoutTimeoutState(parseInt(savedTimeout, 10));
@@ -131,7 +108,6 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
         );
         
       } catch (error) {
-        console.error("LogoutTimeoutContext: Error loading initial timeout:", error);
         // Fall back to localStorage
         const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (savedTimeout) {
@@ -145,7 +121,6 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
     loadTimeout();
 
     return () => {
-      console.log("LogoutTimeoutContext: Cleanup listener");
       unsubscribe();
     };
   }, [user]);
@@ -155,7 +130,6 @@ export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ child
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === LOCAL_STORAGE_KEY && e.newValue !== null) {
         const newTimeout = parseInt(e.newValue, 10);
-        console.log("LogoutTimeoutContext: localStorage updated in another tab:", newTimeout);
         setLogoutTimeoutState(newTimeout);
       }
     };

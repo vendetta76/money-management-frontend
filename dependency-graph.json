@@ -1,0 +1,9 @@
+{
+  "eslint.config.js": [],
+  "postcss.config.js": [],
+  "services/api.js": [],
+  "tailwind.config.js": [],
+  "utils/auth.js": [],
+  "utils/cropImage.js": [],
+  "utils/toast.js": []
+}

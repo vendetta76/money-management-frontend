@@ -116,7 +116,7 @@ const LoginPage = () => {
         // No active session to sign out from
       }
       
-      // Long delay to ensure Firebase is ready
+      // Delay to ensure Firebase is ready
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Set the appropriate persistence based on rememberMe
