@@ -15,7 +15,11 @@ import { IncomeEntry, WalletEntry } from "../helpers/types";
 import { Pencil, Trash } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 
-const RecentTransactions = () => {
+interface RecentTransactionsProps {
+  onEdit?: (entry: IncomeEntry) => void;
+}
+
+const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
   const { user } = useAuth();
   const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
@@ -55,10 +59,22 @@ const RecentTransactions = () => {
 
   const handleDelete = async (id: string, amount: number, wallet: string) => {
     if (!user) return;
-    await deleteDoc(doc(db, "users", user.uid, "incomes", id));
-    await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
-      balance: increment(-amount),
-    });
+    if (!window.confirm("Yakin ingin menghapus transaksi ini?")) return;
+    
+    try {
+      await deleteDoc(doc(db, "users", user.uid, "incomes", id));
+      await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
+        balance: increment(-amount),
+      });
+    } catch (error) {
+      console.error("Error deleting income:", error);
+    }
+  };
+
+  const handleEdit = (entry: IncomeEntry) => {
+    if (onEdit) {
+      onEdit(entry);
+    }
   };
 
   return (
@@ -78,7 +94,7 @@ const RecentTransactions = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {entry.source} • {getWalletName(entry.wallet)}
+                        {entry.description} • {getWalletName(entry.wallet)}
                       </p>
                       <p className="text-xs text-gray-500">
                         {new Date(entry.createdAt?.toDate?.() ?? entry.createdAt).toLocaleDateString("id-ID")}
@@ -96,8 +112,22 @@ const RecentTransactions = () => {
                 </div>
                 <div className="flex gap-2 ml-4">
                   <button
-                    onClick={() => handleDelete(entry.id, entry.amount, entry.wallet)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(entry);
+                    }}
+                    className="text-blue-500 hover:text-blue-700"
+                    title="Edit transaksi"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(entry.id, entry.amount, entry.wallet);
+                    }}
                     className="text-red-500 hover:text-red-700"
+                    title="Hapus transaksi"
                   >
                     <Trash size={16} />
                   </button>

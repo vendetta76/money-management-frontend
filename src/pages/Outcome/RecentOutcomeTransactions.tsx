@@ -15,7 +15,11 @@ import { OutcomeEntry, WalletEntry } from "../helpers/types";
 import { Pencil, Trash } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 
-const RecentOutcomeTransactions = () => {
+interface RecentOutcomeTransactionsProps {
+  onEdit?: (entry: OutcomeEntry) => void;
+}
+
+const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ onEdit }) => {
   const { user } = useAuth();
   const [outcomes, setOutcomes] = useState<OutcomeEntry[]>([]);
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
@@ -55,10 +59,22 @@ const RecentOutcomeTransactions = () => {
 
   const handleDelete = async (id: string, amount: number, wallet: string) => {
     if (!user) return;
-    await deleteDoc(doc(db, "users", user.uid, "outcomes", id));
-    await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
-      balance: increment(amount),
-    });
+    if (!window.confirm("Yakin ingin menghapus transaksi ini?")) return;
+    
+    try {
+      await deleteDoc(doc(db, "users", user.uid, "outcomes", id));
+      await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
+        balance: increment(amount),
+      });
+    } catch (error) {
+      console.error("Error deleting outcome:", error);
+    }
+  };
+
+  const handleEdit = (entry: OutcomeEntry) => {
+    if (onEdit) {
+      onEdit(entry);
+    }
   };
 
   return (
@@ -72,10 +88,12 @@ const RecentOutcomeTransactions = () => {
             {paginatedOutcomes.map((entry) => (
               <div
                 key={entry.id}
-                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 cursor-pointer"
-                onClick={() => toggleExpand(entry.id!)}
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
               >
-                <div className="text-sm w-full">
+                <div 
+                  className="text-sm w-full cursor-pointer"
+                  onClick={() => toggleExpand(entry.id!)}
+                >
                   <div className="font-semibold text-gray-800 dark:text-white">
                     {entry.createdAt?.toDate
                       ? new Date(entry.createdAt.toDate()).toLocaleString("id-ID")
@@ -94,12 +112,23 @@ const RecentOutcomeTransactions = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(entry);
+                    }}
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                    title="Edit transaksi"
+                  >
                     <Pencil size={18} />
                   </button>
                   <button
-                    onClick={() => handleDelete(entry.id!, entry.amount, entry.wallet)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(entry.id!, entry.amount, entry.wallet);
+                    }}
                     className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                    title="Hapus transaksi"
                   >
                     <Trash size={18} />
                   </button>

@@ -23,9 +23,18 @@ interface OutcomeFormProps {
   presetWalletId?: string;
   onClose?: () => void;
   hideTitle?: boolean;
+  editingEntry?: OutcomeEntry | null;
+  onEditComplete?: () => void;
 }
 
-const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hideCardPreview, hideTitle = true }) => {
+const OutcomeForm: React.FC<OutcomeFormProps> = ({ 
+  presetWalletId, 
+  onClose, 
+  hideCardPreview, 
+  hideTitle = true, 
+  editingEntry, 
+  onEditComplete 
+}) => {
   const { user } = useAuth();
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [outcomes, setOutcomes] = useState<OutcomeEntry[]>([]);
@@ -36,34 +45,44 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
   const [success, setSuccess] = useState(false);
   const descriptionRef = useRef<HTMLInputElement>(null);
 
+  // Handle editing existing entry
+  useEffect(() => {
+    if (editingEntry) {
+      setEditingId(editingEntry.id);
+      
+      // Format amount properly for display
+      const formattedAmount = editingEntry.amount.toLocaleString('id-ID', {
+        useGrouping: true,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      
+      setForm({
+        wallet: editingEntry.wallet,
+        description: editingEntry.description,
+        amount: formattedAmount,
+        currency: editingEntry.currency
+      });
+    } else {
+      setEditingId(null);
+      setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
+    }
+  }, [editingEntry, presetWalletId]);
+
   useEffect(() => {
     if (!user) return;
     
-    // Get all wallets and filter out archived ones
     const walletRef = collection(db, "users", user.uid, "wallets");
     
     const unsubWallets = onSnapshot(walletRef, (snap) => {
       const allWallets = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[];
       
-      // Debug: Log wallet data to understand the structure
-      console.log("All wallets from DB:", allWallets.map(w => ({
-        id: w.id,
-        name: w.name,
-        status: w.status,
-        isArchived: w.isArchived,
-        deleted: w.deleted,
-        active: w.active,
-        allFields: Object.keys(w)
-      })));
-      
-      // More comprehensive filtering for archived/deleted wallets
+      // Filter out archived/deleted wallets and system entries
       const activeWallets = allWallets.filter(w => {
-        // Skip system entries and wallets without names
         if (!w.name || w.name.trim() === '' || w.id.startsWith('_')) {
           return false;
         }
         
-        // Check multiple possible indicators for archived/deleted wallets
         const isArchived = w.status === "archived" || 
                           w.status === "deleted" || 
                           w.status === "inactive" ||
@@ -71,19 +90,11 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
                           w.deleted === true ||
                           w.active === false;
         
-        // Keep only non-archived wallets with valid names
         return !isArchived;
       });
       
-      console.log("Filtered active wallets:", activeWallets.map(w => ({
-        id: w.id,
-        name: w.name,
-        status: w.status
-      })));
-      
       setWallets(activeWallets);
       
-      // Check if currently selected wallet is still available
       if (form.wallet && !activeWallets.find(w => w.id === form.wallet)) {
         setForm(prev => ({ ...prev, wallet: "", currency: "" }));
         if (presetWalletId === form.wallet) {
@@ -114,7 +125,6 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
         currency: selected.currency,
       }));
     } else if (wallets.length > 0) {
-      // Preset wallet not found in active wallets
       toast.error("Dompet yang dipilih sudah dihapus atau diarsipkan.");
       if (onClose) onClose();
     }
@@ -149,7 +159,6 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
       e.amount = "Nominal harus lebih dari 0.";
     if (!form.currency.trim()) e.currency = "Mata uang wajib dipilih.";
     
-    // Additional validation: check if selected wallet still exists
     if (form.wallet && !wallets.find(w => w.id === form.wallet)) {
       e.wallet = "Dompet sudah dihapus atau diarsipkan.";
     }
@@ -161,25 +170,20 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     const { name, value } = e.target;
 
     if (name === "amount") {
-      // First, clean the input to only allow digits, commas, and dots
       let cleaned = value.replace(/[^0-9.,]/g, "");
       
-      // Handle decimal part (using comma as decimal separator)
       const parts = cleaned.split(",");
       if (parts.length > 2) {
         cleaned = parts[0] + "," + parts.slice(1).join("").replace(/,/g, "");
       }
       
-      // Remove existing thousand separators (dots) to work with raw number
       const numberWithoutSeparator = parts[0].replace(/\./g, "");
       
-      // Add thousand separators
       let formattedInteger = "";
       if (numberWithoutSeparator.length > 0) {
         formattedInteger = numberWithoutSeparator.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
       }
       
-      // Combine the formatted integer with decimal part if exists
       const finalValue = parts.length > 1 
         ? formattedInteger + "," + parts[1] 
         : formattedInteger;
@@ -265,6 +269,11 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
       setEditingId(null);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
+      
+      if (editingId && onEditComplete) {
+        onEditComplete();
+      }
+      
       if (onClose) onClose();
     } catch (err) {
       toast.error("Gagal menyimpan data. Silakan coba lagi.");
@@ -331,13 +340,10 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
     setEditingId(null);
     setErrors({});
+    if (onEditComplete) onEditComplete();
     if (onClose) onClose();
   };
 
-  const getWalletName = (id: string) => wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
-  const getWalletBalance = (id: string) => wallets.find((w) => w.id === id)?.balance || 0;
-
-  // Helper function to get the selected wallet safely
   const getSelectedWallet = () => {
     if (!form.wallet) return null;
     return wallets.find((w) => w.id === form.wallet) || null;
@@ -376,11 +382,9 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
           </select>
           {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
-          {/* Fixed wallet card preview - only show if wallet exists and is valid */}
           {form.wallet && !hideCardPreview && (() => {
             const selectedWallet = getSelectedWallet();
             
-            // Don't render anything if wallet doesn't exist or is invalid
             if (!selectedWallet) {
               return null;
             }
