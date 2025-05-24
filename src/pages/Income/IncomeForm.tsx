@@ -23,7 +23,10 @@ import {
   CreditCard,
   CheckCircle,
   Plus,
-  Save
+  Save,
+  Calendar,
+  Target,
+  Zap
 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 import { getCardStyle } from "../helpers/getCardStyle";
@@ -313,6 +316,15 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
     if (onClose) onClose();
   };
 
+  // Calculate total income today for quick stats
+  const todayIncomes = incomes.filter((income) => {
+    const today = new Date();
+    const incomeDate = new Date(income.createdAt?.toDate?.() ?? income.createdAt);
+    return incomeDate.toDateString() === today.toDateString();
+  });
+
+  const todayTotal = todayIncomes.reduce((sum, income) => sum + income.amount, 0);
+
   return (
     <div className="relative">
       {/* Success Animation */}
@@ -323,6 +335,32 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             <span className="font-semibold">
               {editingId ? "Pemasukan diperbarui! ✨" : "Pemasukan berhasil disimpan! 🎉"}
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Stats Card */}
+      {!editingId && (
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-6 rounded-2xl mb-6 border border-green-200 dark:border-green-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-green-500 p-3 rounded-xl">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Pemasukan Hari Ini</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {formatCurrency(todayTotal, 'IDR')}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600 dark:text-gray-300">Total Transaksi</p>
+              <p className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-1">
+                {todayIncomes.length}
+                <Zap className="w-4 h-4 text-yellow-500" />
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -429,75 +467,78 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             )}
           </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              <FileText className="w-4 h-4 text-purple-500" />
-              Deskripsi
-            </label>
-            <div className="relative">
-              <input
-                ref={descriptionRef}
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                onFocus={() => setFocusedField('description')}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Contoh: Gaji bulanan, Bonus, Freelance..."
-                disabled={loading}
-                className={`w-full rounded-2xl border-2 px-5 py-4 dark:bg-gray-700 dark:text-white text-gray-800 placeholder-gray-400 font-medium transition-all duration-300 ${
-                  errors.description 
-                    ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
-                    : focusedField === 'description'
-                    ? "border-purple-400 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-100 dark:shadow-purple-900/20"
-                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-purple-300 hover:bg-purple-50/50"
-                }`}
-              />
-            </div>
-            {errors.description && (
-              <p className="text-red-500 text-sm flex items-center gap-1">
-                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                {errors.description}
-              </p>
-            )}
-          </div>
-
-          {/* Amount */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              <DollarSign className="w-4 h-4 text-green-500" />
-              Nominal
-            </label>
-            <div className="relative">
-              <input
-                name="amount"
-                value={form.amount}
-                onChange={handleChange}
-                onFocus={() => setFocusedField('amount')}
-                onBlur={() => setFocusedField(null)}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9.,]*"
-                placeholder="0"
-                disabled={loading}
-                className={`w-full rounded-2xl border-2 px-5 py-4 dark:bg-gray-700 dark:text-white text-gray-800 text-xl font-bold placeholder-gray-400 transition-all duration-300 ${
-                  errors.amount 
-                    ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
-                    : focusedField === 'amount'
-                    ? "border-green-400 bg-green-50 dark:bg-green-900/20 shadow-lg shadow-green-100 dark:shadow-green-900/20"
-                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-green-300 hover:bg-green-50/50"
-                }`}
-              />
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">
-                {form.currency || "IDR"}
+          {/* Description and Amount - Two Column Layout on Larger Screens */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <FileText className="w-4 h-4 text-purple-500" />
+                Deskripsi
+              </label>
+              <div className="relative">
+                <input
+                  ref={descriptionRef}
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  onFocus={() => setFocusedField('description')}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder="Contoh: Gaji bulanan, Bonus..."
+                  disabled={loading}
+                  className={`w-full rounded-2xl border-2 px-5 py-4 dark:bg-gray-700 dark:text-white text-gray-800 placeholder-gray-400 font-medium transition-all duration-300 ${
+                    errors.description 
+                      ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
+                      : focusedField === 'description'
+                      ? "border-purple-400 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-100 dark:shadow-purple-900/20"
+                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-purple-300 hover:bg-purple-50/50"
+                  }`}
+                />
               </div>
+              {errors.description && (
+                <p className="text-red-500 text-sm flex items-center gap-1">
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                  {errors.description}
+                </p>
+              )}
             </div>
-            {errors.amount && (
-              <p className="text-red-500 text-sm flex items-center gap-1">
-                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                {errors.amount}
-              </p>
-            )}
+
+            {/* Amount */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <DollarSign className="w-4 h-4 text-green-500" />
+                Nominal
+              </label>
+              <div className="relative">
+                <input
+                  name="amount"
+                  value={form.amount}
+                  onChange={handleChange}
+                  onFocus={() => setFocusedField('amount')}
+                  onBlur={() => setFocusedField(null)}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9.,]*"
+                  placeholder="0"
+                  disabled={loading}
+                  className={`w-full rounded-2xl border-2 px-5 py-4 dark:bg-gray-700 dark:text-white text-gray-800 text-xl font-bold placeholder-gray-400 transition-all duration-300 ${
+                    errors.amount 
+                      ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
+                      : focusedField === 'amount'
+                      ? "border-green-400 bg-green-50 dark:bg-green-900/20 shadow-lg shadow-green-100 dark:shadow-green-900/20"
+                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-green-300 hover:bg-green-50/50"
+                  }`}
+                />
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">
+                  {form.currency || "IDR"}
+                </div>
+              </div>
+              {errors.amount && (
+                <p className="text-red-500 text-sm flex items-center gap-1">
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                  {errors.amount}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Currency Display */}
