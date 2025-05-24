@@ -292,6 +292,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
   const getWalletName = (id: string) => wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
   const getWalletBalance = (id: string) => wallets.find((w) => w.id === id)?.balance || 0;
 
+  // Helper function to get the selected wallet safely
+  const getSelectedWallet = () => {
+    if (!form.wallet) return null;
+    return wallets.find((w) => w.id === form.wallet) || null;
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-900 p-6 rounded-xl shadow">
       <div>
@@ -312,26 +318,27 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ presetWalletId, onClose, hideCa
         </select>
         {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
-        {form.wallet && !hideCardPreview && (
-          (() => {
-            const selectedWallet = wallets.find((w) => w.id === form.wallet);
-            return selectedWallet ? (
-              <div
-                className="mt-4 rounded-xl text-white p-4 shadow w-full"
-                style={getCardStyle(selectedWallet)}
-              >
-                <h3 className="text-sm font-semibold truncate">{getWalletName(form.wallet)}</h3>
-                <p className="text-lg font-bold mt-1">
-                  {formatCurrency(getWalletBalance(form.wallet), form.currency)}
-                </p>
-              </div>
-            ) : (
-              <div className="text-center text-sm text-gray-400 my-6 animate-pulse">
-                Memuat dompet...
-              </div>
-            );
-          })()
-        )}
+        {/* Fixed wallet card preview - only show if wallet exists and is valid */}
+        {form.wallet && !hideCardPreview && (() => {
+          const selectedWallet = getSelectedWallet();
+          
+          // Don't render anything if wallet doesn't exist or is invalid
+          if (!selectedWallet) {
+            return null;
+          }
+          
+          return (
+            <div
+              className="mt-4 rounded-xl text-white p-4 shadow w-full"
+              style={getCardStyle(selectedWallet)}
+            >
+              <h3 className="text-sm font-semibold truncate">{selectedWallet.name}</h3>
+              <p className="text-lg font-bold mt-1">
+                {formatCurrency(selectedWallet.balance || 0, selectedWallet.currency)}
+              </p>
+            </div>
+          );
+        })()}
       </div>
 
       <div>

@@ -302,6 +302,12 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
   const getWalletName = (id: string) => wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
   const getWalletBalance = (id: string) => wallets.find((w) => w.id === id)?.balance || 0;
 
+  // Helper function to get the selected wallet safely
+  const getSelectedWallet = () => {
+    if (!form.wallet) return null;
+    return wallets.find((w) => w.id === form.wallet) || null;
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       {!hideTitle && (
@@ -335,9 +341,15 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
           </select>
           {errors.wallet && <p className="text-red-500 text-sm mt-1">{errors.wallet}</p>}
 
+          {/* Fixed wallet card preview - only show if wallet exists and is valid */}
           {form.wallet && !hideCardPreview && (() => {
-            const selectedWallet = wallets.find((w) => w.id === form.wallet);
-            if (!selectedWallet) return null;
+            const selectedWallet = getSelectedWallet();
+            
+            // Don't render anything if wallet doesn't exist or is invalid
+            if (!selectedWallet) {
+              return null;
+            }
+            
             return (
               <div
                 className="mt-4 rounded-xl text-white p-4 shadow w-full"
