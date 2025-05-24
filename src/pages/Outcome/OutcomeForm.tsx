@@ -44,8 +44,38 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
     
     const unsubWallets = onSnapshot(walletRef, (snap) => {
       const allWallets = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[];
-      // Filter out archived wallets (only keep wallets that are not archived)
-      const activeWallets = allWallets.filter(w => w.status !== "archived");
+      
+      // Debug: Log wallet data to understand the structure
+      console.log("All wallets from DB:", allWallets.map(w => ({
+        id: w.id,
+        name: w.name,
+        status: w.status,
+        isArchived: w.isArchived,
+        deleted: w.deleted,
+        active: w.active,
+        allFields: Object.keys(w)
+      })));
+      
+      // More comprehensive filtering for archived/deleted wallets
+      const activeWallets = allWallets.filter(w => {
+        // Check multiple possible indicators for archived/deleted wallets
+        const isArchived = w.status === "archived" || 
+                          w.status === "deleted" || 
+                          w.status === "inactive" ||
+                          w.isArchived === true ||
+                          w.deleted === true ||
+                          w.active === false;
+        
+        // Keep only non-archived wallets
+        return !isArchived;
+      });
+      
+      console.log("Filtered active wallets:", activeWallets.map(w => ({
+        id: w.id,
+        name: w.name,
+        status: w.status
+      })));
+      
       setWallets(activeWallets);
       
       // Check if currently selected wallet is still available
