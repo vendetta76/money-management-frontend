@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { db } from "../../lib/firebaseClient";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -12,40 +12,23 @@ import {
   increment,
 } from "firebase/firestore";
 import { IncomeEntry, WalletEntry } from "../helpers/types";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  IconButton,
-  Chip,
-  Stack,
-  Pagination,
-  Collapse,
-  Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Avatar,
-  Tooltip,
-  Fade,
-  Skeleton,
-} from "@mui/material";
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  TrendingUp as TrendingUpIcon,
-  CalendarToday as CalendarIcon,
-  AccountBalanceWallet as WalletIcon,
-} from "@mui/icons-material";
+import { 
+  Edit3, 
+  Trash2, 
+  TrendingUp, 
+  Calendar, 
+  Wallet,
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
+  Sparkles,
+  Clock,
+  ArrowRight,
+  Zap,
+  Target,
+  Filter,
+  SortDesc
+} from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 
 interface RecentTransactionsProps {
@@ -58,17 +41,15 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; entry: IncomeEntry | null }>({
-    open: false,
-    entry: null
-  });
-  const itemsPerPage = 5;
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const itemsPerPage = 6;
   const totalPages = Math.ceil(incomes.length / itemsPerPage);
   const paginatedIncomes = incomes.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -99,17 +80,17 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
     wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
 
   const getWalletColor = (id: string) =>
-    wallets.find((w) => w.id === id)?.color || "#1976d2";
+    wallets.find((w) => w.id === id)?.color || "#3B82F6";
 
-  const handleDelete = async () => {
-    if (!user || !deleteDialog.entry) return;
+  const handleDelete = async (id: string, amount: number, wallet: string) => {
+    if (!user) return;
     
     try {
-      await deleteDoc(doc(db, "users", user.uid, "incomes", deleteDialog.entry.id));
-      await updateDoc(doc(db, "users", user.uid, "wallets", deleteDialog.entry.wallet), {
-        balance: increment(-deleteDialog.entry.amount),
+      await deleteDoc(doc(db, "users", user.uid, "incomes", id));
+      await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
+        balance: increment(-amount),
       });
-      setDeleteDialog({ open: false, entry: null });
+      setDeleteConfirm(null);
     } catch (error) {
       console.error("Error deleting income:", error);
     }
@@ -125,263 +106,323 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
+  const formatDate = (date: any) => {
+    const d = new Date(date?.toDate?.() ?? date);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (d.toDateString() === today.toDateString()) {
+      return `Hari ini • ${d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
+    } else if (d.toDateString() === yesterday.toDateString()) {
+      return `Kemarin • ${d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
+    } else {
+      return d.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: d.getFullYear() !== today.getFullYear() ? "numeric" : undefined,
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+  };
+
   if (loading) {
     return (
-      <Card sx={{ mt: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Transaksi Terbaru
-          </Typography>
-          <Stack spacing={2}>
+      <div className="mt-12">
+        <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-8 rounded-3xl shadow-2xl border border-green-100 dark:border-gray-600">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-3 rounded-2xl animate-pulse">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded-lg w-48 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded-lg w-32 mt-2 animate-pulse"></div>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} variant="rectangular" height={80} sx={{ borderRadius: 1 }} />
+              <div key={i} className="bg-gray-100 dark:bg-gray-700 p-6 rounded-2xl animate-pulse">
+                <div className="flex justify-between items-start">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-xl"></div>
+                    <div>
+                      <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded w-32 mb-2"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24"></div>
+                    </div>
+                  </div>
+                  <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-20"></div>
+                </div>
+              </div>
             ))}
-          </Stack>
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card sx={{ mt: 3, borderRadius: 2 }} elevation={2}>
-      <CardContent>
-        <Box display="flex" alignItems="center" gap={1} mb={2}>
-          <TrendingUpIcon color="success" />
-          <Typography variant="h6" component="h3">
-            Transaksi Terbaru
-          </Typography>
-          {incomes.length > 0 && (
-            <Chip 
-              label={`${incomes.length} transaksi`} 
-              size="small" 
-              color="success" 
-              variant="outlined" 
-            />
-          )}
-        </Box>
+    <div className="mt-12">
+      <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-8 rounded-3xl shadow-2xl border border-green-100 dark:border-gray-600">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-3 rounded-2xl shadow-lg">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                Transaksi Terbaru
+                <Sparkles className="w-5 h-5 text-yellow-500" />
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm flex items-center gap-1">
+                <Target className="w-4 h-4" />
+                {incomes.length} total transaksi
+              </p>
+            </div>
+          </div>
+          
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full text-green-700 dark:text-green-300 text-sm font-medium flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              Live
+            </div>
+          </div>
+        </div>
 
         {incomes.length === 0 ? (
-          <Box 
-            display="flex" 
-            flexDirection="column" 
-            alignItems="center" 
-            py={4}
-            sx={{ opacity: 0.6 }}
-          >
-            <TrendingUpIcon sx={{ fontSize: 48, mb: 1 }} color="disabled" />
-            <Typography variant="body1" color="text.secondary">
+          <div className="text-center py-16">
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+              <TrendingUp className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+            </div>
+            <h4 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
               Belum ada pemasukan
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Transaksi pemasukan akan muncul di sini
-            </Typography>
-          </Box>
+            </h4>
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+              Transaksi pemasukan Anda akan muncul disini setelah Anda menambahkan yang pertama.
+            </p>
+            <div className="mt-6">
+              <ArrowRight className="w-6 h-6 text-blue-500 mx-auto animate-bounce" />
+            </div>
+          </div>
         ) : (
           <>
-            <List sx={{ p: 0 }}>
+            {/* Transaction List */}
+            <div className="space-y-4">
               {paginatedIncomes.map((entry, index) => (
-                <Fade in key={entry.id} timeout={300 + index * 100}>
-                  <Box>
-                    <ListItem
-                      sx={{
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        mb: 1,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                          transform: 'translateY(-1px)',
-                          boxShadow: 1,
-                        },
-                        transition: 'all 0.2s ease-in-out',
-                        cursor: 'pointer',
+                <div
+                  key={entry.id}
+                  className={`group relative transform transition-all duration-300 ${
+                    hoveredId === entry.id ? 'scale-102 -translate-y-1' : ''
+                  }`}
+                  onMouseEnter={() => setHoveredId(entry.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Delete Confirmation Overlay */}
+                  {deleteConfirm === entry.id && (
+                    <div className="absolute inset-0 bg-red-500/95 backdrop-blur-sm rounded-2xl z-10 flex items-center justify-center">
+                      <div className="text-white text-center">
+                        <Trash2 className="w-8 h-8 mx-auto mb-2" />
+                        <p className="font-semibold mb-4">Hapus transaksi ini?</p>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleDelete(entry.id, entry.amount, entry.wallet)}
+                            className="bg-white text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                          >
+                            Ya, Hapus
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm(null)}
+                            className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Main Transaction Card */}
+                  <div
+                    className={`relative bg-white dark:bg-gray-700 rounded-2xl p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
+                      expandedId === entry.id 
+                        ? 'border-green-300 dark:border-green-600 shadow-2xl shadow-green-100 dark:shadow-green-900/20' 
+                        : 'border-gray-100 dark:border-gray-600 hover:border-green-200 dark:hover:border-green-700 hover:shadow-xl'
+                    }`}
+                    onClick={() => toggleExpand(entry.id)}
+                  >
+                    {/* Background Gradient */}
+                    <div 
+                      className="absolute inset-0 opacity-5"
+                      style={{
+                        background: `linear-gradient(135deg, ${getWalletColor(entry.wallet)} 0%, transparent 70%)`
                       }}
-                      onClick={() => toggleExpand(entry.id)}
-                    >
-                      <Avatar
-                        sx={{
-                          bgcolor: getWalletColor(entry.wallet),
-                          mr: 2,
-                          width: 40,
-                          height: 40,
-                        }}
-                      >
-                        <WalletIcon />
-                      </Avatar>
+                    ></div>
 
-                      <ListItemText
-                        primary={
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <Typography variant="subtitle1" fontWeight="medium">
-                              {entry.description}
-                            </Typography>
-                            <Chip
-                              label={getWalletName(entry.wallet)}
-                              size="small"
-                              variant="outlined"
-                              sx={{ 
-                                borderColor: getWalletColor(entry.wallet),
-                                color: getWalletColor(entry.wallet),
-                              }}
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                            <CalendarIcon sx={{ fontSize: 14 }} />
-                            <Typography variant="caption" color="text.secondary">
-                              {new Date(entry.createdAt?.toDate?.() ?? entry.createdAt).toLocaleDateString("id-ID", {
-                                weekday: 'short',
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </Typography>
-                          </Box>
-                        }
-                      />
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between">
+                        {/* Left Side - Icon and Info */}
+                        <div className="flex items-start gap-4">
+                          <div 
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300"
+                            style={{ 
+                              background: `linear-gradient(135deg, ${getWalletColor(entry.wallet)} 0%, ${getWalletColor(entry.wallet)}dd 100%)` 
+                            }}
+                          >
+                            <Wallet className="w-6 h-6 text-white" />
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="font-bold text-gray-800 dark:text-white text-lg truncate">
+                                {entry.description}
+                              </h4>
+                              <span 
+                                className="px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm"
+                                style={{ backgroundColor: getWalletColor(entry.wallet) }}
+                              >
+                                {getWalletName(entry.wallet)}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {formatDate(entry.createdAt)}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="w-3 h-3" />
+                                {entry.currency}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
 
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Typography 
-                          variant="h6" 
-                          color="success.main" 
-                          fontWeight="bold"
-                          sx={{ mr: 1 }}
-                        >
-                          {formatCurrency(entry.amount, entry.currency)}
-                        </Typography>
+                        {/* Right Side - Amount and Actions */}
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                              {formatCurrency(entry.amount, entry.currency)}
+                            </div>
+                          </div>
 
-                        <Stack direction="row" spacing={0.5}>
-                          <Tooltip title="Edit transaksi">
-                            <IconButton
-                              size="small"
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEdit(entry);
                               }}
-                              sx={{ 
-                                color: 'primary.main',
-                                '&:hover': { bgcolor: 'primary.light', color: 'white' }
-                              }}
+                              className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-300 transform hover:scale-110"
+                              title="Edit transaksi"
                             >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-
-                          <Tooltip title="Hapus transaksi">
-                            <IconButton
-                              size="small"
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setDeleteDialog({ open: true, entry });
+                                setDeleteConfirm(entry.id);
                               }}
-                              sx={{ 
-                                color: 'error.main',
-                                '&:hover': { bgcolor: 'error.light', color: 'white' }
-                              }}
+                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-300 transform hover:scale-110"
+                              title="Hapus transaksi"
                             >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
 
-                          <IconButton 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleExpand(entry.id);
-                            }}
-                          >
-                            {expandedId === entry.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                          </IconButton>
-                        </Stack>
-                      </Box>
-                    </ListItem>
-
-                    <Collapse in={expandedId === entry.id} timeout="auto" unmountOnExit>
-                      <Box sx={{ px: 2, pb: 2 }}>
-                        <Card variant="outlined" sx={{ bgcolor: 'grey.50' }}>
-                          <CardContent sx={{ py: 1.5 }}>
-                            <Typography variant="body2" color="text.secondary">
-                              <strong>Detail:</strong> {entry.description}
-                            </Typography>
-                            {entry.editHistory && entry.editHistory.length > 0 && (
-                              <Box mt={1}>
-                                <Typography variant="caption" color="text.secondary">
-                                  Riwayat Edit: {entry.editHistory.length} perubahan
-                                </Typography>
-                              </Box>
+                          {/* Expand Button */}
+                          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300">
+                            {expandedId === entry.id ? (
+                              <ChevronUp className="w-5 h-5" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5" />
                             )}
-                          </CardContent>
-                        </Card>
-                      </Box>
-                    </Collapse>
+                          </button>
+                        </div>
+                      </div>
 
-                    {index < paginatedIncomes.length - 1 && <Divider sx={{ my: 0.5 }} />}
-                  </Box>
-                </Fade>
+                      {/* Expanded Content */}
+                      <div className={`transition-all duration-500 overflow-hidden ${
+                        expandedId === entry.id ? 'max-h-40 opacity-100 mt-6' : 'max-h-0 opacity-0'
+                      }`}>
+                        <div className="bg-gray-50 dark:bg-gray-600 rounded-xl p-4 border border-gray-200 dark:border-gray-500">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p className="text-gray-600 dark:text-gray-300 font-medium mb-1">Detail Transaksi</p>
+                              <p className="text-gray-800 dark:text-white">{entry.description}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600 dark:text-gray-300 font-medium mb-1">Waktu Dibuat</p>
+                              <p className="text-gray-800 dark:text-white">{formatDate(entry.createdAt)}</p>
+                            </div>
+                          </div>
+                          
+                          {entry.editHistory && entry.editHistory.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-500">
+                              <p className="text-gray-600 dark:text-gray-300 font-medium mb-2 flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                Riwayat Edit ({entry.editHistory.length})
+                              </p>
+                              <div className="space-y-1 max-h-20 overflow-y-auto">
+                                {entry.editHistory.slice(0, 3).map((edit, i) => (
+                                  <p key={i} className="text-xs text-gray-500 dark:text-gray-400">
+                                    {new Date(edit.editedAt?.toDate?.() ?? edit.editedAt).toLocaleDateString("id-ID")} - 
+                                    {edit.description} • {formatCurrency(edit.amount, entry.currency)}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </List>
+            </div>
 
+            {/* Pagination */}
             {totalPages > 1 && (
-              <Box display="flex" justifyContent="center" mt={3}>
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={(_, page) => setCurrentPage(page)}
-                  color="primary"
-                  size="medium"
-                  showFirstButton
-                  showLastButton
-                />
-              </Box>
+              <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
+                >
+                  Sebelumnya
+                </button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-10 h-10 rounded-xl font-medium transition-all duration-300 ${
+                        currentPage === page
+                          ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
+                >
+                  Berikutnya
+                </button>
+              </div>
             )}
           </>
         )}
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={deleteDialog.open}
-          onClose={() => setDeleteDialog({ open: false, entry: null })}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>
-            <Box display="flex" alignItems="center" gap={1}>
-              <DeleteIcon color="error" />
-              Hapus Transaksi
-            </Box>
-          </DialogTitle>
-          <DialogContent>
-            <Typography>
-              Yakin ingin menghapus transaksi "{deleteDialog.entry?.description}"?
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mt={1}>
-              Nominal: {deleteDialog.entry && formatCurrency(deleteDialog.entry.amount, deleteDialog.entry.currency)}
-            </Typography>
-            <Typography variant="body2" color="error.main" mt={2}>
-              Tindakan ini tidak dapat dibatalkan.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button 
-              onClick={() => setDeleteDialog({ open: false, entry: null })}
-              color="inherit"
-            >
-              Batal
-            </Button>
-            <Button 
-              onClick={handleDelete} 
-              color="error" 
-              variant="contained"
-              startIcon={<DeleteIcon />}
-            >
-              Hapus
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

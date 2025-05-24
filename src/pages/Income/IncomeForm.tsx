@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { db } from "../../lib/firebaseClient";
 import {
@@ -13,40 +13,22 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Typography,
-  Alert,
-  CircularProgress,
-  Snackbar,
-  Paper,
-  Divider,
-  Chip,
-  Stack,
-  FormHelperText,
-  InputAdornment,
-  Fade,
-  Slide,
-} from "@mui/material";
-import {
-  Save as SaveIcon,
-  Add as AddIcon,
-  Cancel as CancelIcon,
-  AccountBalanceWallet as WalletIcon,
-  AttachMoney as MoneyIcon,
-  Description as DescriptionIcon,
-} from "@mui/icons-material";
+import { 
+  Loader2, 
+  Wallet, 
+  DollarSign, 
+  FileText, 
+  TrendingUp, 
+  Sparkles,
+  CreditCard,
+  CheckCircle,
+  Plus,
+  Save
+} from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 import { getCardStyle } from "../helpers/getCardStyle";
 import { WalletEntry, IncomeEntry } from "../helpers/types";
+import { toast } from "react-toastify";
 
 interface IncomeFormProps {
   hideCardPreview?: boolean;
@@ -70,7 +52,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+  const [success, setSuccess] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
 
   // Handle editing existing entry
@@ -124,7 +107,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
       if (form.wallet && !activeWallets.find(w => w.id === form.wallet)) {
         setForm(prev => ({ ...prev, wallet: "", currency: "" }));
         if (presetWalletId === form.wallet) {
-          setSnackbar({ open: true, message: "Dompet yang dipilih sudah dihapus atau diarsipkan.", severity: "error" });
+          toast.error("Dompet yang dipilih sudah dihapus atau diarsipkan.");
           if (onClose) onClose();
         }
       }
@@ -171,11 +154,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
     setErrors({ ...errors, [name]: "" });
   };
 
-  const handleWalletChange = (value: string) => {
-    const selected = wallets.find((w) => w.id === value);
+  const handleWalletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = wallets.find((w) => w.id === e.target.value);
     setForm({
       ...form,
-      wallet: value,
+      wallet: e.target.value,
       currency: selected?.currency || "",
     });
     setErrors({ ...errors, wallet: "", currency: "" });
@@ -207,7 +190,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
     const selectedWallet = wallets.find(w => w.id === form.wallet);
     if (!selectedWallet) {
-      setSnackbar({ open: true, message: "Dompet sudah dihapus atau diarsipkan.", severity: "error" });
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
       return;
     }
 
@@ -233,7 +216,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
           balance: increment(parsedAmount),
         });
-        setSnackbar({ open: true, message: "Pemasukan berhasil disimpan!", severity: "success" });
       } else {
         const old = incomes.find((i) => i.id === editingId);
         if (!old) return;
@@ -252,11 +234,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
           balance: increment(diff),
         });
-        setSnackbar({ open: true, message: "Pemasukan berhasil diperbarui!", severity: "success" });
       }
 
       setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: form.currency });
       setEditingId(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
       
       if (editingId && onEditComplete) {
         onEditComplete();
@@ -264,7 +247,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
       
       if (onClose) onClose();
     } catch (err) {
-      setSnackbar({ open: true, message: "Gagal menyimpan data. Silakan coba lagi.", severity: "error" });
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -280,7 +263,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
     const selectedWallet = wallets.find(w => w.id === form.wallet);
     if (!selectedWallet) {
-      setSnackbar({ open: true, message: "Dompet sudah dihapus atau diarsipkan.", severity: "error" });
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
       return;
     }
 
@@ -308,9 +291,10 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
       setForm({ wallet: form.wallet, description: "", amount: "", currency: form.currency });
       setTimeout(() => descriptionRef.current?.focus(), 50);
-      setSnackbar({ open: true, message: "Pemasukan disimpan! Siap untuk entri berikutnya.", severity: "success" });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setSnackbar({ open: true, message: "Gagal menyimpan data. Silakan coba lagi.", severity: "error" });
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -330,181 +314,254 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   };
 
   return (
-    <Card elevation={3} sx={{ borderRadius: 3 }}>
-      <CardContent sx={{ p: 3 }}>
-        <form onSubmit={handleSubmit}>
-          <Stack spacing={3}>
-            {/* Header */}
-            <Box display="flex" alignItems="center" gap={1}>
-              <WalletIcon color="primary" />
-              <Typography variant="h6" component="h2">
-                {editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}
-              </Typography>
-              {editingId && <Chip label="Edit Mode" color="primary" size="small" />}
-            </Box>
+    <div className="relative">
+      {/* Success Animation */}
+      {success && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="bg-green-500 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
+            <CheckCircle className="w-6 h-6" />
+            <span className="font-semibold">
+              {editingId ? "Pemasukan diperbarui! ✨" : "Pemasukan berhasil disimpan! 🎉"}
+            </span>
+          </div>
+        </div>
+      )}
 
-            {/* Wallet Selection */}
-            <FormControl fullWidth error={!!errors.wallet}>
-              <InputLabel>Pilih Dompet</InputLabel>
-              <Select
+      {/* Main Form Card */}
+      <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-8 rounded-3xl shadow-2xl border border-blue-100 dark:border-gray-600 backdrop-blur-sm">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-3 rounded-2xl shadow-lg">
+            {editingId ? (
+              <FileText className="w-7 h-7 text-white" />
+            ) : (
+              <TrendingUp className="w-7 h-7 text-white" />
+            )}
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+              {editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 text-sm flex items-center gap-1">
+              <Sparkles className="w-4 h-4" />
+              Catat pemasukan Anda dengan mudah
+            </p>
+          </div>
+          {editingId && (
+            <div className="ml-auto">
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                Mode Edit
+              </span>
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Wallet Selection */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <Wallet className="w-4 h-4 text-blue-500" />
+              Pilih Dompet
+            </label>
+            <div className="relative">
+              <select
+                name="wallet"
                 value={form.wallet}
-                label="Pilih Dompet"
-                onChange={(e) => handleWalletChange(e.target.value)}
+                onChange={handleWalletChange}
                 disabled={!!presetWalletId || loading}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <WalletIcon />
-                  </InputAdornment>
-                }
+                onFocus={() => setFocusedField('wallet')}
+                onBlur={() => setFocusedField(null)}
+                className={`w-full rounded-2xl border-2 px-5 py-4 pr-12 dark:bg-gray-700 dark:text-white text-gray-800 font-medium transition-all duration-300 ${
+                  errors.wallet 
+                    ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
+                    : focusedField === 'wallet'
+                    ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-lg shadow-blue-100 dark:shadow-blue-900/20"
+                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-blue-300 hover:bg-blue-50/50"
+                }`}
               >
+                <option value="">-- Pilih Dompet --</option>
                 {wallets.map((w) => (
-                  <MenuItem key={w.id} value={w.id}>
-                    <Box display="flex" justifyContent="space-between" width="100%">
-                      <Typography>{w.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatCurrency(w.balance || 0, w.currency)}
-                      </Typography>
-                    </Box>
-                  </MenuItem>
+                  <option key={w.id} value={w.id}>
+                    {w.name} • {formatCurrency(w.balance || 0, w.currency)}
+                  </option>
                 ))}
-              </Select>
-              {errors.wallet && <FormHelperText>{errors.wallet}</FormHelperText>}
-            </FormControl>
+              </select>
+              <CreditCard className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors ${
+                focusedField === 'wallet' ? 'text-blue-500' : 'text-gray-400'
+              }`} />
+            </div>
+            {errors.wallet && (
+              <p className="text-red-500 text-sm flex items-center gap-1">
+                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                {errors.wallet}
+              </p>
+            )}
 
             {/* Wallet Card Preview */}
             {form.wallet && !hideCardPreview && (
-              <Fade in={!!form.wallet}>
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 2,
-                    background: `linear-gradient(135deg, ${getSelectedWallet()?.color || '#1976d2'} 0%, ${getSelectedWallet()?.color || '#1976d2'}99 100%)`,
-                    color: 'white'
-                  }}
-                >
-                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>
-                    {getSelectedWallet()?.name}
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold" mt={0.5}>
-                    {formatCurrency(getSelectedWallet()?.balance || 0, form.currency)}
-                  </Typography>
-                </Paper>
-              </Fade>
+              <div className="mt-6 transform transition-all duration-500 animate-in slide-in-from-top-4">
+                {(() => {
+                  const selectedWallet = getSelectedWallet();
+                  if (!selectedWallet) return null;
+                  
+                  return (
+                    <div
+                      className="rounded-2xl text-white p-6 shadow-xl transform hover:scale-105 transition-transform duration-300 cursor-pointer relative overflow-hidden"
+                      style={{
+                        background: `linear-gradient(135deg, ${selectedWallet.color || '#3B82F6'} 0%, ${selectedWallet.color || '#3B82F6'}dd 100%)`
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+                      <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-lg font-bold truncate">{selectedWallet.name}</h3>
+                          <Wallet className="w-6 h-6 opacity-80" />
+                        </div>
+                        <p className="text-2xl font-bold">
+                          {formatCurrency(selectedWallet.balance || 0, selectedWallet.currency)}
+                        </p>
+                        <p className="text-sm opacity-80 mt-1">Current Balance</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <FileText className="w-4 h-4 text-purple-500" />
+              Deskripsi
+            </label>
+            <div className="relative">
+              <input
+                ref={descriptionRef}
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                onFocus={() => setFocusedField('description')}
+                onBlur={() => setFocusedField(null)}
+                placeholder="Contoh: Gaji bulanan, Bonus, Freelance..."
+                disabled={loading}
+                className={`w-full rounded-2xl border-2 px-5 py-4 dark:bg-gray-700 dark:text-white text-gray-800 placeholder-gray-400 font-medium transition-all duration-300 ${
+                  errors.description 
+                    ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
+                    : focusedField === 'description'
+                    ? "border-purple-400 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-100 dark:shadow-purple-900/20"
+                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-purple-300 hover:bg-purple-50/50"
+                }`}
+              />
+            </div>
+            {errors.description && (
+              <p className="text-red-500 text-sm flex items-center gap-1">
+                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                {errors.description}
+              </p>
+            )}
+          </div>
+
+          {/* Amount */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <DollarSign className="w-4 h-4 text-green-500" />
+              Nominal
+            </label>
+            <div className="relative">
+              <input
+                name="amount"
+                value={form.amount}
+                onChange={handleChange}
+                onFocus={() => setFocusedField('amount')}
+                onBlur={() => setFocusedField(null)}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9.,]*"
+                placeholder="0"
+                disabled={loading}
+                className={`w-full rounded-2xl border-2 px-5 py-4 dark:bg-gray-700 dark:text-white text-gray-800 text-xl font-bold placeholder-gray-400 transition-all duration-300 ${
+                  errors.amount 
+                    ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
+                    : focusedField === 'amount'
+                    ? "border-green-400 bg-green-50 dark:bg-green-900/20 shadow-lg shadow-green-100 dark:shadow-green-900/20"
+                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-green-300 hover:bg-green-50/50"
+                }`}
+              />
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">
+                {form.currency || "IDR"}
+              </div>
+            </div>
+            {errors.amount && (
+              <p className="text-red-500 text-sm flex items-center gap-1">
+                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                {errors.amount}
+              </p>
+            )}
+          </div>
+
+          {/* Currency Display */}
+          <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-6 py-4 rounded-2xl border border-gray-200 dark:border-gray-600">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg">
+                <DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Mata Uang</p>
+                <p className="font-semibold text-gray-800 dark:text-white">
+                  {form.currency || "Akan otomatis terisi setelah memilih dompet"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                disabled={loading}
+                className="px-6 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white font-medium transition-colors duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl"
+              >
+                Batal Edit
+              </button>
             )}
 
-            {/* Description */}
-            <TextField
-              ref={descriptionRef}
-              name="description"
-              label="Deskripsi"
-              value={form.description}
-              onChange={handleChange}
-              error={!!errors.description}
-              helperText={errors.description}
-              fullWidth
-              disabled={loading}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <DescriptionIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            {/* Amount */}
-            <TextField
-              name="amount"
-              label="Nominal"
-              value={form.amount}
-              onChange={handleChange}
-              error={!!errors.amount}
-              helperText={errors.amount}
-              fullWidth
-              disabled={loading}
-              inputProps={{
-                inputMode: "numeric",
-                pattern: "[0-9.,]*"
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <MoneyIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            {/* Currency Display */}
-            <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.50' }}>
-              <Typography variant="body2" color="text.secondary">
-                Mata Uang: <strong>{form.currency || "Akan otomatis terisi"}</strong>
-              </Typography>
-            </Paper>
-
-            <Divider />
-
-            {/* Action Buttons */}
-            <Stack direction="row" spacing={2} justifyContent="space-between">
-              {editingId && (
-                <Button
-                  variant="outlined"
-                  startIcon={<CancelIcon />}
-                  onClick={resetForm}
-                  disabled={loading}
-                  color="inherit"
-                >
-                  Batal Edit
-                </Button>
-              )}
-
-              <Stack direction="row" spacing={1} ml="auto">
-                <Button
-                  type="submit"
-                  variant="contained"
-                  startIcon={loading ? <CircularProgress size={16} /> : <SaveIcon />}
-                  disabled={loading}
-                  size="large"
-                >
-                  {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
-                </Button>
-
-                {!editingId && (
-                  <Button
-                    variant="contained"
-                    color="success"
-                    startIcon={loading ? <CircularProgress size={16} /> : <AddIcon />}
-                    disabled={loading}
-                    onClick={handleAddAndContinue}
-                    size="large"
-                  >
-                    Simpan & Lanjut
-                  </Button>
+            <div className="flex flex-col sm:flex-row gap-3 sm:ml-auto">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[56px]"
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin w-5 h-5" />
+                ) : (
+                  <Save className="w-5 h-5" />
                 )}
-              </Stack>
-            </Stack>
-          </Stack>
-        </form>
+                {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
+              </button>
 
-        {/* Snackbar for notifications */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={4000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          TransitionComponent={Slide}
-        >
-          <Alert 
-            onClose={() => setSnackbar({ ...snackbar, open: false })} 
-            severity={snackbar.severity as "success" | "error"}
-            variant="filled"
-            sx={{ width: '100%' }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </CardContent>
-    </Card>
+              {!editingId && (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleAddAndContinue}
+                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[56px]"
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin w-5 h-5" />
+                  ) : (
+                    <Plus className="w-5 h-5" />
+                  )}
+                  Simpan & Lanjut
+                </button>
+              )}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 
