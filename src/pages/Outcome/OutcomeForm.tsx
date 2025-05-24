@@ -58,6 +58,11 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
       
       // More comprehensive filtering for archived/deleted wallets
       const activeWallets = allWallets.filter(w => {
+        // Skip system entries and wallets without names
+        if (!w.name || w.name.trim() === '' || w.id.startsWith('_')) {
+          return false;
+        }
+        
         // Check multiple possible indicators for archived/deleted wallets
         const isArchived = w.status === "archived" || 
                           w.status === "deleted" || 
@@ -66,7 +71,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({ presetWalletId, onClose, hide
                           w.deleted === true ||
                           w.active === false;
         
-        // Keep only non-archived wallets
+        // Keep only non-archived wallets with valid names
         return !isArchived;
       });
       
