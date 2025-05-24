@@ -86,12 +86,13 @@ const IncomePage = () => {
             )}
           </div>
 
-          {/* Desktop Layout - Two Column Layout */}
-          <div className="hidden xl:block max-w-7xl mx-auto">
-            <div className="grid grid-cols-12 gap-8">
+          {/* Responsive Layout */}
+          <div className="max-w-7xl mx-auto">
+            {/* Desktop: Two Column Layout (XL screens and up) */}
+            <div className="hidden xl:grid xl:grid-cols-12 xl:gap-8">
               {/* Left Column - Form */}
-              <div className="col-span-5">
-                <div id="income-form" className="sticky top-6">
+              <div className="xl:col-span-5">
+                <div className="sticky top-6">
                   <IncomeForm 
                     editingEntry={editingEntry}
                     onEditComplete={handleEditComplete}
@@ -100,21 +101,21 @@ const IncomePage = () => {
               </div>
 
               {/* Right Column - Recent Transactions */}
-              <div className="col-span-7">
+              <div className="xl:col-span-7">
                 <RecentTransactions onEdit={handleEdit} />
               </div>
             </div>
-          </div>
 
-          {/* Mobile Layout - Single Column */}
-          <div className="block xl:hidden max-w-2xl mx-auto">
-            <div id="income-form-mobile" className="mb-8">
-              <IncomeForm 
-                editingEntry={editingEntry}
-                onEditComplete={handleEditComplete}
-              />
+            {/* Mobile: Single Column Layout (Below XL screens) */}
+            <div className="xl:hidden max-w-2xl mx-auto">
+              <div className="mb-8">
+                <IncomeForm 
+                  editingEntry={editingEntry}
+                  onEditComplete={handleEditComplete}
+                />
+              </div>
+              <RecentTransactions onEdit={handleEdit} />
             </div>
-            <RecentTransactions onEdit={handleEdit} />
           </div>
         </div>
       </main>
