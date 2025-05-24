@@ -86,11 +86,11 @@ const IncomePage = () => {
             )}
           </div>
 
-          {/* Main Content - Two Column Layout */}
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+          {/* Desktop Layout - Two Column Layout */}
+          <div className="hidden xl:block max-w-7xl mx-auto">
+            <div className="grid grid-cols-12 gap-8">
               {/* Left Column - Form */}
-              <div className="xl:col-span-5">
+              <div className="col-span-5">
                 <div id="income-form" className="sticky top-6">
                   <IncomeForm 
                     editingEntry={editingEntry}
@@ -100,7 +100,7 @@ const IncomePage = () => {
               </div>
 
               {/* Right Column - Recent Transactions */}
-              <div className="xl:col-span-7">
+              <div className="col-span-7">
                 <RecentTransactions onEdit={handleEdit} />
               </div>
             </div>
