@@ -27,7 +27,8 @@ import {
   Zap,
   Target,
   Filter,
-  SortDesc
+  SortDesc,
+  Heart
 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 
@@ -127,6 +128,16 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
     }
   };
 
+  // Fun cat ASCII for empty state (subtle and optional)
+  const CatMascot = () => (
+    <div className="text-center text-gray-400 dark:text-gray-500 text-xs font-mono leading-tight opacity-60">
+      <div>╱|、</div>
+      <div>(˚ˎ。7</div>
+      <div>|、˜〵</div>
+      <div>じしˍ,)ノ</div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="mt-12">
@@ -199,9 +210,15 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
             <h4 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
               Belum ada pemasukan
             </h4>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
               Transaksi pemasukan Anda akan muncul disini setelah Anda menambahkan yang pertama.
             </p>
+            
+            {/* Subtle cat mascot for empty state */}
+            <div className="mb-4">
+              <CatMascot />
+            </div>
+            
             <div className="mt-6">
               <ArrowRight className="w-6 h-6 text-blue-500 mx-auto animate-bounce" />
             </div>
@@ -264,9 +281,9 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                     <div className="relative z-10">
                       <div className="flex items-start justify-between">
                         {/* Left Side - Icon and Info */}
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-4 flex-1 min-w-0">
                           <div 
-                            className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300"
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 flex-shrink-0"
                             style={{ 
                               background: `linear-gradient(135deg, ${getWalletColor(entry.wallet)} 0%, ${getWalletColor(entry.wallet)}dd 100%)` 
                             }}
@@ -275,16 +292,20 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-bold text-gray-800 dark:text-white text-lg truncate">
-                                {entry.description}
-                              </h4>
-                              <span 
-                                className="px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm"
-                                style={{ backgroundColor: getWalletColor(entry.wallet) }}
-                              >
-                                {getWalletName(entry.wallet)}
-                              </span>
+                            <div className="flex items-start gap-3 mb-3">
+                              {/* Improved description display */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-bold text-gray-800 dark:text-white text-lg leading-tight mb-1">
+                                  {entry.description}
+                                </h4>
+                                <span 
+                                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm"
+                                  style={{ backgroundColor: getWalletColor(entry.wallet) }}
+                                >
+                                  <Wallet className="w-3 h-3 mr-1" />
+                                  {getWalletName(entry.wallet)}
+                                </span>
+                              </div>
                             </div>
                             
                             <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -301,7 +322,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                         </div>
 
                         {/* Right Side - Amount and Actions */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
                           <div className="text-right">
                             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                               {formatCurrency(entry.amount, entry.currency)}
@@ -345,17 +366,24 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
 
                       {/* Expanded Content */}
                       <div className={`transition-all duration-500 overflow-hidden ${
-                        expandedId === entry.id ? 'max-h-40 opacity-100 mt-6' : 'max-h-0 opacity-0'
+                        expandedId === entry.id ? 'max-h-48 opacity-100 mt-6' : 'max-h-0 opacity-0'
                       }`}>
                         <div className="bg-gray-50 dark:bg-gray-600 rounded-xl p-4 border border-gray-200 dark:border-gray-500">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                             <div>
-                              <p className="text-gray-600 dark:text-gray-300 font-medium mb-1">Detail Transaksi</p>
-                              <p className="text-gray-800 dark:text-white">{entry.description}</p>
+                              <p className="text-gray-600 dark:text-gray-300 font-medium mb-1 flex items-center gap-1">
+                                <Heart className="w-3 h-3 text-pink-500" />
+                                Detail Transaksi
+                              </p>
+                              <p className="text-gray-800 dark:text-white font-medium bg-white dark:bg-gray-700 p-2 rounded-lg">
+                                {entry.description}
+                              </p>
                             </div>
                             <div>
                               <p className="text-gray-600 dark:text-gray-300 font-medium mb-1">Waktu Dibuat</p>
-                              <p className="text-gray-800 dark:text-white">{formatDate(entry.createdAt)}</p>
+                              <p className="text-gray-800 dark:text-white font-medium bg-white dark:bg-gray-700 p-2 rounded-lg">
+                                {formatDate(entry.createdAt)}
+                              </p>
                             </div>
                           </div>
                           
@@ -365,12 +393,16 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                                 <Calendar className="w-4 h-4" />
                                 Riwayat Edit ({entry.editHistory.length})
                               </p>
-                              <div className="space-y-1 max-h-20 overflow-y-auto">
+                              <div className="space-y-2 max-h-24 overflow-y-auto">
                                 {entry.editHistory.slice(0, 3).map((edit, i) => (
-                                  <p key={i} className="text-xs text-gray-500 dark:text-gray-400">
-                                    {new Date(edit.editedAt?.toDate?.() ?? edit.editedAt).toLocaleDateString("id-ID")} - 
-                                    {edit.description} • {formatCurrency(edit.amount, entry.currency)}
-                                  </p>
+                                  <div key={i} className="bg-white dark:bg-gray-700 p-2 rounded-lg">
+                                    <p className="text-xs text-gray-600 dark:text-gray-300 font-medium">
+                                      {new Date(edit.editedAt?.toDate?.() ?? edit.editedAt).toLocaleDateString("id-ID")}
+                                    </p>
+                                    <p className="text-sm text-gray-800 dark:text-white">
+                                      {edit.description} • {formatCurrency(edit.amount, entry.currency)}
+                                    </p>
+                                  </div>
                                 ))}
                               </div>
                             </div>
@@ -413,7 +445,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(currentPage + 1)}
-                  className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
+                  className="px-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
                 >
                   Berikutnya
                 </button>
