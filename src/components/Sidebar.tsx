@@ -153,8 +153,9 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
           mx: 1,
           mb: 0.5,
           backgroundColor: 'transparent',
+          color: theme.palette.text.primary,
           '&.active': {
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            background: 'linear-gradient(135deg, #00d97e, #00c2ff)',
             color: 'white',
             '& .MuiListItemIcon-root': {
               color: 'white',
@@ -163,7 +164,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
               color: 'white',
             },
             transform: 'translateY(-1px)',
-            boxShadow: theme.shadows[4],
+            boxShadow: '0 4px 12px rgba(0, 217, 126, 0.3)',
           },
           '&:hover': {
             backgroundColor: alpha(theme.palette.primary.main, 0.1),
@@ -179,7 +180,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
         <ListItemIcon
           sx={{
             minWidth: 40,
-            color: theme.palette.text.primary,
+            color: theme.palette.text.secondary,
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
@@ -205,7 +206,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
           variant="h4"
           sx={{
             fontWeight: 800,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            background: 'linear-gradient(135deg, #00d97e, #00c2ff)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -227,7 +228,13 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
               boxShadow: theme.shadows[3],
             }}
           />
-          <Typography variant="subtitle1" fontWeight={600}>
+          <Typography 
+            variant="subtitle1" 
+            fontWeight={600}
+            sx={{
+              color: theme.palette.text.primary,
+            }}
+          >
             {name || "User"}
           </Typography>
           <Chip
@@ -239,7 +246,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
         </Box>
       </Box>
 
-      <Divider />
+      <Divider sx={{ borderColor: theme.palette.divider }} />
 
       {/* Navigation */}
       <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
@@ -262,7 +269,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
                 }
               }}
             >
-              <ListItemIcon sx={{ color: theme.palette.text.primary }}>
+              <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
                 <CatIcon />
               </ListItemIcon>
               <ListItemText 
@@ -270,8 +277,8 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
                 primaryTypographyProps={{ color: theme.palette.text.primary }}
               />
               {isTransactionOpen ? 
-                <ExpandLess sx={{ color: theme.palette.text.primary }} /> : 
-                <ExpandMore sx={{ color: theme.palette.text.primary }} />
+                <ExpandLess sx={{ color: theme.palette.text.secondary }} /> : 
+                <ExpandMore sx={{ color: theme.palette.text.secondary }} />
               }
             </ListItemButton>
           </ListItem>
@@ -300,7 +307,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
                 }
               }}
             >
-              <ListItemIcon sx={{ color: theme.palette.text.primary }}>
+              <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
                 <Settings />
               </ListItemIcon>
               <ListItemText 
@@ -308,8 +315,8 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
                 primaryTypographyProps={{ color: theme.palette.text.primary }}
               />
               {isSettingsOpen ? 
-                <ExpandLess sx={{ color: theme.palette.text.primary }} /> : 
-                <ExpandMore sx={{ color: theme.palette.text.primary }} />
+                <ExpandLess sx={{ color: theme.palette.text.secondary }} /> : 
+                <ExpandMore sx={{ color: theme.palette.text.secondary }} />
               }
             </ListItemButton>
           </ListItem>
@@ -335,7 +342,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
                 }
               }}
             >
-              <ListItemIcon sx={{ color: theme.palette.text.primary }}>
+              <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
                 <Info />
               </ListItemIcon>
               <ListItemText 
@@ -343,8 +350,8 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
                 primaryTypographyProps={{ color: theme.palette.text.primary }}
               />
               {isAboutOpen ? 
-                <ExpandLess sx={{ color: theme.palette.text.primary }} /> : 
-                <ExpandMore sx={{ color: theme.palette.text.primary }} />
+                <ExpandLess sx={{ color: theme.palette.text.secondary }} /> : 
+                <ExpandMore sx={{ color: theme.palette.text.secondary }} />
               }
             </ListItemButton>
           </ListItem>
@@ -359,7 +366,10 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
       </Box>
 
       {/* Bottom Section */}
-      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+      <Box sx={{ 
+        p: 2, 
+        borderTop: `1px solid ${theme.palette.divider}`,
+      }}>
         <Box sx={{ mb: 2 }}>
           <InstallButton />
         </Box>
@@ -426,7 +436,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
             boxSizing: 'border-box',
             backgroundImage: 'none',
             backgroundColor: theme.palette.background.paper,
-            borderRight: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+            borderRight: `1px solid ${theme.palette.divider}`,
             boxShadow: theme.shadows[1],
           },
         }}

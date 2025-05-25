@@ -8,6 +8,7 @@ import routes from './routes';
 import { Toaster } from 'react-hot-toast';
 import { useTheme } from './hooks/useThemeAdvanced';
 import AutoLogout from './components/AutoLogout';
+import MuiThemeProvider from './components/MuiThemeProvider'; // Add this import
 
 function AppRoutes() {
   return useRoutes(routes);
@@ -47,25 +48,28 @@ function App() {
         <LogoutTimeoutProvider>
           {/* LogoutTimeoutProvider should be after PinTimeoutProvider */}
           <LanguageProvider>
-            <Router>
-              <Toaster position="top-center" reverseOrder={false} />
-              {canInstall && (
-                <div className="fixed top-4 right-4 z-50 bg-background border border-border px-4 py-2 rounded-lg shadow-md">
-                  <button
-                    onClick={handleInstall}
-                    className="bg-primary text-primary-foreground px-4 py-1 rounded hover:bg-opacity-90 transition"
-                  >
-                    Install MoniQ
-                  </button>
-                </div>
-              )}
+            <MuiThemeProvider>
+              {/* Add MUI Theme Provider here */}
+              <Router>
+                <Toaster position="top-center" reverseOrder={false} />
+                {canInstall && (
+                  <div className="fixed top-4 right-4 z-50 bg-background border border-border px-4 py-2 rounded-lg shadow-md">
+                    <button
+                      onClick={handleInstall}
+                      className="bg-primary text-primary-foreground px-4 py-1 rounded hover:bg-opacity-90 transition"
+                    >
+                      Install MoniQ
+                    </button>
+                  </div>
+                )}
 
-              {/* AutoLogout Component */}
-              <AutoLogout />
+                {/* AutoLogout Component */}
+                <AutoLogout />
 
-              {/* Main Routes */}
-              <AppRoutes />
-            </Router>
+                {/* Main Routes */}
+                <AppRoutes />
+              </Router>
+            </MuiThemeProvider>
           </LanguageProvider>
         </LogoutTimeoutProvider>
       </PinTimeoutProvider>
