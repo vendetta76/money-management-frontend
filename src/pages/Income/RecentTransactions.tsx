@@ -26,9 +26,8 @@ import {
   ArrowRight,
   Zap,
   Target,
-  Filter,
-  SortDesc,
-  Heart
+  Heart,
+  MoreHorizontal
 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 
@@ -87,13 +86,22 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
     if (!user) return;
     
     try {
+      // Delete the income document
       await deleteDoc(doc(db, "users", user.uid, "incomes", id));
+      
+      // Update wallet balance (subtract the amount)
       await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
         balance: increment(-amount),
       });
+      
+      // Clear the delete confirmation
       setDeleteConfirm(null);
+      
+      // Show success message
+      console.log("Income deleted successfully");
     } catch (error) {
       console.error("Error deleting income:", error);
+      alert("Gagal menghapus transaksi. Silakan coba lagi.");
     }
   };
 
@@ -140,30 +148,30 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
 
   if (loading) {
     return (
-      <div className="mt-12">
-        <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-8 rounded-3xl shadow-2xl border border-green-100 dark:border-gray-600">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-3 rounded-2xl animate-pulse">
-              <TrendingUp className="w-6 h-6 text-white" />
+      <div className="mt-6 lg:mt-12">
+        <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-green-100 dark:border-gray-600">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl animate-pulse">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded-lg w-48 animate-pulse"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded-lg w-32 mt-2 animate-pulse"></div>
+              <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-lg w-36 sm:w-48 animate-pulse"></div>
+              <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-600 rounded-lg w-24 sm:w-32 mt-2 animate-pulse"></div>
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-gray-100 dark:bg-gray-700 p-6 rounded-2xl animate-pulse">
+              <div key={i} className="bg-gray-100 dark:bg-gray-700 p-4 sm:p-6 rounded-xl lg:rounded-2xl animate-pulse">
                 <div className="flex justify-between items-start">
-                  <div className="flex gap-4">
-                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-xl"></div>
+                  <div className="flex gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 dark:bg-gray-600 rounded-lg sm:rounded-xl"></div>
                     <div>
-                      <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded w-32 mb-2"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24"></div>
+                      <div className="h-4 sm:h-5 bg-gray-200 dark:bg-gray-600 rounded w-24 sm:w-32 mb-2"></div>
+                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-600 rounded w-20 sm:w-24"></div>
                     </div>
                   </div>
-                  <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-20"></div>
+                  <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded w-16 sm:w-20"></div>
                 </div>
               </div>
             ))}
@@ -174,28 +182,28 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
   }
 
   return (
-    <div className="mt-12">
-      <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-8 rounded-3xl shadow-2xl border border-green-100 dark:border-gray-600">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-3 rounded-2xl shadow-lg">
-              <TrendingUp className="w-6 h-6 text-white" />
+    <div className="mt-6 lg:mt-12">
+      <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-green-100 dark:border-gray-600">
+        {/* Header - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl shadow-lg flex-shrink-0">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+            <div className="min-w-0">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                 Transaksi Terbaru
-                <Sparkles className="w-5 h-5 text-yellow-500" />
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
               </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm flex items-center gap-1">
-                <Target className="w-4 h-4" />
+              <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm flex items-center gap-1">
+                <Target className="w-3 h-3 sm:w-4 sm:h-4" />
                 {incomes.length} total transaksi
               </p>
             </div>
           </div>
           
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full text-green-700 dark:text-green-300 text-sm font-medium flex items-center gap-1">
+          <div className="flex items-center gap-2 justify-end sm:justify-start">
+            <div className="bg-green-100 dark:bg-green-900/30 px-2 sm:px-3 py-1 rounded-full text-green-700 dark:text-green-300 text-xs sm:text-sm font-medium flex items-center gap-1">
               <Zap className="w-3 h-3" />
               Live
             </div>
@@ -203,14 +211,14 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
         </div>
 
         {incomes.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-              <TrendingUp className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+          <div className="text-center py-12 sm:py-16">
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <TrendingUp className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 dark:text-gray-500" />
             </div>
-            <h4 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+            <h4 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
               Belum ada pemasukan
             </h4>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4 sm:mb-6 text-sm sm:text-base px-4">
               Transaksi pemasukan Anda akan muncul disini setelah Anda menambahkan yang pertama.
             </p>
             
@@ -219,19 +227,19 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
               <CatMascot />
             </div>
             
-            <div className="mt-6">
-              <ArrowRight className="w-6 h-6 text-blue-500 mx-auto animate-bounce" />
+            <div className="mt-4 sm:mt-6">
+              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 mx-auto animate-bounce" />
             </div>
           </div>
         ) : (
           <>
-            {/* Transaction List */}
-            <div className="space-y-4">
+            {/* Transaction List - Mobile Optimized */}
+            <div className="space-y-3 sm:space-y-4">
               {paginatedIncomes.map((entry, index) => (
                 <div
                   key={entry.id}
                   className={`group relative transform transition-all duration-300 ${
-                    hoveredId === entry.id ? 'scale-102 -translate-y-1' : ''
+                    hoveredId === entry.id ? 'scale-[1.01] sm:scale-102 -translate-y-1' : ''
                   }`}
                   onMouseEnter={() => setHoveredId(entry.id)}
                   onMouseLeave={() => setHoveredId(null)}
@@ -239,20 +247,26 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                 >
                   {/* Delete Confirmation Overlay */}
                   {deleteConfirm === entry.id && (
-                    <div className="absolute inset-0 bg-red-500/95 backdrop-blur-sm rounded-2xl z-10 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-red-500/95 backdrop-blur-sm rounded-xl lg:rounded-2xl z-10 flex items-center justify-center p-4">
                       <div className="text-white text-center">
-                        <Trash2 className="w-8 h-8 mx-auto mb-2" />
-                        <p className="font-semibold mb-4">Hapus transaksi ini?</p>
-                        <div className="flex gap-3">
+                        <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" />
+                        <p className="font-semibold mb-4 text-sm sm:text-base">Hapus transaksi ini?</p>
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                           <button
-                            onClick={() => handleDelete(entry.id, entry.amount, entry.wallet)}
-                            className="bg-white text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(entry.id, entry.amount, entry.wallet);
+                            }}
+                            className="bg-white text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors text-sm sm:text-base min-h-[44px]"
                           >
                             Ya, Hapus
                           </button>
                           <button
-                            onClick={() => setDeleteConfirm(null)}
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirm(null);
+                            }}
+                            className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm sm:text-base min-h-[44px]"
                           >
                             Batal
                           </button>
@@ -261,9 +275,9 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                     </div>
                   )}
 
-                  {/* Main Transaction Card */}
+                  {/* Main Transaction Card - Mobile Optimized */}
                   <div
-                    className={`relative bg-white dark:bg-gray-700 rounded-2xl p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
+                    className={`relative bg-white dark:bg-gray-700 rounded-xl lg:rounded-2xl p-4 sm:p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
                       expandedId === entry.id 
                         ? 'border-green-300 dark:border-green-600 shadow-2xl shadow-green-100 dark:shadow-green-900/20' 
                         : 'border-gray-100 dark:border-gray-600 hover:border-green-200 dark:hover:border-green-700 hover:shadow-xl'
@@ -279,64 +293,46 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                     ></div>
 
                     <div className="relative z-10">
-                      <div className="flex items-start justify-between">
-                        {/* Left Side - Icon and Info */}
-                        <div className="flex items-start gap-4 flex-1 min-w-0">
-                          <div 
-                            className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 flex-shrink-0"
-                            style={{ 
-                              background: `linear-gradient(135deg, ${getWalletColor(entry.wallet)} 0%, ${getWalletColor(entry.wallet)}dd 100%)` 
-                            }}
-                          >
-                            <Wallet className="w-6 h-6 text-white" />
+                      {/* Mobile Layout */}
+                      <div className="block sm:hidden">
+                        {/* Top Row - Description and Amount */}
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1 min-w-0 pr-2">
+                            <h4 className="font-bold text-gray-800 dark:text-white text-base leading-tight truncate">
+                              {entry.description}
+                            </h4>
                           </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start gap-3 mb-3">
-                              {/* Improved description display */}
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-bold text-gray-800 dark:text-white text-lg leading-tight mb-1">
-                                  {entry.description}
-                                </h4>
-                                <span 
-                                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm"
-                                  style={{ backgroundColor: getWalletColor(entry.wallet) }}
-                                >
-                                  <Wallet className="w-3 h-3 mr-1" />
-                                  {getWalletName(entry.wallet)}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {formatDate(entry.createdAt)}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <DollarSign className="w-3 h-3" />
-                                {entry.currency}
-                              </span>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                              {formatCurrency(entry.amount, entry.currency)}
                             </div>
                           </div>
                         </div>
 
-                        {/* Right Side - Amount and Actions */}
-                        <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                              {formatCurrency(entry.amount, entry.currency)}
-                            </div>
-                          </div>
+                        {/* Middle Row - Wallet and Date */}
+                        <div className="flex items-center justify-between mb-3">
+                          <span 
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white shadow-sm"
+                            style={{ backgroundColor: getWalletColor(entry.wallet) }}
+                          >
+                            <Wallet className="w-3 h-3 mr-1" />
+                            {getWalletName(entry.wallet)}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                            <Clock className="w-3 h-3" />
+                            {formatDate(entry.createdAt)}
+                          </span>
+                        </div>
 
-                          {/* Action Buttons */}
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {/* Bottom Row - Actions */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEdit(entry);
                               }}
-                              className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-300 transform hover:scale-110"
+                              className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
                               title="Edit transaksi"
                             >
                               <Edit3 className="w-4 h-4" />
@@ -346,7 +342,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                                 e.stopPropagation();
                                 setDeleteConfirm(entry.id);
                               }}
-                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-300 transform hover:scale-110"
+                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
                               title="Hapus transaksi"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -354,7 +350,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                           </div>
 
                           {/* Expand Button */}
-                          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300">
+                          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center">
                             {expandedId === entry.id ? (
                               <ChevronUp className="w-5 h-5" />
                             ) : (
@@ -364,31 +360,118 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                         </div>
                       </div>
 
-                      {/* Expanded Content */}
+                      {/* Desktop Layout */}
+                      <div className="hidden sm:block">
+                        <div className="flex items-start justify-between">
+                          {/* Left Side - Icon and Info */}
+                          <div className="flex items-start gap-4 flex-1 min-w-0">
+                            <div 
+                              className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 flex-shrink-0"
+                              style={{ 
+                                background: `linear-gradient(135deg, ${getWalletColor(entry.wallet)} 0%, ${getWalletColor(entry.wallet)}dd 100%)` 
+                              }}
+                            >
+                              <Wallet className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-bold text-gray-800 dark:text-white text-lg leading-tight mb-1">
+                                    {entry.description}
+                                  </h4>
+                                  <span 
+                                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm"
+                                    style={{ backgroundColor: getWalletColor(entry.wallet) }}
+                                  >
+                                    <Wallet className="w-3 h-3 mr-1" />
+                                    {getWalletName(entry.wallet)}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {formatDate(entry.createdAt)}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <DollarSign className="w-3 h-3" />
+                                  {entry.currency}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Side - Amount and Actions */}
+                          <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
+                            <div className="text-right">
+                              <div className="text-xl lg:text-2xl font-bold text-green-600 dark:text-green-400">
+                                {formatCurrency(entry.amount, entry.currency)}
+                              </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(entry);
+                                }}
+                                className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-300 transform hover:scale-110 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                title="Edit transaksi"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteConfirm(entry.id);
+                                }}
+                                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-300 transform hover:scale-110 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                title="Hapus transaksi"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+
+                            {/* Expand Button */}
+                            <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                              {expandedId === entry.id ? (
+                                <ChevronUp className="w-5 h-5" />
+                              ) : (
+                                <ChevronDown className="w-5 h-5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Expanded Content - Mobile Optimized */}
                       <div className={`transition-all duration-500 overflow-hidden ${
-                        expandedId === entry.id ? 'max-h-48 opacity-100 mt-6' : 'max-h-0 opacity-0'
+                        expandedId === entry.id ? 'max-h-56 opacity-100 mt-4 sm:mt-6' : 'max-h-0 opacity-0'
                       }`}>
-                        <div className="bg-gray-50 dark:bg-gray-600 rounded-xl p-4 border border-gray-200 dark:border-gray-500">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div className="bg-gray-50 dark:bg-gray-600 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-500">
+                          <div className="grid grid-cols-1 gap-3 sm:gap-4 text-sm">
                             <div>
                               <p className="text-gray-600 dark:text-gray-300 font-medium mb-1 flex items-center gap-1">
                                 <Heart className="w-3 h-3 text-pink-500" />
                                 Detail Transaksi
                               </p>
-                              <p className="text-gray-800 dark:text-white font-medium bg-white dark:bg-gray-700 p-2 rounded-lg">
+                              <p className="text-gray-800 dark:text-white font-medium bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-sm sm:text-base">
                                 {entry.description}
                               </p>
                             </div>
                             <div>
                               <p className="text-gray-600 dark:text-gray-300 font-medium mb-1">Waktu Dibuat</p>
-                              <p className="text-gray-800 dark:text-white font-medium bg-white dark:bg-gray-700 p-2 rounded-lg">
+                              <p className="text-gray-800 dark:text-white font-medium bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-sm sm:text-base">
                                 {formatDate(entry.createdAt)}
                               </p>
                             </div>
                           </div>
                           
                           {entry.editHistory && entry.editHistory.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-500">
+                            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-500">
                               <p className="text-gray-600 dark:text-gray-300 font-medium mb-2 flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
                                 Riwayat Edit ({entry.editHistory.length})
@@ -399,7 +482,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                                     <p className="text-xs text-gray-600 dark:text-gray-300 font-medium">
                                       {new Date(edit.editedAt?.toDate?.() ?? edit.editedAt).toLocaleDateString("id-ID")}
                                     </p>
-                                    <p className="text-sm text-gray-800 dark:text-white">
+                                    <p className="text-xs sm:text-sm text-gray-800 dark:text-white">
                                       {edit.description} • {formatCurrency(edit.amount, entry.currency)}
                                     </p>
                                   </div>
@@ -415,23 +498,23 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
               ))}
             </div>
 
-            {/* Pagination */}
+            {/* Pagination - Mobile Optimized */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-600">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(currentPage - 1)}
-                  className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
+                  className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px]"
                 >
                   Sebelumnya
                 </button>
                 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 overflow-x-auto pb-2 sm:pb-0">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`w-10 h-10 rounded-xl font-medium transition-all duration-300 ${
+                      className={`min-w-[44px] h-11 sm:w-10 sm:h-10 rounded-xl font-medium transition-all duration-300 flex-shrink-0 ${
                         currentPage === page
                           ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -445,7 +528,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(currentPage + 1)}
-                  className="px-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
+                  className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px]"
                 >
                   Berikutnya
                 </button>
