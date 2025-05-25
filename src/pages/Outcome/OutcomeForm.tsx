@@ -394,7 +394,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
       {/* Success Animation */}
       {success && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none px-4">
-          <div className="bg-red-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl flex items-center gap-2 sm:gap-3 animate-bounce max-w-sm text-center">
+          <div className="bg-orange-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl flex items-center gap-2 sm:gap-3 animate-bounce max-w-sm text-center">
             <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
             <span className="font-semibold text-sm sm:text-base">
               {editingId ? "Pengeluaran diperbarui! ✨" : "Pengeluaran berhasil disimpan! 💸"}
@@ -404,15 +404,15 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
       )}
 
       {/* Main Form Card */}
-      <div className="bg-gradient-to-br from-white via-red-50/40 to-orange-50/30 dark:from-gray-800 dark:via-red-900/20 dark:to-orange-900/10 p-4 sm:p-6 lg:p-8 rounded-3xl lg:rounded-[2rem] shadow-2xl border-2 border-red-200/50 dark:border-red-700/30 backdrop-blur-sm relative overflow-hidden">
+      <div className="bg-gradient-to-br from-white via-orange-50/40 to-yellow-50/30 dark:from-gray-800 dark:via-orange-900/20 dark:to-yellow-900/10 p-4 sm:p-6 lg:p-8 rounded-3xl lg:rounded-[2rem] shadow-2xl border-2 border-orange-200/50 dark:border-orange-700/30 backdrop-blur-sm relative overflow-hidden">
         {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-200/20 to-orange-200/20 dark:from-red-800/20 dark:to-orange-800/20 rounded-full -translate-y-16 translate-x-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-200/20 to-red-200/20 dark:from-orange-800/20 dark:to-red-800/20 rounded-full translate-y-12 -translate-x-12"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/20 to-yellow-200/20 dark:from-orange-800/20 dark:to-yellow-800/20 rounded-full -translate-y-16 translate-x-16"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-yellow-200/20 to-orange-200/20 dark:from-yellow-800/20 dark:to-orange-800/20 rounded-full translate-y-12 -translate-x-12"></div>
         
         <div className="relative z-10">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div className="bg-gradient-to-r from-red-500 via-orange-500 to-red-600 p-3 sm:p-4 rounded-2xl shadow-xl flex-shrink-0 transform hover:scale-110 transition-all duration-300">
+          <div className="bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-600 p-3 sm:p-4 rounded-2xl shadow-xl flex-shrink-0 transform hover:scale-110 transition-all duration-300">
             {editingId ? (
               <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             ) : (
@@ -423,14 +423,14 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
               {editingId ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
             </h2>
-            <p className="text-red-600 dark:text-red-300 text-sm sm:text-base flex items-center gap-2 font-medium">
+            <p className="text-orange-600 dark:text-orange-300 text-sm sm:text-base flex items-center gap-2 font-medium">
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
               Catat pengeluaran Anda dengan mudah
             </p>
           </div>
           {editingId && (
             <div className="sm:ml-auto">
-              <span className="bg-gradient-to-r from-red-100 to-orange-100 text-red-800 px-3 sm:px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+              <span className="bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 px-3 sm:px-4 py-2 rounded-full text-sm font-bold shadow-lg">
                 ✏️ Mode Edit
               </span>
             </div>
@@ -441,7 +441,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
           {/* Wallet Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              <Wallet className="w-4 h-4 text-red-500" />
+              <Wallet className="w-4 h-4 text-orange-500" />
               Pilih Dompet
             </label>
             <div className="relative">
@@ -456,8 +456,8 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
                   errors.wallet 
                     ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
                     : focusedField === 'wallet'
-                    ? "border-red-400 bg-red-50 dark:bg-red-900/20 shadow-lg shadow-red-100 dark:shadow-red-900/20"
-                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-red-300 hover:bg-red-50/50"
+                    ? "border-orange-400 bg-orange-50 dark:bg-orange-900/20 shadow-lg shadow-orange-100 dark:shadow-orange-900/20"
+                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-orange-300 hover:bg-orange-50/50"
                 }`}
               >
                 <option value="">-- Pilih Dompet --</option>
@@ -468,7 +468,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
                 ))}
               </select>
               <CreditCard className={`absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
-                focusedField === 'wallet' ? 'text-red-500' : 'text-gray-400'
+                focusedField === 'wallet' ? 'text-orange-500' : 'text-gray-400'
               }`} />
             </div>
             {errors.wallet && (
@@ -493,7 +493,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
                       <div
                         className="rounded-xl sm:rounded-2xl text-white p-4 sm:p-6 shadow-xl transform hover:scale-105 transition-transform duration-300 cursor-pointer relative overflow-hidden"
                         style={{
-                          background: `linear-gradient(135deg, ${selectedWallet.color || '#EF4444'} 0%, ${selectedWallet.color || '#EF4444'}dd 100%)`
+                          background: `linear-gradient(135deg, ${selectedWallet.color || '#F97316'} 0%, ${selectedWallet.color || '#F97316'}dd 100%)`
                         }}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
@@ -536,7 +536,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
             {/* Description */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                <FileText className="w-4 h-4 text-orange-500" />
+                <FileText className="w-4 h-4 text-yellow-500" />
                 Deskripsi
               </label>
               <div className="relative">
@@ -553,8 +553,8 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
                     errors.description 
                       ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
                       : focusedField === 'description'
-                      ? "border-orange-400 bg-orange-50 dark:bg-orange-900/20 shadow-lg shadow-orange-100 dark:shadow-orange-900/20"
-                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-orange-300 hover:bg-orange-50/50"
+                      ? "border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 shadow-lg shadow-yellow-100 dark:shadow-yellow-900/20"
+                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-yellow-300 hover:bg-yellow-50/50"
                   }`}
                 />
               </div>
@@ -569,7 +569,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
             {/* Amount */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                <DollarSign className="w-4 h-4 text-red-500" />
+                <DollarSign className="w-4 h-4 text-orange-500" />
                 Nominal
               </label>
               <div className="relative">
@@ -588,8 +588,8 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
                     errors.amount 
                       ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
                       : focusedField === 'amount'
-                      ? "border-red-400 bg-red-50 dark:bg-red-900/20 shadow-lg shadow-red-100 dark:shadow-red-900/20"
-                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-red-300 hover:bg-red-50/50"
+                      ? "border-orange-400 bg-orange-50 dark:bg-orange-900/20 shadow-lg shadow-orange-100 dark:shadow-orange-900/20"
+                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-orange-300 hover:bg-orange-50/50"
                   }`}
                 />
                 <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold text-sm">
@@ -618,10 +618,10 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
           )}
 
           {/* Currency Display */}
-          <div className="bg-gradient-to-r from-red-50/50 to-orange-50/50 dark:from-red-900/20 dark:to-orange-900/20 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-red-200 dark:border-red-700">
+          <div className="bg-gradient-to-r from-orange-50/50 to-yellow-50/50 dark:from-orange-900/20 dark:to-yellow-900/20 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-orange-200 dark:border-orange-700">
             <div className="flex items-center gap-3">
-              <div className="bg-red-100 dark:bg-red-900 p-2 rounded-lg flex-shrink-0">
-                <DollarSign className="w-4 h-4 text-red-600 dark:text-red-400" />
+              <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-lg flex-shrink-0">
+                <DollarSign className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Mata Uang</p>
@@ -649,7 +649,7 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center justify-center gap-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                className="flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
               >
                 {loading ? (
                   <Loader2 className="animate-spin w-4 h-4 sm:w-5 sm:h-5" />

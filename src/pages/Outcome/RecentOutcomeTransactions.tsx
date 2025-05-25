@@ -133,7 +133,7 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
     wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
 
   const getWalletColor = (id: string) =>
-    wallets.find((w) => w.id === id)?.color || "#EF4444";
+    wallets.find((w) => w.id === id)?.color || "#0891B2";
 
   const handleDelete = async (id: string, amount: number, wallet: string) => {
     if (!user) return;
@@ -204,9 +204,9 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
   if (loading) {
     return (
       <div className="mt-6 lg:mt-12">
-        <div className="bg-gradient-to-br from-white via-red-50/30 to-orange-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-red-100 dark:border-gray-600">
+        <div className="bg-gradient-to-br from-white via-teal-50/30 to-indigo-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-teal-100 dark:border-gray-600">
           <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="bg-gradient-to-r from-red-500 to-orange-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl animate-pulse">
+            <div className="bg-gradient-to-r from-teal-500 to-indigo-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl animate-pulse">
               <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
@@ -238,27 +238,27 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
 
   return (
     <div className="mt-6 lg:mt-12 pwa-container">
-      <div className="bg-gradient-to-br from-white via-red-50/40 to-orange-50/30 dark:from-gray-800 dark:via-red-900/20 dark:to-orange-900/10 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl border border-red-200/60 dark:border-red-700/40 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-white via-teal-50/40 to-indigo-50/30 dark:from-gray-800 dark:via-teal-900/20 dark:to-indigo-900/10 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl border border-teal-200/60 dark:border-teal-700/40 relative overflow-hidden">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-4 right-4 w-20 h-20 border-2 border-red-300 rounded-full"></div>
-          <div className="absolute bottom-4 left-4 w-16 h-16 border-2 border-orange-300 rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 w-12 h-12 border border-red-400 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute top-4 right-4 w-20 h-20 border-2 border-teal-300 rounded-full"></div>
+          <div className="absolute bottom-4 left-4 w-16 h-16 border-2 border-indigo-300 rounded-full"></div>
+          <div className="absolute top-1/2 left-1/2 w-12 h-12 border border-teal-400 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
         </div>
         
         <div className="relative z-10">
           {/* Header - Mobile Optimized */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 gap-4">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="bg-gradient-to-r from-red-500 via-orange-500 to-red-600 p-3 sm:p-4 rounded-xl shadow-xl flex-shrink-0 border-2 border-red-200/50">
+              <div className="bg-gradient-to-r from-teal-500 via-indigo-500 to-teal-600 p-3 sm:p-4 rounded-xl shadow-xl flex-shrink-0 border-2 border-teal-200/50">
                 <TrendingDown className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
               <div className="min-w-0">
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                   💸 Pengeluaran Terbaru
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />
                 </h3>
-                <p className="text-red-600 dark:text-red-300 text-sm sm:text-base flex items-center gap-1 font-medium">
+                <p className="text-teal-600 dark:text-teal-300 text-sm sm:text-base flex items-center gap-1 font-medium">
                   <Target className="w-4 h-4" />
                   {outcomes.length} total transaksi
                 </p>
@@ -266,7 +266,7 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
             </div>
             
             <div className="flex items-center gap-2 justify-end sm:justify-start">
-              <div className="bg-gradient-to-r from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 px-3 py-2 rounded-full text-red-700 dark:text-red-300 text-sm font-bold flex items-center gap-2 border border-red-200 dark:border-red-700">
+              <div className="bg-gradient-to-r from-teal-100 to-indigo-100 dark:from-teal-900/30 dark:to-indigo-900/30 px-3 py-2 rounded-full text-teal-700 dark:text-teal-300 text-sm font-bold flex items-center gap-2 border border-teal-200 dark:border-teal-700">
                 <Zap className="w-4 h-4" />
                 Live Data
               </div>
@@ -275,13 +275,13 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
 
           {outcomes.length === 0 ? (
             <div className="text-center py-12 sm:py-16">
-              <div className="bg-gradient-to-r from-red-100 to-orange-100 dark:from-red-800/50 dark:to-orange-800/50 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 border-2 border-red-200 dark:border-red-700">
-                <TrendingDown className="w-10 h-10 sm:w-12 sm:h-12 text-red-600 dark:text-red-400" />
+              <div className="bg-gradient-to-r from-teal-100 to-indigo-100 dark:from-teal-800/50 dark:to-indigo-800/50 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 border-2 border-teal-200 dark:border-teal-700">
+                <TrendingDown className="w-10 h-10 sm:w-12 sm:h-12 text-teal-600 dark:text-teal-400" />
               </div>
               <h4 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
                 📋 Belum ada pengeluaran
               </h4>
-              <p className="text-red-600 dark:text-red-400 max-w-md mx-auto mb-4 sm:mb-6 text-sm sm:text-base px-4 font-medium">
+              <p className="text-teal-600 dark:text-teal-400 max-w-md mx-auto mb-4 sm:mb-6 text-sm sm:text-base px-4 font-medium">
                 Riwayat transaksi pengeluaran Anda akan muncul disini setelah Anda menambahkan yang pertama.
               </p>
               
@@ -291,7 +291,7 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
               </div>
               
               <div className="mt-4 sm:mt-6">
-                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 mx-auto animate-bounce" />
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500 mx-auto animate-bounce" />
               </div>
             </div>
           ) : (
@@ -312,8 +312,8 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
                     <div
                       className={`relative bg-white dark:bg-gray-700 rounded-xl lg:rounded-2xl p-4 sm:p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
                         expandedId === entry.id 
-                          ? 'border-red-300 dark:border-red-600 shadow-2xl shadow-red-100 dark:shadow-red-900/20' 
-                          : 'border-gray-100 dark:border-gray-600 hover:border-red-200 dark:hover:border-red-700 hover:shadow-xl'
+                          ? 'border-teal-300 dark:border-teal-600 shadow-2xl shadow-teal-100 dark:shadow-teal-900/20' 
+                          : 'border-gray-100 dark:border-gray-600 hover:border-teal-200 dark:hover:border-teal-700 hover:shadow-xl'
                       } ${deleteConfirm === entry.id ? 'pointer-events-none' : ''}`}
                       onClick={() => toggleExpand(entry.id)}
                     >
@@ -336,7 +336,7 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
                               </h4>
                             </div>
                             <div className="text-right flex-shrink-0">
-                              <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                              <div className="text-lg font-bold text-rose-600 dark:text-rose-400">
                                 -{formatCurrency(entry.amount, entry.currency)}
                               </div>
                             </div>
@@ -439,7 +439,7 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
                             {/* Right Side - Amount and Actions */}
                             <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
                               <div className="text-right">
-                                <div className="text-xl lg:text-2xl font-bold text-red-600 dark:text-red-400">
+                                <div className="text-xl lg:text-2xl font-bold text-rose-600 dark:text-rose-400">
                                   -{formatCurrency(entry.amount, entry.currency)}
                                 </div>
                               </div>
@@ -533,11 +533,11 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
 
               {/* Pagination - Mobile Optimized */}
               {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-red-200 dark:border-red-700">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-teal-200 dark:border-teal-700">
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(currentPage - 1)}
-                    className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-red-100 dark:bg-red-800/50 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px] border border-red-200 dark:border-red-600"
+                    className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-teal-100 dark:bg-teal-800/50 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px] border border-teal-200 dark:border-teal-600"
                   >
                     ← Sebelumnya
                   </button>
@@ -549,8 +549,8 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
                         onClick={() => setCurrentPage(page)}
                         className={`min-w-[44px] h-11 sm:w-10 sm:h-10 rounded-xl font-medium transition-all duration-300 flex-shrink-0 ${
                           currentPage === page
-                            ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg border-2 border-red-300'
-                            : 'bg-red-50 dark:bg-red-800/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-700/30 border border-red-200 dark:border-red-600'
+                            ? 'bg-gradient-to-r from-teal-500 to-indigo-500 text-white shadow-lg border-2 border-teal-300'
+                            : 'bg-teal-50 dark:bg-teal-800/30 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-700/30 border border-teal-200 dark:border-teal-600'
                         }`}
                       >
                         {page}
@@ -561,7 +561,7 @@ const RecentOutcomeTransactions: React.FC<RecentOutcomeTransactionsProps> = ({ o
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(currentPage + 1)}
-                    className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-red-100 dark:bg-red-800/50 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px] border border-red-200 dark:border-red-600"
+                    className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-teal-100 dark:bg-teal-800/50 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px] border border-teal-200 dark:border-teal-600"
                   >
                     Berikutnya →
                   </button>
