@@ -5,7 +5,6 @@ import {
   Toolbar,
   IconButton,
   Typography,
-  Drawer,
   useTheme,
   useMediaQuery,
   CssBaseline,
@@ -67,7 +66,7 @@ const LayoutShell = ({ children }: LayoutShellProps) => {
         display: 'flex',
         minHeight: '100vh',
         backgroundColor: 'background.default',
-        touchAction: 'pan-y', // Allow vertical scrolling but enable horizontal gestures
+        touchAction: 'pan-y',
       }}
     >
       <CssBaseline />
@@ -117,37 +116,23 @@ const LayoutShell = ({ children }: LayoutShellProps) => {
             </Typography>
           </Box>
           
-          {/* Empty box for centering */}
           <Box sx={{ width: 48 }} />
         </Toolbar>
       </AppBar>
 
-      {/* Unified Sidebar Component */}
+      {/* Sidebar */}
       <Sidebar 
         isOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
       />
 
-      {/* Ensure proper spacing for desktop permanent sidebar */}
-      <Box 
-        sx={{ 
-          display: { xs: 'none', md: 'block' },
-          width: DRAWER_WIDTH,
-          flexShrink: 0 
-        }} 
-      />
-
-      {/* Main Content */}
+      {/* Main Content - Simplified approach */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          width: { xs: '100%', md: `calc(100% - ${DRAWER_WIDTH}px)` },
           minHeight: '100vh',
-          transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
+          // Remove complex width calculations, let flexGrow handle it
         }}
       >
         {/* Spacer for mobile app bar */}
@@ -155,10 +140,6 @@ const LayoutShell = ({ children }: LayoutShellProps) => {
         
         <Box
           sx={{
-            p: { xs: 2, sm: 3, md: 4 },
-            maxWidth: '100%',
-            mx: 'auto',
-            backgroundColor: 'background.default',
             minHeight: { xs: 'calc(100vh - 64px)', md: '100vh' },
           }}
         >
@@ -166,7 +147,7 @@ const LayoutShell = ({ children }: LayoutShellProps) => {
         </Box>
       </Box>
 
-      {/* Gesture hint for PWA - visible only on mobile */}
+      {/* Gesture hint for PWA */}
       <Box
         sx={{
           position: 'fixed',
