@@ -276,7 +276,20 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
               }
             </ListItemButton>
           </ListItem>
-          <Collapse in={isTransactionOpen} timeout="auto" unmountOnExit>
+          <Collapse 
+            in={isTransactionOpen} 
+            timeout="auto" 
+            unmountOnExit
+            sx={{
+              backgroundColor: 'transparent',
+              '& .MuiCollapse-wrapper': {
+                backgroundColor: 'transparent',
+              },
+              '& .MuiCollapse-wrapperInner': {
+                backgroundColor: 'transparent',
+              }
+            }}
+          >
             <Box sx={{ 
               pl: 2, 
               backgroundColor: 'transparent',
@@ -320,7 +333,20 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
               }
             </ListItemButton>
           </ListItem>
-          <Collapse in={isSettingsOpen} timeout="auto" unmountOnExit>
+          <Collapse 
+            in={isSettingsOpen} 
+            timeout="auto" 
+            unmountOnExit
+            sx={{
+              backgroundColor: 'transparent',
+              '& .MuiCollapse-wrapper': {
+                backgroundColor: 'transparent',
+              },
+              '& .MuiCollapse-wrapperInner': {
+                backgroundColor: 'transparent',
+              }
+            }}
+          >
             <Box sx={{ 
               pl: 2, 
               backgroundColor: 'transparent',
@@ -361,7 +387,20 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
               }
             </ListItemButton>
           </ListItem>
-          <Collapse in={isAboutOpen} timeout="auto" unmountOnExit>
+          <Collapse 
+            in={isAboutOpen} 
+            timeout="auto" 
+            unmountOnExit
+            sx={{
+              backgroundColor: 'transparent',
+              '& .MuiCollapse-wrapper': {
+                backgroundColor: 'transparent',
+              },
+              '& .MuiCollapse-wrapperInner': {
+                backgroundColor: 'transparent',
+              }
+            }}
+          >
             <Box sx={{ 
               pl: 2, 
               backgroundColor: 'transparent',
@@ -426,6 +465,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
             boxSizing: 'border-box',
             width: DRAWER_WIDTH,
             backgroundImage: 'none',
+            backgroundColor: theme.palette.background.paper,
           },
         }}
       >
@@ -443,6 +483,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
             width: DRAWER_WIDTH,
             boxSizing: 'border-box',
             backgroundImage: 'none',
+            backgroundColor: theme.palette.background.paper,
             borderRight: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
             boxShadow: theme.shadows[1],
           },
