@@ -379,7 +379,6 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
             backgroundImage: 'none',
             borderRight: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
             boxShadow: theme.shadows[1],
-            position: 'relative', // Ensure it's positioned correctly
           },
         }}
         open
