@@ -1,11 +1,11 @@
 import { useState } from "react";
-import LayoutShell from "../../layouts/LayoutShell";
+import LayoutShell from "src/layouts/LayoutShell";
 import IncomeForm from "./IncomeForm";
 import RecentTransactions from "./RecentTransactions";
-import { useAuth } from "../../context/AuthContext";
-import { usePageLockStatus } from "../../hooks/usePageLockStatus";
-import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
-import { IncomeEntry } from "../helpers/types";
+import { useAuth } from "src/context/AuthContext";
+import { usePageLockStatus } from "src/hooks/usePageLockStatus";
+import PageLockAnnouncement from "src/components/admin/PageLockAnnouncement";
+import { IncomeEntry } from "src/pages/helpers/types";
 
 const IncomePage = () => {
   const { user, userMeta } = useAuth();
@@ -93,7 +93,7 @@ const IncomePage = () => {
               <div className="grid grid-cols-12 gap-8">
                 {/* Left Column - Form */}
                 <div className="col-span-5">
-                  <div className="sticky top-6">
+                  <div className="sticky top-6" id="income-form">
                     <IncomeForm 
                       editingEntry={editingEntry}
                       onEditComplete={handleEditComplete}
@@ -110,7 +110,7 @@ const IncomePage = () => {
 
             {/* Mobile: Single Column Layout (Below XL screens) */}
             <div className="block xl:hidden max-w-2xl mx-auto">
-              <div className="mb-6">
+              <div className="mb-6" id="income-form-mobile">
                 <IncomeForm 
                   editingEntry={editingEntry}
                   onEditComplete={handleEditComplete}
