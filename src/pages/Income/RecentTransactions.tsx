@@ -487,7 +487,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                               e.stopPropagation();
                               setDeleteConfirm(null);
                             }}
-                            className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-3 rounded-xl font-medium transition-colors text-sm min-h-[48px] flex items-center justify-center"
+                            className="flex-1 bg-white hover:bg-blue-50 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 text-sm min-h-[48px] flex items-center justify-center border-2 border-gray-300 dark:border-gray-500 hover:border-blue-400 dark:hover:border-blue-400 shadow-sm hover:shadow-md"
                           >
                             Batal
                           </button>
@@ -496,7 +496,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                               e.stopPropagation();
                               handleDelete(entry.id, entry.amount, entry.wallet);
                             }}
-                            className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-medium transition-colors text-sm min-h-[48px] flex items-center justify-center gap-2"
+                            className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 text-sm min-h-[48px] flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
                           >
                             <Trash2 className="w-4 h-4" />
                             Hapus

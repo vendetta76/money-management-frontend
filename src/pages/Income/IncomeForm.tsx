@@ -339,29 +339,34 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
       )}
 
       {/* Main Form Card */}
-      <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-blue-100 dark:border-gray-600 backdrop-blur-sm">
+      <div className="bg-gradient-to-br from-white via-purple-50/40 to-pink-50/30 dark:from-gray-800 dark:via-purple-900/20 dark:to-pink-900/10 p-4 sm:p-6 lg:p-8 rounded-3xl lg:rounded-[2rem] shadow-2xl border-2 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/20 to-pink-200/20 dark:from-purple-800/20 dark:to-pink-800/20 rounded-full -translate-y-16 translate-x-16"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/20 to-purple-200/20 dark:from-blue-800/20 dark:to-purple-800/20 rounded-full translate-y-12 -translate-x-12"></div>
+        
+        <div className="relative z-10">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl shadow-lg flex-shrink-0">
+          <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 p-3 sm:p-4 rounded-2xl shadow-xl flex-shrink-0 transform hover:scale-110 transition-all duration-300">
             {editingId ? (
-              <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <FileText className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             ) : (
-              <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <TrendingUp className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
               {editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm flex items-center gap-1">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+            <p className="text-purple-600 dark:text-purple-300 text-sm sm:text-base flex items-center gap-2 font-medium">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
               Catat pemasukan Anda dengan mudah
             </p>
           </div>
           {editingId && (
             <div className="sm:ml-auto">
-              <span className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
-                Mode Edit
+              <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 px-3 sm:px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                ✏️ Mode Edit
               </span>
             </div>
           )}
@@ -371,7 +376,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           {/* Wallet Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              <Wallet className="w-4 h-4 text-blue-500" />
+              <Wallet className="w-4 h-4 text-purple-500" />
               Pilih Dompet
             </label>
             <div className="relative">
@@ -386,8 +391,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
                   errors.wallet 
                     ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
                     : focusedField === 'wallet'
-                    ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-lg shadow-blue-100 dark:shadow-blue-900/20"
-                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-blue-300 hover:bg-blue-50/50"
+                    ? "border-purple-400 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-100 dark:shadow-purple-900/20"
+                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-purple-300 hover:bg-purple-50/50"
                 }`}
               >
                 <option value="">-- Pilih Dompet --</option>
@@ -398,7 +403,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
                 ))}
               </select>
               <CreditCard className={`absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
-                focusedField === 'wallet' ? 'text-blue-500' : 'text-gray-400'
+                focusedField === 'wallet' ? 'text-purple-500' : 'text-gray-400'
               }`} />
             </div>
             {errors.wallet && (
@@ -445,7 +450,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             {/* Description */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                <FileText className="w-4 h-4 text-purple-500" />
+                <FileText className="w-4 h-4 text-pink-500" />
                 Deskripsi
               </label>
               <div className="relative">
@@ -462,8 +467,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
                     errors.description 
                       ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
                       : focusedField === 'description'
-                      ? "border-purple-400 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-100 dark:shadow-purple-900/20"
-                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-purple-300 hover:bg-purple-50/50"
+                      ? "border-pink-400 bg-pink-50 dark:bg-pink-900/20 shadow-lg shadow-pink-100 dark:shadow-pink-900/20"
+                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-pink-300 hover:bg-pink-50/50"
                   }`}
                 />
               </div>
@@ -478,7 +483,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             {/* Amount */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                <DollarSign className="w-4 h-4 text-green-500" />
+                <DollarSign className="w-4 h-4 text-emerald-500" />
                 Nominal
               </label>
               <div className="relative">
@@ -497,8 +502,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
                     errors.amount 
                       ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
                       : focusedField === 'amount'
-                      ? "border-green-400 bg-green-50 dark:bg-green-900/20 shadow-lg shadow-green-100 dark:shadow-green-900/20"
-                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-green-300 hover:bg-green-50/50"
+                      ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 shadow-lg shadow-emerald-100 dark:shadow-emerald-900/20"
+                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-emerald-300 hover:bg-emerald-50/50"
                   }`}
                 />
                 <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold text-sm">
@@ -527,10 +532,10 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           )}
 
           {/* Currency Display */}
-          <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-600">
+          <div className="bg-gradient-to-r from-purple-50/50 to-pink-50/50 dark:from-purple-900/20 dark:to-pink-900/20 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-purple-200 dark:border-purple-700">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg flex-shrink-0">
-                <DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg flex-shrink-0">
+                <DollarSign className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Mata Uang</p>
@@ -558,7 +563,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
               >
                 {loading ? (
                   <Loader2 className="animate-spin w-4 h-4 sm:w-5 sm:h-5" />
@@ -573,7 +578,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
                   type="button"
                   disabled={loading}
                   onClick={handleAddAndContinue}
-                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
                 >
                   {loading ? (
                     <Loader2 className="animate-spin w-4 h-4 sm:w-5 sm:h-5" />
@@ -586,6 +591,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             </div>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
