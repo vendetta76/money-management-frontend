@@ -1,544 +1,575 @@
-import { useEffect, useState } from "react";
-import { db } from "../../lib/firebaseClient";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { db } from "../../lib/firebaseClient";
 import {
+  addDoc,
   collection,
-  onSnapshot,
-  orderBy,
-  query,
-  deleteDoc,
   doc,
+  serverTimestamp,
   updateDoc,
   increment,
+  arrayUnion,
+  onSnapshot,
+  query,
+  orderBy,
 } from "firebase/firestore";
-import { IncomeEntry, WalletEntry } from "../helpers/types";
 import { 
-  Edit3, 
-  Trash2, 
+  Loader2, 
+  Wallet, 
+  DollarSign, 
+  FileText, 
   TrendingUp, 
-  Calendar, 
-  Wallet,
-  ChevronDown,
-  ChevronUp,
-  DollarSign,
   Sparkles,
-  Clock,
-  ArrowRight,
-  Zap,
-  Target,
-  Heart,
-  MoreHorizontal
+  CreditCard,
+  CheckCircle,
+  Plus,
+  Save
 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
+import { getCardStyle } from "../helpers/getCardStyle";
+import { WalletEntry, IncomeEntry } from "../helpers/types";
+import { toast } from "react-toastify";
 
-interface RecentTransactionsProps {
-  onEdit?: (entry: IncomeEntry) => void;
+interface IncomeFormProps {
+  hideCardPreview?: boolean;
+  presetWalletId?: string;
+  onClose?: () => void;
+  editingEntry?: IncomeEntry | null;
+  onEditComplete?: () => void;
 }
 
-const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
+const IncomeForm: React.FC<IncomeFormProps> = ({ 
+  presetWalletId, 
+  onClose, 
+  hideCardPreview, 
+  editingEntry, 
+  onEditComplete 
+}) => {
   const { user } = useAuth();
-  const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const itemsPerPage = 6;
-  const totalPages = Math.ceil(incomes.length / itemsPerPage);
-  const paginatedIncomes = incomes.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
+  const [form, setForm] = useState({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const descriptionRef = useRef<HTMLInputElement>(null);
+
+  // Handle editing existing entry
+  useEffect(() => {
+    if (editingEntry) {
+      setEditingId(editingEntry.id);
+      
+      const formattedAmount = editingEntry.amount.toLocaleString('id-ID', {
+        useGrouping: true,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      
+      setForm({
+        wallet: editingEntry.wallet,
+        description: editingEntry.description,
+        amount: formattedAmount,
+        currency: editingEntry.currency
+      });
+    } else {
+      setEditingId(null);
+      setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
+    }
+  }, [editingEntry, presetWalletId]);
 
   useEffect(() => {
     if (!user) return;
     
-    setLoading(true);
+    const walletRef = collection(db, "users", user.uid, "wallets");
     
-    const q = query(
-      collection(db, "users", user.uid, "incomes"),
-      orderBy("createdAt", "desc")
-    );
-    const unsub = onSnapshot(q, (snap) => {
-      setIncomes(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as IncomeEntry[]);
-      setLoading(false);
+    const unsubWallets = onSnapshot(walletRef, (snap) => {
+      const allWallets = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[];
+      
+      const activeWallets = allWallets.filter(w => {
+        if (!w.name || w.name.trim() === '' || w.id.startsWith('_')) {
+          return false;
+        }
+        
+        const isArchived = w.status === "archived" || 
+                          w.status === "deleted" || 
+                          w.status === "inactive" ||
+                          w.isArchived === true ||
+                          w.deleted === true ||
+                          w.active === false;
+        
+        return !isArchived;
+      });
+      
+      setWallets(activeWallets);
+      
+      if (form.wallet && !activeWallets.find(w => w.id === form.wallet)) {
+        setForm(prev => ({ ...prev, wallet: "", currency: "" }));
+        if (presetWalletId === form.wallet) {
+          toast.error("Dompet yang dipilih sudah dihapus atau diarsipkan.");
+          if (onClose) onClose();
+        }
+      }
     });
     
-    const walletRef = collection(db, "users", user.uid, "wallets");
-    const unsubWallets = onSnapshot(walletRef, (snap) => {
-      setWallets(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as WalletEntry[]);
+    const incomeRef = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
+    const unsubIncomes = onSnapshot(incomeRef, (snap) => {
+      setIncomes(snap.docs.map((d) => ({ id: d.id, ...d.data() })) as IncomeEntry[]);
     });
     
     return () => {
-      unsub();
       unsubWallets();
+      unsubIncomes();
     };
-  }, [user]);
+  }, [user, form.wallet, presetWalletId, onClose]);
 
-  const getWalletName = (id: string) =>
-    wallets.find((w) => w.id === id)?.name || "Dompet tidak ditemukan";
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
 
-  const getWalletColor = (id: string) =>
-    wallets.find((w) => w.id === id)?.color || "#3B82F6";
-
-  const handleDelete = async (id: string, amount: number, wallet: string) => {
-    if (!user) return;
-    
-    try {
-      // Delete the income document
-      await deleteDoc(doc(db, "users", user.uid, "incomes", id));
+    if (name === "amount") {
+      let cleaned = value.replace(/[^0-9.,]/g, "");
       
-      // Update wallet balance (subtract the amount)
-      await updateDoc(doc(db, "users", user.uid, "wallets", wallet), {
-        balance: increment(-amount),
-      });
+      const parts = cleaned.split(",");
+      if (parts.length > 2) {
+        cleaned = parts[0] + "," + parts.slice(1).join("").replace(/,/g, "");
+      }
       
-      // Clear the delete confirmation
-      setDeleteConfirm(null);
+      const numberWithoutSeparator = parts[0].replace(/\./g, "");
       
-      // Show success message
-      console.log("Income deleted successfully");
-    } catch (error) {
-      console.error("Error deleting income:", error);
-      alert("Gagal menghapus transaksi. Silakan coba lagi.");
-    }
-  };
-
-  const handleEdit = (entry: IncomeEntry) => {
-    if (onEdit) {
-      onEdit(entry);
-    }
-  };
-
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const formatDate = (date: any) => {
-    const d = new Date(date?.toDate?.() ?? date);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (d.toDateString() === today.toDateString()) {
-      return `Hari ini • ${d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
-    } else if (d.toDateString() === yesterday.toDateString()) {
-      return `Kemarin • ${d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
+      let formattedInteger = "";
+      if (numberWithoutSeparator.length > 0) {
+        formattedInteger = numberWithoutSeparator.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+      
+      const finalValue = parts.length > 1 
+        ? formattedInteger + "," + parts[1] 
+        : formattedInteger;
+        
+      setForm({ ...form, amount: finalValue });
     } else {
-      return d.toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: d.getFullYear() !== today.getFullYear() ? "numeric" : undefined,
-        hour: "2-digit",
-        minute: "2-digit"
-      });
+      setForm({ ...form, [name]: value });
+    }
+
+    setErrors({ ...errors, [name]: "" });
+  };
+
+  const handleWalletChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = wallets.find((w) => w.id === e.target.value);
+    setForm({
+      ...form,
+      wallet: e.target.value,
+      currency: selected?.currency || "",
+    });
+    setErrors({ ...errors, wallet: "", currency: "" });
+  };
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.wallet.trim()) e.wallet = "Dompet wajib dipilih.";
+    if (!form.description.trim()) e.description = "Deskripsi wajib diisi.";
+    if (!form.amount.trim() || parseFloat(form.amount.replace(/\./g, "").replace(",", ".")) <= 0) 
+      e.amount = "Nominal harus lebih dari 0.";
+    if (!form.currency.trim()) e.currency = "Mata uang wajib dipilih.";
+    
+    if (form.wallet && !wallets.find(w => w.id === form.wallet)) {
+      e.wallet = "Dompet sudah dihapus atau diarsipkan.";
+    }
+    
+    return e;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const v = validate();
+    if (Object.keys(v).length) {
+      setErrors(v);
+      return;
+    }
+    if (!user) return;
+
+    const selectedWallet = wallets.find(w => w.id === form.wallet);
+    if (!selectedWallet) {
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
+      if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        setErrors({ amount: "Nominal harus lebih dari 0." });
+        setLoading(false);
+        return;
+      }
+
+      if (!editingId) {
+        const incomeData = {
+          amount: parsedAmount,
+          description: form.description,
+          wallet: form.wallet,
+          currency: form.currency,
+          createdAt: serverTimestamp(),
+        };
+        await addDoc(collection(db, "users", user.uid, "incomes"), incomeData);
+        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+          balance: increment(parsedAmount),
+        });
+      } else {
+        const old = incomes.find((i) => i.id === editingId);
+        if (!old) return;
+        await updateDoc(doc(db, "users", user.uid, "incomes", editingId), {
+          description: form.description,
+          amount: parsedAmount,
+          wallet: form.wallet,
+          currency: form.currency,
+          editHistory: arrayUnion({
+            description: old.description,
+            amount: old.amount,
+            editedAt: new Date(),
+          }),
+        });
+        const diff = parsedAmount - old.amount;
+        await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+          balance: increment(diff),
+        });
+      }
+
+      setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: form.currency });
+      setEditingId(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      
+      if (editingId && onEditComplete) {
+        onEditComplete();
+      }
+      
+      if (onClose) onClose();
+    } catch (err) {
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fun cat ASCII for empty state (subtle and optional)
-  const CatMascot = () => (
-    <div className="text-center text-gray-400 dark:text-gray-500 text-xs font-mono leading-tight opacity-60">
-      <div>╱|、</div>
-      <div>(˚ˎ。7</div>
-      <div>|、˜〵</div>
-      <div>じしˍ,)ノ</div>
-    </div>
-  );
+  const handleAddAndContinue = async () => {
+    const v = validate();
+    if (Object.keys(v).length) {
+      setErrors(v);
+      return;
+    }
+    if (!user) return;
 
-  if (loading) {
-    return (
-      <div className="mt-6 lg:mt-12">
-        <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-green-100 dark:border-gray-600">
-          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl animate-pulse">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded-lg w-36 sm:w-48 animate-pulse"></div>
-              <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-600 rounded-lg w-24 sm:w-32 mt-2 animate-pulse"></div>
-            </div>
-          </div>
-          
-          <div className="space-y-3 sm:space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-gray-100 dark:bg-gray-700 p-4 sm:p-6 rounded-xl lg:rounded-2xl animate-pulse">
-                <div className="flex justify-between items-start">
-                  <div className="flex gap-3 sm:gap-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 dark:bg-gray-600 rounded-lg sm:rounded-xl"></div>
-                    <div>
-                      <div className="h-4 sm:h-5 bg-gray-200 dark:bg-gray-600 rounded w-24 sm:w-32 mb-2"></div>
-                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-600 rounded w-20 sm:w-24"></div>
-                    </div>
-                  </div>
-                  <div className="h-5 sm:h-6 bg-gray-200 dark:bg-gray-600 rounded w-16 sm:w-20"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+    const selectedWallet = wallets.find(w => w.id === form.wallet);
+    if (!selectedWallet) {
+      toast.error("Dompet sudah dihapus atau diarsipkan.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const parsedAmount = Number(form.amount.replace(/\./g, "").replace(",", "."));
+      if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        setErrors({ amount: "Nominal harus lebih dari 0." });
+        setLoading(false);
+        return;
+      }
+
+      const incomeData = {
+        amount: parsedAmount,
+        description: form.description,
+        wallet: form.wallet,
+        currency: form.currency,
+        createdAt: serverTimestamp(),
+      };
+      await addDoc(collection(db, "users", user.uid, "incomes"), incomeData);
+      await updateDoc(doc(db, "users", user.uid, "wallets", form.wallet), {
+        balance: increment(parsedAmount),
+      });
+
+      setForm({ wallet: form.wallet, description: "", amount: "", currency: form.currency });
+      setTimeout(() => descriptionRef.current?.focus(), 50);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      toast.error("Gagal menyimpan data. Silakan coba lagi.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSelectedWallet = () => {
+    if (!form.wallet) return null;
+    return wallets.find((w) => w.id === form.wallet) || null;
+  };
+
+  const resetForm = () => {
+    setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: "" });
+    setEditingId(null);
+    setErrors({});
+    if (onEditComplete) onEditComplete();
+    if (onClose) onClose();
+  };
+
+  // Removed today's income calculation as stats card is no longer needed
 
   return (
-    <div className="mt-6 lg:mt-12">
-      <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-green-100 dark:border-gray-600">
-        {/* Header - Mobile Optimized */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 gap-4">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl shadow-lg flex-shrink-0">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                Transaksi Terbaru
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm flex items-center gap-1">
-                <Target className="w-3 h-3 sm:w-4 sm:h-4" />
-                {incomes.length} total transaksi
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 justify-end sm:justify-start">
-            <div className="bg-green-100 dark:bg-green-900/30 px-2 sm:px-3 py-1 rounded-full text-green-700 dark:text-green-300 text-xs sm:text-sm font-medium flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              Live
-            </div>
+    <div className="relative">
+      {/* Success Animation */}
+      {success && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none px-4">
+          <div className="bg-green-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl flex items-center gap-2 sm:gap-3 animate-bounce max-w-sm text-center">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+            <span className="font-semibold text-sm sm:text-base">
+              {editingId ? "Pemasukan diperbarui! ✨" : "Pemasukan berhasil disimpan! 🎉"}
+            </span>
           </div>
         </div>
+      )}
 
-        {incomes.length === 0 ? (
-          <div className="text-center py-12 sm:py-16">
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <TrendingUp className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 dark:text-gray-500" />
-            </div>
-            <h4 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
-              Belum ada pemasukan
-            </h4>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4 sm:mb-6 text-sm sm:text-base px-4">
-              Transaksi pemasukan Anda akan muncul disini setelah Anda menambahkan yang pertama.
-            </p>
-            
-            {/* Subtle cat mascot for empty state */}
-            <div className="mb-4">
-              <CatMascot />
-            </div>
-            
-            <div className="mt-4 sm:mt-6">
-              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 mx-auto animate-bounce" />
-            </div>
+      {/* Quick Stats Card - Removed as it's unnecessary */}
+
+      {/* Main Form Card - Mobile Optimized */}
+      <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-blue-100 dark:border-gray-600 backdrop-blur-sm">
+        {/* Header - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl shadow-lg flex-shrink-0">
+            {editingId ? (
+              <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            ) : (
+              <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            )}
           </div>
-        ) : (
-          <>
-            {/* Transaction List - Mobile Optimized */}
-            <div className="space-y-3 sm:space-y-4">
-              {paginatedIncomes.map((entry, index) => (
-                <div
-                  key={entry.id}
-                  className={`group relative transform transition-all duration-300 ${
-                    hoveredId === entry.id ? 'scale-[1.01] sm:scale-102 -translate-y-1' : ''
-                  }`}
-                  onMouseEnter={() => setHoveredId(entry.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  {/* Delete Confirmation Overlay */}
-                  {deleteConfirm === entry.id && (
-                    <div className="absolute inset-0 bg-red-500/95 backdrop-blur-sm rounded-xl lg:rounded-2xl z-10 flex items-center justify-center p-4">
-                      <div className="text-white text-center">
-                        <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" />
-                        <p className="font-semibold mb-4 text-sm sm:text-base">Hapus transaksi ini?</p>
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(entry.id, entry.amount, entry.wallet);
-                            }}
-                            className="bg-white text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors text-sm sm:text-base min-h-[44px]"
-                          >
-                            Ya, Hapus
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteConfirm(null);
-                            }}
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm sm:text-base min-h-[44px]"
-                          >
-                            Batal
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Main Transaction Card - Mobile Optimized */}
-                  <div
-                    className={`relative bg-white dark:bg-gray-700 rounded-xl lg:rounded-2xl p-4 sm:p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
-                      expandedId === entry.id 
-                        ? 'border-green-300 dark:border-green-600 shadow-2xl shadow-green-100 dark:shadow-green-900/20' 
-                        : 'border-gray-100 dark:border-gray-600 hover:border-green-200 dark:hover:border-green-700 hover:shadow-xl'
-                    }`}
-                    onClick={() => toggleExpand(entry.id)}
-                  >
-                    {/* Background Gradient */}
-                    <div 
-                      className="absolute inset-0 opacity-5"
-                      style={{
-                        background: `linear-gradient(135deg, ${getWalletColor(entry.wallet)} 0%, transparent 70%)`
-                      }}
-                    ></div>
-
-                    <div className="relative z-10">
-                      {/* Mobile Layout */}
-                      <div className="block sm:hidden">
-                        {/* Top Row - Description and Amount */}
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex-1 min-w-0 pr-2">
-                            <h4 className="font-bold text-gray-800 dark:text-white text-base leading-tight truncate">
-                              {entry.description}
-                            </h4>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                              {formatCurrency(entry.amount, entry.currency)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Middle Row - Wallet and Date */}
-                        <div className="flex items-center justify-between mb-3">
-                          <span 
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white shadow-sm"
-                            style={{ backgroundColor: getWalletColor(entry.wallet) }}
-                          >
-                            <Wallet className="w-3 h-3 mr-1" />
-                            {getWalletName(entry.wallet)}
-                          </span>
-                          <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                            <Clock className="w-3 h-3" />
-                            {formatDate(entry.createdAt)}
-                          </span>
-                        </div>
-
-                        {/* Bottom Row - Actions */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(entry);
-                              }}
-                              className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                              title="Edit transaksi"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteConfirm(entry.id);
-                              }}
-                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                              title="Hapus transaksi"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-
-                          {/* Expand Button */}
-                          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center">
-                            {expandedId === entry.id ? (
-                              <ChevronUp className="w-5 h-5" />
-                            ) : (
-                              <ChevronDown className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Desktop Layout */}
-                      <div className="hidden sm:block">
-                        <div className="flex items-start justify-between">
-                          {/* Left Side - Icon and Info */}
-                          <div className="flex items-start gap-4 flex-1 min-w-0">
-                            <div 
-                              className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 flex-shrink-0"
-                              style={{ 
-                                background: `linear-gradient(135deg, ${getWalletColor(entry.wallet)} 0%, ${getWalletColor(entry.wallet)}dd 100%)` 
-                              }}
-                            >
-                              <Wallet className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start gap-3 mb-3">
-                                <div className="flex-1 min-w-0">
-                                  <h4 className="font-bold text-gray-800 dark:text-white text-lg leading-tight mb-1">
-                                    {entry.description}
-                                  </h4>
-                                  <span 
-                                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm"
-                                    style={{ backgroundColor: getWalletColor(entry.wallet) }}
-                                  >
-                                    <Wallet className="w-3 h-3 mr-1" />
-                                    {getWalletName(entry.wallet)}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {formatDate(entry.createdAt)}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <DollarSign className="w-3 h-3" />
-                                  {entry.currency}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right Side - Amount and Actions */}
-                          <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
-                            <div className="text-right">
-                              <div className="text-xl lg:text-2xl font-bold text-green-600 dark:text-green-400">
-                                {formatCurrency(entry.amount, entry.currency)}
-                              </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEdit(entry);
-                                }}
-                                className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-300 transform hover:scale-110 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                title="Edit transaksi"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteConfirm(entry.id);
-                                }}
-                                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-300 transform hover:scale-110 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                title="Hapus transaksi"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-
-                            {/* Expand Button */}
-                            <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center">
-                              {expandedId === entry.id ? (
-                                <ChevronUp className="w-5 h-5" />
-                              ) : (
-                                <ChevronDown className="w-5 h-5" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Expanded Content - Mobile Optimized */}
-                      <div className={`transition-all duration-500 overflow-hidden ${
-                        expandedId === entry.id ? 'max-h-56 opacity-100 mt-4 sm:mt-6' : 'max-h-0 opacity-0'
-                      }`}>
-                        <div className="bg-gray-50 dark:bg-gray-600 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-500">
-                          <div className="grid grid-cols-1 gap-3 sm:gap-4 text-sm">
-                            <div>
-                              <p className="text-gray-600 dark:text-gray-300 font-medium mb-1 flex items-center gap-1">
-                                <Heart className="w-3 h-3 text-pink-500" />
-                                Detail Transaksi
-                              </p>
-                              <p className="text-gray-800 dark:text-white font-medium bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-sm sm:text-base">
-                                {entry.description}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600 dark:text-gray-300 font-medium mb-1">Waktu Dibuat</p>
-                              <p className="text-gray-800 dark:text-white font-medium bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-sm sm:text-base">
-                                {formatDate(entry.createdAt)}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          {entry.editHistory && entry.editHistory.length > 0 && (
-                            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-500">
-                              <p className="text-gray-600 dark:text-gray-300 font-medium mb-2 flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                Riwayat Edit ({entry.editHistory.length})
-                              </p>
-                              <div className="space-y-2 max-h-24 overflow-y-auto">
-                                {entry.editHistory.slice(0, 3).map((edit, i) => (
-                                  <div key={i} className="bg-white dark:bg-gray-700 p-2 rounded-lg">
-                                    <p className="text-xs text-gray-600 dark:text-gray-300 font-medium">
-                                      {new Date(edit.editedAt?.toDate?.() ?? edit.editedAt).toLocaleDateString("id-ID")}
-                                    </p>
-                                    <p className="text-xs sm:text-sm text-gray-800 dark:text-white">
-                                      {edit.description} • {formatCurrency(edit.amount, entry.currency)}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
+              {editingId ? "Edit Pemasukan" : "Tambah Pemasukan"}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm flex items-center gap-1">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+              Catat pemasukan Anda dengan mudah
+            </p>
+          </div>
+          {editingId && (
+            <div className="sm:ml-auto">
+              <span className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                Mode Edit
+              </span>
             </div>
+          )}
+        </div>
 
-            {/* Pagination - Mobile Optimized */}
-            {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-600">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px]"
-                >
-                  Sebelumnya
-                </button>
-                
-                <div className="flex items-center gap-1 overflow-x-auto pb-2 sm:pb-0">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`min-w-[44px] h-11 sm:w-10 sm:h-10 rounded-xl font-medium transition-all duration-300 flex-shrink-0 ${
-                        currentPage === page
-                          ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      }`}
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          {/* Wallet Selection - Mobile Optimized */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <Wallet className="w-4 h-4 text-blue-500" />
+              Pilih Dompet
+            </label>
+            <div className="relative">
+              <select
+                name="wallet"
+                value={form.wallet}
+                onChange={handleWalletChange}
+                disabled={!!presetWalletId || loading}
+                onFocus={() => setFocusedField('wallet')}
+                onBlur={() => setFocusedField(null)}
+                className={`w-full rounded-xl sm:rounded-2xl border-2 px-4 sm:px-5 py-3 sm:py-4 pr-10 sm:pr-12 dark:bg-gray-700 dark:text-white text-gray-800 font-medium transition-all duration-300 text-sm sm:text-base min-h-[48px] ${
+                  errors.wallet 
+                    ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
+                    : focusedField === 'wallet'
+                    ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-lg shadow-blue-100 dark:shadow-blue-900/20"
+                    : "border-gray-200 dark:border-gray-600 bg-white hover:border-blue-300 hover:bg-blue-50/50"
+                }`}
+              >
+                <option value="">-- Pilih Dompet --</option>
+                {wallets.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name} • {formatCurrency(w.balance || 0, w.currency)}
+                  </option>
+                ))}
+              </select>
+              <CreditCard className={`absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
+                focusedField === 'wallet' ? 'text-blue-500' : 'text-gray-400'
+              }`} />
+            </div>
+            {errors.wallet && (
+              <p className="text-red-500 text-xs sm:text-sm flex items-center gap-1">
+                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                {errors.wallet}
+              </p>
+            )}
+
+            {/* Wallet Card Preview - Mobile Optimized */}
+            {form.wallet && !hideCardPreview && (
+              <div className="mt-4 sm:mt-6 transform transition-all duration-500 animate-in slide-in-from-top-4">
+                {(() => {
+                  const selectedWallet = getSelectedWallet();
+                  if (!selectedWallet) return null;
+                  
+                  return (
+                    <div
+                      className="rounded-xl sm:rounded-2xl text-white p-4 sm:p-6 shadow-xl transform hover:scale-105 transition-transform duration-300 cursor-pointer relative overflow-hidden"
+                      style={{
+                        background: `linear-gradient(135deg, ${selectedWallet.color || '#3B82F6'} 0%, ${selectedWallet.color || '#3B82F6'}dd 100%)`
+                      }}
                     >
-                      {page}
-                    </button>
-                  ))}
-                </div>
-                
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px]"
-                >
-                  Berikutnya
-                </button>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+                      <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-3 sm:mb-4">
+                          <h3 className="text-base sm:text-lg font-bold truncate pr-2">{selectedWallet.name}</h3>
+                          <Wallet className="w-5 h-5 sm:w-6 sm:h-6 opacity-80 flex-shrink-0" />
+                        </div>
+                        <p className="text-xl sm:text-2xl font-bold">
+                          {formatCurrency(selectedWallet.balance || 0, selectedWallet.currency)}
+                        </p>
+                        <p className="text-xs sm:text-sm opacity-80 mt-1">Current Balance</p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
-          </>
-        )}
+          </div>
+
+          {/* Description and Amount - Mobile Responsive Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            {/* Description - Mobile Optimized */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <FileText className="w-4 h-4 text-purple-500" />
+                Deskripsi
+              </label>
+              <div className="relative">
+                <input
+                  ref={descriptionRef}
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  onFocus={() => setFocusedField('description')}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder="Contoh: Gaji bulanan, Bonus..."
+                  disabled={loading}
+                  className={`w-full rounded-xl sm:rounded-2xl border-2 px-4 sm:px-5 py-3 sm:py-4 dark:bg-gray-700 dark:text-white text-gray-800 placeholder-gray-400 font-medium transition-all duration-300 text-sm sm:text-base min-h-[48px] ${
+                    errors.description 
+                      ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
+                      : focusedField === 'description'
+                      ? "border-purple-400 bg-purple-50 dark:bg-purple-900/20 shadow-lg shadow-purple-100 dark:shadow-purple-900/20"
+                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-purple-300 hover:bg-purple-50/50"
+                  }`}
+                />
+              </div>
+              {errors.description && (
+                <p className="text-red-500 text-xs sm:text-sm flex items-center gap-1">
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                  {errors.description}
+                </p>
+              )}
+            </div>
+
+            {/* Amount - Mobile Optimized */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <DollarSign className="w-4 h-4 text-green-500" />
+                Nominal
+              </label>
+              <div className="relative">
+                <input
+                  name="amount"
+                  value={form.amount}
+                  onChange={handleChange}
+                  onFocus={() => setFocusedField('amount')}
+                  onBlur={() => setFocusedField(null)}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9.,]*"
+                  placeholder="0"
+                  disabled={loading}
+                  className={`w-full rounded-xl sm:rounded-2xl border-2 px-4 sm:px-5 py-3 sm:py-4 dark:bg-gray-700 dark:text-white text-gray-800 text-lg sm:text-xl font-bold placeholder-gray-400 transition-all duration-300 min-h-[48px] pr-16 ${
+                    errors.amount 
+                      ? "border-red-300 bg-red-50 dark:bg-red-900/20" 
+                      : focusedField === 'amount'
+                      ? "border-green-400 bg-green-50 dark:bg-green-900/20 shadow-lg shadow-green-100 dark:shadow-green-900/20"
+                      : "border-gray-200 dark:border-gray-600 bg-white hover:border-green-300 hover:bg-green-50/50"
+                  }`}
+                />
+                <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold text-sm">
+                  {form.currency || "IDR"}
+                </div>
+              </div>
+              {errors.amount && (
+                <p className="text-red-500 text-xs sm:text-sm flex items-center gap-1">
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                  {errors.amount}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Currency Display - Mobile Optimized */}
+          <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-600">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg flex-shrink-0">
+                <DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Mata Uang</p>
+                <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">
+                  {form.currency || "Akan otomatis terisi setelah memilih dompet"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons - Mobile Optimized */}
+          <div className="flex flex-col gap-3 pt-2 sm:pt-4">
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                disabled={loading}
+                className="w-full px-6 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white font-medium transition-colors duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl min-h-[48px]"
+              >
+                Batal Edit
+              </button>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                )}
+                {loading ? "Menyimpan..." : editingId ? "Perbarui" : "Simpan"}
+              </button>
+
+              {!editingId && (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleAddAndContinue}
+                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none min-h-[48px] sm:min-h-[56px] text-sm sm:text-base"
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin w-4 h-4 sm:w-5 sm:h-5" />
+                  ) : (
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
+                  Simpan & Lanjut
+                </button>
+              )}
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default RecentTransactions;
+export default IncomeForm;
