@@ -8,7 +8,7 @@ import {
   useTheme,
   alpha,
 } from "@mui/material";
-import { Palette, LightMode, DarkMode, Computer, Eco } from "@mui/icons-material";
+import { Palette, LightMode, DarkMode, Computer, ColorLens } from "@mui/icons-material";
 import { useTheme as useCustomTheme, ThemeMode } from "../hooks/useThemeAdvanced";
 
 const ThemeSelect = () => {
@@ -19,7 +19,7 @@ const ThemeSelect = () => {
     { value: "system", label: "Default", icon: <Computer />, emoji: "🖥️" },
     { value: "light", label: "Light", icon: <LightMode />, emoji: "🌞" },
     { value: "dark", label: "Dark", icon: <DarkMode />, emoji: "🌙" },
-    { value: "original", label: "Original", icon: <Eco />, emoji: "🍃" },
+    { value: "original", label: "Original", icon: <ColorLens />, emoji: "🍃" },
     { value: "warm", label: "Warm (Eye-Friendly)", icon: <Palette />, emoji: "🌿" },
   ] as const;
 
