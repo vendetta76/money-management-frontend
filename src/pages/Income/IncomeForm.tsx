@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { db } from "@/lib/firebaseClient";
+import { useAuth } from "src/context/AuthContext";
+import { db } from "src/lib/firebaseClient";
 import {
   addDoc,
   collection,
@@ -25,10 +25,10 @@ import {
   Plus,
   Save
 } from "lucide-react";
-import { formatCurrency } from "@/helpers/formatCurrency";
-import { getCardStyle } from "@/helpers/getCardStyle";
-import { WalletEntry, IncomeEntry } from "@/helpers/types";
-import { QuickAmountButtons } from "@/helpers/QuickAmountButtons";
+import { formatCurrency } from "src/pages/helpers/formatCurrency";
+import { getCardStyle } from "src/pages/helpers/getCardStyle";
+import { WalletEntry, IncomeEntry } from "src/pages/helpers/types";
+import { QuickAmountButtons } from "src/pages/helpers/QuickAmountButtons";
 import { toast } from "react-toastify";
 
 interface IncomeFormProps {
