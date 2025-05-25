@@ -6,11 +6,14 @@ import { useAuth } from "src/context/AuthContext";
 import { usePageLockStatus } from "src/hooks/usePageLockStatus";
 import PageLockAnnouncement from "src/components/admin/PageLockAnnouncement";
 import { OutcomeEntry } from "src/pages/helpers/types";
+import { CheckCircle } from "lucide-react";
 
 const OutcomePage = () => {
   const { user, userMeta } = useAuth();
   const { locked, message } = usePageLockStatus("outcome");
   const [editingEntry, setEditingEntry] = useState<OutcomeEntry | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const bypassFor = ["Admin", "Staff", "Tester"];
   const normalizedBypass = bypassFor.map((b) => b.toLowerCase());
@@ -31,9 +34,32 @@ const OutcomePage = () => {
     setEditingEntry(null);
   };
 
+  const handleFormSuccess = (isEdit: boolean) => {
+    const message = isEdit ? "Pengeluaran diperbarui! ✨" : "Pengeluaran berhasil disimpan! 💸";
+    setSuccessMessage(message);
+    setShowSuccessToast(true);
+    
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+      setShowSuccessToast(false);
+    }, 3000);
+  };
+
   return (
     <LayoutShell>
       <main className="relative w-full px-4 py-6">
+        {/* Success Toast - Page Level with Highest Z-Index */}
+        {showSuccessToast && (
+          <div className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none px-4">
+            <div className="bg-orange-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl flex items-center gap-2 sm:gap-3 animate-bounce max-w-sm text-center border-2 border-orange-400">
+              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+              <span className="font-semibold text-sm sm:text-base">
+                {successMessage}
+              </span>
+            </div>
+          </div>
+        )}
+
         {locked && !isBypassed && userMeta && (
           <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/30 flex items-center justify-center">
             <PageLockAnnouncement
@@ -97,6 +123,7 @@ const OutcomePage = () => {
                     <OutcomeForm 
                       editingEntry={editingEntry}
                       onEditComplete={handleEditComplete}
+                      onSuccess={handleFormSuccess}
                     />
                   </div>
                 </div>
@@ -114,6 +141,7 @@ const OutcomePage = () => {
                 <OutcomeForm 
                   editingEntry={editingEntry}
                   onEditComplete={handleEditComplete}
+                  onSuccess={handleFormSuccess}
                 />
               </div>
               <RecentOutcomeTransactions onEdit={handleEdit} />

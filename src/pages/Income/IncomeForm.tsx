@@ -21,7 +21,6 @@ import {
   TrendingUp, 
   Sparkles,
   CreditCard,
-  CheckCircle,
   Plus,
   Save
 } from "lucide-react";
@@ -89,6 +88,7 @@ interface IncomeFormProps {
   onClose?: () => void;
   editingEntry?: IncomeEntry | null;
   onEditComplete?: () => void;
+  onSuccess?: (isEdit: boolean) => void; // New prop for success callback
 }
 
 const IncomeForm: React.FC<IncomeFormProps> = ({ 
@@ -96,7 +96,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   onClose, 
   hideCardPreview, 
   editingEntry, 
-  onEditComplete 
+  onEditComplete,
+  onSuccess 
 }) => {
   const { user } = useAuth();
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
@@ -105,7 +106,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
 
@@ -301,8 +301,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
       setForm({ wallet: presetWalletId || "", description: "", amount: "", currency: form.currency });
       setEditingId(null);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      
+      // Call parent success callback instead of showing toast here
+      if (onSuccess) {
+        onSuccess(!!editingId);
+      }
       
       if (editingId && onEditComplete) {
         onEditComplete();
@@ -354,8 +357,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
       setForm({ wallet: form.wallet, description: "", amount: "", currency: form.currency });
       setTimeout(() => descriptionRef.current?.focus(), 50);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      
+      // Call parent success callback
+      if (onSuccess) {
+        onSuccess(false);
+      }
     } catch (err) {
       toast.error("Gagal menyimpan data. Silakan coba lagi.");
     } finally {
@@ -378,18 +384,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
   return (
     <div className="relative pwa-container">
-      {/* Success Animation */}
-      {success && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none px-4">
-          <div className="bg-green-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl flex items-center gap-2 sm:gap-3 animate-bounce max-w-sm text-center">
-            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
-            <span className="font-semibold text-sm sm:text-base">
-              {editingId ? "Pemasukan diperbarui! ✨" : "Pemasukan berhasil disimpan! 🎉"}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Main Form Card */}
       <div className="bg-gradient-to-br from-white via-purple-50/40 to-pink-50/30 dark:from-gray-800 dark:via-purple-900/20 dark:to-pink-900/10 p-4 sm:p-6 lg:p-8 rounded-3xl lg:rounded-[2rem] shadow-2xl border-2 border-purple-200/50 dark:border-purple-700/30 backdrop-blur-sm relative overflow-hidden">
         {/* Decorative Elements */}
