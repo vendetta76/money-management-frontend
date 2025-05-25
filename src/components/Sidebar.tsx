@@ -1,7 +1,41 @@
 import { useEffect, useState } from "react";
 import {
-  Home, LogOut as LogOutIcon, Wallet, PiggyBank, Receipt, Clock, ChevronDown, Repeat2, CreditCard
-} from "lucide-react";
+  Box,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Avatar,
+  Typography,
+  Chip,
+  Button,
+  Collapse,
+  Divider,
+  useTheme,
+  alpha,
+} from "@mui/material";
+import {
+  Home,
+  Logout as LogOutIcon,
+  AccountBalanceWallet,
+  Pets as CatIcon, // Cat representation
+  Receipt,
+  History,
+  ExpandLess,
+  ExpandMore,
+  CreditCard,
+  SwapHoriz,
+  Settings,
+  Info,
+  Person,
+  Security,
+  Tune,
+  MenuBook,
+  Policy,
+  Description,
+} from "@mui/icons-material";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -10,7 +44,20 @@ import { toast } from "react-hot-toast";
 import ThemeSelect from "../components/ThemeSelect";
 import InstallButton from "../components/InstallButton";
 
-const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+const DRAWER_WIDTH = 280;
+
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+  variant?: 'temporary' | 'permanent';
+}
+
+const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
   const [isTransactionOpen, setIsTransactionOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -18,25 +65,32 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
   const [name, setName] = useState<string>("");
   const [role, setRole] = useState<string>("regular");
   const [loading, setLoading] = useState(true);
+  
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const theme = useTheme();
+  
   const allowedEmails = ["joeverson.kamantha@gmail.com"];
   const showVirtualMenu = user?.email && allowedEmails.includes(user.email);
 
   useEffect(() => {
     if (!user?.uid) return;
-    const unsub = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
-      if (!snapshot.exists()) return;
-      const data = snapshot.data();
-      if (data.avatar) setPhotoURL(data.avatar);
-      if (data.name) setName(data.name);
-      if (data.role) setRole(data.role.toLowerCase());
-      setLoading(false);
-    }, (error) => {
-      console.error("🔥 Firestore error:", error);
-      toast.error("Gagal memuat data pengguna.");
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      doc(db, "users", user.uid),
+      (snapshot) => {
+        if (!snapshot.exists()) return;
+        const data = snapshot.data();
+        if (data.avatar) setPhotoURL(data.avatar);
+        if (data.name) setName(data.name);
+        if (data.role) setRole(data.role.toLowerCase());
+        setLoading(false);
+      },
+      (error) => {
+        console.error("🔥 Firestore error:", error);
+        toast.error("Gagal memuat data pengguna.");
+        setLoading(false);
+      }
+    );
     return () => unsub();
   }, [user]);
 
@@ -50,156 +104,289 @@ const Sidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
     }
   };
 
-  return (
-    <aside className={`fixed top-0 left-0 h-screen w-60 md:w-64 z-50
-      bg-white dark:bg-gray-900
-      border-r dark:border-transparent transform transition-transform duration-300
-      ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
-      p-4 flex flex-col justify-between overflow-y-auto`}>
+  const getRoleChip = (userRole: string) => {
+    const configs = {
+      admin: { label: "👑 Admin", color: "error" as const },
+      premium: { label: "🐱 Premium", color: "warning" as const },
+      regular: { label: "🐾 Regular", color: "default" as const },
+    };
+    return configs[userRole as keyof typeof configs] || configs.regular;
+  };
 
-      <div>
-        <h1 className="text-2xl font-extrabold text-center text-green-500 mb-4">MoniQ</h1>
+  const menuItems = [
+    { path: "/dashboard", label: "Dashboard", icon: <Home />, exact: true },
+    { path: "/wallet", label: "Cat Wallet", icon: <CatIcon />, exact: true },
+    ...(showVirtualMenu ? [{ path: "/virtual-wallet", label: "Virtual Wallet", icon: <CreditCard />, exact: true }] : []),
+  ];
 
-        <div className="flex flex-col items-center text-center mb-6 mt-2">
-          <img
-            src={(photoURL?.replace("/upload/", "/upload/f_auto/")) || "/default-avatar.png"}
-            alt="Avatar"
-            className="w-14 h-14 rounded-full object-cover mb-1"
+  const transactionItems = [
+    { path: "/income", label: "Income", icon: <CatIcon /> },
+    { path: "/outcome", label: "Outcome", icon: <Receipt /> },
+    { path: "/transfer", label: "Transfer Antar Wallet", icon: <SwapHoriz /> },
+  ];
+
+  const settingsItems = [
+    { path: "/settings/profile", label: "Profile", icon: <Person /> },
+    { path: "/settings/security", label: "Security", icon: <Security /> },
+    { path: "/settings/preferences", label: "Preferences", icon: <Tune /> },
+  ];
+
+  const aboutItems = [
+    { path: "/about", label: "Tentang", icon: <MenuBook /> },
+    { path: "/about/privacy-policy", label: "Kebijakan Privasi", icon: <Policy /> },
+    { path: "/about/terms-and-conditions", label: "Syarat & Ketentuan", icon: <Description /> },
+  ];
+
+  const handleItemClick = () => {
+    if (variant === 'temporary') {
+      onClose();
+    }
+  };
+
+  const NavListItem = ({ path, label, icon, exact = false }: any) => (
+    <ListItem disablePadding>
+      <ListItemButton
+        component={NavLink}
+        to={path}
+        onClick={handleItemClick}
+        sx={{
+          borderRadius: 2,
+          mx: 1,
+          mb: 0.5,
+          '&.active': {
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            color: 'white',
+            '& .MuiListItemIcon-root': {
+              color: 'white',
+            },
+            transform: 'translateY(-1px)',
+            boxShadow: theme.shadows[4],
+          },
+          '&:hover': {
+            backgroundColor: alpha(theme.palette.primary.main, 0.1),
+            transform: 'translateY(-1px)',
+            '& .MuiListItemIcon-root': {
+              transform: 'scale(1.1)',
+              color: theme.palette.primary.main,
+            },
+          },
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            minWidth: 40,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          {icon}
+        </ListItemIcon>
+        <ListItemText 
+          primary={label} 
+          primaryTypographyProps={{ 
+            fontWeight: 500,
+            fontSize: '0.9rem'
+          }} 
+        />
+      </ListItemButton>
+    </ListItem>
+  );
+
+  const drawerContent = (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 800,
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            mb: 3,
+          }}
+        >
+          🐱 MoniQ
+        </Typography>
+
+        {/* User Profile */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+          <Avatar
+            src={photoURL?.replace("/upload/", "/upload/f_auto/") || "/default-avatar.png"}
+            sx={{ 
+              width: 56, 
+              height: 56, 
+              mb: 1,
+              border: `3px solid ${theme.palette.primary.main}`,
+              boxShadow: theme.shadows[3],
+            }}
           />
-          <p
-            className="text-sm font-semibold text-gray-800 dark:text-white">
+          <Typography variant="subtitle1" fontWeight={600}>
             {name || "User"}
-          </p>
-          <span className={`text-xs ${role === "admin" ? "text-red-500" : role === "premium" ? "text-yellow-500" : "text-gray-500"}`}>
-            {role === "admin" ? "👑 Admin" : role === "premium" ? "💎 Premium" : "🧑‍💻 Regular"}
-          </span>
-        </div>
+          </Typography>
+          <Chip
+            label={getRoleChip(role).label}
+            color={getRoleChip(role).color}
+            size="small"
+            sx={{ mt: 0.5 }}
+          />
+        </Box>
+      </Box>
 
-        <nav className="space-y-2">
-          <NavLink to="/dashboard" className={({ isActive }) =>
-            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
-              ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
-              : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"}`}>
-            <Home size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
-            Dashboard
-          </NavLink>
+      <Divider />
 
-          <NavLink to="/wallet" className={({ isActive }) =>
-            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
-              ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
-              : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"}`}>
-            <Wallet size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
-            Wallet
-          </NavLink>
+      {/* Navigation */}
+      <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
+        <List>
+          {menuItems.map((item) => (
+            <NavListItem key={item.path} {...item} />
+          ))}
 
-          {showVirtualMenu && (
-            <NavLink to="/virtual-wallet" className={({ isActive }) =>
-              `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
-                ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
-                : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"}`}>
-              <CreditCard size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
-              Virtual Wallet
-            </NavLink>
-          )}
-
-          {/* Transaction */}
-          <div>
-            <button
+          {/* Transaction Section */}
+          <ListItem disablePadding>
+            <ListItemButton 
               onClick={() => setIsTransactionOpen(!isTransactionOpen)}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+              sx={{ mx: 1, borderRadius: 2 }}
             >
-              <span className="flex items-center gap-2">
-                <ChevronDown className={`w-4 h-4 transition-transform ${isTransactionOpen ? "rotate-180" : ""}`} />
-                Transaction
-              </span>
-            </button>
-            {isTransactionOpen && (
-              <div className="pl-8 mt-1 space-y-1">
-                <NavLink
-                  to="/income"
-                  className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
-                >
-                  <PiggyBank size={16} className="inline mr-1" /> Income
-                </NavLink>
-                <NavLink
-                  to="/outcome"
-                  className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
-                >
-                  <Receipt size={16} className="inline mr-1" /> Outcome
-                </NavLink>
-                <NavLink
-                  to="/transfer"
-                  className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-[#00d97e] hover:underline"
-                >
-                  <Repeat2 size={16} className="inline mr-1" /> Transfer Antar Wallet
-                </NavLink>
-              </div>
-            )}
-          </div>
+              <ListItemIcon>
+                <CatIcon />
+              </ListItemIcon>
+              <ListItemText primary="Transactions" />
+              {isTransactionOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={isTransactionOpen} timeout="auto" unmountOnExit>
+            <List sx={{ pl: 2 }}>
+              {transactionItems.map((item) => (
+                <NavListItem key={item.path} {...item} />
+              ))}
+            </List>
+          </Collapse>
 
-          <NavLink to="/history" className={({ isActive }) =>
-            `group flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${isActive
-              ? "bg-gradient-to-r from-[#00d97e] to-[#00c2ff] text-white shadow-md"
-              : "text-gray-600 dark:text-white hover:ring-1 hover:ring-[#00c2ff] hover:text-[#00d97e]"}`}>
-            <Clock size={18} className="transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
-            History
-          </NavLink>
+          {/* History */}
+          <NavListItem path="/history" label="History" icon={<History />} />
 
-          {/* Settings */}
-          <div>
-            <button
+          {/* Settings Section */}
+          <ListItem disablePadding>
+            <ListItemButton 
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+              sx={{ mx: 1, borderRadius: 2 }}
             >
-              <span className="flex items-center gap-2">
-                <ChevronDown className={`w-4 h-4 transition-transform ${isSettingsOpen ? "rotate-180" : ""}`} />
-                Settings
-              </span>
-            </button>
-            {isSettingsOpen && (
-              <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/settings/profile" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">👤 Profile</NavLink>
-                <NavLink to="/settings/security" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">🔐 Security</NavLink>
-                <NavLink to="/settings/preferences" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">⚙️ Preferences</NavLink>
-              </div>
-            )}
-          </div>
+              <ListItemIcon>
+                <Settings />
+              </ListItemIcon>
+              <ListItemText primary="Settings" />
+              {isSettingsOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={isSettingsOpen} timeout="auto" unmountOnExit>
+            <List sx={{ pl: 2 }}>
+              {settingsItems.map((item) => (
+                <NavListItem key={item.path} {...item} />
+              ))}
+            </List>
+          </Collapse>
 
-          {/* About MoniQ */}
-          <div>
-            <button
+          {/* About Section */}
+          <ListItem disablePadding>
+            <ListItemButton 
               onClick={() => setIsAboutOpen(!isAboutOpen)}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+              sx={{ mx: 1, borderRadius: 2 }}
             >
-              <span className="flex items-center gap-2">
-                <ChevronDown className={`w-4 h-4 transition-transform ${isAboutOpen ? "rotate-180" : ""}`} />
-                About MoniQ
-              </span>
-            </button>
-            {isAboutOpen && (
-              <div className="pl-8 mt-1 space-y-1">
-                <NavLink to="/about" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">📘 Tentang</NavLink>
-                <NavLink to="/about/privacy-policy" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">📜 Kebijakan Privasi</NavLink>
-                <NavLink to="/about/terms-and-conditions" className="block py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-500">📄 Syarat & Ketentuan</NavLink>
-              </div>
-            )}
-          </div>
-        </nav>
-      </div>
+              <ListItemIcon>
+                <Info />
+              </ListItemIcon>
+              <ListItemText primary="About MoniQ" />
+              {isAboutOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={isAboutOpen} timeout="auto" unmountOnExit>
+            <List sx={{ pl: 2 }}>
+              {aboutItems.map((item) => (
+                <NavListItem key={item.path} {...item} />
+              ))}
+            </List>
+          </Collapse>
+        </List>
+      </Box>
 
       {/* Bottom Section */}
-      <div className="mt-6 space-y-3">
-        <InstallButton />
-        <button
+      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Box sx={{ mb: 2 }}>
+          <InstallButton />
+        </Box>
+        
+        <Button
+          fullWidth
+          variant="outlined"
+          color="error"
+          startIcon={<LogOutIcon />}
           onClick={handleLogout}
-          className="w-full group flex items-center justify-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 px-3 py-2 border border-red-400 dark:border-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 ease-in-out transform hover:scale-[1.02]"
+          sx={{
+            mb: 2,
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 500,
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-1px)',
+              boxShadow: theme.shadows[4],
+            },
+          }}
         >
-          <LogOutIcon size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
           Logout
-        </button>
+        </Button>
+        
         <ThemeSelect />
-      </div>
-    </aside>
+      </Box>
+    </Box>
+  );
+
+  return (
+    <>
+      {/* Mobile Temporary Drawer */}
+      <Drawer
+        variant="temporary"
+        anchor="left"
+        open={isOpen}
+        onClose={onClose}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: DRAWER_WIDTH,
+            backgroundImage: 'none',
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+
+      {/* Desktop Permanent Drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          width: DRAWER_WIDTH,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            backgroundImage: 'none',
+            borderRight: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+            boxShadow: theme.shadows[1],
+            position: 'relative', // Ensure it's positioned correctly
+          },
+        }}
+        open
+      >
+        {drawerContent}
+      </Drawer>
+    </>
   );
 };
 
