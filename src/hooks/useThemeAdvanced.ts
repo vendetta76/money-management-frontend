@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react"
 
-export type ThemeMode = "system" | "light" | "dark" | "original" | "warm"
+export type ThemeMode = "light" | "dark"
 
 export const useTheme = () => {
   const [theme, setTheme] = useState<ThemeMode>(() => {
     try {
-      return (localStorage.getItem("theme") as ThemeMode) || "system"
+      const savedTheme = localStorage.getItem("theme") as ThemeMode;
+      if (savedTheme === "light" || savedTheme === "dark") {
+        return savedTheme;
+      }
+      // Default to system preference if no saved theme
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     } catch (e) {
       console.warn("⚠️ Gagal ambil theme dari localStorage:", e)
-      return "system"
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     }
   })
 
@@ -16,23 +21,14 @@ export const useTheme = () => {
     const root = document.documentElement
 
     // Reset semua class theme
-    root.classList.remove("original", "warm", "dark", "system")
+    root.classList.remove("dark", "light")
 
-    const applyTheme = (mode: ThemeMode) => {
-      if (mode === "system") {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-        root.classList.add("system") // optional class, bisa dihapus kalau nggak perlu
-        root.classList.toggle("dark", prefersDark)
-        return
-      }
-
-      if (mode === "dark") root.classList.add("dark")
-      if (mode === "original") root.classList.add("original")
-      if (mode === "warm") root.classList.add("warm")
-      // "light" mode: no class added
+    // Apply theme
+    if (theme === "dark") {
+      root.classList.add("dark")
+    } else {
+      root.classList.add("light")
     }
-
-    applyTheme(theme)
 
     // Tailwind repaint fix
     document.body.style.display = "none"
