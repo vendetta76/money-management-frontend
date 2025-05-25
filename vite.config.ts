@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import tsconfigPaths from 'vite-tsconfig-paths';
+import tsconfigPaths from 'vite-tsconfig-paths'
+import path from 'path'
 
 export default defineConfig({
   plugins: [
@@ -30,8 +31,13 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // ✅ FIX ERROR precache 2MB
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024
       }
     })
-  ]
-});
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src') // 💥 Explicit fallback alias fix
+    }
+  }
+})
