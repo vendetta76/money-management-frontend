@@ -103,7 +103,7 @@ function DashboardPage() {
 
   return (
     <LayoutShell>
-      <main className="min-h-screen w-full px-4 md:px-8 max-w-screen-2xl mx-auto bg-background text-foreground">
+      <main className="min-h-screen w-full bg-background text-foreground">
         <DashboardHeader displayName={displayName} />
 
         <DashboardFilters
