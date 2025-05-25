@@ -186,43 +186,51 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
 
   return (
     <div className="mt-6 lg:mt-12">
-      <div className="bg-gradient-to-br from-white via-green-50/30 to-blue-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-green-100 dark:border-gray-600">
+      <div className="bg-gradient-to-br from-white via-blue-50/40 to-cyan-50/30 dark:from-gray-800 dark:via-blue-900/20 dark:to-cyan-900/10 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl border border-blue-200/60 dark:border-blue-700/40 relative overflow-hidden">
+        {/* Subtle Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-4 right-4 w-20 h-20 border-2 border-blue-300 rounded-full"></div>
+          <div className="absolute bottom-4 left-4 w-16 h-16 border-2 border-cyan-300 rounded-full"></div>
+          <div className="absolute top-1/2 left-1/2 w-12 h-12 border border-blue-400 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+        
+        <div className="relative z-10">
         {/* Header - Mobile Optimized */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 gap-4">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl shadow-lg flex-shrink-0">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 p-3 sm:p-4 rounded-xl shadow-xl flex-shrink-0 border-2 border-blue-200/50">
+              <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <div className="min-w-0">
               <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                Transaksi Terbaru
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                📊 Transaksi Terbaru
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-500" />
               </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm flex items-center gap-1">
-                <Target className="w-3 h-3 sm:w-4 sm:h-4" />
+              <p className="text-blue-600 dark:text-blue-300 text-sm sm:text-base flex items-center gap-1 font-medium">
+                <Target className="w-4 h-4" />
                 {incomes.length} total transaksi
               </p>
             </div>
           </div>
           
           <div className="flex items-center gap-2 justify-end sm:justify-start">
-            <div className="bg-green-100 dark:bg-green-900/30 px-2 sm:px-3 py-1 rounded-full text-green-700 dark:text-green-300 text-xs sm:text-sm font-medium flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              Live
+            <div className="bg-gradient-to-r from-cyan-100 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 px-3 py-2 rounded-full text-cyan-700 dark:text-cyan-300 text-sm font-bold flex items-center gap-2 border border-cyan-200 dark:border-cyan-700">
+              <Zap className="w-4 h-4" />
+              Live Data
             </div>
           </div>
         </div>
 
         {incomes.length === 0 ? (
           <div className="text-center py-12 sm:py-16">
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <TrendingUp className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 dark:text-gray-500" />
+            <div className="bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-800/50 dark:to-cyan-800/50 w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 border-2 border-blue-200 dark:border-blue-700">
+              <TrendingUp className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 dark:text-blue-400" />
             </div>
             <h4 className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
-              Belum ada pemasukan
+              📋 Belum ada pemasukan
             </h4>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-4 sm:mb-6 text-sm sm:text-base px-4">
-              Transaksi pemasukan Anda akan muncul disini setelah Anda menambahkan yang pertama.
+            <p className="text-blue-600 dark:text-blue-400 max-w-md mx-auto mb-4 sm:mb-6 text-sm sm:text-base px-4 font-medium">
+              Riwayat transaksi pemasukan Anda akan muncul disini setelah Anda menambahkan yang pertama.
             </p>
             
             {/* Subtle cat mascot for empty state */}
@@ -231,7 +239,7 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
             </div>
             
             <div className="mt-4 sm:mt-6">
-              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 mx-auto animate-bounce" />
+              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-500 mx-auto animate-bounce" />
             </div>
           </div>
         ) : (
@@ -511,13 +519,13 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
 
             {/* Pagination - Mobile Optimized */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-600">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-blue-200 dark:border-blue-700">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(currentPage - 1)}
-                  className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px]"
+                  className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px] border border-blue-200 dark:border-blue-600"
                 >
-                  Sebelumnya
+                  ← Sebelumnya
                 </button>
                 
                 <div className="flex items-center gap-1 overflow-x-auto pb-2 sm:pb-0">
@@ -527,8 +535,8 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                       onClick={() => setCurrentPage(page)}
                       className={`min-w-[44px] h-11 sm:w-10 sm:h-10 rounded-xl font-medium transition-all duration-300 flex-shrink-0 ${
                         currentPage === page
-                          ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg border-2 border-blue-300'
+                          : 'bg-blue-50 dark:bg-blue-800/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-700/30 border border-blue-200 dark:border-blue-600'
                       }`}
                     >
                       {page}
@@ -539,14 +547,15 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(currentPage + 1)}
-                  className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px]"
+                  className="w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium min-h-[44px] border border-blue-200 dark:border-blue-600"
                 >
-                  Berikutnya
+                  Berikutnya →
                 </button>
               </div>
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );
