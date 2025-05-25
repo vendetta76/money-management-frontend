@@ -11,7 +11,6 @@ import {
   Typography,
   Chip,
   Button,
-  Collapse,
   Divider,
   useTheme,
   alpha,
@@ -276,32 +275,13 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
               }
             </ListItemButton>
           </ListItem>
-          <Collapse 
-            in={isTransactionOpen} 
-            timeout="auto" 
-            unmountOnExit
-            sx={{
-              backgroundColor: 'transparent',
-              '& .MuiCollapse-wrapper': {
-                backgroundColor: 'transparent',
-              },
-              '& .MuiCollapse-wrapperInner': {
-                backgroundColor: 'transparent',
-              }
-            }}
-          >
-            <Box sx={{ 
-              pl: 2, 
-              backgroundColor: 'transparent',
-              '& .MuiListItem-root': {
-                backgroundColor: 'transparent',
-              }
-            }}>
+          {isTransactionOpen && (
+            <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
               {transactionItems.map((item) => (
                 <NavListItem key={item.path} {...item} />
               ))}
             </Box>
-          </Collapse>
+          )}
 
           {/* History */}
           <NavListItem path="/history" label="History" icon={<History />} />
@@ -333,32 +313,13 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
               }
             </ListItemButton>
           </ListItem>
-          <Collapse 
-            in={isSettingsOpen} 
-            timeout="auto" 
-            unmountOnExit
-            sx={{
-              backgroundColor: 'transparent',
-              '& .MuiCollapse-wrapper': {
-                backgroundColor: 'transparent',
-              },
-              '& .MuiCollapse-wrapperInner': {
-                backgroundColor: 'transparent',
-              }
-            }}
-          >
-            <Box sx={{ 
-              pl: 2, 
-              backgroundColor: 'transparent',
-              '& .MuiListItem-root': {
-                backgroundColor: 'transparent',
-              }
-            }}>
+          {isSettingsOpen && (
+            <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
               {settingsItems.map((item) => (
                 <NavListItem key={item.path} {...item} />
               ))}
             </Box>
-          </Collapse>
+          )}
 
           {/* About Section */}
           <ListItem disablePadding>
@@ -387,32 +348,13 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
               }
             </ListItemButton>
           </ListItem>
-          <Collapse 
-            in={isAboutOpen} 
-            timeout="auto" 
-            unmountOnExit
-            sx={{
-              backgroundColor: 'transparent',
-              '& .MuiCollapse-wrapper': {
-                backgroundColor: 'transparent',
-              },
-              '& .MuiCollapse-wrapperInner': {
-                backgroundColor: 'transparent',
-              }
-            }}
-          >
-            <Box sx={{ 
-              pl: 2, 
-              backgroundColor: 'transparent',
-              '& .MuiListItem-root': {
-                backgroundColor: 'transparent',
-              }
-            }}>
+          {isAboutOpen && (
+            <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
               {aboutItems.map((item) => (
                 <NavListItem key={item.path} {...item} />
               ))}
             </Box>
-          </Collapse>
+          )}
         </List>
       </Box>
 
