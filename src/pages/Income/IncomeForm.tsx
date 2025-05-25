@@ -440,8 +440,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             )}
           </div>
 
-          {/* Description and Amount - Side by Side on Desktop */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+          {/* Description and Amount - Now Vertical Layout */}
+          <div className="space-y-4 sm:space-y-6">
             {/* Description */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">

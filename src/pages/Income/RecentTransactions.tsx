@@ -27,7 +27,8 @@ import {
   Zap,
   Target,
   Heart,
-  MoreHorizontal
+  MoreHorizontal,
+  AlertTriangle
 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 
@@ -112,6 +113,8 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
   };
 
   const toggleExpand = (id: string) => {
+    // Don't toggle if we're in delete confirmation mode
+    if (deleteConfirm === id) return;
     setExpandedId(expandedId === id ? null : id);
   };
 
@@ -245,43 +248,13 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                   onMouseLeave={() => setHoveredId(null)}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {/* Delete Confirmation Overlay */}
-                  {deleteConfirm === entry.id && (
-                    <div className="absolute inset-0 bg-red-500/95 backdrop-blur-sm rounded-xl lg:rounded-2xl z-10 flex items-center justify-center p-4">
-                      <div className="text-white text-center">
-                        <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" />
-                        <p className="font-semibold mb-4 text-sm sm:text-base">Hapus transaksi ini?</p>
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(entry.id, entry.amount, entry.wallet);
-                            }}
-                            className="bg-white text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-50 transition-colors text-sm sm:text-base min-h-[44px]"
-                          >
-                            Ya, Hapus
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteConfirm(null);
-                            }}
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm sm:text-base min-h-[44px]"
-                          >
-                            Batal
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Main Transaction Card - Mobile Optimized */}
                   <div
                     className={`relative bg-white dark:bg-gray-700 rounded-xl lg:rounded-2xl p-4 sm:p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
                       expandedId === entry.id 
                         ? 'border-green-300 dark:border-green-600 shadow-2xl shadow-green-100 dark:shadow-green-900/20' 
                         : 'border-gray-100 dark:border-gray-600 hover:border-green-200 dark:hover:border-green-700 hover:shadow-xl'
-                    }`}
+                    } ${deleteConfirm === entry.id ? 'pointer-events-none' : ''}`}
                     onClick={() => toggleExpand(entry.id)}
                   >
                     {/* Background Gradient */}
@@ -494,6 +467,44 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Delete Confirmation Modal - Positioned Outside Main Card */}
+                  {deleteConfirm === entry.id && (
+                    <div className="absolute inset-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl lg:rounded-2xl z-20 flex items-center justify-center p-4 border-2 border-orange-200 dark:border-orange-700">
+                      <div className="text-center max-w-sm">
+                        <div className="bg-orange-100 dark:bg-orange-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <AlertTriangle className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+                        </div>
+                        <h4 className="font-bold text-gray-800 dark:text-white mb-2 text-lg">
+                          Hapus Transaksi?
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
+                          Transaksi ini akan dihapus secara permanen dan saldo dompet akan disesuaikan.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirm(null);
+                            }}
+                            className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-3 rounded-xl font-medium transition-colors text-sm min-h-[48px] flex items-center justify-center"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(entry.id, entry.amount, entry.wallet);
+                            }}
+                            className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-medium transition-colors text-sm min-h-[48px] flex items-center justify-center gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Hapus
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
