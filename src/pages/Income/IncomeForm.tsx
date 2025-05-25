@@ -28,7 +28,7 @@ import {
 import { formatCurrency } from "src/pages/helpers/formatCurrency";
 import { getCardStyle } from "src/pages/helpers/getCardStyle";
 import { WalletEntry, IncomeEntry } from "src/pages/helpers/types";
-import { QuickAmountButtons } from "src/pages/helpers/QuickAmountButtons";
+import QuickAmountButtons from "src/pages/helpers/QuickAmountButtons";
 import { toast } from "react-toastify";
 
 interface IncomeFormProps {
