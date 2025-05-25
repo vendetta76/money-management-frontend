@@ -21,7 +21,7 @@ import {
   Edit3,
   Clock
 } from 'lucide-react';
-import { formatCurrency } from '@/helpers/formatCurrency';
+import { formatCurrency } from '@/pages/helpers/formatCurrency';
 import { UnifiedEntry } from './historyTypes';
 
 interface TransactionItemProps {
