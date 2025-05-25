@@ -21,7 +21,7 @@ import WalletPage from './pages/Wallet/WalletPage'
 import IncomePage from './pages/Income/IncomePage'
 import OutcomePage from './pages/Outcome/OutcomePage'
 import TransferPage from './pages/TransferPage'
-import HistoryPage from './pages/HistoryPage'
+import HistoryPage from './pages/History/HistoryPage'
 
 // Virtual Wallet
 import VirtualWalletPage from './pages/VirtualWalletPage'
