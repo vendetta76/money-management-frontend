@@ -86,32 +86,36 @@ const IncomePage = () => {
             )}
           </div>
 
-          {/* Responsive Layout - Fixed */}
+          {/* Responsive Layout - PROPERLY FIXED */}
           <div className="max-w-7xl mx-auto">
             {/* Desktop: Two Column Layout (XL screens and up) */}
-            <div className="hidden xl:grid xl:grid-cols-12 xl:gap-8">
-              {/* Left Column - Form */}
-              <div className="xl:col-span-5">
-                <div className="sticky top-6">
-                  <IncomeForm 
-                    editingEntry={editingEntry}
-                    onEditComplete={handleEditComplete}
-                  />
+            <div className="hidden xl:block">
+              <div className="grid grid-cols-12 gap-8">
+                {/* Left Column - Form */}
+                <div className="col-span-5">
+                  <div className="sticky top-6">
+                    <IncomeForm 
+                      editingEntry={editingEntry}
+                      onEditComplete={handleEditComplete}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Right Column - Recent Transactions */}
-              <div className="xl:col-span-7">
-                <RecentTransactions onEdit={handleEdit} />
+                {/* Right Column - Recent Transactions */}
+                <div className="col-span-7">
+                  <RecentTransactions onEdit={handleEdit} />
+                </div>
               </div>
             </div>
 
             {/* Mobile: Single Column Layout (Below XL screens) */}
-            <div className="xl:hidden max-w-2xl mx-auto">
-              <IncomeForm 
-                editingEntry={editingEntry}
-                onEditComplete={handleEditComplete}
-              />
+            <div className="block xl:hidden max-w-2xl mx-auto">
+              <div className="mb-6">
+                <IncomeForm 
+                  editingEntry={editingEntry}
+                  onEditComplete={handleEditComplete}
+                />
+              </div>
               <RecentTransactions onEdit={handleEdit} />
             </div>
           </div>

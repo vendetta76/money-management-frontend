@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { db } from "../../lib/firebaseClient";
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/lib/firebaseClient";
 import {
   addDoc,
   collection,
@@ -25,11 +25,11 @@ import {
   Plus,
   Save
 } from "lucide-react";
-import { formatCurrency } from "../helpers/formatCurrency";
-import { getCardStyle } from "../helpers/getCardStyle";
-import { WalletEntry, IncomeEntry } from "../helpers/types";
+import { formatCurrency } from "@/helpers/formatCurrency";
+import { getCardStyle } from "@/helpers/getCardStyle";
+import { WalletEntry, IncomeEntry } from "@/helpers/types";
+import { QuickAmountButtons } from "@/helpers/QuickAmountButtons";
 import { toast } from "react-toastify";
-import QuickAmountButtons from "@helpers/QuickAmountButtons";
 
 interface IncomeFormProps {
   hideCardPreview?: boolean;
@@ -56,6 +56,16 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   const [success, setSuccess] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const descriptionRef = useRef<HTMLInputElement>(null);
+
+  const handleQuickAmount = (value: number) => {
+    const formattedAmount = value.toLocaleString('id-ID', {
+      useGrouping: true,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+    setForm({ ...form, amount: formattedAmount });
+    setErrors({ ...errors, amount: "" });
+  };
 
   // Handle editing existing entry
   useEffect(() => {
@@ -314,8 +324,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
     if (onClose) onClose();
   };
 
-  // Removed today's income calculation as stats card is no longer needed
-
   return (
     <div className="relative">
       {/* Success Animation */}
@@ -330,9 +338,9 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         </div>
       )}
 
-      {/* Main Form Card - Mobile Optimized */}
+      {/* Main Form Card */}
       <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700 p-4 sm:p-6 lg:p-8 rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl border border-blue-100 dark:border-gray-600 backdrop-blur-sm">
-        {/* Header - Mobile Optimized */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 sm:p-3 rounded-xl lg:rounded-2xl shadow-lg flex-shrink-0">
             {editingId ? (
@@ -360,7 +368,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          {/* Wallet Selection - Mobile Optimized */}
+          {/* Wallet Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
               <Wallet className="w-4 h-4 text-blue-500" />
@@ -400,7 +408,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               </p>
             )}
 
-            {/* Wallet Card Preview - Mobile Optimized */}
+            {/* Wallet Card Preview */}
             {form.wallet && !hideCardPreview && (
               <div className="mt-4 sm:mt-6 transform transition-all duration-500 animate-in slide-in-from-top-4">
                 {(() => {
@@ -432,9 +440,9 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             )}
           </div>
 
-          {/* Description and Amount - Mobile Responsive Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {/* Description - Mobile Optimized */}
+          {/* Description and Amount - Side by Side on Desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+            {/* Description */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                 <FileText className="w-4 h-4 text-purple-500" />
@@ -467,32 +475,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               )}
             </div>
 
-            {/* Amount - Mobile Optimized with Quick Amount Buttons */}
+            {/* Amount */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                 <DollarSign className="w-4 h-4 text-green-500" />
                 Nominal
               </label>
-
-              {/* Quick Amount Buttons using the separate component */}
-              {form.currency && (
-                <div className="mb-3">
-                  <QuickAmountButtons
-                    currency={form.currency}
-                    onAmountSelect={(value) => {
-                      const formattedAmount = value.toLocaleString('id-ID', {
-                        useGrouping: true,
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 2
-                      });
-                      setForm({ ...form, amount: formattedAmount });
-                      setErrors({ ...errors, amount: "" });
-                    }}
-                    disabled={loading}
-                  />
-                </div>
-              )}
-
               <div className="relative">
                 <input
                   name="amount"
@@ -503,7 +491,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9.,]*"
-                  placeholder="Ketik nominal atau pilih tombol di atas"
+                  placeholder="Ketik nominal"
                   disabled={loading}
                   className={`w-full rounded-xl sm:rounded-2xl border-2 px-4 sm:px-5 py-3 sm:py-4 dark:bg-gray-700 dark:text-white text-gray-800 text-lg sm:text-xl font-bold placeholder-gray-400 transition-all duration-300 min-h-[48px] pr-16 ${
                     errors.amount 
@@ -526,7 +514,19 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             </div>
           </div>
 
-          {/* Currency Display - Mobile Optimized */}
+          {/* Quick Amount Buttons */}
+          {form.currency && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Nominal Cepat:</p>
+              <QuickAmountButtons
+                currency={form.currency}
+                onAmountSelect={handleQuickAmount}
+                disabled={loading}
+              />
+            </div>
+          )}
+
+          {/* Currency Display */}
           <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-600">
             <div className="flex items-center gap-3">
               <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-lg flex-shrink-0">
@@ -541,7 +541,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             </div>
           </div>
 
-          {/* Action Buttons - Mobile Optimized */}
+          {/* Action Buttons */}
           <div className="flex flex-col gap-3 pt-2 sm:pt-4">
             {editingId && (
               <button
