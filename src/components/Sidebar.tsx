@@ -144,7 +144,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
   };
 
   const NavListItem = ({ path, label, icon, exact = false }: any) => (
-    <ListItem disablePadding>
+    <ListItem disablePadding sx={{ backgroundColor: 'transparent' }}>
       <ListItemButton
         component={NavLink}
         to={path}
@@ -153,10 +153,14 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
           borderRadius: 2,
           mx: 1,
           mb: 0.5,
+          backgroundColor: 'transparent',
           '&.active': {
             background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
             color: 'white',
             '& .MuiListItemIcon-root': {
+              color: 'white',
+            },
+            '& .MuiListItemText-primary': {
               color: 'white',
             },
             transform: 'translateY(-1px)',
@@ -176,6 +180,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
         <ListItemIcon
           sx={{
             minWidth: 40,
+            color: theme.palette.text.primary,
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
@@ -185,7 +190,8 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
           primary={label} 
           primaryTypographyProps={{ 
             fontWeight: 500,
-            fontSize: '0.9rem'
+            fontSize: '0.9rem',
+            color: theme.palette.text.primary,
           }} 
         />
       </ListItemButton>
@@ -247,21 +253,41 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
           <ListItem disablePadding>
             <ListItemButton 
               onClick={() => setIsTransactionOpen(!isTransactionOpen)}
-              sx={{ mx: 1, borderRadius: 2 }}
+              sx={{ 
+                mx: 1, 
+                borderRadius: 2,
+                backgroundColor: 'transparent',
+                color: theme.palette.text.primary,
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.action.hover, 0.08),
+                }
+              }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ color: theme.palette.text.primary }}>
                 <CatIcon />
               </ListItemIcon>
-              <ListItemText primary="Transactions" />
-              {isTransactionOpen ? <ExpandLess /> : <ExpandMore />}
+              <ListItemText 
+                primary="Transactions" 
+                primaryTypographyProps={{ color: theme.palette.text.primary }}
+              />
+              {isTransactionOpen ? 
+                <ExpandLess sx={{ color: theme.palette.text.primary }} /> : 
+                <ExpandMore sx={{ color: theme.palette.text.primary }} />
+              }
             </ListItemButton>
           </ListItem>
           <Collapse in={isTransactionOpen} timeout="auto" unmountOnExit>
-            <List sx={{ pl: 2 }}>
+            <Box sx={{ 
+              pl: 2, 
+              backgroundColor: 'transparent',
+              '& .MuiListItem-root': {
+                backgroundColor: 'transparent',
+              }
+            }}>
               {transactionItems.map((item) => (
                 <NavListItem key={item.path} {...item} />
               ))}
-            </List>
+            </Box>
           </Collapse>
 
           {/* History */}
@@ -271,42 +297,82 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
           <ListItem disablePadding>
             <ListItemButton 
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              sx={{ mx: 1, borderRadius: 2 }}
+              sx={{ 
+                mx: 1, 
+                borderRadius: 2,
+                backgroundColor: 'transparent',
+                color: theme.palette.text.primary,
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.action.hover, 0.08),
+                }
+              }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ color: theme.palette.text.primary }}>
                 <Settings />
               </ListItemIcon>
-              <ListItemText primary="Settings" />
-              {isSettingsOpen ? <ExpandLess /> : <ExpandMore />}
+              <ListItemText 
+                primary="Settings" 
+                primaryTypographyProps={{ color: theme.palette.text.primary }}
+              />
+              {isSettingsOpen ? 
+                <ExpandLess sx={{ color: theme.palette.text.primary }} /> : 
+                <ExpandMore sx={{ color: theme.palette.text.primary }} />
+              }
             </ListItemButton>
           </ListItem>
           <Collapse in={isSettingsOpen} timeout="auto" unmountOnExit>
-            <List sx={{ pl: 2 }}>
+            <Box sx={{ 
+              pl: 2, 
+              backgroundColor: 'transparent',
+              '& .MuiListItem-root': {
+                backgroundColor: 'transparent',
+              }
+            }}>
               {settingsItems.map((item) => (
                 <NavListItem key={item.path} {...item} />
               ))}
-            </List>
+            </Box>
           </Collapse>
 
           {/* About Section */}
           <ListItem disablePadding>
             <ListItemButton 
               onClick={() => setIsAboutOpen(!isAboutOpen)}
-              sx={{ mx: 1, borderRadius: 2 }}
+              sx={{ 
+                mx: 1, 
+                borderRadius: 2,
+                backgroundColor: 'transparent',
+                color: theme.palette.text.primary,
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.action.hover, 0.08),
+                }
+              }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ color: theme.palette.text.primary }}>
                 <Info />
               </ListItemIcon>
-              <ListItemText primary="About MoniQ" />
-              {isAboutOpen ? <ExpandLess /> : <ExpandMore />}
+              <ListItemText 
+                primary="About MoniQ" 
+                primaryTypographyProps={{ color: theme.palette.text.primary }}
+              />
+              {isAboutOpen ? 
+                <ExpandLess sx={{ color: theme.palette.text.primary }} /> : 
+                <ExpandMore sx={{ color: theme.palette.text.primary }} />
+              }
             </ListItemButton>
           </ListItem>
           <Collapse in={isAboutOpen} timeout="auto" unmountOnExit>
-            <List sx={{ pl: 2 }}>
+            <Box sx={{ 
+              pl: 2, 
+              backgroundColor: 'transparent',
+              '& .MuiListItem-root': {
+                backgroundColor: 'transparent',
+              }
+            }}>
               {aboutItems.map((item) => (
                 <NavListItem key={item.path} {...item} />
               ))}
-            </List>
+            </Box>
           </Collapse>
         </List>
       </Box>
