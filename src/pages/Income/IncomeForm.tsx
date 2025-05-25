@@ -31,6 +31,58 @@ import { WalletEntry, IncomeEntry } from "src/pages/helpers/types";
 import QuickAmountButtons from "src/pages/helpers/QuickAmountButtons";
 import { toast } from "react-toastify";
 
+// Add CSS to prevent iOS overscroll/bounce in PWA
+if (typeof window !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    /* Prevent iOS bounce/overscroll in PWA */
+    html, body {
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+      overflow-x: hidden;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* PWA specific fixes */
+    .pwa-container {
+      touch-action: pan-y;
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Prevent horizontal scroll and drag */
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-text-size-adjust: none;
+    }
+    
+    /* Allow text selection in form inputs */
+    input, textarea, select, [contenteditable] {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    
+    /* Fix for iOS PWA viewport */
+    @media screen and (max-width: 768px) {
+      html {
+        overflow-x: hidden;
+        overscroll-behavior-x: none;
+      }
+      
+      body {
+        overflow-x: hidden;
+        overscroll-behavior-x: none;
+        position: relative;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 interface IncomeFormProps {
   hideCardPreview?: boolean;
   presetWalletId?: string;
@@ -325,7 +377,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative pwa-container">
       {/* Success Animation */}
       {success && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none px-4">

@@ -32,6 +32,30 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 
+// Add CSS to prevent iOS overscroll/bounce
+if (typeof window !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    body {
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    html, body {
+      overflow-x: hidden;
+      position: relative;
+      width: 100%;
+    }
+    /* Prevent iOS bounce/drag */
+    body.ios-fix {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 interface RecentTransactionsProps {
   onEdit?: (entry: IncomeEntry) => void;
 }
@@ -476,39 +500,41 @@ const RecentTransactions: React.FC<RecentTransactionsProps> = ({ onEdit }) => {
                     </div>
                   </div>
 
-                  {/* Delete Confirmation Modal - Positioned Outside Main Card */}
+                  {/* Delete Confirmation Modal - Fixed for Mobile */}
                   {deleteConfirm === entry.id && (
-                    <div className="absolute inset-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl lg:rounded-2xl z-20 flex items-center justify-center p-4 border-2 border-orange-200 dark:border-orange-700">
-                      <div className="text-center max-w-sm">
-                        <div className="bg-orange-100 dark:bg-orange-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <AlertTriangle className="w-8 h-8 text-orange-600 dark:text-orange-400" />
-                        </div>
-                        <h4 className="font-bold text-gray-800 dark:text-white mb-2 text-lg">
-                          Hapus Transaksi?
-                        </h4>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
-                          Transaksi ini akan dihapus secara permanen dan saldo dompet akan disesuaikan.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteConfirm(null);
-                            }}
-                            className="flex-1 bg-white hover:bg-blue-50 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 text-sm min-h-[48px] flex items-center justify-center border-2 border-gray-300 dark:border-gray-500 hover:border-blue-400 dark:hover:border-blue-400 shadow-sm hover:shadow-md"
-                          >
-                            Batal
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(entry.id, entry.amount, entry.wallet);
-                            }}
-                            className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 text-sm min-h-[48px] flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Hapus
-                          </button>
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border-2 border-orange-200 dark:border-orange-700">
+                        <div className="text-center">
+                          <div className="bg-orange-100 dark:bg-orange-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+                          </div>
+                          <h4 className="font-bold text-gray-800 dark:text-white mb-2 text-lg">
+                            Hapus Transaksi?
+                          </h4>
+                          <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
+                            Transaksi ini akan dihapus secara permanen dan saldo dompet akan disesuaikan.
+                          </p>
+                          <div className="flex flex-col gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(entry.id, entry.amount, entry.wallet);
+                              }}
+                              className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold transition-colors text-sm min-h-[48px] flex items-center justify-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Ya, Hapus
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirm(null);
+                              }}
+                              className="w-full bg-white hover:bg-blue-50 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 text-sm min-h-[48px] flex items-center justify-center border-2 border-gray-300 dark:border-gray-500 hover:border-blue-400 dark:hover:border-blue-400"
+                            >
+                              Batal
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
