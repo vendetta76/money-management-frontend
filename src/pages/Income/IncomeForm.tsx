@@ -23,15 +23,13 @@ import {
   CreditCard,
   CheckCircle,
   Plus,
-  Save,
-  Calendar,
-  Target,
-  Zap
+  Save
 } from "lucide-react";
 import { formatCurrency } from "../helpers/formatCurrency";
 import { getCardStyle } from "../helpers/getCardStyle";
 import { WalletEntry, IncomeEntry } from "../helpers/types";
 import { toast } from "react-toastify";
+import QuickAmountButtons from "@helpers/QuickAmountButtons";
 
 interface IncomeFormProps {
   hideCardPreview?: boolean;
@@ -316,14 +314,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
     if (onClose) onClose();
   };
 
-  // Calculate total income today for quick stats
-  const todayIncomes = incomes.filter((income) => {
-    const today = new Date();
-    const incomeDate = new Date(income.createdAt?.toDate?.() ?? income.createdAt);
-    return incomeDate.toDateString() === today.toDateString();
-  });
-
-  const todayTotal = todayIncomes.reduce((sum, income) => sum + income.amount, 0);
+  // Removed today's income calculation as stats card is no longer needed
 
   return (
     <div className="relative">
@@ -335,32 +326,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             <span className="font-semibold text-sm sm:text-base">
               {editingId ? "Pemasukan diperbarui! ✨" : "Pemasukan berhasil disimpan! 🎉"}
             </span>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Stats Card - Mobile Optimized */}
-      {!editingId && (
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 sm:p-6 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 border border-green-200 dark:border-green-700">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="bg-green-500 p-2 sm:p-3 rounded-lg sm:rounded-xl flex-shrink-0">
-                <Target className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Pemasukan Hari Ini</p>
-                <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(todayTotal, 'IDR')}
-                </p>
-              </div>
-            </div>
-            <div className="text-left sm:text-right">
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Total Transaksi</p>
-              <p className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-1">
-                {todayIncomes.length}
-                <Zap className="w-4 h-4 text-yellow-500" />
-              </p>
-            </div>
           </div>
         </div>
       )}
@@ -502,12 +467,32 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               )}
             </div>
 
-            {/* Amount - Mobile Optimized */}
+            {/* Amount - Mobile Optimized with Quick Amount Buttons */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                 <DollarSign className="w-4 h-4 text-green-500" />
                 Nominal
               </label>
+
+              {/* Quick Amount Buttons using the separate component */}
+              {form.currency && (
+                <div className="mb-3">
+                  <QuickAmountButtons
+                    currency={form.currency}
+                    onAmountSelect={(value) => {
+                      const formattedAmount = value.toLocaleString('id-ID', {
+                        useGrouping: true,
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2
+                      });
+                      setForm({ ...form, amount: formattedAmount });
+                      setErrors({ ...errors, amount: "" });
+                    }}
+                    disabled={loading}
+                  />
+                </div>
+              )}
+
               <div className="relative">
                 <input
                   name="amount"
@@ -518,7 +503,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9.,]*"
-                  placeholder="0"
+                  placeholder="Ketik nominal atau pilih tombol di atas"
                   disabled={loading}
                   className={`w-full rounded-xl sm:rounded-2xl border-2 px-4 sm:px-5 py-3 sm:py-4 dark:bg-gray-700 dark:text-white text-gray-800 text-lg sm:text-xl font-bold placeholder-gray-400 transition-all duration-300 min-h-[48px] pr-16 ${
                     errors.amount 

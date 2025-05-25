@@ -86,7 +86,7 @@ const IncomePage = () => {
             )}
           </div>
 
-          {/* Responsive Layout */}
+          {/* Responsive Layout - Fixed */}
           <div className="max-w-7xl mx-auto">
             {/* Desktop: Two Column Layout (XL screens and up) */}
             <div className="hidden xl:grid xl:grid-cols-12 xl:gap-8">
@@ -108,12 +108,10 @@ const IncomePage = () => {
 
             {/* Mobile: Single Column Layout (Below XL screens) */}
             <div className="xl:hidden max-w-2xl mx-auto">
-              <div className="mb-8">
-                <IncomeForm 
-                  editingEntry={editingEntry}
-                  onEditComplete={handleEditComplete}
-                />
-              </div>
+              <IncomeForm 
+                editingEntry={editingEntry}
+                onEditComplete={handleEditComplete}
+              />
               <RecentTransactions onEdit={handleEdit} />
             </div>
           </div>
