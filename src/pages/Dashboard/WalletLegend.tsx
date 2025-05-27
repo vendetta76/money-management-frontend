@@ -71,12 +71,34 @@ const WalletLegend: React.FC<Props> = ({
     return true;
   });
 
+  // ✅ FIXED: Updated formatCurrency to handle crypto currencies
   const formatCurrency = (amount: number = 0, currency: string = 'IDR') => {
-    return amount.toLocaleString('id-ID', {
-      style: 'currency',
-      currency: currency,
-      maximumFractionDigits: 0
-    });
+    // List of valid ISO currency codes
+    const validIsoCurrencies = ['USD', 'EUR', 'IDR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SGD'];
+    
+    // Check if it's a valid ISO currency
+    if (validIsoCurrencies.includes(currency?.toUpperCase())) {
+      return amount.toLocaleString('id-ID', {
+        style: 'currency',
+        currency: currency,
+        maximumFractionDigits: currency === 'IDR' ? 0 : 2
+      });
+    }
+    
+    // Handle cryptocurrencies and other non-ISO currencies
+    const cryptoSymbols = {
+      'USDT': '$',
+      'BTC': '₿',
+      'ETH': 'Ξ',
+      'BNB': 'BNB',
+      'USDC': '$',
+    };
+    
+    const symbol = cryptoSymbols[currency?.toUpperCase()] || currency || '';
+    
+    return `${symbol} ${amount.toLocaleString('id-ID', {
+      maximumFractionDigits: 2
+    })}`;
   };
 
   const getTotalBalance = () => {
