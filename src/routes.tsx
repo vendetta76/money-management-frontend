@@ -48,12 +48,12 @@ import NotFoundPage from './pages/NotFoundPage'
 // 🛡️ ADMIN ROUTES - NEW
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
 import AdminLayoutShell from './layouts/admin/AdminLayoutShell'
-import AdminDashboard from './pages/admin/Dashboard'
-import UserManagement from './pages/admin/Users'
-import WalletManagement from './pages/admin/Wallets'
-import TransactionManagement from './pages/admin/Transactions'
-import GlobalSettings from './pages/admin/Settings'
-import AuditLogs from './pages/admin/AuditLogs'
+import AdminDashboard from './pages/admin/DashboardPage'
+import UserManagement from './pages/admin/UsersManagementPage'
+import WalletManagement from './pages/admin/WalletsManagementPage'
+import TransactionManagement from './pages/admin/TransactionsManagementPage'
+import GlobalSettings from './pages/admin/SettingsPage'
+import AuditLogs from './pages/admin/AuditLogsPage'
 
 const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },
