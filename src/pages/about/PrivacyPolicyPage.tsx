@@ -9,12 +9,12 @@ const PrivacyPolicyPage = () => {
 
         <section className="dark:text-white dark:bg-gray-900 space-y-5 text-sm text-gray-700 leading-relaxed">
           <p>
-            Moniq adalah platform digital yang bertujuan membantu pengguna dalam mencatat, mengelola, dan memantau kondisi keuangan pribadi mereka.
+            MeowIQ adalah platform digital yang bertujuan membantu pengguna dalam mencatat, mengelola, dan memantau kondisi keuangan pribadi mereka.
             Aplikasi ini dirancang untuk memberikan pengalaman edukatif dan informatif dalam pengelolaan keuangan, tanpa melibatkan transaksi uang asli.
           </p>
 
           <p>
-            Seluruh data yang ditampilkan dalam Moniq bersifat simulatif. Kami tidak menyediakan layanan keuangan nyata, seperti penyimpanan dana, transfer, penarikan, atau transaksi dengan uang sungguhan.
+            Seluruh data yang ditampilkan dalam MeowIQ bersifat simulatif. Kami tidak menyediakan layanan keuangan nyata, seperti penyimpanan dana, transfer, penarikan, atau transaksi dengan uang sungguhan.
             Segala bentuk pengelolaan keuangan dalam aplikasi ini murni untuk keperluan pencatatan pribadi.
           </p>
 
@@ -32,24 +32,24 @@ const PrivacyPolicyPage = () => {
           <ul className="dark:text-white dark:bg-gray-900 list-disc pl-6 space-y-2">
             <li>Mengelola fitur seperti proteksi PIN untuk halaman Wallet.</li>
             <li>Menyimpan data pencatatan keuangan Anda secara aman di cloud.</li>
-            <li>Meningkatkan fungsionalitas dan keamanan aplikasi Moniq.</li>
+            <li>Meningkatkan fungsionalitas dan keamanan aplikasi MeowIQ.</li>
           </ul>
 
           <h2 className="dark:text-white dark:bg-gray-900 text-lg font-semibold">3. Keamanan Data</h2>
           <p>
-            Moniq menggunakan sistem autentikasi aman dan penyimpanan data terenkripsi melalui Firebase.
+            MeowIQ menggunakan sistem autentikasi aman dan penyimpanan data terenkripsi melalui Firebase.
             Kami tidak pernah membagikan informasi pribadi pengguna kepada pihak ketiga tanpa izin.
           </p>
 
           <h2 className="dark:text-white dark:bg-gray-900 text-lg font-semibold">4. Tidak Ada Transaksi Finansial Nyata</h2>
           <p>
-            Moniq bukan layanan keuangan. Kami tidak melakukan transaksi finansial apa pun. Semua saldo, transaksi, dan aktivitas dalam aplikasi ini hanyalah simulasi.
+            MeowIQ bukan layanan keuangan. Kami tidak melakukan transaksi finansial apa pun. Semua saldo, transaksi, dan aktivitas dalam aplikasi ini hanyalah simulasi.
             Pengguna bertanggung jawab penuh atas interpretasi dan penggunaan informasi dari aplikasi.
           </p>
 
           <h2 className="dark:text-white dark:bg-gray-900 text-lg font-semibold">5. Kontak</h2>
           <p>
-            Jika Anda memiliki pertanyaan mengenai kebijakan privasi ini, silakan hubungi kami melalui email resmi atau halaman kontak Moniq.
+            Jika Anda memiliki pertanyaan mengenai kebijakan privasi ini, silakan hubungi kami melalui email resmi atau halaman kontak MeowIQ.
           </p>
         </section>
       </main>

@@ -213,7 +213,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
             mb: 3,
           }}
         >
-          🐱 MoniQ
+          🐱 MeowIQ
         </Typography>
 
         {/* User Profile */}
@@ -346,7 +346,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
                 <Info />
               </ListItemIcon>
               <ListItemText 
-                primary="About MoniQ" 
+                primary="About MeowIQ" 
                 primaryTypographyProps={{ color: theme.palette.text.primary }}
               />
               {isAboutOpen ? 

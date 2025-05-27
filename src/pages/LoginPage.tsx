@@ -179,7 +179,7 @@ const LoginPage = () => {
 
         {/* Login Card */}
         <div className="relative z-0 bg-card border border-border shadow-lg rounded-xl px-6 py-8">
-          <h2 className="text-xl font-bold text-center mb-4 mt-2">Welcome to MoniQ</h2>
+          <h2 className="text-xl font-bold text-center mb-4 mt-2">Welcome to MeowIQ</h2>
 
           {error && (
             <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 mb-4 animate-shake">

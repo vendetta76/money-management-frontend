@@ -4,8 +4,8 @@ import { ArrowRight, ChevronRight, Shield, BarChart, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export const metadata = {
-  title: "MoniQ - Aplikasi Manajemen Keuangan Pribadi dan Pintar",
-  description: "MoniQ membantu kamu mencatat pemasukan, pengeluaran, dan mengelola dompet dengan mudah. Gratis, aman, dan bisa diinstal ke perangkatmu.",
+  title: "MeowIQ - Aplikasi Manajemen Keuangan Pribadi dan Pintar",
+  description: "MeowIQ membantu kamu mencatat pemasukan, pengeluaran, dan mengelola dompet dengan mudah. Gratis, aman, dan bisa diinstal ke perangkatmu.",
 };
 
 // Enhanced loading animation component
@@ -57,7 +57,7 @@ const LoadingAnimation = () => {
         
         {/* Loading text */}
         <div className="text-center">
-          <h2 className="text-xl font-bold mb-2">MoniQ</h2>
+          <h2 className="text-xl font-bold mb-2">MeowIQ</h2>
           <p className="text-muted-foreground min-h-10 transition-all duration-300">{loadingText}</p>
         </div>
         
@@ -100,7 +100,7 @@ const LandingPage = () => {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl transition-all">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-extrabold bg-gradient-to-r from-primary to-purple-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-            MoniQ
+            MeowIQ
           </h1>
           <nav className="flex gap-6">
             <a 
@@ -208,7 +208,7 @@ const LandingPage = () => {
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
-              <h3 className="text-2xl md:text-3xl font-bold mb-12">Cara Memulai dengan MoniQ 🚀</h3>
+              <h3 className="text-2xl md:text-3xl font-bold mb-12">Cara Memulai dengan MeowIQ 🚀</h3>
               
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="relative pl-10 text-left">
@@ -253,7 +253,7 @@ const LandingPage = () => {
             <div className="max-w-4xl mx-auto text-center space-y-6">
               <h3 className="text-2xl md:text-3xl font-bold">Yuk mulai kelola uangmu sekarang!</h3>
               <p className="text-white/80 dark:text-foreground/80 max-w-lg mx-auto">
-                Bergabunglah dengan ribuan pengguna yang telah mengelola keuangan mereka dengan MoniQ.
+                Bergabunglah dengan ribuan pengguna yang telah mengelola keuangan mereka dengan MeowIQ.
               </p>
               <div>
                 <a
@@ -274,7 +274,7 @@ const LandingPage = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
               <h3 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                MoniQ
+                MeowIQ
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
                 Aplikasi Manajemen Keuangan Pribadi dan Pintar
@@ -282,7 +282,7 @@ const LandingPage = () => {
             </div>
             
             <div className="text-sm text-muted-foreground">
-              © 2025 MoniQ. Dibuat dengan ❤️
+              © 2025 MeowIQ. Dibuat dengan ❤️
             </div>
           </div>
         </div>

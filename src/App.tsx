@@ -58,7 +58,7 @@ function App() {
                       onClick={handleInstall}
                       className="bg-primary text-primary-foreground px-4 py-1 rounded hover:bg-opacity-90 transition"
                     >
-                      Install MoniQ
+                      Install MeowIQ
                     </button>
                   </div>
                 )}

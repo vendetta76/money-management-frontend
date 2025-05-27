@@ -12,6 +12,7 @@ import WalletCard from "../pages/Wallet/WalletCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "../pages/helpers/formatCurrency";
+import { toast } from "react-toastify";
 
 const tabs = ["income", "outcome", "history"];
 
@@ -49,6 +50,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState("history");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [formSubmitting, setFormSubmitting] = useState(false);
   const perPage = 5;
 
   useEffect(() => {
@@ -57,6 +59,11 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
         searchInputRef.current?.focus();
       }, 100);
     }
+  }, [activeTab]);
+
+  // Reset pagination when switching tabs
+  useEffect(() => {
+    setCurrentPage(1);
   }, [activeTab]);
 
   if (!isOpen || !walletId) return null;
@@ -114,6 +121,27 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     else if (preset === "yesterday") setDateFilter(format(subDays(today, 1), "yyyy-MM-dd"));
     else if (preset === "last7") setDateFilter("last7");
     else setDateFilter("");
+  };
+
+  const handleTransactionSuccess = (isEdit, type) => {
+    setFormSubmitting(false);
+    
+    if (isEdit) {
+      toast.success(`${type === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil diperbarui!`);
+    } else {
+      toast.success(`${type === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan!`);
+    }
+    
+    // Switch back to history tab after successful submission
+    setTimeout(() => {
+      setActiveTab("history");
+      setCurrentPage(1); // Reset to first page to see the new transaction
+    }, 500);
+  };
+
+  const handleFormClose = () => {
+    setFormSubmitting(false);
+    setActiveTab("history");
   };
 
   const allFiltered = transactions
@@ -196,11 +224,12 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     setActiveTab(tab);
                     setCurrentPage(1);
                   }}
-                  className={`relative px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm ${
+                  disabled={formSubmitting}
+                  className={`relative px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm disabled:opacity-50 ${
                     activeTab === tab ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: formSubmitting ? 1 : 1.05 }}
+                  whileTap={{ scale: formSubmitting ? 1 : 0.95 }}
                 >
                   {activeTab === tab && (
                     <motion.div
@@ -319,36 +348,38 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                       </div>
                     )}
 
-                    <motion.div
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="flex justify-between items-center pt-2"
-                    >
-                      <motion.button
-                        variants={paginationVariants}
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(p => p - 1)}
-                        className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                    {totalPages > 1 && (
+                      <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="flex justify-between items-center pt-2"
                       >
-                        ← Sebelumnya
-                      </motion.button>
-                      <motion.span variants={paginationVariants} className="text-sm text-gray-500">
-                        Hal {currentPage} dari {totalPages}
-                      </motion.span>
-                      <motion.button
-                        variants={paginationVariants}
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(p => p + 1)}
-                        className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Selanjutnya →
-                      </motion.button>
-                    </motion.div>
+                        <motion.button
+                          variants={paginationVariants}
+                          disabled={currentPage === 1}
+                          onClick={() => setCurrentPage(p => p - 1)}
+                          className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                          whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
+                          whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                        >
+                          ← Sebelumnya
+                        </motion.button>
+                        <motion.span variants={paginationVariants} className="text-sm text-gray-500">
+                          Hal {currentPage} dari {totalPages}
+                        </motion.span>
+                        <motion.button
+                          variants={paginationVariants}
+                          disabled={currentPage === totalPages}
+                          onClick={() => setCurrentPage(p => p + 1)}
+                          className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                          whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
+                          whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                        >
+                          Selanjutnya →
+                        </motion.button>
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
 
@@ -360,7 +391,12 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
                   >
-                    <IncomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+                    <IncomeForm 
+                      presetWalletId={walletId} 
+                      hideCardPreview 
+                      onClose={handleFormClose}
+                      onSuccess={(isEdit) => handleTransactionSuccess(isEdit, 'income')}
+                    />
                   </motion.div>
                 )}
 
@@ -372,35 +408,45 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
                   >
-                    <OutcomeForm presetWalletId={walletId} hideCardPreview onClose={() => setActiveTab("history")} />
+                    <OutcomeForm 
+                      presetWalletId={walletId} 
+                      hideCardPreview 
+                      onClose={handleFormClose}
+                      onSuccess={(isEdit) => handleTransactionSuccess(isEdit, 'outcome')}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20, y: 20 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
-              className="fixed bottom-4 right-4 z-50 flex gap-2"
-            >
-              <motion.button
-                onClick={() => setActiveTab("income")}
-                className="p-3 rounded-full bg-green-500 text-white dark:shadow-md"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+            {/* Floating Action Buttons - Only show when on history tab */}
+            {activeTab === "history" && (
+              <motion.div
+                initial={{ opacity: 0, x: 20, y: 20 }}
+                animate={{ opacity: 1, x: 0, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
+                className="fixed bottom-4 right-4 z-50 flex gap-2"
               >
-                <ArrowDownCircle size={20} />
-              </motion.button>
-              <motion.button
-                onClick={() => setActiveTab("outcome")}
-                className="p-3 rounded-full bg-red-500 text-white dark:shadow-md"
-                whileHover={{ scale:1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <ArrowUpCircle size={20} />
-              </motion.button>
-            </motion.div>
+                <motion.button
+                  onClick={() => setActiveTab("income")}
+                  className="p-3 rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Tambah Pemasukan"
+                >
+                  <ArrowDownCircle size={20} />
+                </motion.button>
+                <motion.button
+                  onClick={() => setActiveTab("outcome")}
+                  className="p-3 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Tambah Pengeluaran"
+                >
+                  <ArrowUpCircle size={20} />
+                </motion.button>
+              </motion.div>
+            )}
           </DialogContent>
         )}
       </AnimatePresence>

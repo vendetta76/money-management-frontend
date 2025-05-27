@@ -80,7 +80,7 @@ const RegisterPage = () => {
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-background">
               <img
                 src="/assets/attack-on catan.png"
-                alt="MoniQ Cat"
+                alt="MeowIQ Cat"
                 className="w-full h-full object-cover"
               />
             </div>

@@ -35,7 +35,7 @@ import SettingsProfile from './pages/settings/ProfilePage'
 import SecurityPage from './pages/settings/SecurityPage'
 import PreferencesPage from './pages/settings/PreferencesPage'
 
-// About MoniQ Pages ✨
+// About MeowIQ Pages ✨
 import AboutPage from './pages/about/AboutPage'
 import PrivacyPolicyPage from './pages/about/PrivacyPolicyPage'
 import TermsAndConditionsPage from './pages/about/TermsAndConditionsPage'
@@ -191,7 +191,7 @@ const routes: RouteObject[] = [
     ),
   },
 
-  // About MoniQ
+  // About MeowIQ
   {
     path: '/about',
     element: (

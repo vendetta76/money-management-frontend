@@ -112,7 +112,7 @@ const LayoutShell = ({ children }: LayoutShellProps) => {
                 fontSize: '1.25rem',
               }}
             >
-              MoniQ
+              MeowIQ
             </Typography>
           </Box>
           
