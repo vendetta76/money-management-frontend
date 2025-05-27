@@ -31,7 +31,7 @@ import {
 } from "@mui/material";
 import {
   PieChart as PieChartIcon,
-  Donut as DonutIcon,
+  DonutLarge as DonutIcon,
   AccountBalanceWallet as WalletIcon,
   Visibility as ViewIcon,
   VisibilityOff as HideIcon,
