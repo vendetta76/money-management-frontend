@@ -13,7 +13,6 @@ import LayoutShell from "@/layouts/LayoutShell";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebaseClient";
 import { usePageLockStatus } from "@/hooks/usePageLockStatus";
-import PageLockAnnouncement from "@/components/admin/PageLockAnnouncement";
 
 import FilterControls from "./FilterControls";
 import TransactionGroup from "./TransactionGroup";

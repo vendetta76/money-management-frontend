@@ -4,7 +4,6 @@ import IncomeForm from "./IncomeForm";
 import RecentTransactions from "./RecentTransactions";
 import { useAuth } from "src/context/AuthContext";
 import { usePageLockStatus } from "src/hooks/usePageLockStatus";
-import PageLockAnnouncement from "src/components/admin/PageLockAnnouncement";
 import { IncomeEntry } from "src/pages/helpers/types";
 import { CheckCircle } from "lucide-react";
 

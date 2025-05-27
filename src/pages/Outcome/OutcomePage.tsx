@@ -4,7 +4,6 @@ import OutcomeForm from "./OutcomeForm";
 import RecentOutcomeTransactions from "./RecentOutcomeTransactions";
 import { useAuth } from "src/context/AuthContext";
 import { usePageLockStatus } from "src/hooks/usePageLockStatus";
-import PageLockAnnouncement from "src/components/admin/PageLockAnnouncement";
 import { OutcomeEntry } from "src/pages/helpers/types";
 import { CheckCircle } from "lucide-react";
 
