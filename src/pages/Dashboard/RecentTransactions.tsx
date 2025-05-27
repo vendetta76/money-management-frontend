@@ -36,6 +36,7 @@ interface Transaction {
   type: 'income' | 'outcome' | 'transfer';
   description: string;
   amount: number;
+  currency?: string;
   wallet?: string;
   from?: string;
   to?: string;
@@ -60,12 +61,59 @@ interface Props {
   isWalletsLoaded: boolean;
 }
 
-const formatRupiah = (amount: number): string => {
-  return amount.toLocaleString("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  });
+const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
+  // Handle different currency formats
+  switch (currency.toUpperCase()) {
+    case 'USD':
+      return amount.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 2
+      });
+    case 'EUR':
+      return amount.toLocaleString('de-DE', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 2
+      });
+    case 'JPY':
+      return amount.toLocaleString('ja-JP', {
+        style: 'currency',
+        currency: 'JPY',
+        maximumFractionDigits: 0
+      });
+    case 'SGD':
+      return amount.toLocaleString('en-SG', {
+        style: 'currency',
+        currency: 'SGD',
+        maximumFractionDigits: 2
+      });
+    case 'GBP':
+      return amount.toLocaleString('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
+        maximumFractionDigits: 2
+      });
+    case 'THB':
+      return amount.toLocaleString('th-TH', {
+        style: 'currency',
+        currency: 'THB',
+        maximumFractionDigits: 2
+      });
+    case 'USDT':
+      return `USDT ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+    case 'BTC':
+      return `₿ ${amount.toLocaleString('en-US', { maximumFractionDigits: 8 })}`;
+    case 'ETH':
+      return `Ξ ${amount.toLocaleString('en-US', { maximumFractionDigits: 6 })}`;
+    case 'IDR':
+    default:
+      return amount.toLocaleString('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0
+      });
+  }
 };
 
 const getWalletName = (walletId: string, wallets: Wallet[]): string => {
@@ -262,8 +310,13 @@ const RecentTransactions: React.FC<Props> = ({
                         fontWeight="bold"
                         sx={{ color: getTransactionColor(tx.type) }}
                       >
-                        {getAmountPrefix(tx.type)}{formatRupiah(tx.amount)}
+                        {getAmountPrefix(tx.type)}{formatCurrency(tx.amount, tx.currency)}
                       </Typography>
+                      {tx.currency && tx.currency !== 'IDR' && (
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {tx.currency}
+                        </Typography>
+                      )}
                     </Box>
                   </ListItem>
 
@@ -279,6 +332,9 @@ const RecentTransactions: React.FC<Props> = ({
                     }}>
                       <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
                         Transaction ID: {tx.id}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        Amount: {formatCurrency(tx.amount, tx.currency)} {tx.currency && `(${tx.currency})`}
                       </Typography>
                       {tx.notes && (
                         <Typography variant="body2" color="text.secondary">

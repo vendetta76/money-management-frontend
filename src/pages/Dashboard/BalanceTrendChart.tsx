@@ -135,13 +135,67 @@ const BalanceTrendChart: React.FC<Props> = ({
     return { chartData: data, isEmpty: false };
   }, [transactions, selectedCurrency, filterDate]);
 
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      maximumFractionDigits: 0
-    });
+  const formatCurrency = (value: number, currency: string = 'IDR') => {
+    // Handle different currency formats
+    switch (currency.toUpperCase()) {
+      case 'USD':
+        return value.toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          maximumFractionDigits: 2
+        });
+      case 'EUR':
+        return value.toLocaleString('de-DE', {
+          style: 'currency',
+          currency: 'EUR',
+          maximumFractionDigits: 2
+        });
+      case 'JPY':
+        return value.toLocaleString('ja-JP', {
+          style: 'currency',
+          currency: 'JPY',
+          maximumFractionDigits: 0
+        });
+      case 'SGD':
+        return value.toLocaleString('en-SG', {
+          style: 'currency',
+          currency: 'SGD',
+          maximumFractionDigits: 2
+        });
+      case 'GBP':
+        return value.toLocaleString('en-GB', {
+          style: 'currency',
+          currency: 'GBP',
+          maximumFractionDigits: 2
+        });
+      case 'THB':
+        return value.toLocaleString('th-TH', {
+          style: 'currency',
+          currency: 'THB',
+          maximumFractionDigits: 2
+        });
+      case 'USDT':
+        return `USDT ${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+      case 'BTC':
+        return `₿ ${value.toLocaleString('en-US', { maximumFractionDigits: 8 })}`;
+      case 'ETH':
+        return `Ξ ${value.toLocaleString('en-US', { maximumFractionDigits: 6 })}`;
+      case 'IDR':
+      default:
+        return value.toLocaleString('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          maximumFractionDigits: 0
+        });
+    }
   };
+
+  // Get display currency
+  const getDisplayCurrency = () => {
+    return selectedCurrency === 'all' ? 'IDR' : selectedCurrency;
+  };
+
+  const displayCurrency = getDisplayCurrency();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -152,13 +206,13 @@ const BalanceTrendChart: React.FC<Props> = ({
             {label}
           </Typography>
           <Typography variant="body2" color="success.main">
-            Masuk: {formatCurrency(data.income)}
+            Masuk: {formatCurrency(data.income, displayCurrency)}
           </Typography>
           <Typography variant="body2" color="error.main">
-            Keluar: {formatCurrency(data.outcome)}
+            Keluar: {formatCurrency(data.outcome, displayCurrency)}
           </Typography>
           <Typography variant="body2" fontWeight="bold">
-            Saldo: {formatCurrency(data.cumulative)}
+            Saldo: {formatCurrency(data.cumulative, displayCurrency)}
           </Typography>
         </Paper>
       );
@@ -207,7 +261,7 @@ const BalanceTrendChart: React.FC<Props> = ({
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
               <XAxis dataKey="date" stroke="#666" />
-              <YAxis tickFormatter={formatCurrency} stroke="#666" />
+              <YAxis tickFormatter={(value) => formatCurrency(value, displayCurrency)} stroke="#666" />
               <RechartsTooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"
@@ -221,7 +275,7 @@ const BalanceTrendChart: React.FC<Props> = ({
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
               <XAxis dataKey="date" stroke="#666" />
-              <YAxis tickFormatter={formatCurrency} stroke="#666" />
+              <YAxis tickFormatter={(value) => formatCurrency(value, displayCurrency)} stroke="#666" />
               <RechartsTooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
@@ -241,30 +295,30 @@ const BalanceTrendChart: React.FC<Props> = ({
         <Grid item xs={4}>
           <Box textAlign="center">
             <Typography variant="h6" fontWeight="bold" color="success.main">
-              {formatCurrency(chartData.reduce((sum, d) => sum + d.income, 0))}
+              {formatCurrency(chartData.reduce((sum, d) => sum + d.income, 0), displayCurrency)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Total Masuk
+              Total Masuk {displayCurrency !== 'IDR' && `(${displayCurrency})`}
             </Typography>
           </Box>
         </Grid>
         <Grid item xs={4}>
           <Box textAlign="center">
             <Typography variant="h6" fontWeight="bold" color="error.main">
-              {formatCurrency(chartData.reduce((sum, d) => sum + d.outcome, 0))}
+              {formatCurrency(chartData.reduce((sum, d) => sum + d.outcome, 0), displayCurrency)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Total Keluar
+              Total Keluar {displayCurrency !== 'IDR' && `(${displayCurrency})`}
             </Typography>
           </Box>
         </Grid>
         <Grid item xs={4}>
           <Box textAlign="center">
             <Typography variant="h6" fontWeight="bold" color="primary.main">
-              {formatCurrency(chartData[chartData.length - 1]?.cumulative || 0)}
+              {formatCurrency(chartData[chartData.length - 1]?.cumulative || 0, displayCurrency)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Saldo Akhir
+              Saldo Akhir {displayCurrency !== 'IDR' && `(${displayCurrency})`}
             </Typography>
           </Box>
         </Grid>
