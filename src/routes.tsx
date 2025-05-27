@@ -46,7 +46,7 @@ import UpgradePage from './pages/upgrade/UpgradePage'
 import NotFoundPage from './pages/NotFoundPage'
 
 // 🛡️ ADMIN ROUTES - NEW
-import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
+import AdminProtectedRoute from './components/Admin/AdminProtectedRoute'
 import AdminLayoutShell from './layouts/admin/AdminLayoutShell'
 import AdminDashboard from './pages/admin/DashboardPage'
 import UserManagement from './pages/admin/UsersManagementPage'
