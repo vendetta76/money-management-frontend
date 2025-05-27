@@ -213,134 +213,94 @@ function DashboardPage() {
     };
   }, [user]);
 
-  // Simple Quick Stats - no currency conversion, just display in selected format
-  const QuickStats = () => {
-    const totalBalance = wallets.reduce((sum, wallet) => sum + (wallet.balance || 0), 0);
-    const netFlow = income - outcome;
+  // Simple Filters Component - dynamically filter currency options based on wallets
+  const SimpleFilters = () => {
+    // Get unique currencies from wallets
+    const walletCurrencies = [...new Set(wallets.map(wallet => wallet.currency).filter(Boolean))];
+    
+    // Filter availableCurrencies to only include those present in wallets
+    const filteredCurrencies = availableCurrencies.filter(currency => 
+      walletCurrencies.includes(currency.code)
+    );
+
+    // If displayCurrency is not in filteredCurrencies, reset it to the first available option or 'IDR'
+    useEffect(() => {
+      if (filteredCurrencies.length > 0 && !filteredCurrencies.some(c => c.code === displayCurrency)) {
+        setDisplayCurrency(filteredCurrencies[0]?.code || 'IDR');
+      }
+    }, [filteredCurrencies, displayCurrency]);
 
     return (
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={6} sm={3}>
-          <Card elevation={1}>
-            <CardContent sx={{ textAlign: 'center', py: 2 }}>
-              <Typography variant="h6" fontWeight="bold" color="success.main">
-                {formatCurrency(income)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Pemasukan
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Card elevation={1}>
-            <CardContent sx={{ textAlign: 'center', py: 2 }}>
-              <Typography variant="h6" fontWeight="bold" color="error.main">
-                {formatCurrency(outcome)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Pengeluaran
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Card elevation={1}>
-            <CardContent sx={{ textAlign: 'center', py: 2 }}>
-              <Typography 
-                variant="h6" 
-                fontWeight="bold" 
-                color={netFlow >= 0 ? 'success.main' : 'error.main'}
+      <Card elevation={1} sx={{ mb: 3 }}>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Periode</InputLabel>
+                <Select
+                  value={filterDate}
+                  label="Periode"
+                  onChange={(e) => setFilterDate(e.target.value)}
+                >
+                  <MenuItem value="7days">7 Hari</MenuItem>
+                  <MenuItem value="30days">30 Hari</MenuItem>
+                  <MenuItem value="1year">1 Tahun</MenuItem>
+                  <MenuItem value="all">Semua</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <Button
+                variant={showSplit ? 'contained' : 'outlined'}
+                startIcon={<CalculatorIcon />}
+                onClick={() => setShowSplit(!showSplit)}
+                fullWidth
+                sx={{ height: 40 }}
               >
-                {formatCurrency(netFlow)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Net
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Card elevation={1}>
-            <CardContent sx={{ textAlign: 'center', py: 2 }}>
-              <Typography variant="h6" fontWeight="bold" color="primary.main">
-                {formatCurrency(totalBalance)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Saldo
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                Money Split
+              </Button>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth size="small" disabled={filteredCurrencies.length === 0}>
+                <InputLabel>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <SettingsIcon fontSize="small" />
+                    Display Currency
+                  </Box>
+                </InputLabel>
+                <Select
+                  value={displayCurrency}
+                  label="Display Currency"
+                  onChange={(e) => handleCurrencyChange(e.target.value)}
+                >
+                  {filteredCurrencies.length === 0 ? (
+                    <MenuItem disabled value="">
+                      No currencies available
+                    </MenuItem>
+                  ) : (
+                    filteredCurrencies.map((currency) => (
+                      <MenuItem key={currency.code} value={currency.code}>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Typography variant="body2" fontWeight="bold">
+                            {currency.symbol}
+                          </Typography>
+                          <Typography variant="body2">
+                            {currency.code} - {currency.name}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
     );
   };
-
-  // Simple Filters Component - removed currency filter, added currency setting
-  const SimpleFilters = () => (
-    <Card elevation={1} sx={{ mb: 3 }}>
-      <CardContent>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={4}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Periode</InputLabel>
-              <Select
-                value={filterDate}
-                label="Periode"
-                onChange={(e) => setFilterDate(e.target.value)}
-              >
-                <MenuItem value="7days">7 Hari</MenuItem>
-                <MenuItem value="30days">30 Hari</MenuItem>
-                <MenuItem value="1year">1 Tahun</MenuItem>
-                <MenuItem value="all">Semua</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <Button
-              variant={showSplit ? 'contained' : 'outlined'}
-              startIcon={<CalculatorIcon />}
-              onClick={() => setShowSplit(!showSplit)}
-              fullWidth
-              sx={{ height: 40 }}
-            >
-              Money Split
-            </Button>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <FormControl fullWidth size="small">
-              <InputLabel>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <SettingsIcon fontSize="small" />
-                  Display Currency
-                </Box>
-              </InputLabel>
-              <Select
-                value={displayCurrency}
-                label="Display Currency"
-                onChange={(e) => handleCurrencyChange(e.target.value)}
-              >
-                {availableCurrencies.map((currency) => (
-                  <MenuItem key={currency.code} value={currency.code}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="body2" fontWeight="bold">
-                        {currency.symbol}
-                      </Typography>
-                      <Typography variant="body2">
-                        {currency.code} - {currency.name}
-                      </Typography>
-                    </Box>
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
-  );
 
   // Currency Info Display
   const CurrencyInfo = () => {
@@ -391,9 +351,6 @@ function DashboardPage() {
 
         {/* Currency Info */}
         <CurrencyInfo />
-
-        {/* Quick Stats */}
-        <QuickStats />
 
         {/* Simple Filters */}
         <SimpleFilters />
