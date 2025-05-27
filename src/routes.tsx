@@ -43,14 +43,6 @@ import TermsAndConditionsPage from './pages/about/TermsAndConditionsPage'
 // Upgrade Page ✨
 import UpgradePage from './pages/upgrade/UpgradePage'
 
-// Admin Pages
-import AdminDashboard from "./pages/admin/AdminDashboard"
-import AdminUsers from "./pages/admin/AdminUsers"
-import AdminTransactions from "./pages/admin/AdminTransactions"
-import AdminReports from "./pages/admin/AdminReports"
-import AdminSettings from "./pages/admin/AdminSettings"
-import AdminWalletPanel from "./pages/admin/AdminWalletPanel"; 
-
 // 404 Page
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -235,67 +227,6 @@ const routes: RouteObject[] = [
     ),
   },
 
-  // Admin Routes
-  {
-    path: '/admin',
-    element: (
-      <PrivateRoute requiredRole="Admin">
-        <PageTransition>
-          <AdminDashboard />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/admin/users',
-    element: (
-      <PrivateRoute requiredRole="Admin">
-        <PageTransition>
-          <AdminUsers />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/admin/transactions',
-    element: (
-      <PrivateRoute requiredRole="Admin">
-        <PageTransition>
-          <AdminTransactions />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/admin/reports',
-    element: (
-      <PrivateRoute requiredRole="Admin">
-        <PageTransition>
-          <AdminReports />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/admin/settings',
-    element: (
-      <PrivateRoute requiredRole="Admin">
-        <PageTransition>
-          <AdminSettings />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-{
-  path: '/admin/wallets',
-  element: (
-    <PrivateRoute requiredRole="Admin">
-      <PageTransition>
-        <AdminWalletPanel />
-      </PageTransition>
-    </PrivateRoute>
-  ),
-},
   // Catch-all route for 404
   { path: '*', element: <NotFoundPage /> },
 ]
