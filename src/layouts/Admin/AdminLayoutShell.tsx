@@ -29,10 +29,10 @@ import {
   LightMode,
   Refresh,
 } from "@mui/icons-material";
-import AdminSidebar from "../components/AdminSidebar";
-import { useTheme as useCustomTheme } from "../hooks/useThemeAdvanced";
+import AdminSidebar from "@/components/Admin/AdminSidebar";
+import { useTheme as useCustomTheme } from "@/hooks/useThemeAdvanced";
 import { useGesture } from "@use-gesture/react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
