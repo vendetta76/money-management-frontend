@@ -22,7 +22,7 @@ import {
   AccountBalanceWallet,
   Receipt,
   Settings,
-  Activity,
+  History as ActivityIcon,
   ExpandLess,
   ExpandMore,
   Security,

@@ -52,26 +52,23 @@ export const formatCurrency = (
 
   // Enhanced cryptocurrency symbols and formatting
   const cryptoSymbols: Record<string, string> = {
-    // Stablecoins
-    'USDT': 'USDT', 'USDC': 'USDC', 'DAI': 'DAI', 'BUSD': 'BUSD',
-    'TUSD': 'TUSD', 'FRAX': 'FRAX', 'LUSD': 'LUSD',
-    
-    // Major Cryptocurrencies
-    'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'BNB', 'ADA': '₳', 'DOT': '●',
-    'LINK': 'LINK', 'SOL': 'SOL', 'MATIC': 'MATIC', 'AVAX': 'AVAX',
-    'DOGE': 'DOGE', 'LTC': 'Ł', 'XRP': 'XRP', 'TRX': 'TRX',
-    'UNI': 'UNI', 'CAKE': 'CAKE', 'SUSHI': 'SUSHI',
-    
-    // DeFi Tokens
-    'AAVE': 'AAVE', 'COMP': 'COMP', 'MKR': 'MKR', 'SNX': 'SNX',
-    'CRV': 'CRV', 'BAL': 'BAL', 'YFI': 'YFI',
-    
-    // Layer 2 & Scaling
-    'MATIC': 'MATIC', 'AVAX': 'AVAX', 'FTM': 'FTM', 'NEAR': 'NEAR',
-    
-    // Meme Coins
-    'SHIB': 'SHIB', 'FLOKI': 'FLOKI', 'PEPE': 'PEPE'
-  };
+  // Stablecoins
+  'USDT': 'USDT', 'USDC': 'USDC', 'DAI': 'DAI', 'BUSD': 'BUSD',
+  'TUSD': 'TUSD', 'FRAX': 'FRAX', 'LUSD': 'LUSD',
+
+  // Major Cryptocurrencies
+  'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'BNB', 'ADA': '₳', 'DOT': '●',
+  'LINK': 'LINK', 'SOL': 'SOL', 'MATIC': 'MATIC', 'AVAX': 'AVAX',
+  'DOGE': 'DOGE', 'LTC': 'Ł', 'XRP': 'XRP', 'TRX': 'TRX',
+  'UNI': 'UNI', 'CAKE': 'CAKE', 'SUSHI': 'SUSHI',
+
+  // DeFi Tokens
+  'AAVE': 'AAVE', 'COMP': 'COMP', 'MKR': 'MKR', 'SNX': 'SNX',
+  'CRV': 'CRV', 'BAL': 'BAL', 'YFI': 'YFI',
+
+  // Meme Coins
+  'SHIB': 'SHIB', 'FLOKI': 'FLOKI', 'PEPE': 'PEPE'
+};
 
   // Custom/Gaming currencies
   const customCurrencies: Record<string, string> = {
