@@ -50,7 +50,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState("history");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key to force re-render
   const perPage = 5;
 
   useEffect(() => {
@@ -112,7 +112,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     return () => {
       unsubIn(); unsubOut(); unsubTransfer();
     };
-  }, [user, walletId, isOpen]);
+  }, [user, walletId, isOpen, refreshKey]);
 
   const handleDatePreset = (preset) => {
     setActivePreset(preset);
@@ -123,24 +123,28 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     else setDateFilter("");
   };
 
-  const handleTransactionSuccess = (isEdit, type) => {
-    setFormSubmitting(false);
+  // Success handler for income/outcome forms
+  const handleFormSuccess = (isEdit, formType) => {
+    console.log(`Form success: ${formType}, isEdit: ${isEdit}`); // Debug log
     
-    if (isEdit) {
-      toast.success(`${type === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil diperbarui!`);
-    } else {
-      toast.success(`${type === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan!`);
-    }
+    // Show success toast
+    const message = isEdit 
+      ? `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil diperbarui!`
+      : `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan!`;
     
-    // Switch back to history tab after successful submission
+    toast.success(message);
+    
+    // Force refresh of data
+    setRefreshKey(prev => prev + 1);
+    
+    // Switch to history tab after a short delay
     setTimeout(() => {
       setActiveTab("history");
-      setCurrentPage(1); // Reset to first page to see the new transaction
-    }, 500);
+      setCurrentPage(1);
+    }, 1000);
   };
 
   const handleFormClose = () => {
-    setFormSubmitting(false);
     setActiveTab("history");
   };
 
@@ -215,8 +219,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
               />
             </motion.div>
 
-            <div className="sticky top-0 z-10 bg-white py-2 flex justify-center gap-2 border-b mb-2">
-              <motion.div layoutId="tab-underline" className="absolute bottom-0 h-0.5 bg-blue-600" />
+            <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 py-2 flex justify-center gap-2 border-b mb-2">
               {tabs.map((tab) => (
                 <motion.button
                   key={tab}
@@ -224,21 +227,14 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     setActiveTab(tab);
                     setCurrentPage(1);
                   }}
-                  disabled={formSubmitting}
-                  className={`relative px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm disabled:opacity-50 ${
-                    activeTab === tab ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className={`relative px-4 py-2 rounded text-sm font-medium transition-all duration-200 shadow-sm ${
+                    activeTab === tab 
+                      ? "bg-blue-600 text-white" 
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
-                  whileHover={{ scale: formSubmitting ? 1 : 1.05 }}
-                  whileTap={{ scale: formSubmitting ? 1 : 0.95 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {activeTab === tab && (
-                    <motion.div
-                      layoutId="tab-background"
-                      className="absolute inset-0 bg-blue-600 rounded z-[-1]"
-                      initial={false}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                    />
-                  )}
                   <span className="relative z-10">
                     {tab === "income" && "Pemasukan"}
                     {tab === "outcome" && "Pengeluaran"}
@@ -252,7 +248,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
               <AnimatePresence mode="wait">
                 {activeTab === "history" && (
                   <motion.div
-                    key={activeTab + currentPage}
+                    key={`history-${refreshKey}-${currentPage}`}
                     className="space-y-4"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -274,7 +270,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                           placeholder="Cari transaksi..."
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
-                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                         />
                       </motion.div>
                     </motion.div>
@@ -290,8 +286,10 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                           key={preset}
                           variants={itemVariants}
                           onClick={() => handleDatePreset(preset)}
-                          className={`px-3 py-1 rounded border text-sm ${
-                            activePreset === preset ? "bg-blue-600 text-white" : "bg-gray-100"
+                          className={`px-3 py-1 rounded border text-sm transition-colors ${
+                            activePreset === preset 
+                              ? "bg-blue-600 text-white border-blue-600" 
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
                           }`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -314,7 +312,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                         <Loader2 className="animate-spin text-gray-500" size={24} />
                       </motion.div>
                     ) : (
-                      <div className="min-h-[284px] space-y-4">
+                      <div className="min-h-[284px] space-y-3">
                         {paginatedTx.length ? (
                           paginatedTx.map(tx => (
                             <motion.div
@@ -322,17 +320,29 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                               initial={{ opacity: 0, scale: 0.95 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ duration: 0.25, ease: "easeOut" }}
-                              className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 shadow-sm"
+                              className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 shadow-sm border-gray-200 dark:border-gray-700"
                               whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", transition: { duration: 0.2, ease: "easeOut" } }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              <div className="flex items-center gap-3">
-                                {tx.type === "income" && <ArrowDownCircle className="text-green-500" size={16} />}
-                                {tx.type === "outcome" && <ArrowUpCircle className="text-red-500" size={16} />}
-                                {tx.type === "transfer" && <Repeat2 className="text-blue-500" size={16} />}
-                                <span className="font-medium truncate text-gray-800 dark:text-white">{tx.description || "Transfer"}</span>
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                {tx.type === "income" && <ArrowDownCircle className="text-green-500 flex-shrink-0" size={16} />}
+                                {tx.type === "outcome" && <ArrowUpCircle className="text-red-500 flex-shrink-0" size={16} />}
+                                {tx.type === "transfer" && <Repeat2 className="text-blue-500 flex-shrink-0" size={16} />}
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-medium truncate text-gray-800 dark:text-white block">{tx.description || "Transfer"}</span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {format(new Date((tx.createdAt?.seconds ?? Date.now() / 1000) * 1000), "dd/MM/yyyy HH:mm")}
+                                  </span>
+                                </div>
                               </div>
-                              <span className="font-semibold text-gray-700 dark:text-white">{formatCurrency(tx.amount, tx.currency)}</span>
+                              <span className={`font-semibold text-sm flex-shrink-0 ${
+                                tx.type === 'income' ? 'text-green-600 dark:text-green-400' : 
+                                tx.type === 'outcome' ? 'text-red-600 dark:text-red-400' : 
+                                'text-blue-600 dark:text-blue-400'
+                              }`}>
+                                {tx.type === 'income' ? '+' : tx.type === 'outcome' ? '-' : ''}
+                                {formatCurrency(tx.amount, tx.currency)}
+                              </span>
                             </motion.div>
                           ))
                         ) : (
@@ -340,9 +350,11 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.3, ease: "easeOut" }}
-                            className="text-center text-gray-500 py-10 min-h-[284px] flex items-center justify-center"
+                            className="text-center text-gray-500 py-10 min-h-[284px] flex flex-col items-center justify-center"
                           >
-                            Tidak ada transaksi ditemukan.
+                            <div className="text-gray-400 mb-2">📊</div>
+                            <p>Tidak ada transaksi ditemukan.</p>
+                            <p className="text-sm mt-1">Mulai tambahkan pemasukan atau pengeluaran!</p>
                           </motion.div>
                         )}
                       </div>
@@ -353,26 +365,26 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"
-                        className="flex justify-between items-center pt-2"
+                        className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700"
                       >
                         <motion.button
                           variants={paginationVariants}
                           disabled={currentPage === 1}
                           onClick={() => setCurrentPage(p => p - 1)}
-                          className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                          className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400 disabled:cursor-not-allowed text-sm"
                           whileHover={{ scale: currentPage === 1 ? 1 : 1.1 }}
                           whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
                         >
                           ← Sebelumnya
                         </motion.button>
-                        <motion.span variants={paginationVariants} className="text-sm text-gray-500">
+                        <motion.span variants={paginationVariants} className="text-sm text-gray-500 dark:text-gray-400">
                           Hal {currentPage} dari {totalPages}
                         </motion.span>
                         <motion.button
                           variants={paginationVariants}
                           disabled={currentPage === totalPages}
                           onClick={() => setCurrentPage(p => p + 1)}
-                          className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400 disabled:cursor-not-allowed"
+                          className="text-gray-600 dark:text-gray-300 hover:text-blue-600 disabled:text-gray-400 disabled:cursor-not-allowed text-sm"
                           whileHover={{ scale: currentPage === totalPages ? 1 : 1.1 }}
                           whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
                         >
@@ -386,16 +398,20 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 {activeTab === "income" && (
                   <motion.div
                     key="income-form"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="h-full"
                   >
                     <IncomeForm 
                       presetWalletId={walletId} 
-                      hideCardPreview 
+                      hideCardPreview={true}
                       onClose={handleFormClose}
-                      onSuccess={(isEdit) => handleTransactionSuccess(isEdit, 'income')}
+                      onSuccess={(isEdit) => {
+                        console.log("Income form success callback triggered:", isEdit);
+                        handleFormSuccess(isEdit, 'income');
+                      }}
                     />
                   </motion.div>
                 )}
@@ -403,16 +419,20 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 {activeTab === "outcome" && (
                   <motion.div
                     key="outcome-form"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="h-full"
                   >
                     <OutcomeForm 
                       presetWalletId={walletId} 
-                      hideCardPreview 
+                      hideCardPreview={true}
                       onClose={handleFormClose}
-                      onSuccess={(isEdit) => handleTransactionSuccess(isEdit, 'outcome')}
+                      onSuccess={(isEdit) => {
+                        console.log("Outcome form success callback triggered:", isEdit);
+                        handleFormSuccess(isEdit, 'outcome');
+                      }}
                     />
                   </motion.div>
                 )}
@@ -422,14 +442,17 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
             {/* Floating Action Buttons - Only show when on history tab */}
             {activeTab === "history" && (
               <motion.div
-                initial={{ opacity: 0, x: 20, y: 20 }}
-                animate={{ opacity: 1, x: 0, y: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
-                className="fixed bottom-4 right-4 z-50 flex gap-2"
+                className="fixed bottom-6 right-6 z-50 flex gap-3"
               >
                 <motion.button
-                  onClick={() => setActiveTab("income")}
-                  className="p-3 rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600"
+                  onClick={() => {
+                    console.log("Switching to income tab");
+                    setActiveTab("income");
+                  }}
+                  className="p-3 rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 hover:shadow-xl"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   title="Tambah Pemasukan"
@@ -437,8 +460,11 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                   <ArrowDownCircle size={20} />
                 </motion.button>
                 <motion.button
-                  onClick={() => setActiveTab("outcome")}
-                  className="p-3 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600"
+                  onClick={() => {
+                    console.log("Switching to outcome tab");
+                    setActiveTab("outcome");
+                  }}
+                  className="p-3 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 hover:shadow-xl"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   title="Tambah Pengeluaran"
