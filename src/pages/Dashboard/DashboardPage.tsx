@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc, setDoc } from 'firebase/firestore';
 import {
   Box,
   Container,
@@ -20,13 +20,18 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
-  Fade
+  Fade,
+  Chip,
+  Alert
 } from '@mui/material';
 import {
   Calculate as CalculatorIcon,
   Visibility as ShowIcon,
   VisibilityOff as HideIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  TrendingUp as TrendingUpIcon,
+  Save as SaveIcon,
+  AutoAwesome as AutoIcon
 } from '@mui/icons-material';
 
 import LayoutShell from '../../layouts/LayoutShell';
@@ -55,30 +60,154 @@ function DashboardPage() {
   const [showSplit, setShowSplit] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Currency preference states
+  const [displayCurrency, setDisplayCurrency] = useState('IDR');
+  const [userPreferredCurrency, setUserPreferredCurrency] = useState<string | null>(null);
+  const [isLoadingPreference, setIsLoadingPreference] = useState(true);
+  const [preferenceSource, setPreferenceSource] = useState<'user' | 'auto' | 'default'>('default');
+
   // Simple filter states
   const [filterDate, setFilterDate] = useState('30days');
-  
-  // Manual currency setting - stored in localStorage
-  const [displayCurrency, setDisplayCurrency] = useState(() => {
-    return localStorage.getItem('dashboard-currency') || 'IDR';
-  });
 
-  // Available currencies for manual selection
-  const availableCurrencies = [
-    { code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp' },
-    { code: 'USD', name: 'US Dollar', symbol: '$' },
-    { code: 'EUR', name: 'Euro', symbol: '€' },
-    { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-    { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
-    { code: 'GBP', name: 'British Pound', symbol: '£' },
-    { code: 'THB', name: 'Thai Baht', symbol: '฿' },
-    { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM' }
-  ];
+  // Currency metadata for display
+  const currencyMetadata = {
+    'IDR': { name: 'Indonesian Rupiah', symbol: 'Rp' },
+    'USD': { name: 'US Dollar', symbol: '$' },
+    'EUR': { name: 'Euro', symbol: '€' },
+    'JPY': { name: 'Japanese Yen', symbol: '¥' },
+    'SGD': { name: 'Singapore Dollar', symbol: 'S$' },
+    'GBP': { name: 'British Pound', symbol: '£' },
+    'THB': { name: 'Thai Baht', symbol: '฿' },
+    'MYR': { name: 'Malaysian Ringgit', symbol: 'RM' },
+    'USDT': { name: 'Tether USD', symbol: 'USDT' },
+    'BTC': { name: 'Bitcoin', symbol: '₿' },
+    'ETH': { name: 'Ethereum', symbol: 'Ξ' },
+    'BNB': { name: 'Binance Coin', symbol: 'BNB' },
+    'USDC': { name: 'USD Coin', symbol: 'USDC' }
+  };
 
-  // Save currency preference to localStorage
+  // Load user's currency preference from Firebase
+  useEffect(() => {
+    if (!user) return;
+
+    const loadUserPreference = async () => {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists() && userDoc.data().preferredDisplayCurrency) {
+          setUserPreferredCurrency(userDoc.data().preferredDisplayCurrency);
+        }
+      } catch (error) {
+        console.log('Error loading currency preference:', error);
+      } finally {
+        setIsLoadingPreference(false);
+      }
+    };
+
+    loadUserPreference();
+  }, [user]);
+
+  // Dynamic currencies and smart currency selection
+  const { availableCurrencies, smartDefaultCurrency } = useMemo(() => {
+    // Get unique currencies from wallets
+    const walletCurrencies = [...new Set(wallets.map(wallet => wallet.currency).filter(Boolean))];
+    
+    // If no wallets yet, return default
+    if (walletCurrencies.length === 0) {
+      return {
+        availableCurrencies: [{ code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp', balance: 0 }],
+        smartDefaultCurrency: 'IDR'
+      };
+    }
+
+    // Calculate total balance per currency
+    const currencyBalances = {};
+    wallets.forEach(wallet => {
+      if (wallet.currency && wallet.balance) {
+        currencyBalances[wallet.currency] = (currencyBalances[wallet.currency] || 0) + wallet.balance;
+      }
+    });
+
+    // Map to display format with balances
+    const currencies = walletCurrencies.map(currency => ({
+      code: currency,
+      name: currencyMetadata[currency]?.name || currency,
+      symbol: currencyMetadata[currency]?.symbol || currency,
+      balance: currencyBalances[currency] || 0
+    }));
+
+    // Sort by balance (highest first)
+    currencies.sort((a, b) => b.balance - a.balance);
+
+    // Smart default: highest balance currency
+    const smartDefault = currencies[0]?.code || 'IDR';
+
+    return {
+      availableCurrencies: currencies,
+      smartDefaultCurrency: smartDefault
+    };
+  }, [wallets]);
+
+  // Smart currency selection logic
+  useEffect(() => {
+    if (isLoadingPreference || availableCurrencies.length === 0) return;
+
+    let selectedCurrency = 'IDR';
+    let source: 'user' | 'auto' | 'default' = 'default';
+
+    // Priority 1: User's saved preference (if still available)
+    if (userPreferredCurrency && availableCurrencies.some(c => c.code === userPreferredCurrency)) {
+      selectedCurrency = userPreferredCurrency;
+      source = 'user';
+    }
+    // Priority 2: Smart default (highest balance)
+    else if (smartDefaultCurrency && availableCurrencies.some(c => c.code === smartDefaultCurrency)) {
+      selectedCurrency = smartDefaultCurrency;
+      source = 'auto';
+    }
+    // Priority 3: First available currency
+    else if (availableCurrencies.length > 0) {
+      selectedCurrency = availableCurrencies[0].code;
+      source = 'default';
+    }
+
+    setDisplayCurrency(selectedCurrency);
+    setPreferenceSource(source);
+  }, [availableCurrencies, userPreferredCurrency, smartDefaultCurrency, isLoadingPreference]);
+
+  // Save currency preference to Firebase
+  const saveCurrencyPreference = async (currency: string) => {
+    if (!user) return;
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, {
+        preferredDisplayCurrency: currency,
+        updatedAt: new Date()
+      }, { merge: true });
+
+      setUserPreferredCurrency(currency);
+      setPreferenceSource('user');
+      
+      // Show success feedback
+      console.log('Currency preference saved successfully');
+    } catch (error) {
+      console.error('Error saving currency preference:', error);
+    }
+  };
+
+  // Handle currency change
   const handleCurrencyChange = (newCurrency: string) => {
     setDisplayCurrency(newCurrency);
-    localStorage.setItem('dashboard-currency', newCurrency);
+    saveCurrencyPreference(newCurrency);
+  };
+
+  // Auto-select highest balance currency
+  const handleAutoSelectCurrency = () => {
+    if (smartDefaultCurrency) {
+      handleCurrencyChange(smartDefaultCurrency);
+    }
   };
 
   // Simple currency formatting - no conversion, just formatting
@@ -122,6 +251,15 @@ function DashboardPage() {
         });
       case 'MYR':
         return `RM ${amount.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
+      case 'USDT':
+      case 'USDC':
+        return `${currency} ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+      case 'BTC':
+        return `₿ ${amount.toLocaleString('en-US', { maximumFractionDigits: 8 })}`;
+      case 'ETH':
+        return `Ξ ${amount.toLocaleString('en-US', { maximumFractionDigits: 6 })}`;
+      case 'BNB':
+        return `BNB ${amount.toLocaleString('en-US', { maximumFractionDigits: 4 })}`;
       case 'IDR':
       default:
         return amount.toLocaleString('id-ID', {
@@ -213,57 +351,42 @@ function DashboardPage() {
     };
   }, [user]);
 
-  // Simple Filters Component - dynamically filter currency options based on wallets
-  const SimpleFilters = () => {
-    // Get unique currencies from wallets
-    const walletCurrencies = [...new Set(wallets.map(wallet => wallet.currency).filter(Boolean))];
-    
-    // Filter availableCurrencies to only include those present in wallets
-    const filteredCurrencies = availableCurrencies.filter(currency => 
-      walletCurrencies.includes(currency.code)
-    );
-
-    // If displayCurrency is not in filteredCurrencies, reset it to the first available option or 'IDR'
-    useEffect(() => {
-      if (filteredCurrencies.length > 0 && !filteredCurrencies.some(c => c.code === displayCurrency)) {
-        setDisplayCurrency(filteredCurrencies[0]?.code || 'IDR');
-      }
-    }, [filteredCurrencies, displayCurrency]);
-
-    return (
-      <Card elevation={1} sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Periode</InputLabel>
-                <Select
-                  value={filterDate}
-                  label="Periode"
-                  onChange={(e) => setFilterDate(e.target.value)}
-                >
-                  <MenuItem value="7days">7 Hari</MenuItem>
-                  <MenuItem value="30days">30 Hari</MenuItem>
-                  <MenuItem value="1year">1 Tahun</MenuItem>
-                  <MenuItem value="all">Semua</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={4}>
-              <Button
-                variant={showSplit ? 'contained' : 'outlined'}
-                startIcon={<CalculatorIcon />}
-                onClick={() => setShowSplit(!showSplit)}
-                fullWidth
-                sx={{ height: 40 }}
+  // Enhanced Filters Component with smart currency selection
+  const SimpleFilters = () => (
+    <Card elevation={1} sx={{ mb: 3 }}>
+      <CardContent>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Periode</InputLabel>
+              <Select
+                value={filterDate}
+                label="Periode"
+                onChange={(e) => setFilterDate(e.target.value)}
               >
-                Money Split
-              </Button>
-            </Grid>
+                <MenuItem value="7days">7 Hari</MenuItem>
+                <MenuItem value="30days">30 Hari</MenuItem>
+                <MenuItem value="1year">1 Tahun</MenuItem>
+                <MenuItem value="all">Semua</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth size="small" disabled={filteredCurrencies.length === 0}>
+          <Grid item xs={12} sm={6} md={4}>
+            <Button
+              variant={showSplit ? 'contained' : 'outlined'}
+              startIcon={<CalculatorIcon />}
+              onClick={() => setShowSplit(!showSplit)}
+              fullWidth
+              sx={{ height: 40 }}
+            >
+              Money Split
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <Box display="flex" gap={1}>
+              <FormControl fullWidth size="small">
                 <InputLabel>
                   <Box display="flex" alignItems="center" gap={1}>
                     <SettingsIcon fontSize="small" />
@@ -274,56 +397,91 @@ function DashboardPage() {
                   value={displayCurrency}
                   label="Display Currency"
                   onChange={(e) => handleCurrencyChange(e.target.value)}
+                  disabled={availableCurrencies.length <= 1}
                 >
-                  {filteredCurrencies.length === 0 ? (
-                    <MenuItem disabled value="">
-                      No currencies available
-                    </MenuItem>
-                  ) : (
-                    filteredCurrencies.map((currency) => (
-                      <MenuItem key={currency.code} value={currency.code}>
+                  {availableCurrencies.map((currency) => (
+                    <MenuItem key={currency.code} value={currency.code}>
+                      <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
                         <Box display="flex" alignItems="center" gap={1}>
                           <Typography variant="body2" fontWeight="bold">
                             {currency.symbol}
                           </Typography>
                           <Typography variant="body2">
-                            {currency.code} - {currency.name}
+                            {currency.code}
                           </Typography>
                         </Box>
-                      </MenuItem>
-                    ))
-                  )}
+                        <Typography variant="caption" color="text.secondary">
+                          {formatCurrency(currency.balance, currency.code)}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
-            </Grid>
+              
+              {/* Auto-select button */}
+              {availableCurrencies.length > 1 && preferenceSource !== 'auto' && (
+                <Tooltip title="Auto-select highest balance currency">
+                  <IconButton 
+                    size="small" 
+                    onClick={handleAutoSelectCurrency}
+                    sx={{ border: 1, borderColor: 'primary.main' }}
+                  >
+                    <AutoIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
           </Grid>
-        </CardContent>
-      </Card>
-    );
-  };
+        </Grid>
 
-  // Currency Info Display
-  const CurrencyInfo = () => {
-    const currentCurrency = availableCurrencies.find(c => c.code === displayCurrency);
-    return (
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          Dashboard Overview
-        </Typography>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Typography variant="body2" color="text.secondary">
-            All amounts displayed in:
-          </Typography>
-          <Typography variant="body2" fontWeight="bold" color="primary.main">
-            {currentCurrency?.symbol} {currentCurrency?.name}
-          </Typography>
-        </Box>
-      </Box>
-    );
-  };
+        {/* Enhanced Currency Info */}
+        {availableCurrencies.length > 0 && (
+          <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={8}>
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Available Currencies:</strong> {availableCurrencies.map(c => `${c.code} (${formatCurrency(c.balance, c.code)})`).join(', ')}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Box display="flex" alignItems="center" gap={1} justifyContent="flex-end">
+                  <Chip
+                    label={
+                      preferenceSource === 'user' ? '👤 User Preference' :
+                      preferenceSource === 'auto' ? '🤖 Auto Selected' : 
+                      '⚙️ Default'
+                    }
+                    size="small"
+                    color={preferenceSource === 'user' ? 'primary' : 'default'}
+                    variant="outlined"
+                  />
+                  {preferenceSource === 'user' && (
+                    <Tooltip title="Saved to your profile">
+                      <SaveIcon fontSize="small" color="success" />
+                    </Tooltip>
+                  )}
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+        )}
+
+        {/* Smart selection hint for new users */}
+        {availableCurrencies.length > 1 && preferenceSource === 'auto' && (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <Typography variant="body2">
+              💡 Auto-selected <strong>{displayCurrency}</strong> as it has the highest balance. 
+              Your preference will be saved automatically when you change it.
+            </Typography>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
 
   // Loading Screen
-  if (isLoading) {
+  if (isLoading || isLoadingPreference) {
     return (
       <LayoutShell>
         <Box
@@ -349,10 +507,7 @@ function DashboardPage() {
         {/* Header */}
         <DashboardHeader displayName={displayName} />
 
-        {/* Currency Info */}
-        <CurrencyInfo />
-
-        {/* Simple Filters */}
+        {/* Enhanced Filters */}
         <SimpleFilters />
 
         {/* Money Split Simulator */}

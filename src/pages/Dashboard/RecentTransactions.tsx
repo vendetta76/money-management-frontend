@@ -18,14 +18,18 @@ import {
   LinearProgress,
   Alert,
   Collapse,
-  useTheme
+  useTheme,
+  Paper,
+  Tooltip
 } from "@mui/material";
 import {
   TrendingUp as IncomeIcon,
   TrendingDown as OutcomeIcon,
   SwapHoriz as TransferIcon,
   Search as SearchIcon,
-  Visibility as ViewIcon
+  Visibility as ViewIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
 } from "@mui/icons-material";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
@@ -59,12 +63,21 @@ interface Props {
   transactions: Transaction[];
   wallets: Wallet[];
   isWalletsLoaded: boolean;
-  displayCurrency: string; // New prop for manual currency setting
+  displayCurrency: string;
 }
 
-// Simple currency formatting - no conversion, just formatting in display currency
+// Enhanced currency formatting with better support for all currencies
 const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
-  switch (currency.toUpperCase()) {
+  // Handle undefined/null amounts
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    amount = 0;
+  }
+
+  // Normalize currency to uppercase
+  const normalizedCurrency = (currency || 'IDR').toUpperCase();
+
+  switch (normalizedCurrency) {
+    // Traditional Currencies
     case 'USD':
       return amount.toLocaleString('en-US', {
         style: 'currency',
@@ -103,13 +116,91 @@ const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
       });
     case 'MYR':
       return `RM ${amount.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
+    case 'AUD':
+      return amount.toLocaleString('en-AU', {
+        style: 'currency',
+        currency: 'AUD',
+        maximumFractionDigits: 2
+      });
+    case 'CAD':
+      return amount.toLocaleString('en-CA', {
+        style: 'currency',
+        currency: 'CAD',
+        maximumFractionDigits: 2
+      });
+    case 'CHF':
+      return amount.toLocaleString('de-CH', {
+        style: 'currency',
+        currency: 'CHF',
+        maximumFractionDigits: 2
+      });
+    
+    // Cryptocurrencies
+    case 'USDT':
+      return `USDT ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6 
+      })}`;
+    case 'USDC':
+      return `USDC ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6 
+      })}`;
+    case 'BTC':
+      return `₿ ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 8 
+      })}`;
+    case 'ETH':
+      return `Ξ ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6 
+      })}`;
+    case 'BNB':
+      return `BNB ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4 
+      })}`;
+    case 'ADA':
+      return `ADA ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6 
+      })}`;
+    case 'DOT':
+      return `DOT ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4 
+      })}`;
+    case 'MATIC':
+      return `MATIC ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4 
+      })}`;
+    case 'SOL':
+      return `SOL ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4 
+      })}`;
+    case 'AVAX':
+      return `AVAX ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4 
+      })}`;
+    
+    // Indonesian Rupiah (default)
     case 'IDR':
-    default:
       return amount.toLocaleString('id-ID', {
         style: 'currency',
         currency: 'IDR',
         maximumFractionDigits: 0
       });
+    
+    // Fallback for unknown currencies
+    default:
+      return `${normalizedCurrency} ${amount.toLocaleString('en-US', { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6 
+      })}`;
   }
 };
 
@@ -128,16 +219,17 @@ const RecentTransactions: React.FC<Props> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTx, setExpandedTx] = useState<string | null>(null);
 
-  // Simple filtering and sorting
+  // Enhanced filtering and sorting
   const filteredTransactions = useMemo(() => {
-    let filtered = transactions.filter((tx) => tx.createdAt);
+    let filtered = transactions.filter((tx) => tx.createdAt && tx.amount !== undefined);
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((tx) =>
-        tx.description.toLowerCase().includes(query) ||
+        tx.description?.toLowerCase().includes(query) ||
         tx.category?.toLowerCase().includes(query) ||
+        tx.currency?.toLowerCase().includes(query) ||
         getWalletName(tx.wallet || '', wallets).toLowerCase().includes(query)
       );
     }
@@ -185,6 +277,16 @@ const RecentTransactions: React.FC<Props> = ({
     }
   };
 
+  const getCurrencyChipColor = (currency: string) => {
+    const normalizedCurrency = (currency || '').toUpperCase();
+    // Crypto currencies get special colors
+    if (['BTC', 'ETH', 'BNB', 'USDT', 'USDC'].includes(normalizedCurrency)) {
+      return 'warning';
+    }
+    // Traditional currencies
+    return 'primary';
+  };
+
   return (
     <Card elevation={1} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardHeader
@@ -196,7 +298,7 @@ const RecentTransactions: React.FC<Props> = ({
         subheader={
           <Typography variant="body2" color="text.secondary">
             {isWalletsLoaded 
-              ? `${filteredTransactions.length} dari ${transactions.length} transaksi • ${displayCurrency}`
+              ? `${filteredTransactions.length} dari ${transactions.length} transaksi • Display: ${displayCurrency}`
               : "Loading..."
             }
           </Typography>
@@ -204,10 +306,10 @@ const RecentTransactions: React.FC<Props> = ({
       />
 
       <CardContent sx={{ flex: 1, pt: 0 }}>
-        {/* Simple Search */}
+        {/* Enhanced Search */}
         <TextField
           size="small"
-          placeholder="Cari transaksi..."
+          placeholder="Cari transaksi, kategori, atau mata uang..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
@@ -225,7 +327,7 @@ const RecentTransactions: React.FC<Props> = ({
           <Box>
             <LinearProgress sx={{ mb: 2 }} />
             <Typography variant="body2" color="text.secondary" align="center">
-              Loading...
+              Loading transactions...
             </Typography>
           </Box>
         ) : filteredTransactions.length === 0 ? (
@@ -240,6 +342,8 @@ const RecentTransactions: React.FC<Props> = ({
             {filteredTransactions.map((tx, index) => {
               const walletName = getWalletName(tx.wallet || '', wallets);
               const isExpanded = expandedTx === tx.id;
+              const txCurrency = tx.currency || displayCurrency;
+              const showCurrencyDifference = tx.currency && tx.currency !== displayCurrency;
               
               return (
                 <Box key={tx.id}>
@@ -271,23 +375,34 @@ const RecentTransactions: React.FC<Props> = ({
                       primary={
                         <Box>
                           <Typography variant="subtitle2" fontWeight="bold">
-                            {tx.description}
+                            {tx.description || 'Transaksi'}
                           </Typography>
-                          {tx.category && (
-                            <Chip 
-                              label={tx.category} 
-                              size="small" 
-                              variant="outlined"
-                              sx={{ fontSize: '0.7rem', height: 18, mt: 0.5 }}
-                            />
-                          )}
+                          <Box display="flex" gap={0.5} mt={0.5} flexWrap="wrap">
+                            {tx.category && (
+                              <Chip 
+                                label={tx.category} 
+                                size="small" 
+                                variant="outlined"
+                                sx={{ fontSize: '0.7rem', height: 18 }}
+                              />
+                            )}
+                            {txCurrency && (
+                              <Chip 
+                                label={txCurrency}
+                                size="small" 
+                                color={getCurrencyChipColor(txCurrency)}
+                                variant="filled"
+                                sx={{ fontSize: '0.7rem', height: 18 }}
+                              />
+                            )}
+                          </Box>
                         </Box>
                       }
                       secondary={
                         <Box sx={{ mt: 0.5 }}>
                           <Typography variant="caption" color="text.secondary">
                             {tx.type === 'transfer'
-                              ? `${tx.from} → ${tx.to}`
+                              ? `${tx.from || 'Unknown'} → ${tx.to || 'Unknown'}`
                               : `${walletName}`
                             }
                           </Typography>
@@ -310,40 +425,75 @@ const RecentTransactions: React.FC<Props> = ({
                       >
                         {getAmountPrefix(tx.type)}{formatCurrency(tx.amount, displayCurrency)}
                       </Typography>
-                      {tx.currency && tx.currency !== displayCurrency && (
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          Original: {tx.currency}
-                        </Typography>
+                      {showCurrencyDifference && (
+                        <Tooltip title={`Original: ${formatCurrency(tx.amount, tx.currency)}`}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Orig: {tx.currency}
+                          </Typography>
+                        </Tooltip>
                       )}
+                      <IconButton size="small" sx={{ opacity: 0.7 }}>
+                        {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      </IconButton>
                     </Box>
                   </ListItem>
 
-                  {/* Expanded Details */}
+                  {/* Enhanced Expanded Details */}
                   <Collapse in={isExpanded}>
-                    <Box sx={{ 
-                      px: 2, 
-                      pb: 2, 
+                    <Paper sx={{ 
+                      mx: 1,
+                      mb: 1,
+                      p: 2, 
                       bgcolor: 'grey.50',
                       borderRadius: 1,
-                      mx: 1,
-                      mb: 1
+                      border: 1,
+                      borderColor: 'divider'
                     }}>
-                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                        <strong>Transaction ID:</strong> {tx.id}
+                      <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                        Detail Transaksi
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                        <strong>Amount:</strong> {formatCurrency(tx.amount, displayCurrency)}
-                        {tx.currency && tx.currency !== displayCurrency && ` (Original: ${tx.currency})`}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                        <strong>Type:</strong> {tx.type.toUpperCase()}
-                      </Typography>
+                      
+                      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            <strong>ID:</strong> {tx.id}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            <strong>Tipe:</strong> {tx.type.toUpperCase()}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            <strong>Mata Uang:</strong> {txCurrency}
+                          </Typography>
+                        </Box>
+                        
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            <strong>Jumlah Asli:</strong> {formatCurrency(tx.amount, tx.currency)}
+                          </Typography>
+                          {showCurrencyDifference && (
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              <strong>Tampilan:</strong> {formatCurrency(tx.amount, displayCurrency)}
+                            </Typography>
+                          )}
+                          {tx.category && (
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              <strong>Kategori:</strong> {tx.category}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                      
                       {tx.notes && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                          <strong>Catatan:</strong> {tx.notes}
-                        </Typography>
+                        <Box sx={{ mt: 2, p: 1.5, bgcolor: 'white', borderRadius: 1 }}>
+                          <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                            <strong>Catatan:</strong>
+                          </Typography>
+                          <Typography variant="body2">
+                            {tx.notes}
+                          </Typography>
+                        </Box>
                       )}
-                    </Box>
+                    </Paper>
                   </Collapse>
                   
                   {index < filteredTransactions.length - 1 && <Divider />}
@@ -353,10 +503,13 @@ const RecentTransactions: React.FC<Props> = ({
           </List>
         )}
 
-        {/* Footer */}
+        {/* Enhanced Footer */}
         {filteredTransactions.length > 0 && (
           <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Box textAlign="center">
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="caption" color="text.secondary">
+                Menampilkan dalam {displayCurrency}
+              </Typography>
               <Link to="/history" style={{ textDecoration: 'none' }}>
                 <Chip 
                   label="Lihat Semua" 
