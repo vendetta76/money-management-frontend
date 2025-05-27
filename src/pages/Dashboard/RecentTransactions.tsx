@@ -51,10 +51,12 @@ import {
   TrendingFlat as NeutralIcon,
   Analytics as AnalyticsIcon,
   CalendarToday as CalendarIcon
+  TrendingUp as TrendingUpIcon
 } from "@mui/icons-material";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { id as localeID } from "date-fns/locale";
+import { TrendingUp as TrendingUpIcon } from "@mui/icons-material";
 
 interface Transaction {
   id: string;
