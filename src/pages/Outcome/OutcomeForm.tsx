@@ -188,6 +188,20 @@ const OutcomeForm: React.FC<OutcomeFormProps> = ({
     };
   }, [user, form.wallet, presetWalletId, onClose]);
 
+    useEffect(() => {
+    if (presetWalletId && wallets.length > 0 && !form.currency) {
+      const presetWallet = wallets.find(w => w.id === presetWalletId);
+      if (presetWallet?.currency) {
+        console.log("🎯 Auto-setting currency for preset wallet:", presetWallet.currency);
+        setForm(prev => ({
+          ...prev,
+          currency: presetWallet.currency
+        }));
+      }
+    }
+  }, [presetWalletId, wallets, form.currency]);
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 

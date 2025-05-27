@@ -187,6 +187,22 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
     };
   }, [user, form.wallet, presetWalletId, onClose]);
 
+   // 🎯 ADD THIS NEW useEffect HERE ⬇️
+  // Auto-detect currency when preset wallet is ready
+  useEffect(() => {
+    if (presetWalletId && wallets.length > 0 && !form.currency) {
+      const presetWallet = wallets.find(w => w.id === presetWalletId);
+      if (presetWallet?.currency) {
+        console.log("🎯 Auto-setting currency for preset wallet:", presetWallet.currency);
+        setForm(prev => ({
+          ...prev,
+          currency: presetWallet.currency
+        }));
+      }
+    }
+  }, [presetWalletId, wallets, form.currency]);
+  // 🎯 END OF NEW CODE ⬆️
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
