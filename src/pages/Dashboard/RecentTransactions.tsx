@@ -50,8 +50,8 @@ import {
   MoreVert as MoreIcon,
   TrendingFlat as NeutralIcon,
   Analytics as AnalyticsIcon,
-  CalendarToday as CalendarIcon
-  TrendingUp as TrendingUpIcon
+  CalendarToday as CalendarIcon,
+TrendingUp as TrendingUpIcon
 } from "@mui/icons-material";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
