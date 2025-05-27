@@ -44,6 +44,72 @@ import BalanceTrendChart from './BalanceTrendChart';
 import WalletPieChart from './WalletPieChart';
 import RecentTransactions from './RecentTransactions';
 
+// Standardized currency formatting utility
+const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    amount = 0;
+  }
+
+  const normalizedCurrency = (currency || 'IDR').toUpperCase();
+
+  // Traditional currencies with proper locale support
+  const traditionalCurrencies = {
+    'USD': { locale: 'en-US', options: { style: 'currency', currency: 'USD', maximumFractionDigits: 2 } },
+    'EUR': { locale: 'de-DE', options: { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 } },
+    'JPY': { locale: 'ja-JP', options: { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 } },
+    'SGD': { locale: 'en-SG', options: { style: 'currency', currency: 'SGD', maximumFractionDigits: 2 } },
+    'GBP': { locale: 'en-GB', options: { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 } },
+    'THB': { locale: 'th-TH', options: { style: 'currency', currency: 'THB', maximumFractionDigits: 2 } },
+    'AUD': { locale: 'en-AU', options: { style: 'currency', currency: 'AUD', maximumFractionDigits: 2 } },
+    'CAD': { locale: 'en-CA', options: { style: 'currency', currency: 'CAD', maximumFractionDigits: 2 } },
+    'CHF': { locale: 'de-CH', options: { style: 'currency', currency: 'CHF', maximumFractionDigits: 2 } },
+    'CNY': { locale: 'zh-CN', options: { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 } },
+    'KRW': { locale: 'ko-KR', options: { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 } },
+    'IDR': { locale: 'id-ID', options: { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 } }
+  };
+
+  // Check if it's a traditional currency
+  if (traditionalCurrencies[normalizedCurrency]) {
+    const { locale, options } = traditionalCurrencies[normalizedCurrency];
+    return amount.toLocaleString(locale, options);
+  }
+
+  // Cryptocurrency formatting
+  const cryptoFormats = {
+    'USDT': { symbol: 'USDT', decimals: 2 },
+    'USDC': { symbol: 'USDC', decimals: 2 },
+    'BTC': { symbol: '₿', decimals: 8 },
+    'ETH': { symbol: 'Ξ', decimals: 6 },
+    'BNB': { symbol: 'BNB', decimals: 4 },
+    'ADA': { symbol: 'ADA', decimals: 6 },
+    'DOT': { symbol: 'DOT', decimals: 4 },
+    'MATIC': { symbol: 'MATIC', decimals: 4 },
+    'SOL': { symbol: 'SOL', decimals: 4 },
+    'AVAX': { symbol: 'AVAX', decimals: 4 },
+    'LINK': { symbol: 'LINK', decimals: 4 },
+    'UNI': { symbol: 'UNI', decimals: 4 }
+  };
+
+  if (cryptoFormats[normalizedCurrency]) {
+    const { symbol, decimals } = cryptoFormats[normalizedCurrency];
+    return `${symbol} ${amount.toLocaleString('en-US', { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals 
+    })}`;
+  }
+
+  // Special case for MYR and other custom formats
+  if (normalizedCurrency === 'MYR') {
+    return `RM ${amount.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
+  }
+
+  // Fallback for unknown currencies
+  return `${normalizedCurrency} ${amount.toLocaleString('en-US', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 6 
+  })}`;
+};
+
 function DashboardPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -69,21 +135,33 @@ function DashboardPage() {
   // Simple filter states
   const [filterDate, setFilterDate] = useState('30days');
 
-  // Currency metadata for display
+  // Enhanced currency metadata
   const currencyMetadata = {
-    'IDR': { name: 'Indonesian Rupiah', symbol: 'Rp' },
-    'USD': { name: 'US Dollar', symbol: '$' },
-    'EUR': { name: 'Euro', symbol: '€' },
-    'JPY': { name: 'Japanese Yen', symbol: '¥' },
-    'SGD': { name: 'Singapore Dollar', symbol: 'S$' },
-    'GBP': { name: 'British Pound', symbol: '£' },
-    'THB': { name: 'Thai Baht', symbol: '฿' },
-    'MYR': { name: 'Malaysian Ringgit', symbol: 'RM' },
-    'USDT': { name: 'Tether USD', symbol: 'USDT' },
-    'BTC': { name: 'Bitcoin', symbol: '₿' },
-    'ETH': { name: 'Ethereum', symbol: 'Ξ' },
-    'BNB': { name: 'Binance Coin', symbol: 'BNB' },
-    'USDC': { name: 'USD Coin', symbol: 'USDC' }
+    // Traditional currencies
+    'IDR': { name: 'Indonesian Rupiah', symbol: 'Rp', type: 'fiat' },
+    'USD': { name: 'US Dollar', symbol: '$', type: 'fiat' },
+    'EUR': { name: 'Euro', symbol: '€', type: 'fiat' },
+    'JPY': { name: 'Japanese Yen', symbol: '¥', type: 'fiat' },
+    'SGD': { name: 'Singapore Dollar', symbol: 'S$', type: 'fiat' },
+    'GBP': { name: 'British Pound', symbol: '£', type: 'fiat' },
+    'THB': { name: 'Thai Baht', symbol: '฿', type: 'fiat' },
+    'MYR': { name: 'Malaysian Ringgit', symbol: 'RM', type: 'fiat' },
+    'AUD': { name: 'Australian Dollar', symbol: 'A$', type: 'fiat' },
+    'CAD': { name: 'Canadian Dollar', symbol: 'C$', type: 'fiat' },
+    'CHF': { name: 'Swiss Franc', symbol: 'CHF', type: 'fiat' },
+    'CNY': { name: 'Chinese Yuan', symbol: '¥', type: 'fiat' },
+    'KRW': { name: 'South Korean Won', symbol: '₩', type: 'fiat' },
+    // Cryptocurrencies
+    'USDT': { name: 'Tether USD', symbol: 'USDT', type: 'crypto' },
+    'BTC': { name: 'Bitcoin', symbol: '₿', type: 'crypto' },
+    'ETH': { name: 'Ethereum', symbol: 'Ξ', type: 'crypto' },
+    'BNB': { name: 'Binance Coin', symbol: 'BNB', type: 'crypto' },
+    'USDC': { name: 'USD Coin', symbol: 'USDC', type: 'crypto' },
+    'ADA': { name: 'Cardano', symbol: 'ADA', type: 'crypto' },
+    'DOT': { name: 'Polkadot', symbol: 'DOT', type: 'crypto' },
+    'MATIC': { name: 'Polygon', symbol: 'MATIC', type: 'crypto' },
+    'SOL': { name: 'Solana', symbol: 'SOL', type: 'crypto' },
+    'AVAX': { name: 'Avalanche', symbol: 'AVAX', type: 'crypto' }
   };
 
   // Load user's currency preference from Firebase
@@ -108,46 +186,84 @@ function DashboardPage() {
     loadUserPreference();
   }, [user]);
 
-  // Dynamic currencies and smart currency selection
-  const { availableCurrencies, smartDefaultCurrency } = useMemo(() => {
-    // Get unique currencies from wallets
-    const walletCurrencies = [...new Set(wallets.map(wallet => wallet.currency).filter(Boolean))];
+  // Enhanced dynamic currencies and smart currency selection
+  const { availableCurrencies, smartDefaultCurrency, totalBalanceInSelectedCurrency } = useMemo(() => {
+    // Get unique currencies from wallets with balances > 0
+    const walletCurrencies = [...new Set(
+      wallets
+        .filter(wallet => wallet.currency && (wallet.balance || 0) > 0)
+        .map(wallet => wallet.currency)
+    )];
     
     // If no wallets yet, return default
     if (walletCurrencies.length === 0) {
       return {
-        availableCurrencies: [{ code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp', balance: 0 }],
-        smartDefaultCurrency: 'IDR'
+        availableCurrencies: [{ 
+          code: 'IDR', 
+          name: 'Indonesian Rupiah', 
+          symbol: 'Rp', 
+          balance: 0,
+          type: 'fiat',
+          walletCount: 0
+        }],
+        smartDefaultCurrency: 'IDR',
+        totalBalanceInSelectedCurrency: 0
       };
     }
 
-    // Calculate total balance per currency
-    const currencyBalances = {};
+    // Calculate total balance per currency and wallet count
+    const currencyStats = {};
     wallets.forEach(wallet => {
-      if (wallet.currency && wallet.balance) {
-        currencyBalances[wallet.currency] = (currencyBalances[wallet.currency] || 0) + wallet.balance;
+      if (wallet.currency && typeof wallet.balance === 'number' && wallet.balance > 0) {
+        if (!currencyStats[wallet.currency]) {
+          currencyStats[wallet.currency] = { balance: 0, count: 0 };
+        }
+        currencyStats[wallet.currency].balance += wallet.balance;
+        currencyStats[wallet.currency].count += 1;
       }
     });
 
-    // Map to display format with balances
-    const currencies = walletCurrencies.map(currency => ({
-      code: currency,
-      name: currencyMetadata[currency]?.name || currency,
-      symbol: currencyMetadata[currency]?.symbol || currency,
-      balance: currencyBalances[currency] || 0
-    }));
+    // Map to display format with enhanced metadata
+    const currencies = walletCurrencies.map(currency => {
+      const metadata = currencyMetadata[currency] || { name: currency, symbol: currency, type: 'unknown' };
+      const stats = currencyStats[currency] || { balance: 0, count: 0 };
+      
+      return {
+        code: currency,
+        name: metadata.name,
+        symbol: metadata.symbol,
+        type: metadata.type,
+        balance: stats.balance,
+        walletCount: stats.count
+      };
+    });
 
-    // Sort by balance (highest first)
-    currencies.sort((a, b) => b.balance - a.balance);
+    // Sort by balance (highest first), then by wallet count
+    currencies.sort((a, b) => {
+      if (b.balance !== a.balance) return b.balance - a.balance;
+      return b.walletCount - a.walletCount;
+    });
 
-    // Smart default: highest balance currency
-    const smartDefault = currencies[0]?.code || 'IDR';
+    // Smart default: highest balance currency, preferring fiat over crypto if balances are close
+    let smartDefault = currencies[0]?.code || 'IDR';
+    
+    // If top currency is crypto and there's a fiat currency with significant balance, prefer fiat
+    if (currencies.length > 1 && currencies[0].type === 'crypto') {
+      const topFiat = currencies.find(c => c.type === 'fiat');
+      if (topFiat && topFiat.balance >= currencies[0].balance * 0.5) {
+        smartDefault = topFiat.code;
+      }
+    }
+
+    // Calculate total balance in selected currency
+    const selectedCurrencyBalance = currencyStats[displayCurrency]?.balance || 0;
 
     return {
       availableCurrencies: currencies,
-      smartDefaultCurrency: smartDefault
+      smartDefaultCurrency: smartDefault,
+      totalBalanceInSelectedCurrency: selectedCurrencyBalance
     };
-  }, [wallets]);
+  }, [wallets, displayCurrency]);
 
   // Smart currency selection logic
   useEffect(() => {
@@ -161,7 +277,7 @@ function DashboardPage() {
       selectedCurrency = userPreferredCurrency;
       source = 'user';
     }
-    // Priority 2: Smart default (highest balance)
+    // Priority 2: Smart default (highest balance with fiat preference)
     else if (smartDefaultCurrency && availableCurrencies.some(c => c.code === smartDefaultCurrency)) {
       selectedCurrency = smartDefaultCurrency;
       source = 'auto';
@@ -172,7 +288,9 @@ function DashboardPage() {
       source = 'default';
     }
 
-    setDisplayCurrency(selectedCurrency);
+    if (displayCurrency !== selectedCurrency) {
+      setDisplayCurrency(selectedCurrency);
+    }
     setPreferenceSource(source);
   }, [availableCurrencies, userPreferredCurrency, smartDefaultCurrency, isLoadingPreference]);
 
@@ -190,7 +308,6 @@ function DashboardPage() {
       setUserPreferredCurrency(currency);
       setPreferenceSource('user');
       
-      // Show success feedback
       console.log('Currency preference saved successfully');
     } catch (error) {
       console.error('Error saving currency preference:', error);
@@ -205,68 +322,8 @@ function DashboardPage() {
 
   // Auto-select highest balance currency
   const handleAutoSelectCurrency = () => {
-    if (smartDefaultCurrency) {
+    if (smartDefaultCurrency && smartDefaultCurrency !== displayCurrency) {
       handleCurrencyChange(smartDefaultCurrency);
-    }
-  };
-
-  // Simple currency formatting - no conversion, just formatting
-  const formatCurrency = (amount: number, currency: string = displayCurrency) => {
-    switch (currency.toUpperCase()) {
-      case 'USD':
-        return amount.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          maximumFractionDigits: 2
-        });
-      case 'EUR':
-        return amount.toLocaleString('de-DE', {
-          style: 'currency',
-          currency: 'EUR',
-          maximumFractionDigits: 2
-        });
-      case 'JPY':
-        return amount.toLocaleString('ja-JP', {
-          style: 'currency',
-          currency: 'JPY',
-          maximumFractionDigits: 0
-        });
-      case 'SGD':
-        return amount.toLocaleString('en-SG', {
-          style: 'currency',
-          currency: 'SGD',
-          maximumFractionDigits: 2
-        });
-      case 'GBP':
-        return amount.toLocaleString('en-GB', {
-          style: 'currency',
-          currency: 'GBP',
-          maximumFractionDigits: 2
-        });
-      case 'THB':
-        return amount.toLocaleString('th-TH', {
-          style: 'currency',
-          currency: 'THB',
-          maximumFractionDigits: 2
-        });
-      case 'MYR':
-        return `RM ${amount.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
-      case 'USDT':
-      case 'USDC':
-        return `${currency} ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-      case 'BTC':
-        return `₿ ${amount.toLocaleString('en-US', { maximumFractionDigits: 8 })}`;
-      case 'ETH':
-        return `Ξ ${amount.toLocaleString('en-US', { maximumFractionDigits: 6 })}`;
-      case 'BNB':
-        return `BNB ${amount.toLocaleString('en-US', { maximumFractionDigits: 4 })}`;
-      case 'IDR':
-      default:
-        return amount.toLocaleString('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          maximumFractionDigits: 0
-        });
     }
   };
 
@@ -351,7 +408,7 @@ function DashboardPage() {
     };
   }, [user]);
 
-  // Enhanced Filters Component with smart currency selection
+  // Enhanced Filters Component with improved currency selection
   const SimpleFilters = () => (
     <Card elevation={1} sx={{ mb: 3 }}>
       <CardContent>
@@ -409,10 +466,22 @@ function DashboardPage() {
                           <Typography variant="body2">
                             {currency.code}
                           </Typography>
+                          <Chip 
+                            label={currency.type} 
+                            size="small" 
+                            color={currency.type === 'crypto' ? 'warning' : 'primary'}
+                            variant="outlined"
+                            sx={{ fontSize: '0.6rem', height: 16 }}
+                          />
                         </Box>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatCurrency(currency.balance, currency.code)}
-                        </Typography>
+                        <Box textAlign="right">
+                          <Typography variant="caption" color="text.secondary">
+                            {formatCurrency(currency.balance, currency.code)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {currency.walletCount} wallet{currency.walletCount !== 1 ? 's' : ''}
+                          </Typography>
+                        </Box>
                       </Box>
                     </MenuItem>
                   ))}
@@ -420,12 +489,16 @@ function DashboardPage() {
               </FormControl>
               
               {/* Auto-select button */}
-              {availableCurrencies.length > 1 && preferenceSource !== 'auto' && (
-                <Tooltip title="Auto-select highest balance currency">
+              {availableCurrencies.length > 1 && preferenceSource !== 'auto' && smartDefaultCurrency !== displayCurrency && (
+                <Tooltip title={`Auto-select ${smartDefaultCurrency} (highest balance)`}>
                   <IconButton 
                     size="small" 
                     onClick={handleAutoSelectCurrency}
-                    sx={{ border: 1, borderColor: 'primary.main' }}
+                    sx={{ 
+                      border: 1, 
+                      borderColor: 'primary.main',
+                      '&:hover': { bgcolor: 'primary.light', color: 'white' }
+                    }}
                   >
                     <AutoIcon />
                   </IconButton>
@@ -440,12 +513,25 @@ function DashboardPage() {
           <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={8}>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Available Currencies:</strong> {availableCurrencies.map(c => `${c.code} (${formatCurrency(c.balance, c.code)})`).join(', ')}
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  <strong>Available Currencies ({availableCurrencies.length}):</strong>
                 </Typography>
+                <Box display="flex" flexWrap="wrap" gap={1}>
+                  {availableCurrencies.map(c => (
+                    <Chip
+                      key={c.code}
+                      label={`${c.code}: ${formatCurrency(c.balance, c.code)}`}
+                      size="small"
+                      color={c.code === displayCurrency ? 'primary' : 'default'}
+                      variant={c.code === displayCurrency ? 'filled' : 'outlined'}
+                      onClick={() => handleCurrencyChange(c.code)}
+                      clickable
+                    />
+                  ))}
+                </Box>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Box display="flex" alignItems="center" gap={1} justifyContent="flex-end">
+                <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
                   <Chip
                     label={
                       preferenceSource === 'user' ? '👤 User Preference' :
@@ -456,6 +542,9 @@ function DashboardPage() {
                     color={preferenceSource === 'user' ? 'primary' : 'default'}
                     variant="outlined"
                   />
+                  <Typography variant="caption" color="text.secondary">
+                    Current Balance: {formatCurrency(totalBalanceInSelectedCurrency, displayCurrency)}
+                  </Typography>
                   {preferenceSource === 'user' && (
                     <Tooltip title="Saved to your profile">
                       <SaveIcon fontSize="small" color="success" />
@@ -467,12 +556,13 @@ function DashboardPage() {
           </Box>
         )}
 
-        {/* Smart selection hint for new users */}
+        {/* Smart selection hint */}
         {availableCurrencies.length > 1 && preferenceSource === 'auto' && (
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              💡 Auto-selected <strong>{displayCurrency}</strong> as it has the highest balance. 
-              Your preference will be saved automatically when you change it.
+              💡 Auto-selected <strong>{displayCurrency}</strong> ({currencyMetadata[displayCurrency]?.name}) 
+              as it has the highest balance among your {currencyMetadata[displayCurrency]?.type} currencies. 
+              Your preference will be saved when you manually change it.
             </Typography>
           </Alert>
         )}
@@ -495,6 +585,9 @@ function DashboardPage() {
           <CircularProgress size={60} />
           <Typography variant="h6" color="primary">
             Loading Dashboard...
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Loading currency preferences and wallet data...
           </Typography>
         </Box>
       </LayoutShell>
@@ -520,9 +613,16 @@ function DashboardPage() {
         {/* Simplified Trend Chart */}
         <Card elevation={1} sx={{ mb: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-              Grafik Saldo
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Grafik Saldo - {displayCurrency}
+              </Typography>
+              <Chip 
+                label={`${formatCurrency(totalBalanceInSelectedCurrency, displayCurrency)}`}
+                color="primary"
+                variant="outlined"
+              />
+            </Box>
             <BalanceTrendChart
               transactions={transactions}
               selectedCurrency={displayCurrency}
