@@ -17,6 +17,7 @@ import {
   InputAdornment,
   LinearProgress,
   Alert,
+  Collapse,
   useTheme
 } from "@mui/material";
 import {
@@ -79,6 +80,7 @@ const RecentTransactions: React.FC<Props> = ({
 }) => {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedTx, setExpandedTx] = useState<string | null>(null);
 
   // Simple filtering and sorting
   const filteredTransactions = useMemo(() => {
@@ -191,10 +193,22 @@ const RecentTransactions: React.FC<Props> = ({
           <List sx={{ maxHeight: 400, overflow: 'auto', p: 0 }}>
             {filteredTransactions.map((tx, index) => {
               const walletName = getWalletName(tx.wallet || '', wallets);
+              const isExpanded = expandedTx === tx.id;
               
               return (
                 <Box key={tx.id}>
-                  <ListItem sx={{ px: 0, py: 1.5 }}>
+                  <ListItem 
+                    sx={{ 
+                      px: 0, 
+                      py: 1.5,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                      borderRadius: 1
+                    }}
+                    onClick={() => setExpandedTx(isExpanded ? null : tx.id)}
+                  >
                     <ListItemIcon>
                       <Avatar 
                         sx={{ 
@@ -252,6 +266,27 @@ const RecentTransactions: React.FC<Props> = ({
                       </Typography>
                     </Box>
                   </ListItem>
+
+                  {/* Expanded Details */}
+                  <Collapse in={isExpanded}>
+                    <Box sx={{ 
+                      px: 2, 
+                      pb: 2, 
+                      bgcolor: 'grey.50',
+                      borderRadius: 1,
+                      mx: 1,
+                      mb: 1
+                    }}>
+                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        Transaction ID: {tx.id}
+                      </Typography>
+                      {tx.notes && (
+                        <Typography variant="body2" color="text.secondary">
+                          Catatan: {tx.notes}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Collapse>
                   
                   {index < filteredTransactions.length - 1 && <Divider />}
                 </Box>

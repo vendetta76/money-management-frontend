@@ -21,7 +21,6 @@ import {
   Fade
 } from '@mui/material';
 import {
-  Add as AddIcon,
   Calculate as CalculatorIcon,
   Visibility as ShowIcon,
   VisibilityOff as HideIcon
@@ -242,17 +241,7 @@ function DashboardPage() {
             </FormControl>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/add-transaction')}
-              fullWidth
-              sx={{ height: 40 }}
-            >
-              Tambah Transaksi
-            </Button>
-          </Grid>
+
 
           <Grid item xs={12} sm={6} md={3}>
             <Button
