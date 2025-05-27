@@ -17,7 +17,6 @@ import WalletTotalOverview from "./WalletTotalOverview";
 import WalletGrid from "./WalletGrid";
 import WalletFormModal from "./WalletFormModal";
 import { useIsBypassed } from "../../hooks/useIsBypassed";
-import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 import RecalcButtonWithTooltip from "./RecalcButtonWithTooltip";
 import WalletSearchBar from "./WalletSearchBar";
 import { usePinTimeout } from "../../context/PinTimeoutContext";

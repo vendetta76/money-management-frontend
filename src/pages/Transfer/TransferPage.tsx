@@ -2,7 +2,6 @@ import { Suspense, lazy, useState } from "react";
 import LayoutShell from "../../layouts/LayoutShell";
 import { usePageLockStatus } from "../../hooks/usePageLockStatus";
 import { useAuth } from "../../context/AuthContext";
-import PageLockAnnouncement from "../../components/admin/PageLockAnnouncement";
 import { TransferProvider } from "./TransferContext";
 
 // Lazy loaded components
