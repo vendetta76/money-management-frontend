@@ -59,10 +59,11 @@ interface Props {
   transactions: Transaction[];
   wallets: Wallet[];
   isWalletsLoaded: boolean;
+  displayCurrency: string; // New prop for manual currency setting
 }
 
+// Simple currency formatting - no conversion, just formatting in display currency
 const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
-  // Handle different currency formats
   switch (currency.toUpperCase()) {
     case 'USD':
       return amount.toLocaleString('en-US', {
@@ -100,12 +101,8 @@ const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
         currency: 'THB',
         maximumFractionDigits: 2
       });
-    case 'USDT':
-      return `USDT ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-    case 'BTC':
-      return `₿ ${amount.toLocaleString('en-US', { maximumFractionDigits: 8 })}`;
-    case 'ETH':
-      return `Ξ ${amount.toLocaleString('en-US', { maximumFractionDigits: 6 })}`;
+    case 'MYR':
+      return `RM ${amount.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
     case 'IDR':
     default:
       return amount.toLocaleString('id-ID', {
@@ -124,7 +121,8 @@ const getWalletName = (walletId: string, wallets: Wallet[]): string => {
 const RecentTransactions: React.FC<Props> = ({ 
   transactions, 
   wallets, 
-  isWalletsLoaded 
+  isWalletsLoaded,
+  displayCurrency 
 }) => {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
@@ -198,7 +196,7 @@ const RecentTransactions: React.FC<Props> = ({
         subheader={
           <Typography variant="body2" color="text.secondary">
             {isWalletsLoaded 
-              ? `${filteredTransactions.length} dari ${transactions.length} transaksi`
+              ? `${filteredTransactions.length} dari ${transactions.length} transaksi • ${displayCurrency}`
               : "Loading..."
             }
           </Typography>
@@ -310,11 +308,11 @@ const RecentTransactions: React.FC<Props> = ({
                         fontWeight="bold"
                         sx={{ color: getTransactionColor(tx.type) }}
                       >
-                        {getAmountPrefix(tx.type)}{formatCurrency(tx.amount, tx.currency)}
+                        {getAmountPrefix(tx.type)}{formatCurrency(tx.amount, displayCurrency)}
                       </Typography>
-                      {tx.currency && tx.currency !== 'IDR' && (
+                      {tx.currency && tx.currency !== displayCurrency && (
                         <Typography variant="caption" color="text.secondary" display="block">
-                          {tx.currency}
+                          Original: {tx.currency}
                         </Typography>
                       )}
                     </Box>
@@ -331,14 +329,18 @@ const RecentTransactions: React.FC<Props> = ({
                       mb: 1
                     }}>
                       <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                        Transaction ID: {tx.id}
+                        <strong>Transaction ID:</strong> {tx.id}
                       </Typography>
                       <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                        Amount: {formatCurrency(tx.amount, tx.currency)} {tx.currency && `(${tx.currency})`}
+                        <strong>Amount:</strong> {formatCurrency(tx.amount, displayCurrency)}
+                        {tx.currency && tx.currency !== displayCurrency && ` (Original: ${tx.currency})`}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        <strong>Type:</strong> {tx.type.toUpperCase()}
                       </Typography>
                       {tx.notes && (
-                        <Typography variant="body2" color="text.secondary">
-                          Catatan: {tx.notes}
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                          <strong>Catatan:</strong> {tx.notes}
                         </Typography>
                       )}
                     </Box>

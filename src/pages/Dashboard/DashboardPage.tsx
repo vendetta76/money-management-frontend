@@ -16,7 +16,8 @@ import {
   Collapse,
   LinearProgress,
   CircularProgress,
-  Chip,
+  IconButton,
+  Tooltip,
   useTheme,
   useMediaQuery,
   Fade
@@ -24,7 +25,8 @@ import {
 import {
   Calculate as CalculatorIcon,
   Visibility as ShowIcon,
-  VisibilityOff as HideIcon
+  VisibilityOff as HideIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 
 import LayoutShell from '../../layouts/LayoutShell';
@@ -53,11 +55,84 @@ function DashboardPage() {
   const [showSplit, setShowSplit] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simplified filter states
-  const [selectedCurrency, setSelectedCurrency] = useState('all');
+  // Simple filter states
   const [filterDate, setFilterDate] = useState('30days');
+  
+  // Manual currency setting - stored in localStorage
+  const [displayCurrency, setDisplayCurrency] = useState(() => {
+    return localStorage.getItem('dashboard-currency') || 'IDR';
+  });
 
-  // Firebase data loading
+  // Available currencies for manual selection
+  const availableCurrencies = [
+    { code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp' },
+    { code: 'USD', name: 'US Dollar', symbol: '$' },
+    { code: 'EUR', name: 'Euro', symbol: '€' },
+    { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+    { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
+    { code: 'GBP', name: 'British Pound', symbol: '£' },
+    { code: 'THB', name: 'Thai Baht', symbol: '฿' },
+    { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM' }
+  ];
+
+  // Save currency preference to localStorage
+  const handleCurrencyChange = (newCurrency: string) => {
+    setDisplayCurrency(newCurrency);
+    localStorage.setItem('dashboard-currency', newCurrency);
+  };
+
+  // Simple currency formatting - no conversion, just formatting
+  const formatCurrency = (amount: number, currency: string = displayCurrency) => {
+    switch (currency.toUpperCase()) {
+      case 'USD':
+        return amount.toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          maximumFractionDigits: 2
+        });
+      case 'EUR':
+        return amount.toLocaleString('de-DE', {
+          style: 'currency',
+          currency: 'EUR',
+          maximumFractionDigits: 2
+        });
+      case 'JPY':
+        return amount.toLocaleString('ja-JP', {
+          style: 'currency',
+          currency: 'JPY',
+          maximumFractionDigits: 0
+        });
+      case 'SGD':
+        return amount.toLocaleString('en-SG', {
+          style: 'currency',
+          currency: 'SGD',
+          maximumFractionDigits: 2
+        });
+      case 'GBP':
+        return amount.toLocaleString('en-GB', {
+          style: 'currency',
+          currency: 'GBP',
+          maximumFractionDigits: 2
+        });
+      case 'THB':
+        return amount.toLocaleString('th-TH', {
+          style: 'currency',
+          currency: 'THB',
+          maximumFractionDigits: 2
+        });
+      case 'MYR':
+        return `RM ${amount.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
+      case 'IDR':
+      default:
+        return amount.toLocaleString('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          maximumFractionDigits: 0
+        });
+    }
+  };
+
+  // Firebase data loading (unchanged)
   useEffect(() => {
     if (!user) return;
 
@@ -138,133 +213,10 @@ function DashboardPage() {
     };
   }, [user]);
 
-  // Enhanced currency formatting function
-  const formatCurrency = (amount: number, currency: string = 'IDR') => {
-    // Handle different currency formats
-    switch (currency.toUpperCase()) {
-      case 'USD':
-        return amount.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          maximumFractionDigits: 2
-        });
-      case 'EUR':
-        return amount.toLocaleString('de-DE', {
-          style: 'currency',
-          currency: 'EUR',
-          maximumFractionDigits: 2
-        });
-      case 'JPY':
-        return amount.toLocaleString('ja-JP', {
-          style: 'currency',
-          currency: 'JPY',
-          maximumFractionDigits: 0
-        });
-      case 'SGD':
-        return amount.toLocaleString('en-SG', {
-          style: 'currency',
-          currency: 'SGD',
-          maximumFractionDigits: 2
-        });
-      case 'GBP':
-        return amount.toLocaleString('en-GB', {
-          style: 'currency',
-          currency: 'GBP',
-          maximumFractionDigits: 2
-        });
-      case 'THB':
-        return amount.toLocaleString('th-TH', {
-          style: 'currency',
-          currency: 'THB',
-          maximumFractionDigits: 2
-        });
-      case 'IDR':
-      default:
-        return amount.toLocaleString('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          maximumFractionDigits: 0
-        });
-    }
-  };
-
-  // Get primary currency for stats display
-  const getPrimaryCurrency = () => {
-    if (selectedCurrency !== 'all') return selectedCurrency;
-    
-    // Find most common currency
-    const currencyCount = {};
-    wallets.forEach(wallet => {
-      const curr = wallet.currency || 'IDR';
-      currencyCount[curr] = (currencyCount[curr] || 0) + 1;
-    });
-    
-    return Object.keys(currencyCount).reduce((a, b) => 
-      currencyCount[a] > currencyCount[b] ? a : b, 'IDR'
-    );
-  };
-
-  const primaryCurrency = getPrimaryCurrency();
-
-  // Calculate stats with currency conversion if needed
-  const calculateStatsInCurrency = (targetCurrency: string) => {
-    // In a real app, you'd have exchange rates here
-    // For now, we'll use simple mock rates
-    const exchangeRates = {
-      'USD': { 'IDR': 15000, 'EUR': 0.85, 'JPY': 110 },
-      'EUR': { 'IDR': 17500, 'USD': 1.18, 'JPY': 130 },
-      'IDR': { 'USD': 0.000067, 'EUR': 0.000057, 'JPY': 0.0074 },
-      'JPY': { 'USD': 0.009, 'EUR': 0.0077, 'IDR': 135 },
-      'SGD': { 'IDR': 11000, 'USD': 0.74 },
-      'THB': { 'IDR': 450, 'USD': 0.03 }
-    };
-
-    let totalIncome = 0;
-    let totalOutcome = 0;
-    let totalBalance = 0;
-
-    // Calculate income/outcome with currency conversion
-    transactions.forEach(tx => {
-      if (!tx.createdAt) return;
-      
-      let amount = tx.amount || 0;
-      const txCurrency = tx.currency || 'IDR';
-      
-      // Convert to target currency if different
-      if (txCurrency !== targetCurrency && exchangeRates[txCurrency]?.[targetCurrency]) {
-        amount = amount * exchangeRates[txCurrency][targetCurrency];
-      }
-      
-      if (tx.type === 'income') totalIncome += amount;
-      if (tx.type === 'outcome') totalOutcome += amount;
-    });
-
-    // Calculate wallet balances with currency conversion
-    wallets.forEach(wallet => {
-      let balance = wallet.balance || 0;
-      const walletCurrency = wallet.currency || 'IDR';
-      
-      // Convert to target currency if different
-      if (walletCurrency !== targetCurrency && exchangeRates[walletCurrency]?.[targetCurrency]) {
-        balance = balance * exchangeRates[walletCurrency][targetCurrency];
-      }
-      
-      totalBalance += balance;
-    });
-
-    return {
-      income: totalIncome,
-      outcome: totalOutcome,
-      balance: totalBalance,
-      net: totalIncome - totalOutcome
-    };
-  };
-
-  const allCurrencies = Array.from(new Set(wallets.map((w) => w.currency)));
-
-  // Quick Stats Component with Currency Recognition
+  // Simple Quick Stats - no currency conversion, just display in selected format
   const QuickStats = () => {
-    const stats = calculateStatsInCurrency(primaryCurrency);
+    const totalBalance = wallets.reduce((sum, wallet) => sum + (wallet.balance || 0), 0);
+    const netFlow = income - outcome;
 
     return (
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -272,17 +224,10 @@ function DashboardPage() {
           <Card elevation={1}>
             <CardContent sx={{ textAlign: 'center', py: 2 }}>
               <Typography variant="h6" fontWeight="bold" color="success.main">
-                {formatCurrency(stats.income, primaryCurrency)}
+                {formatCurrency(income)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Pemasukan
-                {primaryCurrency !== 'IDR' && (
-                  <Chip 
-                    label={primaryCurrency} 
-                    size="small" 
-                    sx={{ ml: 0.5, fontSize: '0.6rem', height: 16 }}
-                  />
-                )}
               </Typography>
             </CardContent>
           </Card>
@@ -291,17 +236,10 @@ function DashboardPage() {
           <Card elevation={1}>
             <CardContent sx={{ textAlign: 'center', py: 2 }}>
               <Typography variant="h6" fontWeight="bold" color="error.main">
-                {formatCurrency(stats.outcome, primaryCurrency)}
+                {formatCurrency(outcome)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Pengeluaran
-                {primaryCurrency !== 'IDR' && (
-                  <Chip 
-                    label={primaryCurrency} 
-                    size="small" 
-                    sx={{ ml: 0.5, fontSize: '0.6rem', height: 16 }}
-                  />
-                )}
               </Typography>
             </CardContent>
           </Card>
@@ -312,19 +250,12 @@ function DashboardPage() {
               <Typography 
                 variant="h6" 
                 fontWeight="bold" 
-                color={stats.net >= 0 ? 'success.main' : 'error.main'}
+                color={netFlow >= 0 ? 'success.main' : 'error.main'}
               >
-                {formatCurrency(stats.net, primaryCurrency)}
+                {formatCurrency(netFlow)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Net
-                {primaryCurrency !== 'IDR' && (
-                  <Chip 
-                    label={primaryCurrency} 
-                    size="small" 
-                    sx={{ ml: 0.5, fontSize: '0.6rem', height: 16 }}
-                  />
-                )}
               </Typography>
             </CardContent>
           </Card>
@@ -333,17 +264,10 @@ function DashboardPage() {
           <Card elevation={1}>
             <CardContent sx={{ textAlign: 'center', py: 2 }}>
               <Typography variant="h6" fontWeight="bold" color="primary.main">
-                {formatCurrency(stats.balance, primaryCurrency)}
+                {formatCurrency(totalBalance)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Total Saldo
-                {primaryCurrency !== 'IDR' && (
-                  <Chip 
-                    label={primaryCurrency} 
-                    size="small" 
-                    sx={{ ml: 0.5, fontSize: '0.6rem', height: 16 }}
-                  />
-                )}
               </Typography>
             </CardContent>
           </Card>
@@ -352,12 +276,12 @@ function DashboardPage() {
     );
   };
 
-  // Simple Filters Component
+  // Simple Filters Component - removed currency filter, added currency setting
   const SimpleFilters = () => (
     <Card elevation={1} sx={{ mb: 3 }}>
       <CardContent>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <FormControl fullWidth size="small">
               <InputLabel>Periode</InputLabel>
               <Select
@@ -372,28 +296,8 @@ function DashboardPage() {
               </Select>
             </FormControl>
           </Grid>
-          
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Mata Uang</InputLabel>
-              <Select
-                value={selectedCurrency}
-                label="Mata Uang"
-                onChange={(e) => setSelectedCurrency(e.target.value)}
-              >
-                <MenuItem value="all">Semua</MenuItem>
-                {allCurrencies.map((currency) => (
-                  <MenuItem key={currency} value={currency}>
-                    {currency}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
 
-
-
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <Button
               variant={showSplit ? 'contained' : 'outlined'}
               startIcon={<CalculatorIcon />}
@@ -404,10 +308,59 @@ function DashboardPage() {
               Money Split
             </Button>
           </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth size="small">
+              <InputLabel>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <SettingsIcon fontSize="small" />
+                  Display Currency
+                </Box>
+              </InputLabel>
+              <Select
+                value={displayCurrency}
+                label="Display Currency"
+                onChange={(e) => handleCurrencyChange(e.target.value)}
+              >
+                {availableCurrencies.map((currency) => (
+                  <MenuItem key={currency.code} value={currency.code}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body2" fontWeight="bold">
+                        {currency.symbol}
+                      </Typography>
+                      <Typography variant="body2">
+                        {currency.code} - {currency.name}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
       </CardContent>
     </Card>
   );
+
+  // Currency Info Display
+  const CurrencyInfo = () => {
+    const currentCurrency = availableCurrencies.find(c => c.code === displayCurrency);
+    return (
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          Dashboard Overview
+        </Typography>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography variant="body2" color="text.secondary">
+            All amounts displayed in:
+          </Typography>
+          <Typography variant="body2" fontWeight="bold" color="primary.main">
+            {currentCurrency?.symbol} {currentCurrency?.name}
+          </Typography>
+        </Box>
+      </Box>
+    );
+  };
 
   // Loading Screen
   if (isLoading) {
@@ -436,6 +389,9 @@ function DashboardPage() {
         {/* Header */}
         <DashboardHeader displayName={displayName} />
 
+        {/* Currency Info */}
+        <CurrencyInfo />
+
         {/* Quick Stats */}
         <QuickStats />
 
@@ -457,11 +413,12 @@ function DashboardPage() {
             </Typography>
             <BalanceTrendChart
               transactions={transactions}
-              selectedCurrency={selectedCurrency}
+              selectedCurrency={displayCurrency}
               filterDate={filterDate}
               customStartDate={null}
               customEndDate={null}
               wallets={wallets}
+              displayCurrency={displayCurrency}
             />
           </CardContent>
         </Card>
@@ -471,7 +428,8 @@ function DashboardPage() {
           <Grid item xs={12} md={6}>
             <WalletPieChart 
               wallets={wallets} 
-              selectedCurrency={selectedCurrency} 
+              selectedCurrency={displayCurrency}
+              displayCurrency={displayCurrency}
             />
           </Grid>
           
@@ -480,6 +438,7 @@ function DashboardPage() {
               transactions={transactions}
               wallets={wallets}
               isWalletsLoaded={isWalletsLoaded}
+              displayCurrency={displayCurrency}
             />
           </Grid>
         </Grid>
