@@ -1,18 +1,3 @@
-/**
- * WalletPopupHistory.tsx - Fixed version
- * 
- * Key fixes for form submission issues:
- * 1. Added authLoading state to prevent rendering before authentication
- * 2. Enhanced form keys to include user.uid for proper re-rendering
- * 3. Added explicit user prop passing to forms 
- * 4. Improved Firebase listener error handling
- * 5. Added debug logs for troubleshooting user state
- * 6. Added loading states for unauthenticated users
- * 
- * This fixes the issue where forms couldn't submit because they received
- * stale or null user context when the popup was mounted before auth completed.
- */
-
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
@@ -66,32 +51,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [formKey, setFormKey] = useState(0);
   const perPage = 5;
-
-  // Debug logging for form rendering
-  useEffect(() => {
-    if (activeTab === "income" || activeTab === "outcome") {
-      console.log(`🎯 Form rendered:`, {
-        activeTab,
-        walletId,
-        hasUser: !!user?.uid,
-        userId: user?.uid,
-        formKey
-      });
-    }
-  }, [activeTab, walletId, user?.uid, formKey]);
-
-  // Debug logging for user state changes
-  useEffect(() => {
-    console.log("🔐 WalletPopup user state changed:", { 
-      hasUser: !!user, 
-      userId: user?.uid, 
-      authLoading,
-      isOpen,
-      activeTab 
-    });
-  }, [user, authLoading, isOpen, activeTab]);
 
   useEffect(() => {
     if (activeTab === "history") {
@@ -105,26 +65,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab]);
-
-  // Force form refresh when switching to form tabs
-  useEffect(() => {
-    if ((activeTab === "income" || activeTab === "outcome") && user?.uid) {
-      // Add a small delay to ensure the form gets fresh context
-      const timer = setTimeout(() => {
-        setFormKey(prev => prev + 1);
-        console.log(`🔄 Form key refreshed for ${activeTab}:`, formKey + 1);
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, user?.uid]);
-
-  // Reset form key when switching tabs or user changes to ensure fresh form state
-  useEffect(() => {
-    if (activeTab === "income" || activeTab === "outcome") {
-      setFormKey(prev => prev + 1);
-    }
-  }, [activeTab, user?.uid]); // Add user.uid to dependency to force refresh when user changes
 
   // Don't render if popup not open, no walletId, or still loading auth
   if (!isOpen || !walletId || authLoading) return null;
@@ -156,12 +96,8 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const colorValue = wallet.colorValue || "#cccccc";
 
   useEffect(() => {
-    if (!user?.uid || !isOpen) {
-      console.log("🔄 Skipping Firebase listeners setup:", { hasUser: !!user?.uid, isOpen });
-      return;
-    }
+    if (!user?.uid || !isOpen) return;
 
-    console.log("🔗 Setting up Firebase listeners for user:", user.uid);
     setLoading(true);
 
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
@@ -173,7 +109,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
         const data = snap.docs.map(d => ({ id: d.id, type: "income", ...d.data() }));
         setTransactions(prev => [...prev.filter(x => x.type !== "income"), ...data]);
         setLoading(false);
-        console.log("📈 Income data updated:", data.length, "items");
       },
       (error) => {
         console.error("❌ Income listener error:", error);
@@ -186,7 +121,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
         const data = snap.docs.map(d => ({ id: d.id, type: "outcome", ...d.data() }));
         setTransactions(prev => [...prev.filter(x => x.type !== "outcome"), ...data]);
         setLoading(false);
-        console.log("📉 Outcome data updated:", data.length, "items");
       },
       (error) => {
         console.error("❌ Outcome listener error:", error);
@@ -199,7 +133,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
         const data = snap.docs.map(d => ({ id: d.id, type: "transfer", ...d.data() }));
         setTransactions(prev => [...prev.filter(x => x.type !== "transfer"), ...data]);
         setLoading(false);
-        console.log("🔄 Transfer data updated:", data.length, "items");
       },
       (error) => {
         console.error("❌ Transfer listener error:", error);
@@ -208,7 +141,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     );
 
     return () => {
-      console.log("🧹 Cleaning up Firebase listeners");
       unsubIn(); 
       unsubOut(); 
       unsubTransfer();
@@ -224,42 +156,23 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     else setDateFilter("");
   };
 
-  // Enhanced success handler that prevents premature closing
+  // Success handler for form submissions
   const handleFormSuccess = (isEdit, formType) => {
     console.log(`✅ Form success: ${formType}, isEdit: ${isEdit}`);
     
-    try {
-      // Show success toast immediately
-      const message = isEdit 
-        ? `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil diperbarui! 🎉`
-        : `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan! 🎉`;
-      
-      toast.success(message, {
-        position: "top-center",
-        autoClose: 2000,
-      });
-      
-      // Force refresh of data
-      setRefreshKey(prev => prev + 1);
-      
-      // Switch to history tab immediately
-      console.log("🔄 Switching to history tab immediately");
-      setActiveTab("history");
-      setCurrentPage(1);
-      
-    } catch (error) {
-      console.error("❌ Error in handleFormSuccess:", error);
-      toast.error("Terjadi kesalahan saat memproses data", {
-        position: "top-center",
-        autoClose: 3000,
-      });
-    }
-  };
-
-  // Custom close handler that doesn't actually close
-  const handleFormClose = () => {
-    console.log("📝 Form requested close - switching to history instead");
+    const message = isEdit 
+      ? `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil diperbarui! 🎉`
+      : `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan! 🎉`;
+    
+    toast.success(message, {
+      position: "top-center",
+      autoClose: 2000,
+    });
+    
+    // Refresh data and switch to history
+    setRefreshKey(prev => prev + 1);
     setActiveTab("history");
+    setCurrentPage(1);
   };
 
   const allFiltered = transactions
@@ -339,7 +252,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 <motion.button
                   key={tab}
                   onClick={() => {
-                    console.log(`🔄 Tab clicked: ${tab}`);
                     setActiveTab(tab);
                     setCurrentPage(1);
                   }}
@@ -510,63 +422,63 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 </motion.div>
               )}
 
-              {/* Forms with success/close handlers to prevent premature closing */}
-              {activeTab === "income" && user?.uid && (
-                <div 
-                  className="h-full" 
-                  key={`income-container-${formKey}`}
-                  onClick={(e) => {
-                    // Debug: Check if clicks are being registered
-                    if (e.target.tagName === 'BUTTON') {
-                      console.log("🔘 Button clicked in income form:", e.target.textContent, "at", new Date().toISOString());
-                    }
-                  }}
-                >
-                  <IncomeForm 
-                    key={`income-form-${walletId}-${user.uid}-${formKey}`}
-                    presetWalletId={walletId} 
-                    hideCardPreview={true}
-                    onSuccess={(isEdit) => {
-                      console.log("✅ Income form success callback triggered:", { isEdit, walletId, userId: user.uid });
-                      handleFormSuccess(isEdit, 'income');
-                    }}
-                    onClose={handleFormClose}
-                  />
-                </div>
+              {/* Forms with wallet validation */}
+              {activeTab === "income" && (
+                (() => {
+                  const presetWallet = wallets.find(w => w.id === walletId);
+                  if (!presetWallet || !presetWallet.currency) {
+                    return (
+                      <div className="text-red-500 p-6 text-center rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                        <div className="text-4xl mb-3">❗</div>
+                        <p className="font-semibold text-lg mb-2">Wallet tidak valid atau belum siap</p>
+                        <p className="text-sm">Silakan coba lagi atau pilih wallet lain</p>
+                        <button 
+                          onClick={() => setActiveTab("history")}
+                          className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-800 dark:hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Kembali ke Riwayat
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <IncomeForm 
+                      presetWalletId={walletId} 
+                      hideCardPreview={true}
+                      onSuccess={(isEdit) => handleFormSuccess(isEdit, 'income')}
+                    />
+                  );
+                })()
               )}
 
-              {activeTab === "outcome" && user?.uid && (
-                <div 
-                  className="h-full" 
-                  key={`outcome-container-${formKey}`}
-                  onClick={(e) => {
-                    // Debug: Check if clicks are being registered
-                    if (e.target.tagName === 'BUTTON') {
-                      console.log("🔘 Button clicked in outcome form:", e.target.textContent, "at", new Date().toISOString());
-                    }
-                  }}
-                >
-                  <OutcomeForm 
-                    key={`outcome-form-${walletId}-${user.uid}-${formKey}`}
-                    presetWalletId={walletId} 
-                    hideCardPreview={true}
-                    onSuccess={(isEdit) => {
-                      console.log("✅ Outcome form success callback triggered:", { isEdit, walletId, userId: user.uid });
-                      handleFormSuccess(isEdit, 'outcome');
-                    }}
-                    onClose={handleFormClose}
-                  />
-                </div>
-              )}
+              {activeTab === "outcome" && (
+                (() => {
+                  const presetWallet = wallets.find(w => w.id === walletId);
+                  if (!presetWallet || !presetWallet.currency) {
+                    return (
+                      <div className="text-red-500 p-6 text-center rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                        <div className="text-4xl mb-3">❗</div>
+                        <p className="font-semibold text-lg mb-2">Wallet tidak valid atau belum siap</p>
+                        <p className="text-sm">Silakan coba lagi atau pilih wallet lain</p>
+                        <button 
+                          onClick={() => setActiveTab("history")}
+                          className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-800 dark:hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Kembali ke Riwayat
+                        </button>
+                      </div>
+                    );
+                  }
 
-              {/* Show loading state when user is not available but auth is loading */}
-              {(activeTab === "income" || activeTab === "outcome") && !user?.uid && (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <Loader2 className="animate-spin mx-auto mb-2" size={24} />
-                    <p>Memuat form...</p>
-                  </div>
-                </div>
+                  return (
+                    <OutcomeForm 
+                      presetWalletId={walletId} 
+                      hideCardPreview={true}
+                      onSuccess={(isEdit) => handleFormSuccess(isEdit, 'outcome')}
+                    />
+                  );
+                })()
               )}
             </div>
 
@@ -579,10 +491,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 className="fixed bottom-6 right-6 z-50 flex gap-3"
               >
                 <motion.button
-                  onClick={() => {
-                    console.log("🟢 Switching to income tab");
-                    setActiveTab("income");
-                  }}
+                  onClick={() => setActiveTab("income")}
                   className="p-3 rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 hover:shadow-xl"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -591,10 +500,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                   <ArrowDownCircle size={20} />
                 </motion.button>
                 <motion.button
-                  onClick={() => {
-                    console.log("🔴 Switching to outcome tab");
-                    setActiveTab("outcome");
-                  }}
+                  onClick={() => setActiveTab("outcome")}
                   className="p-3 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 hover:shadow-xl"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
