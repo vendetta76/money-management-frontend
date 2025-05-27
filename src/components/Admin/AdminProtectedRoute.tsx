@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Paper, Alert } from '@mui/material';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../lib/firebaseClient';
+import { db } from '@/lib/firebaseClient';
 import { toast } from 'react-hot-toast';
 
 interface AdminProtectedRouteProps {
