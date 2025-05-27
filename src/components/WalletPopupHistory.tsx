@@ -69,6 +69,19 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [formKey, setFormKey] = useState(0);
   const perPage = 5;
 
+  // Debug logging for form rendering
+  useEffect(() => {
+    if (activeTab === "income" || activeTab === "outcome") {
+      console.log(`🎯 Form rendered:`, {
+        activeTab,
+        walletId,
+        hasUser: !!user?.uid,
+        userId: user?.uid,
+        formKey
+      });
+    }
+  }, [activeTab, walletId, user?.uid, formKey]);
+
   // Debug logging for user state changes
   useEffect(() => {
     console.log("🔐 WalletPopup user state changed:", { 
@@ -92,6 +105,19 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab]);
+
+  // Force form refresh when switching to form tabs
+  useEffect(() => {
+    if ((activeTab === "income" || activeTab === "outcome") && user?.uid) {
+      // Add a small delay to ensure the form gets fresh context
+      const timer = setTimeout(() => {
+        setFormKey(prev => prev + 1);
+        console.log(`🔄 Form key refreshed for ${activeTab}:`, formKey + 1);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, user?.uid]);
 
   // Reset form key when switching tabs or user changes to ensure fresh form state
   useEffect(() => {
@@ -493,37 +519,49 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 </motion.div>
               )}
 
-              {/* Forms with explicit user passing and fresh keys */}
+              {/* Forms with fresh keys and debug wrappers */}
               {activeTab === "income" && user?.uid && (
-                <div className="h-full">
+                <div 
+                  className="h-full" 
+                  key={`income-container-${formKey}`}
+                  onClick={(e) => {
+                    // Debug: Check if clicks are being registered
+                    if (e.target.tagName === 'BUTTON') {
+                      console.log("🔘 Button clicked in income form:", e.target.textContent);
+                    }
+                  }}
+                >
                   <IncomeForm 
-                    key={`income-${walletId}-${formKey}-${user.uid}`}
+                    key={`income-form-${walletId}-${user.uid}-${formKey}`}
                     presetWalletId={walletId} 
                     hideCardPreview={true}
-                    onClose={handleFormClose}
                     onSuccess={(isEdit) => {
-                      console.log("📝 Income form success callback triggered:", isEdit);
+                      console.log("✅ Income form success callback triggered:", { isEdit, walletId, userId: user.uid });
                       handleFormSuccess(isEdit, 'income');
                     }}
-                    onError={(error) => handleFormError(error, 'income')}
-                    user={user}
                   />
                 </div>
               )}
 
               {activeTab === "outcome" && user?.uid && (
-                <div className="h-full">
+                <div 
+                  className="h-full" 
+                  key={`outcome-container-${formKey}`}
+                  onClick={(e) => {
+                    // Debug: Check if clicks are being registered
+                    if (e.target.tagName === 'BUTTON') {
+                      console.log("🔘 Button clicked in outcome form:", e.target.textContent);
+                    }
+                  }}
+                >
                   <OutcomeForm 
-                    key={`outcome-${walletId}-${formKey}-${user.uid}`}
+                    key={`outcome-form-${walletId}-${user.uid}-${formKey}`}
                     presetWalletId={walletId} 
                     hideCardPreview={true}
-                    onClose={handleFormClose}
                     onSuccess={(isEdit) => {
-                      console.log("📝 Outcome form success callback triggered:", isEdit);
+                      console.log("✅ Outcome form success callback triggered:", { isEdit, walletId, userId: user.uid });
                       handleFormSuccess(isEdit, 'outcome');
                     }}
-                    onError={(error) => handleFormError(error, 'outcome')}
-                    user={user}
                   />
                 </div>
               )}
