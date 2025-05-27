@@ -69,31 +69,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [formKey, setFormKey] = useState(0);
   const perPage = 5;
 
-  // Auto-switch to history when new data is added
-  useEffect(() => {
-    if ((activeTab === "income" || activeTab === "outcome") && transactions.length > 0) {
-      // Check if we have new transactions (simple heuristic)
-      const recentTransaction = transactions[0];
-      if (recentTransaction && recentTransaction.wallet === walletId) {
-        const transactionTime = recentTransaction.createdAt?.seconds * 1000 || Date.now();
-        const timeDiff = Date.now() - transactionTime;
-        
-        // If there's a very recent transaction (within 5 seconds), switch to history
-        if (timeDiff < 5000) {
-          console.log("🔄 Auto-switching to history due to new transaction");
-          setTimeout(() => {
-            setActiveTab("history");
-            setCurrentPage(1);
-            toast.success(`${activeTab === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan! 🎉`, {
-              position: "top-center",
-              autoClose: 2000,
-            });
-          }, 1000);
-        }
-      }
-    }
-  }, [transactions, activeTab, walletId]);
-
   // Debug logging for form rendering
   useEffect(() => {
     if (activeTab === "income" || activeTab === "outcome") {
@@ -249,12 +224,12 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     else setDateFilter("");
   };
 
-  // Enhanced success handler with better error handling and debugging
+  // Enhanced success handler that prevents premature closing
   const handleFormSuccess = (isEdit, formType) => {
     console.log(`✅ Form success: ${formType}, isEdit: ${isEdit}`);
     
     try {
-      // Show success toast
+      // Show success toast immediately
       const message = isEdit 
         ? `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil diperbarui! 🎉`
         : `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan! 🎉`;
@@ -267,12 +242,11 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
       // Force refresh of data
       setRefreshKey(prev => prev + 1);
       
-      // Switch to history tab after a short delay
-      setTimeout(() => {
-        console.log("🔄 Switching to history tab");
-        setActiveTab("history");
-        setCurrentPage(1);
-      }, 1500);
+      // Switch to history tab immediately
+      console.log("🔄 Switching to history tab immediately");
+      setActiveTab("history");
+      setCurrentPage(1);
+      
     } catch (error) {
       console.error("❌ Error in handleFormSuccess:", error);
       toast.error("Terjadi kesalahan saat memproses data", {
@@ -282,18 +256,10 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     }
   };
 
+  // Custom close handler that doesn't actually close
   const handleFormClose = () => {
-    console.log("❌ Form closed");
+    console.log("📝 Form requested close - switching to history instead");
     setActiveTab("history");
-  };
-
-  // Enhanced error handler for form errors
-  const handleFormError = (error, formType) => {
-    console.error(`❌ Form error in ${formType}:`, error);
-    toast.error(`Gagal menyimpan ${formType === 'income' ? 'pemasukan' : 'pengeluaran'}. Silahkan coba lagi.`, {
-      position: "top-center",
-      autoClose: 3000,
-    });
   };
 
   const allFiltered = transactions
@@ -544,7 +510,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 </motion.div>
               )}
 
-              {/* Forms with simplified approach - let Firebase listener handle success */}
+              {/* Forms with success/close handlers to prevent premature closing */}
               {activeTab === "income" && user?.uid && (
                 <div 
                   className="h-full" 
@@ -560,6 +526,11 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     key={`income-form-${walletId}-${user.uid}-${formKey}`}
                     presetWalletId={walletId} 
                     hideCardPreview={true}
+                    onSuccess={(isEdit) => {
+                      console.log("✅ Income form success callback triggered:", { isEdit, walletId, userId: user.uid });
+                      handleFormSuccess(isEdit, 'income');
+                    }}
+                    onClose={handleFormClose}
                   />
                 </div>
               )}
@@ -579,6 +550,11 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     key={`outcome-form-${walletId}-${user.uid}-${formKey}`}
                     presetWalletId={walletId} 
                     hideCardPreview={true}
+                    onSuccess={(isEdit) => {
+                      console.log("✅ Outcome form success callback triggered:", { isEdit, walletId, userId: user.uid });
+                      handleFormSuccess(isEdit, 'outcome');
+                    }}
+                    onClose={handleFormClose}
                   />
                 </div>
               )}
