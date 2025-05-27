@@ -47,7 +47,7 @@ import NotFoundPage from './pages/NotFoundPage'
 
 // 🛡️ ADMIN ROUTES - NEW
 import AdminProtectedRoute from './components/Admin/AdminProtectedRoute'
-import AdminLayoutShell from './layouts/admin/AdminLayoutShell'
+import AdminLayoutShell from './layouts/Admin/AdminLayoutShell'
 import AdminDashboard from './pages/admin/DashboardPage'
 import UserManagement from './pages/admin/UsersManagementPage'
 import WalletManagement from './pages/admin/WalletsManagementPage'
