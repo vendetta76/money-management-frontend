@@ -1,5 +1,5 @@
 import React from 'react'
-import { RouteObject } from 'react-router-dom'
+import { RouteObject, Navigate } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
 import PageTransition from './components/PageTransition'
 
@@ -13,7 +13,6 @@ import LandingPage from './pages/LandingPage'
 
 // PIN Reset Pages
 import ForgotPinPage from './pages/ForgotPinPage'
-// Hapus import ResetPinPage
 
 // Core Pages
 import DashboardPage from './pages/Dashboard/DashboardPage'
@@ -46,6 +45,16 @@ import UpgradePage from './pages/upgrade/UpgradePage'
 // 404 Page
 import NotFoundPage from './pages/NotFoundPage'
 
+// 🛡️ ADMIN ROUTES - NEW
+import AdminProtectedRoute from './components/AdminProtectedRoute'
+import AdminLayoutShell from './components/AdminLayoutShell'
+import AdminDashboard from './pages/admin/Dashboard'
+import UserManagement from './pages/admin/Users'
+import WalletManagement from './pages/admin/Wallets'
+import TransactionManagement from './pages/admin/Transactions'
+import GlobalSettings from './pages/admin/Settings'
+import AuditLogs from './pages/admin/AuditLogs'
+
 const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
@@ -56,7 +65,6 @@ const routes: RouteObject[] = [
 
   // PIN reset flow
   { path: '/forgot-pin', element: <ForgotPinPage /> },
-  // Hapus route '/reset-pin'
 
   {
     path: '/dashboard',
@@ -225,6 +233,163 @@ const routes: RouteObject[] = [
         </PageTransition>
       </PrivateRoute>
     ),
+  },
+
+  // 🛡️ ADMIN ROUTES SECTION - NEW
+  {
+    path: '/admin',
+    element: (
+      <AdminProtectedRoute>
+        <AdminLayoutShell />
+      </AdminProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+      { 
+        path: 'dashboard', 
+        element: (
+          <PageTransition>
+            <AdminDashboard />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'users', 
+        element: (
+          <PageTransition>
+            <UserManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'wallets', 
+        element: (
+          <PageTransition>
+            <WalletManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'transactions', 
+        element: (
+          <PageTransition>
+            <TransactionManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'settings', 
+        element: (
+          <PageTransition>
+            <GlobalSettings />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'settings/general', 
+        element: (
+          <PageTransition>
+            <GlobalSettings />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'settings/security', 
+        element: (
+          <PageTransition>
+            <GlobalSettings />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'settings/notifications', 
+        element: (
+          <PageTransition>
+            <GlobalSettings />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'audit-logs', 
+        element: (
+          <PageTransition>
+            <AuditLogs />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'reports/overview', 
+        element: (
+          <PageTransition>
+            <AdminDashboard />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'reports/analytics', 
+        element: (
+          <PageTransition>
+            <AdminDashboard />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'reports/charts', 
+        element: (
+          <PageTransition>
+            <AdminDashboard />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'reports/trends', 
+        element: (
+          <PageTransition>
+            <AdminDashboard />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'system/backup', 
+        element: (
+          <PageTransition>
+            <GlobalSettings />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'system/maintenance', 
+        element: (
+          <PageTransition>
+            <GlobalSettings />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'profile', 
+        element: (
+          <PageTransition>
+            <GlobalSettings />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'security', 
+        element: (
+          <PageTransition>
+            <GlobalSettings />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'notifications', 
+        element: (
+          <PageTransition>
+            <AuditLogs />
+          </PageTransition>
+        )
+      },
+    ]
   },
 
   // Catch-all route for 404
