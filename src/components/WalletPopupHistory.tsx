@@ -1,3 +1,18 @@
+/**
+ * WalletPopupHistory.tsx - Fixed version
+ * 
+ * Key fixes for form submission issues:
+ * 1. Added authLoading state to prevent rendering before authentication
+ * 2. Enhanced form keys to include user.uid for proper re-rendering
+ * 3. Added explicit user prop passing to forms 
+ * 4. Improved Firebase listener error handling
+ * 5. Added debug logs for troubleshooting user state
+ * 6. Added loading states for unauthenticated users
+ * 
+ * This fixes the issue where forms couldn't submit because they received
+ * stale or null user context when the popup was mounted before auth completed.
+ */
+
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebaseClient";
@@ -39,7 +54,7 @@ const paginationVariants = {
 };
 
 const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const searchInputRef = useRef(null);
   const [transactions, setTransactions] = useState([]);
@@ -51,7 +66,19 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [formKey, setFormKey] = useState(0);
   const perPage = 5;
+
+  // Debug logging for user state changes
+  useEffect(() => {
+    console.log("🔐 WalletPopup user state changed:", { 
+      hasUser: !!user, 
+      userId: user?.uid, 
+      authLoading,
+      isOpen,
+      activeTab 
+    });
+  }, [user, authLoading, isOpen, activeTab]);
 
   useEffect(() => {
     if (activeTab === "history") {
@@ -66,7 +93,26 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     setCurrentPage(1);
   }, [activeTab]);
 
-  if (!isOpen || !walletId) return null;
+  // Reset form key when switching tabs or user changes to ensure fresh form state
+  useEffect(() => {
+    if (activeTab === "income" || activeTab === "outcome") {
+      setFormKey(prev => prev + 1);
+    }
+  }, [activeTab, user?.uid]); // Add user.uid to dependency to force refresh when user changes
+
+  // Don't render if popup not open, no walletId, or still loading auth
+  if (!isOpen || !walletId || authLoading) return null;
+  
+  // Don't render if no authenticated user
+  if (!user) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="p-6 text-center text-gray-500">
+          <DialogDescription>Menunggu autentikasi...</DialogDescription>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const wallet = useMemo(() => wallets.find(w => w?.id === walletId), [wallets, walletId]);
 
@@ -84,35 +130,64 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const colorValue = wallet.colorValue || "#cccccc";
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid || !isOpen) {
+      console.log("🔄 Skipping Firebase listeners setup:", { hasUser: !!user?.uid, isOpen });
+      return;
+    }
+
+    console.log("🔗 Setting up Firebase listeners for user:", user.uid);
     setLoading(true);
 
     const incomeQuery = query(collection(db, "users", user.uid, "incomes"), orderBy("createdAt", "desc"));
     const outcomeQuery = query(collection(db, "users", user.uid, "outcomes"), orderBy("createdAt", "desc"));
     const transferQuery = collection(db, "users", user.uid, "transfers");
 
-    const unsubIn = onSnapshot(incomeQuery, snap => {
-      const data = snap.docs.map(d => ({ id: d.id, type: "income", ...d.data() }));
-      setTransactions(prev => [...prev.filter(x => x.type !== "income"), ...data]);
-      setLoading(false);
-    });
+    const unsubIn = onSnapshot(incomeQuery, 
+      (snap) => {
+        const data = snap.docs.map(d => ({ id: d.id, type: "income", ...d.data() }));
+        setTransactions(prev => [...prev.filter(x => x.type !== "income"), ...data]);
+        setLoading(false);
+        console.log("📈 Income data updated:", data.length, "items");
+      },
+      (error) => {
+        console.error("❌ Income listener error:", error);
+        setLoading(false);
+      }
+    );
 
-    const unsubOut = onSnapshot(outcomeQuery, snap => {
-      const data = snap.docs.map(d => ({ id: d.id, type: "outcome", ...d.data() }));
-      setTransactions(prev => [...prev.filter(x => x.type !== "outcome"), ...data]);
-      setLoading(false);
-    });
+    const unsubOut = onSnapshot(outcomeQuery, 
+      (snap) => {
+        const data = snap.docs.map(d => ({ id: d.id, type: "outcome", ...d.data() }));
+        setTransactions(prev => [...prev.filter(x => x.type !== "outcome"), ...data]);
+        setLoading(false);
+        console.log("📉 Outcome data updated:", data.length, "items");
+      },
+      (error) => {
+        console.error("❌ Outcome listener error:", error);
+        setLoading(false);
+      }
+    );
 
-    const unsubTransfer = onSnapshot(transferQuery, snap => {
-      const data = snap.docs.map(d => ({ id: d.id, type: "transfer", ...d.data() }));
-      setTransactions(prev => [...prev.filter(x => x.type !== "transfer"), ...data]);
-      setLoading(false);
-    });
+    const unsubTransfer = onSnapshot(transferQuery, 
+      (snap) => {
+        const data = snap.docs.map(d => ({ id: d.id, type: "transfer", ...d.data() }));
+        setTransactions(prev => [...prev.filter(x => x.type !== "transfer"), ...data]);
+        setLoading(false);
+        console.log("🔄 Transfer data updated:", data.length, "items");
+      },
+      (error) => {
+        console.error("❌ Transfer listener error:", error);
+        setLoading(false);
+      }
+    );
 
     return () => {
-      unsubIn(); unsubOut(); unsubTransfer();
+      console.log("🧹 Cleaning up Firebase listeners");
+      unsubIn(); 
+      unsubOut(); 
+      unsubTransfer();
     };
-  }, [user, walletId, isOpen, refreshKey]);
+  }, [user?.uid, walletId, isOpen, refreshKey]);
 
   const handleDatePreset = (preset) => {
     setActivePreset(preset);
@@ -123,34 +198,51 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
     else setDateFilter("");
   };
 
-  // Success handler for income/outcome forms
+  // Enhanced success handler with better error handling and debugging
   const handleFormSuccess = (isEdit, formType) => {
     console.log(`✅ Form success: ${formType}, isEdit: ${isEdit}`);
     
-    // Show success toast
-    const message = isEdit 
-      ? `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil diperbarui! 🎉`
-      : `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan! 🎉`;
-    
-    toast.success(message, {
-      position: "top-center",
-      autoClose: 2000,
-    });
-    
-    // Force refresh of data
-    setRefreshKey(prev => prev + 1);
-    
-    // Switch to history tab after a short delay
-    setTimeout(() => {
-      console.log("🔄 Switching to history tab");
-      setActiveTab("history");
-      setCurrentPage(1);
-    }, 1500);
+    try {
+      // Show success toast
+      const message = isEdit 
+        ? `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil diperbarui! 🎉`
+        : `${formType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan! 🎉`;
+      
+      toast.success(message, {
+        position: "top-center",
+        autoClose: 2000,
+      });
+      
+      // Force refresh of data
+      setRefreshKey(prev => prev + 1);
+      
+      // Switch to history tab after a short delay
+      setTimeout(() => {
+        console.log("🔄 Switching to history tab");
+        setActiveTab("history");
+        setCurrentPage(1);
+      }, 1500);
+    } catch (error) {
+      console.error("❌ Error in handleFormSuccess:", error);
+      toast.error("Terjadi kesalahan saat memproses data", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+    }
   };
 
   const handleFormClose = () => {
     console.log("❌ Form closed");
     setActiveTab("history");
+  };
+
+  // Enhanced error handler for form errors
+  const handleFormError = (error, formType) => {
+    console.error(`❌ Form error in ${formType}:`, error);
+    toast.error(`Gagal menyimpan ${formType === 'income' ? 'pemasukan' : 'pengeluaran'}. Silahkan coba lagi.`, {
+      position: "top-center",
+      autoClose: 3000,
+    });
   };
 
   const allFiltered = transactions
@@ -251,7 +343,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
               ))}
             </div>
 
-            {/* Content Area - Remove AnimatePresence that might interfere with forms */}
+            {/* Content Area */}
             <div className="px-1 space-y-4 flex-1 overflow-y-auto" style={{ maxHeight: activeTab === "history" ? "420px" : "none" }}>
               {activeTab === "history" && (
                 <motion.div
@@ -401,11 +493,11 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 </motion.div>
               )}
 
-              {/* Forms without AnimatePresence to prevent interference */}
-              {activeTab === "income" && (
+              {/* Forms with explicit user passing and fresh keys */}
+              {activeTab === "income" && user?.uid && (
                 <div className="h-full">
                   <IncomeForm 
-                    key={`income-${walletId}`} // Add key to force re-render
+                    key={`income-${walletId}-${formKey}-${user.uid}`}
                     presetWalletId={walletId} 
                     hideCardPreview={true}
                     onClose={handleFormClose}
@@ -413,14 +505,16 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                       console.log("📝 Income form success callback triggered:", isEdit);
                       handleFormSuccess(isEdit, 'income');
                     }}
+                    onError={(error) => handleFormError(error, 'income')}
+                    user={user}
                   />
                 </div>
               )}
 
-              {activeTab === "outcome" && (
+              {activeTab === "outcome" && user?.uid && (
                 <div className="h-full">
                   <OutcomeForm 
-                    key={`outcome-${walletId}`} // Add key to force re-render
+                    key={`outcome-${walletId}-${formKey}-${user.uid}`}
                     presetWalletId={walletId} 
                     hideCardPreview={true}
                     onClose={handleFormClose}
@@ -428,7 +522,19 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                       console.log("📝 Outcome form success callback triggered:", isEdit);
                       handleFormSuccess(isEdit, 'outcome');
                     }}
+                    onError={(error) => handleFormError(error, 'outcome')}
+                    user={user}
                   />
+                </div>
+              )}
+
+              {/* Show loading state when user is not available but auth is loading */}
+              {(activeTab === "income" || activeTab === "outcome") && !user?.uid && (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <Loader2 className="animate-spin mx-auto mb-2" size={24} />
+                    <p>Memuat form...</p>
+                  </div>
                 </div>
               )}
             </div>
