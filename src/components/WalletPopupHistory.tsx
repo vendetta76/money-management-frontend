@@ -69,6 +69,31 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
   const [formKey, setFormKey] = useState(0);
   const perPage = 5;
 
+  // Auto-switch to history when new data is added
+  useEffect(() => {
+    if ((activeTab === "income" || activeTab === "outcome") && transactions.length > 0) {
+      // Check if we have new transactions (simple heuristic)
+      const recentTransaction = transactions[0];
+      if (recentTransaction && recentTransaction.wallet === walletId) {
+        const transactionTime = recentTransaction.createdAt?.seconds * 1000 || Date.now();
+        const timeDiff = Date.now() - transactionTime;
+        
+        // If there's a very recent transaction (within 5 seconds), switch to history
+        if (timeDiff < 5000) {
+          console.log("🔄 Auto-switching to history due to new transaction");
+          setTimeout(() => {
+            setActiveTab("history");
+            setCurrentPage(1);
+            toast.success(`${activeTab === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan! 🎉`, {
+              position: "top-center",
+              autoClose: 2000,
+            });
+          }, 1000);
+        }
+      }
+    }
+  }, [transactions, activeTab, walletId]);
+
   // Debug logging for form rendering
   useEffect(() => {
     if (activeTab === "income" || activeTab === "outcome") {
@@ -519,7 +544,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                 </motion.div>
               )}
 
-              {/* Forms with fresh keys and debug wrappers */}
+              {/* Forms with simplified approach - let Firebase listener handle success */}
               {activeTab === "income" && user?.uid && (
                 <div 
                   className="h-full" 
@@ -527,7 +552,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                   onClick={(e) => {
                     // Debug: Check if clicks are being registered
                     if (e.target.tagName === 'BUTTON') {
-                      console.log("🔘 Button clicked in income form:", e.target.textContent);
+                      console.log("🔘 Button clicked in income form:", e.target.textContent, "at", new Date().toISOString());
                     }
                   }}
                 >
@@ -535,10 +560,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     key={`income-form-${walletId}-${user.uid}-${formKey}`}
                     presetWalletId={walletId} 
                     hideCardPreview={true}
-                    onSuccess={(isEdit) => {
-                      console.log("✅ Income form success callback triggered:", { isEdit, walletId, userId: user.uid });
-                      handleFormSuccess(isEdit, 'income');
-                    }}
                   />
                 </div>
               )}
@@ -550,7 +571,7 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                   onClick={(e) => {
                     // Debug: Check if clicks are being registered
                     if (e.target.tagName === 'BUTTON') {
-                      console.log("🔘 Button clicked in outcome form:", e.target.textContent);
+                      console.log("🔘 Button clicked in outcome form:", e.target.textContent, "at", new Date().toISOString());
                     }
                   }}
                 >
@@ -558,10 +579,6 @@ const WalletPopup = ({ walletId, wallets = [], isOpen, onClose }) => {
                     key={`outcome-form-${walletId}-${user.uid}-${formKey}`}
                     presetWalletId={walletId} 
                     hideCardPreview={true}
-                    onSuccess={(isEdit) => {
-                      console.log("✅ Outcome form success callback triggered:", { isEdit, walletId, userId: user.uid });
-                      handleFormSuccess(isEdit, 'outcome');
-                    }}
                   />
                 </div>
               )}
