@@ -43,7 +43,7 @@ import { id as localeID } from 'date-fns/locale';
 import LangToggle from './LangToggle';
 
 // 🚀 Import real notification system
-import { useNotifications, getNotificationIcon, getNotificationColor } from '../hooks/useNotifications';
+import { useNotifications, getNotificationIcon, getNotificationColor } from '@/hooks/useNotifications';
 
 interface Props {
   displayName?: string | null;
