@@ -22,7 +22,8 @@ import {
   useMediaQuery,
   Fade,
   Chip,
-  Alert
+  Alert,
+  Divider
 } from '@mui/material';
 import {
   Calculate as CalculatorIcon,
