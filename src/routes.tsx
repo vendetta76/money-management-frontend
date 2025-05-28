@@ -1,4 +1,4 @@
-// src/routes.tsx - FINAL VERSION WITH ADMIN ROUTES
+// src/routes.tsx - COMPLETE VERSION WITH ALL NEW FEATURES
 import React from 'react'
 import { RouteObject, Navigate } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
@@ -46,15 +46,20 @@ import UpgradePage from './pages/upgrade/UpgradePage'
 // 404 Page
 import NotFoundPage from './pages/NotFoundPage'
 
-// 🛡️ ADMIN COMPONENTS
+// 🛡️ ADMIN COMPONENTS - Original
 import AdminProtectedRoute from '@/components/Admin/AdminProtectedRoute'
 import AdminLayoutShell from '@/layouts/Admin/AdminLayoutShell'
-import AdminDashboard from './pages/admin/DashboardPage'
-import UserManagement from './pages/admin/UsersManagementPage'
-import WalletManagement from './pages/admin/WalletsManagementPage'
-import TransactionManagement from './pages/admin/TransactionsManagementPage'
-import GlobalSettings from './pages/admin/SettingsPage'
-import AuditLogs from './pages/admin/AuditLogsPage'
+import AdminDashboard from '@/pages/admin/DashboardPage'
+import UserManagement from '@/pages/admin/UsersManagementPage'
+import WalletManagement from '@/pages/admin/WalletsManagementPage'
+import TransactionManagement from '@/pages/admin/TransactionsManagementPage'
+import GlobalSettings from '@/pages/admin/SettingsPage'
+import AuditLogs from '@/pages/admin/AuditLogsPage'
+
+// 🚀 NEW ADMIN FEATURES
+import CommunicationSystem from './pages/admin/CommunicationSystem'
+import SystemManagement from './pages/admin/SystemManagement'
+import SecurityManagement from './pages/admin/SecurityManagement'
 
 const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },
@@ -237,7 +242,7 @@ const routes: RouteObject[] = [
     ),
   },
 
-  // 🛡️ ADMIN ROUTES SECTION
+  // 🛡️ COMPLETE ADMIN ROUTES SECTION
   {
     path: '/admin',
     element: (
@@ -247,6 +252,8 @@ const routes: RouteObject[] = [
     ),
     children: [
       { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+      
+      // CORE ADMIN PAGES
       { 
         path: 'dashboard', 
         element: (
@@ -279,6 +286,110 @@ const routes: RouteObject[] = [
           </PageTransition>
         )
       },
+
+      // 📨 COMMUNICATION SYSTEM
+      { 
+        path: 'communications', 
+        element: (
+          <PageTransition>
+            <CommunicationSystem />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'notifications', 
+        element: (
+          <PageTransition>
+            <CommunicationSystem />
+          </PageTransition>
+        )
+      },
+
+      // 🛠️ SYSTEM MANAGEMENT
+      { 
+        path: 'system', 
+        element: (
+          <PageTransition>
+            <SystemManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'system/health', 
+        element: (
+          <PageTransition>
+            <SystemManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'system/performance', 
+        element: (
+          <PageTransition>
+            <SystemManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'system/backup', 
+        element: (
+          <PageTransition>
+            <SystemManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'system/maintenance', 
+        element: (
+          <PageTransition>
+            <SystemManagement />
+          </PageTransition>
+        )
+      },
+
+      // 🔐 ENHANCED SECURITY
+      { 
+        path: 'security', 
+        element: (
+          <PageTransition>
+            <SecurityManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'security/alerts', 
+        element: (
+          <PageTransition>
+            <SecurityManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'security/sessions', 
+        element: (
+          <PageTransition>
+            <SecurityManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'security/whitelist', 
+        element: (
+          <PageTransition>
+            <SecurityManagement />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'security/bugs', 
+        element: (
+          <PageTransition>
+            <SecurityManagement />
+          </PageTransition>
+        )
+      },
+
+      // ORIGINAL ADMIN ROUTES (Updated)
       { 
         path: 'settings', 
         element: (
@@ -299,7 +410,7 @@ const routes: RouteObject[] = [
         path: 'settings/security', 
         element: (
           <PageTransition>
-            <GlobalSettings />
+            <SecurityManagement />
           </PageTransition>
         )
       },
@@ -307,7 +418,7 @@ const routes: RouteObject[] = [
         path: 'settings/notifications', 
         element: (
           <PageTransition>
-            <GlobalSettings />
+            <CommunicationSystem />
           </PageTransition>
         )
       },
@@ -319,6 +430,8 @@ const routes: RouteObject[] = [
           </PageTransition>
         )
       },
+
+      // REPORTS ROUTES
       { 
         path: 'reports/overview', 
         element: (
@@ -351,43 +464,13 @@ const routes: RouteObject[] = [
           </PageTransition>
         )
       },
-      { 
-        path: 'system/backup', 
-        element: (
-          <PageTransition>
-            <GlobalSettings />
-          </PageTransition>
-        )
-      },
-      { 
-        path: 'system/maintenance', 
-        element: (
-          <PageTransition>
-            <GlobalSettings />
-          </PageTransition>
-        )
-      },
+
+      // PROFILE ROUTES
       { 
         path: 'profile', 
         element: (
           <PageTransition>
             <GlobalSettings />
-          </PageTransition>
-        )
-      },
-      { 
-        path: 'security', 
-        element: (
-          <PageTransition>
-            <GlobalSettings />
-          </PageTransition>
-        )
-      },
-      { 
-        path: 'notifications', 
-        element: (
-          <PageTransition>
-            <AuditLogs />
           </PageTransition>
         )
       },

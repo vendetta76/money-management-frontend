@@ -1,4 +1,4 @@
-// src/components/AdminSidebar.tsx - FINAL VERSION
+// src/components/AdminSidebar.tsx - ENHANCED VERSION WITH ALL NEW FEATURES
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -15,6 +15,7 @@ import {
   Divider,
   useTheme,
   alpha,
+  Badge,
 } from "@mui/material";
 import {
   Dashboard,
@@ -36,6 +37,19 @@ import {
   TrendingUp,
   Person,
   Tune,
+  // New icons for enhanced features
+  Campaign,
+  Email,
+  SystemUpdate,
+  MonitorHeart,
+  BugReport,
+  Shield,
+  VpnKey,
+  Timeline,
+  PhoneAndroid,
+  Speed,
+  CloudSync,
+  Warning,
 } from "@mui/icons-material";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -53,9 +67,11 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarProps) => {
   const [isManagementOpen, setIsManagementOpen] = useState(true);
+  const [isCommunicationOpen, setIsCommunicationOpen] = useState(false);
+  const [isSystemOpen, setIsSystemOpen] = useState(false);
+  const [isSecurityOpen, setIsSecurityOpen] = useState(false);
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isSystemOpen, setIsSystemOpen] = useState(false);
   const [photoURL, setPhotoURL] = useState<string | null>(null);
   const [name, setName] = useState<string>("");
   const [role, setRole] = useState<string>("admin");
@@ -107,13 +123,97 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
   };
 
   const mainMenuItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: <Dashboard />, exact: true },
+    { 
+      path: "/admin/dashboard", 
+      label: "Dashboard", 
+      icon: <Dashboard />, 
+      exact: true,
+      badge: null
+    },
   ];
 
   const managementItems = [
     { path: "/admin/users", label: "User Management", icon: <People /> },
     { path: "/admin/wallets", label: "Wallet Management", icon: <AccountBalanceWallet /> },
     { path: "/admin/transactions", label: "Transactions", icon: <Receipt /> },
+  ];
+
+  // 📨 NEW: Communication System
+  const communicationItems = [
+    { 
+      path: "/admin/communications", 
+      label: "Communications Hub", 
+      icon: <Campaign />,
+      badge: null
+    },
+    { 
+      path: "/admin/notifications", 
+      label: "Push Notifications", 
+      icon: <Notifications />,
+      badge: 3 // Active notifications count
+    },
+    { 
+      path: "/admin/communications", 
+      label: "Email Templates", 
+      icon: <Email /> 
+    },
+  ];
+
+  // 🛠️ NEW: System Management
+  const systemItems = [
+    { 
+      path: "/admin/system", 
+      label: "System Health", 
+      icon: <MonitorHeart />,
+      badge: null
+    },
+    { 
+      path: "/admin/system/performance", 
+      label: "Performance", 
+      icon: <Speed /> 
+    },
+    { 
+      path: "/admin/system/backup", 
+      label: "Backup Manager", 
+      icon: <CloudSync /> 
+    },
+    { 
+      path: "/admin/system/maintenance", 
+      label: "Maintenance", 
+      icon: <SystemUpdate /> 
+    },
+  ];
+
+  // 🔐 NEW: Enhanced Security
+  const securityItems = [
+    { 
+      path: "/admin/security", 
+      label: "Security Overview", 
+      icon: <Shield />,
+      badge: null
+    },
+    { 
+      path: "/admin/security/alerts", 
+      label: "Security Alerts", 
+      icon: <Warning />,
+      badge: 2 // Active security alerts
+    },
+    { 
+      path: "/admin/security/sessions", 
+      label: "Session Management", 
+      icon: <Timeline /> 
+    },
+    { 
+      path: "/admin/security/whitelist", 
+      label: "IP Whitelist", 
+      icon: <VpnKey /> 
+    },
+    { 
+      path: "/admin/security/bugs", 
+      label: "Bug Reports", 
+      icon: <BugReport />,
+      badge: 5 // Open bug reports
+    },
   ];
 
   const reportsItems = [
@@ -129,10 +229,9 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
     { path: "/admin/settings/notifications", label: "Notifications", icon: <Notifications /> },
   ];
 
-  const systemItems = [
+  // Original system items (kept for audit logs)
+  const auditItems = [
     { path: "/admin/audit-logs", label: "Audit Logs", icon: <History /> },
-    { path: "/admin/system/backup", label: "Backup", icon: <Storage /> },
-    { path: "/admin/system/maintenance", label: "Maintenance", icon: <Settings /> },
   ];
 
   const handleItemClick = () => {
@@ -141,7 +240,7 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
     }
   };
 
-  const NavListItem = ({ path, label, icon, exact = false }: any) => (
+  const NavListItem = ({ path, label, icon, exact = false, badge = null }: any) => (
     <ListItem disablePadding sx={{ backgroundColor: 'transparent' }}>
       <ListItemButton
         component={NavLink}
@@ -183,7 +282,13 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
-          {icon}
+          {badge ? (
+            <Badge badgeContent={badge} color="error">
+              {icon}
+            </Badge>
+          ) : (
+            icon
+          )}
         </ListItemIcon>
         <ListItemText 
           primary={label} 
@@ -197,7 +302,7 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
     </ListItem>
   );
 
-  const SectionHeader = ({ onClick, isOpen, icon, title }: any) => (
+  const SectionHeader = ({ onClick, isOpen, icon, title, badge = null }: any) => (
     <ListItem disablePadding>
       <ListItemButton 
         onClick={onClick}
@@ -212,7 +317,13 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
         }}
       >
         <ListItemIcon sx={{ color: theme.palette.text.secondary }}>
-          {icon}
+          {badge ? (
+            <Badge badgeContent={badge} color="error">
+              {icon}
+            </Badge>
+          ) : (
+            icon
+          )}
         </ListItemIcon>
         <ListItemText 
           primary={title} 
@@ -255,7 +366,7 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
             mb: 3,
           }}
         >
-          Financial Management System
+          Enhanced Management System
         </Typography>
 
         {/* Admin Profile */}
@@ -293,7 +404,7 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
       {/* Navigation */}
       <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
         <List>
-          {/* Main Menu */}
+          {/* Main Dashboard */}
           {mainMenuItems.map((item) => (
             <NavListItem key={item.path} {...item} />
           ))}
@@ -305,11 +416,58 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
             onClick={() => setIsManagementOpen(!isManagementOpen)}
             isOpen={isManagementOpen}
             icon={<AdminPanelSettings />}
-            title="Management"
+            title="Core Management"
           />
           {isManagementOpen && (
             <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
               {managementItems.map((item) => (
+                <NavListItem key={item.path} {...item} />
+              ))}
+            </Box>
+          )}
+
+          {/* 📨 NEW: Communication Section */}
+          <SectionHeader
+            onClick={() => setIsCommunicationOpen(!isCommunicationOpen)}
+            isOpen={isCommunicationOpen}
+            icon={<Campaign />}
+            title="Communications"
+            badge={3}
+          />
+          {isCommunicationOpen && (
+            <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
+              {communicationItems.map((item) => (
+                <NavListItem key={item.path} {...item} />
+              ))}
+            </Box>
+          )}
+
+          {/* 🛠️ NEW: System Management Section */}
+          <SectionHeader
+            onClick={() => setIsSystemOpen(!isSystemOpen)}
+            isOpen={isSystemOpen}
+            icon={<MonitorHeart />}
+            title="System Management"
+          />
+          {isSystemOpen && (
+            <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
+              {systemItems.map((item) => (
+                <NavListItem key={item.path} {...item} />
+              ))}
+            </Box>
+          )}
+
+          {/* 🔐 NEW: Enhanced Security Section */}
+          <SectionHeader
+            onClick={() => setIsSecurityOpen(!isSecurityOpen)}
+            isOpen={isSecurityOpen}
+            icon={<Shield />}
+            title="Security Center"
+            badge={7}
+          />
+          {isSecurityOpen && (
+            <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
+              {securityItems.map((item) => (
                 <NavListItem key={item.path} {...item} />
               ))}
             </Box>
@@ -330,6 +488,11 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
             </Box>
           )}
 
+          {/* Audit Logs (Standalone) */}
+          {auditItems.map((item) => (
+            <NavListItem key={item.path} {...item} />
+          ))}
+
           {/* Settings Section */}
           <SectionHeader
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
@@ -340,21 +503,6 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
           {isSettingsOpen && (
             <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
               {settingsItems.map((item) => (
-                <NavListItem key={item.path} {...item} />
-              ))}
-            </Box>
-          )}
-
-          {/* System Section */}
-          <SectionHeader
-            onClick={() => setIsSystemOpen(!isSystemOpen)}
-            isOpen={isSystemOpen}
-            icon={<Storage />}
-            title="System"
-          />
-          {isSystemOpen && (
-            <Box sx={{ pl: 2, backgroundColor: 'transparent' }}>
-              {systemItems.map((item) => (
                 <NavListItem key={item.path} {...item} />
               ))}
             </Box>
@@ -397,8 +545,25 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
           textAlign: 'center'
         }}>
           <Typography variant="caption" color="success.main">
-            🟢 System Online
+            🟢 All Systems Online
           </Typography>
+        </Box>
+
+        {/* Mobile Enhancement Indicator */}
+        <Box sx={{ 
+          mt: 1, 
+          p: 1, 
+          backgroundColor: alpha(theme.palette.info.main, 0.1),
+          borderRadius: 2,
+          textAlign: 'center',
+          display: { xs: 'block', md: 'none' }
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+            <PhoneAndroid sx={{ fontSize: 14 }} color="info" />
+            <Typography variant="caption" color="info.main">
+              Mobile Enhanced
+            </Typography>
+          </Box>
         </Box>
       </Box>
     </Box>
