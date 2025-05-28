@@ -24,22 +24,17 @@ import {
   DialogActions,
   Grid,
   Paper,
-  Fab,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
   Snackbar,
   Switch,
   FormControlLabel,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Badge,
   InputAdornment,
   useTheme,
+  useMediaQuery,
   alpha,
   Slide,
-  Fade
+  Fade,
+  Stack
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -58,7 +53,8 @@ import {
   ExpandMore as ExpandMoreIcon,
   Calculate as CalculateIcon,
   AttachMoney as MoneyIcon,
-  Analytics as AnalyticsIcon
+  Analytics as AnalyticsIcon,
+  Close as CloseIcon
 } from "@mui/icons-material";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
@@ -88,11 +84,15 @@ interface SortableItemProps {
   isOverLimit: boolean;
   total: number;
   selectedCurrency: string;
+  isMobile?: boolean;
 }
 
-// Sortable Item Component
-function SortableItem({ id, item, onChange, onRemove, isOverLimit, total, selectedCurrency }: SortableItemProps) {
+// Mobile-Friendly Sortable Item Component
+function SortableItem({ id, item, onChange, onRemove, isOverLimit, total, selectedCurrency, isMobile }: SortableItemProps) {
   const theme = useTheme();
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [expanded, setExpanded] = useState(false);
+  
   const {
     attributes,
     listeners,
@@ -117,6 +117,132 @@ function SortableItem({ id, item, onChange, onRemove, isOverLimit, total, select
     low: theme.palette.success.main
   };
 
+  if (isMobile) {
+    return (
+      <Paper
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        elevation={isDragging ? 8 : 2}
+        sx={{
+          p: 2,
+          mb: 2,
+          border: isOverLimit ? `2px solid ${theme.palette.error.main}` : 'none',
+          borderRadius: 2,
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {/* Mobile: Compact Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+          <Typography variant="subtitle2" fontWeight="bold" sx={{ flex: 1 }}>
+            {item.name || 'Kategori'}
+          </Typography>
+          
+          <Box display="flex" alignItems="center" gap={0.5}>
+            <Chip
+              size="small"
+              label={`${item.percent}%`}
+              color={isOverLimit ? 'error' : 'primary'}
+              variant="filled"
+            />
+            <IconButton
+              size="small"
+              onClick={() => setExpanded(!expanded)}
+              sx={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            >
+              <ExpandMoreIcon />
+            </IconButton>
+          </Box>
+        </Box>
+
+        {/* Amount Display */}
+        <Typography variant="h6" color="primary.main" sx={{ mb: 1 }}>
+          {formatCurrency((total * item.percent) / 100, selectedCurrency)}
+        </Typography>
+
+        {/* Priority Chip */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={expanded ? 2 : 0}>
+          <Chip
+            size="small"
+            label={item.priority === 'high' ? 'Tinggi' : item.priority === 'medium' ? 'Sedang' : 'Rendah'}
+            sx={{
+              bgcolor: alpha(priorityColors[item.priority || 'medium'], 0.1),
+              color: priorityColors[item.priority || 'medium'],
+            }}
+          />
+          
+          <Box display="flex" alignItems="center" gap={0.5}>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => onRemove(id)}
+            >
+              <DeleteIcon />
+            </IconButton>
+            <Box {...listeners} sx={{ cursor: 'grab', '&:active': { cursor: 'grabbing' } }}>
+              <IconButton size="small">
+                <DragIcon />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Expandable Edit Form */}
+        <Collapse in={expanded}>
+          <Stack spacing={2}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Nama Kategori"
+              value={item.name}
+              onChange={(e) => onChange(id, "name", e.target.value)}
+              error={isOverLimit}
+            />
+            
+            <Box display="flex" gap={1}>
+              <TextField
+                size="small"
+                type="number"
+                label="Persentase"
+                value={item.percent}
+                onChange={(e) => onChange(id, "percent", parseFloat(e.target.value) || 0)}
+                error={isOverLimit}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>
+                }}
+                sx={{ flex: 1 }}
+              />
+              
+              <FormControl size="small" sx={{ flex: 1 }}>
+                <InputLabel>Prioritas</InputLabel>
+                <Select
+                  value={item.priority || 'medium'}
+                  label="Prioritas"
+                  onChange={(e) => onChange(id, "priority", e.target.value)}
+                >
+                  <MenuItem value="high">Tinggi</MenuItem>
+                  <MenuItem value="medium">Sedang</MenuItem>
+                  <MenuItem value="low">Rendah</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <TextField
+              fullWidth
+              size="small"
+              label="Deskripsi (opsional)"
+              value={item.description || ''}
+              onChange={(e) => onChange(id, "description", e.target.value)}
+              multiline
+              rows={2}
+            />
+          </Stack>
+        </Collapse>
+      </Paper>
+    );
+  }
+
+  // Desktop version (original layout)
   return (
     <Paper
       ref={setNodeRef}
@@ -243,6 +369,9 @@ function SortableItem({ id, item, onChange, onRemove, isOverLimit, total, select
 // Main Component
 export default function MoneySplitAdvanced() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const availableCurrencies = ["IDR", "USD", "EUR", "THB", "SGD", "JPY", "GBP"];
   const [selectedCurrency, setSelectedCurrency] = useState("");
   const [total, setTotal] = useState(0);
@@ -335,23 +464,7 @@ export default function MoneySplitAdvanced() {
     setCategories(arrayMove(categories, oldIndex, newIndex));
   };
 
-  // New advanced features
-  const autoBalance = () => {
-    if (categories.length === 0) return;
-    
-    const evenSplit = Math.floor(100 / categories.length);
-    const remainder = 100 % categories.length;
-    
-    const updated = categories.map((cat, index) => ({
-      ...cat,
-      percent: evenSplit + (index < remainder ? 1 : 0)
-    }));
-    
-    setPrevCategories(categories);
-    setCategories(updated);
-    showSnackbar("Persentase berhasil diseimbangkan secara otomatis!");
-  };
-
+  // Template functions (simplified for mobile)
   const applyRecommendedSplit = (type: '50-30-20' | '60-20-20' | 'aggressive-save') => {
     setPrevCategories(categories);
     
@@ -386,65 +499,6 @@ export default function MoneySplitAdvanced() {
     showSnackbar(`Template ${type} berhasil diterapkan!`);
   };
 
-  const saveTemplate = () => {
-    if (!templateName.trim()) return;
-    
-    const template = {
-      id: Date.now().toString(),
-      name: templateName,
-      categories: categories,
-      createdAt: new Date().toISOString()
-    };
-    
-    const updatedTemplates = [...savedTemplates, template];
-    setSavedTemplates(updatedTemplates);
-    localStorage.setItem("moneySplitTemplates", JSON.stringify(updatedTemplates));
-    
-    setSaveDialogOpen(false);
-    setTemplateName("");
-    showSnackbar("Template berhasil disimpan!");
-  };
-
-  const loadTemplate = (template: any) => {
-    setPrevCategories(categories);
-    setCategories(template.categories);
-    showSnackbar(`Template "${template.name}" berhasil dimuat!`);
-  };
-
-  const exportData = () => {
-    const result = {
-      currency: selectedCurrency,
-      total: total,
-      categories: categories.map((cat) => ({
-        name: cat.name,
-        percentage: cat.percent,
-        priority: cat.priority,
-        description: cat.description,
-        amount: (total * cat.percent) / 100,
-        formatted: formatCurrency((total * cat.percent) / 100, selectedCurrency)
-      })),
-      summary: {
-        totalPercentage: totalPercent,
-        isBalanced: totalPercent === 100,
-        totalAmount: total,
-        exportedAt: new Date().toISOString()
-      }
-    };
-    
-    const dataStr = JSON.stringify(result, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `money-split-${selectedCurrency}-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    
-    setExportDialogOpen(false);
-    showSnackbar("Data berhasil diekspor!");
-  };
-
   const showSnackbar = (message: string) => {
     setSnackbarMessage(message);
     setSnackbarOpen(true);
@@ -455,167 +509,138 @@ export default function MoneySplitAdvanced() {
     return { ...cat, value, name: cat.name, percent: cat.percent };
   });
 
-  const pieData = categories.map((cat, index) => ({
-    name: cat.name,
-    value: cat.percent,
-    color: theme.palette.primary.main
-  }));
-
-  const COLORS = [
-    theme.palette.primary.main,
-    theme.palette.secondary.main,
-    theme.palette.success.main,
-    theme.palette.warning.main,
-    theme.palette.error.main,
-    theme.palette.info.main,
-  ];
-
   return (
     <Card elevation={3} sx={{ maxWidth: '100%', mx: 'auto', mt: 4 }}>
       <CardHeader
         title={
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
             <CalculateIcon color="primary" />
-            <Typography variant="h5" component="h1" fontWeight="bold">
-              Money Split Simulator Pro
+            <Typography variant={isSmallMobile ? "h6" : "h5"} component="h1" fontWeight="bold">
+              {isSmallMobile ? "Money Split" : "Money Split Simulator Pro"}
             </Typography>
             <Chip label="Enhanced" color="primary" size="small" />
           </Box>
         }
-        subheader="Bagi uang Anda dengan bijak menggunakan strategi keuangan terpercaya"
+        subheader={
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            {isSmallMobile ? "Bagi uang dengan bijak" : "Bagi uang Anda dengan bijak menggunakan strategi keuangan terpercaya"}
+          </Typography>
+        }
         action={
-          <Box display="flex" gap={1}>
-            <Tooltip title="Tips & Panduan">
-              <IconButton onClick={() => setShowTips(!showTips)} color="info">
-                <InfoIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Pengaturan Lanjutan">
-              <IconButton onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}>
+          <Box display="flex" gap={0.5} flexWrap="wrap">
+            {!isSmallMobile && (
+              <Tooltip title="Tips & Panduan">
+                <IconButton onClick={() => setShowTips(!showTips)} color="info" size="small">
+                  <InfoIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+            <Tooltip title="Template">
+              <IconButton onClick={() => setShowAdvancedOptions(!showAdvancedOptions)} size="small">
                 <SettingsIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Simpan Template">
-              <IconButton onClick={() => setSaveDialogOpen(true)} color="success">
-                <SaveIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Ekspor Data">
-              <IconButton onClick={() => setExportDialogOpen(true)} disabled={!selectedCurrency}>
-                <DownloadIcon />
               </IconButton>
             </Tooltip>
           </Box>
         }
       />
 
-      <CardContent>
-        {/* Tips Section */}
-        <Collapse in={showTips}>
-          <Alert severity="info" sx={{ mb: 3 }} action={
-            <IconButton size="small" onClick={() => setShowTips(false)}>
-              ✕
-            </IconButton>
-          }>
-            <Typography variant="subtitle2" gutterBottom>
-              💡 Tips Pembagian Uang yang Ideal:
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Typography variant="body2">
-                  <strong>Rule 50/30/20:</strong><br />
-                  50% Kebutuhan, 30% Keinginan, 20% Tabungan
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        {/* Mobile Tips */}
+        {isMobile && (
+          <Collapse in={showTips}>
+            <Alert severity="info" sx={{ mb: 2 }} 
+              action={
+                <IconButton size="small" onClick={() => setShowTips(false)}>
+                  <CloseIcon />
+                </IconButton>
+              }
+            >
+              <Typography variant="body2" fontWeight="bold" gutterBottom>
+                💡 Template Populer:
+              </Typography>
+              <Stack spacing={1}>
+                <Typography variant="caption">
+                  <strong>50/30/20:</strong> 50% Kebutuhan, 30% Keinginan, 20% Tabungan
                 </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="body2">
-                  <strong>Conservative 60/20/20:</strong><br />
-                  60% Kebutuhan, 20% Tabungan, 20% Investasi
+                <Typography variant="caption">
+                  <strong>60/20/20:</strong> 60% Kebutuhan, 20% Tabungan, 20% Investasi
                 </Typography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="body2">
-                  <strong>Aggressive Saving:</strong><br />
-                  40% Kebutuhan, 30% Tabungan, 25% Investasi, 5% Hiburan
-                </Typography>
-              </Grid>
-            </Grid>
-          </Alert>
-        </Collapse>
+              </Stack>
+            </Alert>
+          </Collapse>
+        )}
 
-        {/* Template Quick Actions */}
+        {/* Template Quick Actions - Mobile Optimized */}
         <Collapse in={showAdvancedOptions}>
           <Paper elevation={1} sx={{ p: 2, mb: 3, bgcolor: 'grey.50' }}>
-            <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+            <Typography variant="subtitle2" gutterBottom fontWeight="bold">
               🚀 Template Cepat
             </Typography>
-            <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => applyRecommendedSplit('50-30-20')}
-                startIcon={<TrendingUpIcon />}
-              >
-                50/30/20 Rule
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => applyRecommendedSplit('60-20-20')}
-                startIcon={<TrendingUpIcon />}
-              >
-                60/20/20 Conservative
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => applyRecommendedSplit('aggressive-save')}
-                startIcon={<TrendingUpIcon />}
-              >
-                Aggressive Saving
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={autoBalance}
-                startIcon={<AutoIcon />}
-                disabled={categories.length === 0}
-              >
-                Auto Balance
-              </Button>
-            </Box>
             
-            {/* Saved Templates */}
-            {savedTemplates.length > 0 && (
-              <>
-                <Typography variant="subtitle2" gutterBottom>
-                  📋 Template Tersimpan
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {savedTemplates.map((template) => (
-                    <Chip
-                      key={template.id}
-                      label={template.name}
-                      onClick={() => loadTemplate(template)}
-                      onDelete={() => {
-                        const updated = savedTemplates.filter(t => t.id !== template.id);
-                        setSavedTemplates(updated);
-                        localStorage.setItem("moneySplitTemplates", JSON.stringify(updated));
-                      }}
-                      color="primary"
-                      variant="outlined"
-                      size="small"
-                    />
-                  ))}
-                </Box>
-              </>
+            {isMobile ? (
+              <Stack spacing={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => applyRecommendedSplit('50-30-20')}
+                  startIcon={<TrendingUpIcon />}
+                  fullWidth
+                >
+                  50/30/20 Rule
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => applyRecommendedSplit('60-20-20')}
+                  startIcon={<TrendingUpIcon />}
+                  fullWidth
+                >
+                  60/20/20 Conservative
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => applyRecommendedSplit('aggressive-save')}
+                  startIcon={<TrendingUpIcon />}
+                  fullWidth
+                >
+                  Aggressive Saving
+                </Button>
+              </Stack>
+            ) : (
+              <Box display="flex" flexWrap="wrap" gap={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => applyRecommendedSplit('50-30-20')}
+                  startIcon={<TrendingUpIcon />}
+                >
+                  50/30/20 Rule
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => applyRecommendedSplit('60-20-20')}
+                  startIcon={<TrendingUpIcon />}
+                >
+                  60/20/20 Conservative
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => applyRecommendedSplit('aggressive-save')}
+                  startIcon={<TrendingUpIcon />}
+                >
+                  Aggressive Saving
+                </Button>
+              </Box>
             )}
           </Paper>
         </Collapse>
 
-        {/* Currency and Total Input */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6}>
+        {/* Currency and Total Input - Mobile Friendly */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel id="currency-label">Mata Uang</InputLabel>
               <Select
@@ -641,7 +666,7 @@ export default function MoneySplitAdvanced() {
           </Grid>
 
           {selectedCurrency && (
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label={`Total Uang (${selectedCurrency})`}
@@ -664,34 +689,35 @@ export default function MoneySplitAdvanced() {
 
         {selectedCurrency && (
           <>
-            {/* Status Indicator */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-              <Typography variant="h6" fontWeight="bold">
-                Kategori & Alokasi
-              </Typography>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Chip
-                  label={`Total: ${totalPercent}%`}
-                  color={totalPercent === 100 ? 'success' : totalPercent > 100 ? 'error' : 'warning'}
-                  icon={totalPercent === 100 ? <span>✅</span> : totalPercent > 100 ? <span>⚠️</span> : <span>📊</span>}
-                />
-                {remaining !== 0 && (
+            {/* Status Indicator - Mobile Optimized */}
+            <Box sx={{ mb: 2 }}>
+              <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'flex-start' : 'center'} gap={1} mb={2}>
+                <Typography variant="h6" fontWeight="bold">
+                  Kategori & Alokasi
+                </Typography>
+                <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
                   <Chip
-                    label={`${remaining > 0 ? 'Sisa' : 'Lebih'}: ${Math.abs(remaining)}%`}
-                    color={remaining > 0 ? 'info' : 'error'}
-                    size="small"
+                    label={`Total: ${totalPercent}%`}
+                    color={totalPercent === 100 ? 'success' : totalPercent > 100 ? 'error' : 'warning'}
+                    icon={totalPercent === 100 ? <span>✅</span> : totalPercent > 100 ? <span>⚠️</span> : <span>📊</span>}
+                    size={isSmallMobile ? 'small' : 'medium'}
                   />
-                )}
+                  {remaining !== 0 && (
+                    <Chip
+                      label={`${remaining > 0 ? 'Sisa' : 'Lebih'}: ${Math.abs(remaining)}%`}
+                      color={remaining > 0 ? 'info' : 'error'}
+                      size="small"
+                    />
+                  )}
+                </Box>
               </Box>
-            </Box>
 
-            {/* Progress Bar */}
-            <Box sx={{ mb: 3 }}>
+              {/* Progress Bar */}
               <LinearProgress
                 variant="determinate"
                 value={Math.min(totalPercent, 100)}
                 color={totalPercent === 100 ? 'success' : totalPercent > 100 ? 'error' : 'primary'}
-                sx={{ height: 8, borderRadius: 4 }}
+                sx={{ height: 8, borderRadius: 4, mb: 2 }}
               />
             </Box>
 
@@ -730,40 +756,77 @@ export default function MoneySplitAdvanced() {
                     isOverLimit={isOverLimit}
                     total={total}
                     selectedCurrency={selectedCurrency}
+                    isMobile={isMobile}
                   />
                 ))}
               </SortableContext>
             </DndContext>
 
-            {/* Action Buttons */}
-            <Box display="flex" flexWrap="wrap" gap={2} sx={{ mt: 3, mb: 4 }}>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={handleAdd}
-                color="success"
-              >
-                Tambah Kategori
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<UndoIcon />}
-                onClick={handleUndo}
-                disabled={!prevCategories}
-              >
-                Undo
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={handleReset}
-                color="error"
-              >
-                Reset Semua
-              </Button>
+            {/* Action Buttons - Mobile Optimized */}
+            <Box sx={{ mt: 3, mb: 4 }}>
+              {isMobile ? (
+                <Stack spacing={2}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleAdd}
+                    color="success"
+                    fullWidth
+                  >
+                    Tambah Kategori
+                  </Button>
+                  <Box display="flex" gap={1}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<UndoIcon />}
+                      onClick={handleUndo}
+                      disabled={!prevCategories}
+                      sx={{ flex: 1 }}
+                    >
+                      Undo
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<RefreshIcon />}
+                      onClick={handleReset}
+                      color="error"
+                      sx={{ flex: 1 }}
+                    >
+                      Reset
+                    </Button>
+                  </Box>
+                </Stack>
+              ) : (
+                <Box display="flex" flexWrap="wrap" gap={2}>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleAdd}
+                    color="success"
+                  >
+                    Tambah Kategori
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<UndoIcon />}
+                    onClick={handleUndo}
+                    disabled={!prevCategories}
+                  >
+                    Undo
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<RefreshIcon />}
+                    onClick={handleReset}
+                    color="error"
+                  >
+                    Reset Semua
+                  </Button>
+                </Box>
+              )}
             </Box>
 
-            {/* Results */}
+            {/* Results - Mobile Optimized */}
             {result.length > 0 && totalPercent === 100 && (
               <Fade in={true}>
                 <Box>
@@ -771,112 +834,97 @@ export default function MoneySplitAdvanced() {
                     📊 Hasil Pembagian
                   </Typography>
                   
-                  {/* Pie Chart */}
-                  <Grid container spacing={3} sx={{ mb: 3 }}>
-                    <Grid item xs={12} md={6}>
-                      <Paper elevation={2} sx={{ p: 2, height: 300 }}>
-                        <Typography variant="subtitle1" align="center" gutterBottom>
-                          Visualisasi Pembagian
-                        </Typography>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={pieData}
-                              dataKey="value"
-                              nameKey="name"
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={80}
-                              label={({ name, value }) => `${name}: ${value}%`}
-                            >
-                              {pieData.map((_, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <RechartsTooltip />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </Paper>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={6}>
-                      <Paper elevation={2} sx={{ p: 2, height: 300, overflow: 'auto' }}>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Detail Alokasi
-                        </Typography>
-                        {result.map((cat, idx) => (
-                          <Box key={idx} sx={{ mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                            <Box display="flex" justifyContent="space-between" alignItems="center">
-                              <Typography variant="subtitle2" fontWeight="bold">
-                                {cat.name}
-                              </Typography>
-                              <Chip
-                                label={`${cat.percent}%`}
-                                size="small"
-                                color="primary"
-                              />
-                            </Box>
-                            <Typography variant="h6" color="primary.main" sx={{ mt: 1 }}>
-                              {formatCurrency(cat.value, selectedCurrency)}
+                  {/* Results List for Mobile */}
+                  {isMobile ? (
+                    <Stack spacing={2}>
+                      {result.map((cat, idx) => (
+                        <Paper key={idx} elevation={1} sx={{ p: 2 }}>
+                          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                              {cat.name}
                             </Typography>
-                            {cat.description && (
-                              <Typography variant="caption" color="text.secondary">
-                                {cat.description}
-                              </Typography>
-                            )}
+                            <Chip
+                              label={`${cat.percent}%`}
+                              size="small"
+                              color="primary"
+                            />
                           </Box>
-                        ))}
-                      </Paper>
+                          <Typography variant="h6" color="primary.main">
+                            {formatCurrency(cat.value, selectedCurrency)}
+                          </Typography>
+                          {cat.description && (
+                            <Typography variant="caption" color="text.secondary">
+                              {cat.description}
+                            </Typography>
+                          )}
+                        </Paper>
+                      ))}
+                    </Stack>
+                  ) : (
+                    /* Desktop Results with Chart */
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={6}>
+                        <Paper elevation={2} sx={{ p: 2, height: 300 }}>
+                          <Typography variant="subtitle1" align="center" gutterBottom>
+                            Visualisasi Pembagian
+                          </Typography>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={result}
+                                dataKey="percent"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={80}
+                                label={({ name, percent }) => `${name}: ${percent}%`}
+                              >
+                                {result.map((_, index) => (
+                                  <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 60%)`} />
+                                ))}
+                              </Pie>
+                              <RechartsTooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </Paper>
+                      </Grid>
+                      
+                      <Grid item xs={12} md={6}>
+                        <Paper elevation={2} sx={{ p: 2, height: 300, overflow: 'auto' }}>
+                          <Typography variant="subtitle1" gutterBottom>
+                            Detail Alokasi
+                          </Typography>
+                          {result.map((cat, idx) => (
+                            <Box key={idx} sx={{ mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                              <Box display="flex" justifyContent="space-between" alignItems="center">
+                                <Typography variant="subtitle2" fontWeight="bold">
+                                  {cat.name}
+                                </Typography>
+                                <Chip
+                                  label={`${cat.percent}%`}
+                                  size="small"
+                                  color="primary"
+                                />
+                              </Box>
+                              <Typography variant="h6" color="primary.main" sx={{ mt: 1 }}>
+                                {formatCurrency(cat.value, selectedCurrency)}
+                              </Typography>
+                              {cat.description && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {cat.description}
+                                </Typography>
+                              )}
+                            </Box>
+                          ))}
+                        </Paper>
+                      </Grid>
                     </Grid>
-                  </Grid>
+                  )}
                 </Box>
               </Fade>
             )}
           </>
         )}
-
-        {/* Dialogs */}
-        <Dialog open={exportDialogOpen} onClose={() => setExportDialogOpen(false)}>
-          <DialogTitle>Ekspor Data Pembagian Uang</DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="text.secondary">
-              Data akan diekspor dalam format JSON yang bisa digunakan untuk backup atau import ke aplikasi lain.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setExportDialogOpen(false)}>Batal</Button>
-            <Button onClick={exportData} variant="contained" startIcon={<DownloadIcon />}>
-              Ekspor
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog open={saveDialogOpen} onClose={() => setSaveDialogOpen(false)}>
-          <DialogTitle>Simpan Template</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Nama Template"
-              fullWidth
-              variant="outlined"
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-              placeholder="Contoh: Template Konservatif"
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setSaveDialogOpen(false)}>Batal</Button>
-            <Button 
-              onClick={saveTemplate} 
-              variant="contained" 
-              disabled={!templateName.trim()}
-              startIcon={<SaveIcon />}
-            >
-              Simpan
-            </Button>
-          </DialogActions>
-        </Dialog>
 
         {/* Snackbar */}
         <Snackbar

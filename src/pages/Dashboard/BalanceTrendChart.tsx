@@ -9,7 +9,15 @@ import {
   Paper,
   Grid,
   Alert,
-  useTheme
+  useTheme,
+  useMediaQuery,
+  Card,
+  CardContent,
+  Chip,
+  Stack,
+  IconButton,
+  Collapse,
+  Button
 } from '@mui/material';
 import {
   ResponsiveContainer,
@@ -22,6 +30,14 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+import {
+  ShowChart as LineIcon,
+  AreaChart as AreaIcon,
+  Settings as SettingsIcon,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  ExpandMore as ExpandMoreIcon
+} from '@mui/icons-material';
 import { format, subDays, subMonths, subYears, parseISO } from 'date-fns';
 
 interface Transaction {
@@ -69,10 +85,14 @@ const BalanceTrendChart: React.FC<Props> = ({
   wallets
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [chartType, setChartType] = useState<'line' | 'area'>('area');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Process data
-  const { chartData, isEmpty } = useMemo(() => {
+  const { chartData, isEmpty, totalIncome, totalOutcome, netChange } = useMemo(() => {
     const now = new Date();
     
     // Filter transactions by date range
@@ -93,7 +113,7 @@ const BalanceTrendChart: React.FC<Props> = ({
       .filter(tx => selectedCurrency === 'all' || tx.currency === selectedCurrency);
 
     if (filteredTx.length === 0) {
-      return { chartData: [], isEmpty: true };
+      return { chartData: [], isEmpty: true, totalIncome: 0, totalOutcome: 0, netChange: 0 };
     }
 
     // Group transactions by date
@@ -123,7 +143,7 @@ const BalanceTrendChart: React.FC<Props> = ({
       cumulativeBalance += net;
       
       return {
-        date: format(parseISO(dateKey), 'dd/MM'),
+        date: format(parseISO(dateKey), isSmallMobile ? 'dd/MM' : 'dd/MM'),
         dateKey,
         income: dayData.income,
         outcome: dayData.outcome,
@@ -132,8 +152,23 @@ const BalanceTrendChart: React.FC<Props> = ({
       };
     });
 
-    return { chartData: data, isEmpty: false };
-  }, [transactions, selectedCurrency, filterDate]);
+    // Calculate totals
+    const totIncome = filteredTx
+      .filter(tx => tx.type === 'income')
+      .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+    
+    const totOutcome = filteredTx
+      .filter(tx => tx.type === 'outcome')
+      .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+    return { 
+      chartData: data, 
+      isEmpty: false, 
+      totalIncome: totIncome,
+      totalOutcome: totOutcome,
+      netChange: totIncome - totOutcome
+    };
+  }, [transactions, selectedCurrency, filterDate, isSmallMobile]);
 
   const formatCurrency = (value: number, currency: string = 'IDR') => {
     // Handle different currency formats
@@ -201,17 +236,29 @@ const BalanceTrendChart: React.FC<Props> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload as ChartDataPoint;
       return (
-        <Paper elevation={3} sx={{ p: 2, maxWidth: 200 }}>
+        <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: { xs: 180, sm: 200 } }}>
           <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
             {label}
           </Typography>
-          <Typography variant="body2" color="success.main">
+          <Typography 
+            variant="body2" 
+            color="success.main"
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Masuk: {formatCurrency(data.income, displayCurrency)}
           </Typography>
-          <Typography variant="body2" color="error.main">
+          <Typography 
+            variant="body2" 
+            color="error.main"
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Keluar: {formatCurrency(data.outcome, displayCurrency)}
           </Typography>
-          <Typography variant="body2" fontWeight="bold">
+          <Typography 
+            variant="body2" 
+            fontWeight="bold"
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Saldo: {formatCurrency(data.cumulative, displayCurrency)}
           </Typography>
         </Paper>
@@ -230,29 +277,87 @@ const BalanceTrendChart: React.FC<Props> = ({
 
   return (
     <Box>
-      {/* Simple Controls */}
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          {chartData.length} hari data
-        </Typography>
-        <FormControl size="small" sx={{ minWidth: 100 }}>
-          <InputLabel>Tampilan</InputLabel>
-          <Select
-            value={chartType}
-            label="Tampilan"
-            onChange={(e) => setChartType(e.target.value as 'line' | 'area')}
-          >
-            <MenuItem value="area">Area</MenuItem>
-            <MenuItem value="line">Line</MenuItem>
-          </Select>
-        </FormControl>
+      {/* Mobile-friendly Controls */}
+      <Box sx={{ mb: 2 }}>
+        {isMobile ? (
+          <Stack spacing={2}>
+            {/* Top row - Chart info and settings toggle */}
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="body2" color="text.secondary">
+                {chartData.length} hari data
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<SettingsIcon />}
+                endIcon={<ExpandMoreIcon sx={{ 
+                  transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s' 
+                }} />}
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                Options
+              </Button>
+            </Box>
+
+            {/* Collapsible advanced controls */}
+            <Collapse in={showAdvanced}>
+              <Paper elevation={1} sx={{ p: 2, bgcolor: 'grey.50' }}>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Chart Type</InputLabel>
+                  <Select
+                    value={chartType}
+                    label="Chart Type"
+                    onChange={(e) => setChartType(e.target.value as 'line' | 'area')}
+                  >
+                    <MenuItem value="area">
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <AreaIcon fontSize="small" />
+                        Area Chart
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="line">
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <LineIcon fontSize="small" />
+                        Line Chart
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </Paper>
+            </Collapse>
+          </Stack>
+        ) : (
+          /* Desktop controls */
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="body2" color="text.secondary">
+              {chartData.length} hari data
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 100 }}>
+              <InputLabel>Tampilan</InputLabel>
+              <Select
+                value={chartType}
+                label="Tampilan"
+                onChange={(e) => setChartType(e.target.value as 'line' | 'area')}
+              >
+                <MenuItem value="area">Area</MenuItem>
+                <MenuItem value="line">Line</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        )}
       </Box>
 
-      {/* Chart */}
-      <Box sx={{ height: 300 }}>
+      {/* Chart - Responsive Height */}
+      <Box sx={{ height: { xs: 250, sm: 300, md: 350 }, mb: 2 }}>
         <ResponsiveContainer width="100%" height="100%">
           {chartType === 'area' ? (
-            <AreaChart data={chartData}>
+            <AreaChart data={chartData} margin={{ 
+              top: 5, 
+              right: isMobile ? 5 : 30, 
+              left: isMobile ? 5 : 20, 
+              bottom: 5 
+            }}>
               <defs>
                 <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={theme.palette.primary.main} stopOpacity={0.8}/>
@@ -260,8 +365,30 @@ const BalanceTrendChart: React.FC<Props> = ({
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis dataKey="date" stroke="#666" />
-              <YAxis tickFormatter={(value) => formatCurrency(value, displayCurrency)} stroke="#666" />
+              <XAxis 
+                dataKey="date" 
+                stroke="#666" 
+                fontSize={isSmallMobile ? 10 : 12}
+                tick={{ fontSize: isSmallMobile ? 10 : 12 }}
+                interval={isSmallMobile ? 'preserveStartEnd' : 0}
+              />
+              <YAxis 
+                tickFormatter={(value) => {
+                  if (isMobile) {
+                    // Simplified format for mobile
+                    if (Math.abs(value) >= 1000000) {
+                      return `${(value / 1000000).toFixed(1)}M`;
+                    } else if (Math.abs(value) >= 1000) {
+                      return `${(value / 1000).toFixed(1)}K`;
+                    }
+                    return value.toFixed(0);
+                  }
+                  return formatCurrency(value, displayCurrency);
+                }} 
+                stroke="#666"
+                fontSize={isSmallMobile ? 10 : 12}
+                width={isMobile ? 50 : 80}
+              />
               <RechartsTooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"
@@ -269,60 +396,139 @@ const BalanceTrendChart: React.FC<Props> = ({
                 stroke={theme.palette.primary.main}
                 fillOpacity={1}
                 fill="url(#colorGradient)"
+                strokeWidth={2}
               />
             </AreaChart>
           ) : (
-            <LineChart data={chartData}>
+            <LineChart data={chartData} margin={{ 
+              top: 5, 
+              right: isMobile ? 5 : 30, 
+              left: isMobile ? 5 : 20, 
+              bottom: 5 
+            }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis dataKey="date" stroke="#666" />
-              <YAxis tickFormatter={(value) => formatCurrency(value, displayCurrency)} stroke="#666" />
+              <XAxis 
+                dataKey="date" 
+                stroke="#666" 
+                fontSize={isSmallMobile ? 10 : 12}
+                tick={{ fontSize: isSmallMobile ? 10 : 12 }}
+                interval={isSmallMobile ? 'preserveStartEnd' : 0}
+              />
+              <YAxis 
+                tickFormatter={(value) => {
+                  if (isMobile) {
+                    // Simplified format for mobile
+                    if (Math.abs(value) >= 1000000) {
+                      return `${(value / 1000000).toFixed(1)}M`;
+                    } else if (Math.abs(value) >= 1000) {
+                      return `${(value / 1000).toFixed(1)}K`;
+                    }
+                    return value.toFixed(0);
+                  }
+                  return formatCurrency(value, displayCurrency);
+                }} 
+                stroke="#666"
+                fontSize={isSmallMobile ? 10 : 12}
+                width={isMobile ? 50 : 80}
+              />
               <RechartsTooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
                 dataKey="cumulative"
                 stroke={theme.palette.primary.main}
                 strokeWidth={3}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
+                dot={{ r: isMobile ? 3 : 4 }}
+                activeDot={{ r: isMobile ? 5 : 6 }}
               />
             </LineChart>
           )}
         </ResponsiveContainer>
       </Box>
 
-      {/* Simple Stats */}
-      <Grid container spacing={2} sx={{ mt: 2 }}>
-        <Grid item xs={4}>
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="bold" color="success.main">
-              {formatCurrency(chartData.reduce((sum, d) => sum + d.income, 0), displayCurrency)}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Total Masuk {displayCurrency !== 'IDR' && `(${displayCurrency})`}
-            </Typography>
-          </Box>
+      {/* Stats - Mobile Optimized Layout */}
+      {isMobile ? (
+        <Stack spacing={2}>
+          {/* Primary stat - Net Change */}
+          <Card elevation={1}>
+            <CardContent sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="caption" color="text.secondary" gutterBottom>
+                Net Change
+              </Typography>
+              <Typography 
+                variant="h5" 
+                fontWeight="bold" 
+                color={netChange >= 0 ? 'success.main' : 'error.main'}
+                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}
+              >
+                {netChange >= 0 ? <TrendingUpIcon /> : <TrendingDownIcon />}
+                {formatCurrency(Math.abs(netChange), displayCurrency)}
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* Secondary stats */}
+          <Grid container spacing={1}>
+            <Grid item xs={6}>
+              <Paper elevation={1} sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="caption" color="text.secondary" gutterBottom>
+                  Total Masuk
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" color="success.main">
+                  {formatCurrency(totalIncome, displayCurrency)}
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={6}>
+              <Paper elevation={1} sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="caption" color="text.secondary" gutterBottom>
+                  Total Keluar
+                </Typography>
+                <Typography variant="h6" fontWeight="bold" color="error.main">
+                  {formatCurrency(totalOutcome, displayCurrency)}
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Stack>
+      ) : (
+        /* Desktop Stats Grid */
+        <Grid container spacing={3}>
+          <Grid item xs={4}>
+            <Box textAlign="center">
+              <Typography variant="h6" fontWeight="bold" color="success.main">
+                {formatCurrency(totalIncome, displayCurrency)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Total Masuk {displayCurrency !== 'IDR' && `(${displayCurrency})`}
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={4}>
+            <Box textAlign="center">
+              <Typography variant="h6" fontWeight="bold" color="error.main">
+                {formatCurrency(totalOutcome, displayCurrency)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Total Keluar {displayCurrency !== 'IDR' && `(${displayCurrency})`}
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={4}>
+            <Box textAlign="center">
+              <Typography 
+                variant="h6" 
+                fontWeight="bold" 
+                color={netChange >= 0 ? 'success.main' : 'error.main'}
+              >
+                {formatCurrency(netChange, displayCurrency)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Net Change {displayCurrency !== 'IDR' && `(${displayCurrency})`}
+              </Typography>
+            </Box>
+          </Grid>
         </Grid>
-        <Grid item xs={4}>
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="bold" color="error.main">
-              {formatCurrency(chartData.reduce((sum, d) => sum + d.outcome, 0), displayCurrency)}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Total Keluar {displayCurrency !== 'IDR' && `(${displayCurrency})`}
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid item xs={4}>
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="bold" color="primary.main">
-              {formatCurrency(chartData[chartData.length - 1]?.cumulative || 0, displayCurrency)}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Saldo Akhir {displayCurrency !== 'IDR' && `(${displayCurrency})`}
-            </Typography>
-          </Box>
-        </Grid>
-      </Grid>
+      )}
     </Box>
   );
 };

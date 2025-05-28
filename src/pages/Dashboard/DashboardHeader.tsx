@@ -17,8 +17,11 @@ import {
   Paper,
   Badge,
   useTheme,
+  useMediaQuery,
   alpha,
-  Fade
+  Fade,
+  Stack,
+  Collapse
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -27,7 +30,9 @@ import {
   Schedule as ScheduleIcon,
   Star as StarIcon,
   Update as UpdateIcon,
-  Verified as VerifiedIcon
+  Verified as VerifiedIcon,
+  ExpandMore as ExpandMoreIcon,
+  Menu as MenuIcon
 } from '@mui/icons-material';
 import LangToggle from './LangToggle';
 
@@ -37,7 +42,10 @@ interface Props {
 
 const DashboardHeader: React.FC<Props> = ({ displayName }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [notificationMenuAnchor, setNotificationMenuAnchor] = useState<null | HTMLElement>(null);
+  const [showDetails, setShowDetails] = useState(!isMobile); // Auto-collapse on mobile
 
   // Get greeting based on time of day
   const greeting = useMemo(() => {
@@ -48,7 +56,7 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
     return 'Selamat Malam';
   }, []);
 
-  // Mock notifications (in real app, this would come from props or context)
+  // Mock notifications
   const notifications = [
     {
       id: 1,
@@ -100,9 +108,9 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
   };
 
   const currentTime = new Date().toLocaleString('id-ID', {
-    weekday: 'long',
+    weekday: isSmallMobile ? 'short' : 'long',
     year: 'numeric',
-    month: 'long',
+    month: isSmallMobile ? 'short' : 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
@@ -118,103 +126,211 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
           color: 'white'
         }}
       >
-        <CardContent sx={{ p: 3 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            {/* Left Section - Main Title & Greeting */}
-            <Box display="flex" alignItems="center" gap={2}>
-              <Avatar 
-                sx={{ 
-                  bgcolor: alpha(theme.palette.common.white, 0.2),
-                  width: 48,
-                  height: 48
-                }}
-              >
-                <DashboardIcon fontSize="large" />
-              </Avatar>
-              <Box>
-                <Typography 
-                  variant="h4" 
-                  fontWeight="bold" 
-                  sx={{ 
-                    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1
-                  }}
-                >
-                  Dashboard
-                  <Chip 
-                    label="Pro" 
-                    size="small"
+        <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+          {/* Mobile Layout */}
+          {isMobile ? (
+            <Box>
+              {/* Top Row - Essential Info */}
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Avatar 
                     sx={{ 
                       bgcolor: alpha(theme.palette.common.white, 0.2),
-                      color: 'white',
-                      fontWeight: 'bold'
+                      width: { xs: 36, sm: 42 },
+                      height: { xs: 36, sm: 42 }
                     }}
-                  />
-                </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                    {greeting}, {displayName || 'User'}!
-                  </Typography>
-                  <VerifiedIcon fontSize="small" sx={{ opacity: 0.8 }} />
+                  >
+                    <DashboardIcon fontSize={isSmallMobile ? 'medium' : 'large'} />
+                  </Avatar>
+                  <Box>
+                    <Typography 
+                      variant={isSmallMobile ? "h5" : "h4"}
+                      fontWeight="bold" 
+                      sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                    >
+                      Dashboard
+                    </Typography>
+                    {!isSmallMobile && (
+                      <Chip 
+                        label="Pro" 
+                        size="small"
+                        sx={{ 
+                          bgcolor: alpha(theme.palette.common.white, 0.2),
+                          color: 'white',
+                          fontWeight: 'bold',
+                          mt: 0.5
+                        }}
+                      />
+                    )}
+                  </Box>
                 </Box>
+
+                {/* Mobile Controls */}
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {/* Language Toggle - Compact */}
+                  <Box
+                    sx={{ 
+                      bgcolor: alpha(theme.palette.common.white, 0.1),
+                      borderRadius: 1,
+                      p: 0.5
+                    }}
+                  >
+                    <LangToggle variant="chip" compact={true} size="small" showFlags={!isSmallMobile} />
+                  </Box>
+
+                  {/* Notifications */}
+                  <IconButton
+                    onClick={handleNotificationMenuOpen}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette.common.white, 0.1),
+                      color: 'white',
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.common.white, 0.2),
+                      }
+                    }}
+                  >
+                    <Badge badgeContent={unreadNotifications} color="error">
+                      <NotificationsIcon fontSize="small" />
+                    </Badge>
+                  </IconButton>
+
+                  {/* Expand Details Button */}
+                  <IconButton
+                    onClick={() => setShowDetails(!showDetails)}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette.common.white, 0.1),
+                      color: 'white',
+                      transform: showDetails ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease'
+                    }}
+                  >
+                    <ExpandMoreIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </Box>
+
+              {/* Greeting Row */}
+              <Box mb={showDetails ? 1 : 0}>
                 <Typography 
-                  variant="body2" 
+                  variant={isSmallMobile ? "body1" : "h6"}
+                  sx={{ opacity: 0.9 }}
+                >
+                  {greeting}, {displayName ? (displayName.length > 15 && isSmallMobile ? displayName.substring(0, 15) + '...' : displayName) : 'User'}!
+                  {!isSmallMobile && <VerifiedIcon fontSize="small" sx={{ ml: 1, opacity: 0.8 }} />}
+                </Typography>
+              </Box>
+
+              {/* Collapsible Details */}
+              <Collapse in={showDetails}>
+                <Typography 
+                  variant="caption" 
                   sx={{ 
                     opacity: 0.8,
-                    mt: 0.5,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1
+                    gap: 0.5
                   }}
                 >
                   <UpdateIcon fontSize="small" />
                   {currentTime}
                 </Typography>
-              </Box>
+              </Collapse>
             </Box>
-
-            {/* Right Section - Controls */}
-            <Box 
-              display="flex" 
-              alignItems="center" 
-              gap={2}
-            >
-              {/* Language Toggle */}
-              <Paper 
-                elevation={0}
-                sx={{ 
-                  bgcolor: alpha(theme.palette.common.white, 0.1),
-                  p: 1,
-                  borderRadius: 2
-                }}
-              >
-                <LangToggle />
-              </Paper>
-
-              {/* Notifications */}
-              <Tooltip title="Notifikasi">
-                <IconButton
-                  onClick={handleNotificationMenuOpen}
-                  sx={{
-                    bgcolor: alpha(theme.palette.common.white, 0.1),
-                    color: 'white',
-                    '&:hover': {
-                      bgcolor: alpha(theme.palette.common.white, 0.2),
-                    }
+          ) : (
+            /* Desktop Layout - Original */
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              {/* Left Section */}
+              <Box display="flex" alignItems="center" gap={2}>
+                <Avatar 
+                  sx={{ 
+                    bgcolor: alpha(theme.palette.common.white, 0.2),
+                    width: 48,
+                    height: 48
                   }}
                 >
-                  <Badge badgeContent={unreadNotifications} color="error">
-                    <NotificationsIcon />
-                  </Badge>
-                </IconButton>
-              </Tooltip>
+                  <DashboardIcon fontSize="large" />
+                </Avatar>
+                <Box>
+                  <Typography 
+                    variant="h4" 
+                    fontWeight="bold" 
+                    sx={{ 
+                      textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    Dashboard
+                    <Chip 
+                      label="Pro" 
+                      size="small"
+                      sx={{ 
+                        bgcolor: alpha(theme.palette.common.white, 0.2),
+                        color: 'white',
+                        fontWeight: 'bold'
+                      }}
+                    />
+                  </Typography>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                      {greeting}, {displayName || 'User'}!
+                    </Typography>
+                    <VerifiedIcon fontSize="small" sx={{ opacity: 0.8 }} />
+                  </Box>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      opacity: 0.8,
+                      mt: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    <UpdateIcon fontSize="small" />
+                    {currentTime}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Right Section */}
+              <Box display="flex" alignItems="center" gap={2}>
+                <Paper 
+                  elevation={0}
+                  sx={{ 
+                    bgcolor: alpha(theme.palette.common.white, 0.1),
+                    p: 1,
+                    borderRadius: 2
+                  }}
+                >
+                  <LangToggle />
+                </Paper>
+
+                <Tooltip title="Notifikasi">
+                  <IconButton
+                    onClick={handleNotificationMenuOpen}
+                    sx={{
+                      bgcolor: alpha(theme.palette.common.white, 0.1),
+                      color: 'white',
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.common.white, 0.2),
+                      }
+                    }}
+                  >
+                    <Badge badgeContent={unreadNotifications} color="error">
+                      <NotificationsIcon />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Box>
-          </Box>
+          )}
         </CardContent>
 
-        {/* Notifications Menu */}
+        {/* Notifications Menu - Responsive */}
         <Menu
           anchorEl={notificationMenuAnchor}
           open={Boolean(notificationMenuAnchor)}
@@ -225,8 +341,9 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
             elevation: 8,
             sx: {
               mt: 1,
-              maxWidth: 400,
-              minWidth: 300,
+              maxWidth: { xs: '90vw', sm: 400 },
+              minWidth: { xs: 280, sm: 300 },
+              maxHeight: { xs: '70vh', sm: 500 }
             },
           }}
         >
@@ -243,7 +360,7 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
             </Box>
           </Box>
 
-          <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+          <Box sx={{ maxHeight: { xs: '50vh', sm: 400 }, overflow: 'auto' }}>
             {notifications.map((notification) => (
               <MenuItem 
                 key={notification.id}
@@ -251,18 +368,26 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
                 sx={{
                   alignItems: 'flex-start',
                   py: 2,
+                  px: { xs: 1.5, sm: 2 },
                   borderBottom: 1,
                   borderColor: 'divider',
                   bgcolor: notification.read ? 'transparent' : alpha(theme.palette.primary.main, 0.05)
                 }}
               >
-                <ListItemIcon sx={{ mt: 0.5 }}>
+                <ListItemIcon sx={{ mt: 0.5, minWidth: { xs: 32, sm: 40 } }}>
                   {getNotificationIcon(notification.type)}
                 </ListItemIcon>
                 <ListItemText
                   primary={
                     <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="subtitle2" fontWeight="bold">
+                      <Typography 
+                        variant="subtitle2" 
+                        fontWeight="bold"
+                        sx={{ 
+                          fontSize: { xs: '0.85rem', sm: '0.875rem' },
+                          lineHeight: 1.2
+                        }}
+                      >
                         {notification.title}
                       </Typography>
                       {!notification.read && (
@@ -271,7 +396,9 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            bgcolor: 'primary.main'
+                            bgcolor: 'primary.main',
+                            flexShrink: 0,
+                            ml: 1
                           }}
                         />
                       )}
@@ -279,10 +406,22 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
                   }
                   secondary={
                     <Box>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ 
+                          fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                          lineHeight: 1.3,
+                          mb: 0.5
+                        }}
+                      >
                         {notification.message}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                      >
                         {notification.time}
                       </Typography>
                     </Box>
@@ -292,8 +431,13 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
             ))}
           </Box>
 
-          <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Button fullWidth variant="outlined" size="small">
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, borderTop: 1, borderColor: 'divider' }}>
+            <Button 
+              fullWidth 
+              variant="outlined" 
+              size="small"
+              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
               Lihat Semua Notifikasi
             </Button>
           </Box>
