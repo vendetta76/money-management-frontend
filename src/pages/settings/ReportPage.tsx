@@ -5,8 +5,8 @@ import {
   Paper,
   Box,
 } from '@mui/material';
-import ReportForm from '../../components/ReportForm';
-import LayoutShell from '../../layout/LayoutShell'; // ✅ Import your layout
+import ReportForm from '@/components/ReportForm';
+import LayoutShell from '@/layouts/LayoutShell'; // ✅ Import your layout
 
 const ReportPage: React.FC = () => {
   return (
