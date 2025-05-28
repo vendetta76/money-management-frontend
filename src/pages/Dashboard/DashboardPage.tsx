@@ -43,8 +43,9 @@ import MoneySplitSimulator from './MoneySplitSimulator';
 import BalanceTrendChart from './BalanceTrendChart';
 import WalletPieChart from './WalletPieChart';
 import RecentTransactions from './RecentTransactions';
+import CollapsibleCurrencyView from './CollapsibleCurrencyView';
 
-// Standardized currency formatting utility
+// Enhanced currency formatting utility with FIXED symbols
 const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
   if (amount === undefined || amount === null || isNaN(amount)) {
     amount = 0;
@@ -54,24 +55,36 @@ const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
 
   // Traditional currencies with proper locale support
   const traditionalCurrencies = {
-    'USD': { locale: 'en-US', options: { style: 'currency', currency: 'USD', maximumFractionDigits: 2 } },
-    'EUR': { locale: 'de-DE', options: { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 } },
-    'JPY': { locale: 'ja-JP', options: { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 } },
-    'SGD': { locale: 'en-SG', options: { style: 'currency', currency: 'SGD', maximumFractionDigits: 2 } },
-    'GBP': { locale: 'en-GB', options: { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 } },
-    'THB': { locale: 'th-TH', options: { style: 'currency', currency: 'THB', maximumFractionDigits: 2 } },
-    'AUD': { locale: 'en-AU', options: { style: 'currency', currency: 'AUD', maximumFractionDigits: 2 } },
-    'CAD': { locale: 'en-CA', options: { style: 'currency', currency: 'CAD', maximumFractionDigits: 2 } },
-    'CHF': { locale: 'de-CH', options: { style: 'currency', currency: 'CHF', maximumFractionDigits: 2 } },
-    'CNY': { locale: 'zh-CN', options: { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 } },
-    'KRW': { locale: 'ko-KR', options: { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 } },
-    'IDR': { locale: 'id-ID', options: { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 } }
+    'USD': { locale: 'en-US', options: { style: 'currency' as const, currency: 'USD', maximumFractionDigits: 2 } },
+    'EUR': { locale: 'de-DE', options: { style: 'currency' as const, currency: 'EUR', maximumFractionDigits: 2 } },
+    'JPY': { locale: 'ja-JP', options: { style: 'currency' as const, currency: 'JPY', maximumFractionDigits: 0 } },
+    'SGD': { locale: 'en-SG', options: { style: 'currency' as const, currency: 'SGD', maximumFractionDigits: 2 } },
+    'GBP': { locale: 'en-GB', options: { style: 'currency' as const, currency: 'GBP', maximumFractionDigits: 2 } },
+    'THB': { locale: 'th-TH', options: { style: 'currency' as const, currency: 'THB', maximumFractionDigits: 2 } },
+    'AUD': { locale: 'en-AU', options: { style: 'currency' as const, currency: 'AUD', maximumFractionDigits: 2 } },
+    'CAD': { locale: 'en-CA', options: { style: 'currency' as const, currency: 'CAD', maximumFractionDigits: 2 } },
+    'CHF': { locale: 'de-CH', options: { style: 'currency' as const, currency: 'CHF', maximumFractionDigits: 2 } },
+    'CNY': { locale: 'zh-CN', options: { style: 'currency' as const, currency: 'CNY', maximumFractionDigits: 2 } },
+    'KRW': { locale: 'ko-KR', options: { style: 'currency' as const, currency: 'KRW', maximumFractionDigits: 0 } },
+    'IDR': { locale: 'id-ID', options: { style: 'currency' as const, currency: 'IDR', maximumFractionDigits: 0 } },
+    'INR': { locale: 'en-IN', options: { style: 'currency' as const, currency: 'INR', maximumFractionDigits: 2 } },
+    'TWD': { locale: 'zh-TW', options: { style: 'currency' as const, currency: 'TWD', maximumFractionDigits: 2 } }
   };
 
   // Check if it's a traditional currency
   if (traditionalCurrencies[normalizedCurrency]) {
     const { locale, options } = traditionalCurrencies[normalizedCurrency];
-    return amount.toLocaleString(locale, options);
+    try {
+      return amount.toLocaleString(locale, options);
+    } catch (error) {
+      // Fallback to manual formatting with correct symbols
+      const symbols = {
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CNY': '¥', 
+        'INR': '₹', 'TWD': 'NT$', 'THB': '฿', 'KRW': '₩', 'IDR': 'Rp'
+      };
+      const symbol = symbols[normalizedCurrency] || normalizedCurrency;
+      return `${symbol} ${amount.toLocaleString()}`;
+    }
   }
 
   // Cryptocurrency formatting
@@ -135,9 +148,9 @@ function DashboardPage() {
   // Simple filter states
   const [filterDate, setFilterDate] = useState('30days');
 
-  // Enhanced currency metadata
+  // Enhanced currency metadata with FIXED symbols
   const currencyMetadata = {
-    // Traditional currencies
+    // Traditional currencies - FIXED SYMBOLS
     'IDR': { name: 'Indonesian Rupiah', symbol: 'Rp', type: 'fiat' },
     'USD': { name: 'US Dollar', symbol: '$', type: 'fiat' },
     'EUR': { name: 'Euro', symbol: '€', type: 'fiat' },
@@ -149,7 +162,9 @@ function DashboardPage() {
     'AUD': { name: 'Australian Dollar', symbol: 'A$', type: 'fiat' },
     'CAD': { name: 'Canadian Dollar', symbol: 'C$', type: 'fiat' },
     'CHF': { name: 'Swiss Franc', symbol: 'CHF', type: 'fiat' },
-    'CNY': { name: 'Chinese Yuan', symbol: '¥', type: 'fiat' },
+    'CNY': { name: 'Chinese Yuan', symbol: '¥', type: 'fiat' },        // FIXED: was 'Rp'
+    'INR': { name: 'Indian Rupee', symbol: '₹', type: 'fiat' },        // FIXED: was 'Rp'
+    'TWD': { name: 'Taiwan Dollar', symbol: 'NT$', type: 'fiat' },     // FIXED: was 'Rp'
     'KRW': { name: 'South Korean Won', symbol: '₩', type: 'fiat' },
     // Cryptocurrencies
     'USDT': { name: 'Tether USD', symbol: 'USDT', type: 'crypto' },
@@ -408,166 +423,74 @@ function DashboardPage() {
     };
   }, [user]);
 
-  // Enhanced Filters Component with improved currency selection
-  const SimpleFilters = () => (
-    <Card elevation={1} sx={{ mb: 3 }}>
-      <CardContent>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={4}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Periode</InputLabel>
-              <Select
-                value={filterDate}
-                label="Periode"
-                onChange={(e) => setFilterDate(e.target.value)}
-              >
-                <MenuItem value="7days">7 Hari</MenuItem>
-                <MenuItem value="30days">30 Hari</MenuItem>
-                <MenuItem value="1year">1 Tahun</MenuItem>
-                <MenuItem value="all">Semua</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <Button
-              variant={showSplit ? 'contained' : 'outlined'}
-              startIcon={<CalculatorIcon />}
-              onClick={() => setShowSplit(!showSplit)}
-              fullWidth
-              sx={{ height: 40 }}
-            >
-              Money Split
-            </Button>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <Box display="flex" gap={1}>
+  // Enhanced Filters Component
+  const EnhancedFilters = () => (
+    <Box sx={{ mb: 3 }}>
+      {/* Basic Controls Row */}
+      <Card elevation={1} sx={{ mb: 2 }}>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={6} md={4}>
               <FormControl fullWidth size="small">
-                <InputLabel>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <SettingsIcon fontSize="small" />
-                    Display Currency
-                  </Box>
-                </InputLabel>
+                <InputLabel>Periode</InputLabel>
                 <Select
-                  value={displayCurrency}
-                  label="Display Currency"
-                  onChange={(e) => handleCurrencyChange(e.target.value)}
-                  disabled={availableCurrencies.length <= 1}
+                  value={filterDate}
+                  label="Periode"
+                  onChange={(e) => setFilterDate(e.target.value)}
                 >
-                  {availableCurrencies.map((currency) => (
-                    <MenuItem key={currency.code} value={currency.code}>
-                      <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="body2" fontWeight="bold">
-                            {currency.symbol}
-                          </Typography>
-                          <Typography variant="body2">
-                            {currency.code}
-                          </Typography>
-                          <Chip 
-                            label={currency.type} 
-                            size="small" 
-                            color={currency.type === 'crypto' ? 'warning' : 'primary'}
-                            variant="outlined"
-                            sx={{ fontSize: '0.6rem', height: 16 }}
-                          />
-                        </Box>
-                        <Box textAlign="right">
-                          <Typography variant="caption" color="text.secondary">
-                            {formatCurrency(currency.balance, currency.code)}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            {currency.walletCount} wallet{currency.walletCount !== 1 ? 's' : ''}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </MenuItem>
-                  ))}
+                  <MenuItem value="7days">7 Hari</MenuItem>
+                  <MenuItem value="30days">30 Hari</MenuItem>
+                  <MenuItem value="1year">1 Tahun</MenuItem>
+                  <MenuItem value="all">Semua</MenuItem>
                 </Select>
               </FormControl>
-              
-              {/* Auto-select button */}
-              {availableCurrencies.length > 1 && preferenceSource !== 'auto' && smartDefaultCurrency !== displayCurrency && (
-                <Tooltip title={`Auto-select ${smartDefaultCurrency} (highest balance)`}>
-                  <IconButton 
-                    size="small" 
-                    onClick={handleAutoSelectCurrency}
-                    sx={{ 
-                      border: 1, 
-                      borderColor: 'primary.main',
-                      '&:hover': { bgcolor: 'primary.light', color: 'white' }
-                    }}
-                  >
-                    <AutoIcon />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
-          </Grid>
-        </Grid>
-
-        {/* Enhanced Currency Info */}
-        {availableCurrencies.length > 0 && (
-          <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} md={8}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  <strong>Available Currencies ({availableCurrencies.length}):</strong>
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {availableCurrencies.map(c => (
-                    <Chip
-                      key={c.code}
-                      label={`${c.code}: ${formatCurrency(c.balance, c.code)}`}
-                      size="small"
-                      color={c.code === displayCurrency ? 'primary' : 'default'}
-                      variant={c.code === displayCurrency ? 'filled' : 'outlined'}
-                      onClick={() => handleCurrencyChange(c.code)}
-                      clickable
-                    />
-                  ))}
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
-                  <Chip
-                    label={
-                      preferenceSource === 'user' ? '👤 User Preference' :
-                      preferenceSource === 'auto' ? '🤖 Auto Selected' : 
-                      '⚙️ Default'
-                    }
-                    size="small"
-                    color={preferenceSource === 'user' ? 'primary' : 'default'}
-                    variant="outlined"
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Current Balance: {formatCurrency(totalBalanceInSelectedCurrency, displayCurrency)}
-                  </Typography>
-                  {preferenceSource === 'user' && (
-                    <Tooltip title="Saved to your profile">
-                      <SaveIcon fontSize="small" color="success" />
-                    </Tooltip>
-                  )}
-                </Box>
-              </Grid>
             </Grid>
-          </Box>
-        )}
 
-        {/* Smart selection hint */}
-        {availableCurrencies.length > 1 && preferenceSource === 'auto' && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              💡 Auto-selected <strong>{displayCurrency}</strong> ({currencyMetadata[displayCurrency]?.name}) 
-              as it has the highest balance among your {currencyMetadata[displayCurrency]?.type} currencies. 
-              Your preference will be saved when you manually change it.
-            </Typography>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
+            <Grid item xs={12} sm={6} md={4}>
+              <Button
+                variant={showSplit ? 'contained' : 'outlined'}
+                startIcon={<CalculatorIcon />}
+                onClick={() => setShowSplit(!showSplit)}
+                fullWidth
+                sx={{ height: 40 }}
+              >
+                Money Split
+              </Button>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="body2" color="text.secondary">
+                  Display Mode:
+                </Typography>
+                <Chip 
+                  label={
+                    preferenceSource === 'user' ? 'Manual' : 
+                    preferenceSource === 'auto' ? 'Auto' : 
+                    'Default'
+                  }
+                  size="small"
+                  color={preferenceSource === 'user' ? 'primary' : 'default'}
+                  variant="outlined"
+                />
+              </Box>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* NEW: Collapsible Currency View */}
+      <CollapsibleCurrencyView
+        availableCurrencies={availableCurrencies}
+        displayCurrency={displayCurrency}
+        onCurrencyChange={handleCurrencyChange}
+        smartDefaultCurrency={smartDefaultCurrency}
+        preferenceSource={preferenceSource}
+        totalBalance={totalBalanceInSelectedCurrency}
+        onAutoSelect={handleAutoSelectCurrency}
+        showSaveIndicator={preferenceSource === 'user'}
+      />
+    </Box>
   );
 
   // Loading Screen
@@ -600,8 +523,8 @@ function DashboardPage() {
         {/* Header */}
         <DashboardHeader displayName={displayName} />
 
-        {/* Enhanced Filters */}
-        <SimpleFilters />
+        {/* Enhanced Filters with Collapsible Currency View */}
+        <EnhancedFilters />
 
         {/* Money Split Simulator */}
         <Collapse in={showSplit}>

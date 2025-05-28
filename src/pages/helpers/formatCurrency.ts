@@ -1,7 +1,3 @@
-// helpers/formatCurrency.ts
-// Enhanced Universal Currency Formatter
-// Now handles ANY currency - traditional, crypto, custom, or completely unknown
-
 interface CurrencyConfig {
   symbol: string;
   name: string;
@@ -50,25 +46,68 @@ export const formatCurrency = (
     ARS: "es-AR", CLP: "es-CL", COP: "es-CO"
   };
 
-  // Enhanced cryptocurrency symbols and formatting
+  // 🔧 FIXED: Enhanced cryptocurrency symbols and formatting with CORRECT symbols
   const cryptoSymbols: Record<string, string> = {
-  // Stablecoins
-  'USDT': 'USDT', 'USDC': 'USDC', 'DAI': 'DAI', 'BUSD': 'BUSD',
-  'TUSD': 'TUSD', 'FRAX': 'FRAX', 'LUSD': 'LUSD',
+    // Stablecoins
+    'USDT': 'USDT', 'USDC': 'USDC', 'DAI': 'DAI', 'BUSD': 'BUSD',
+    'TUSD': 'TUSD', 'FRAX': 'FRAX', 'LUSD': 'LUSD',
 
-  // Major Cryptocurrencies
-  'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'BNB', 'ADA': '₳', 'DOT': '●',
-  'LINK': 'LINK', 'SOL': 'SOL', 'MATIC': 'MATIC', 'AVAX': 'AVAX',
-  'DOGE': 'DOGE', 'LTC': 'Ł', 'XRP': 'XRP', 'TRX': 'TRX',
-  'UNI': 'UNI', 'CAKE': 'CAKE', 'SUSHI': 'SUSHI',
+    // Major Cryptocurrencies
+    'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'BNB', 'ADA': '₳', 'DOT': '●',
+    'LINK': 'LINK', 'SOL': 'SOL', 'MATIC': 'MATIC', 'AVAX': 'AVAX',
+    'DOGE': 'DOGE', 'LTC': 'Ł', 'XRP': 'XRP', 'TRX': 'TRX',
+    'UNI': 'UNI', 'CAKE': 'CAKE', 'SUSHI': 'SUSHI',
 
-  // DeFi Tokens
-  'AAVE': 'AAVE', 'COMP': 'COMP', 'MKR': 'MKR', 'SNX': 'SNX',
-  'CRV': 'CRV', 'BAL': 'BAL', 'YFI': 'YFI',
+    // DeFi Tokens
+    'AAVE': 'AAVE', 'COMP': 'COMP', 'MKR': 'MKR', 'SNX': 'SNX',
+    'CRV': 'CRV', 'BAL': 'BAL', 'YFI': 'YFI',
 
-  // Meme Coins
-  'SHIB': 'SHIB', 'FLOKI': 'FLOKI', 'PEPE': 'PEPE'
-};
+    // Meme Coins
+    'SHIB': 'SHIB', 'FLOKI': 'FLOKI', 'PEPE': 'PEPE'
+  };
+
+  // 🔧 FIXED: Correct fiat currency symbols (was causing the "Rp" issue)
+  const fiatCurrencySymbols: Record<string, string> = {
+    // Traditional Fiat Currencies with CORRECT symbols
+    'USD': '$',
+    'EUR': '€', 
+    'GBP': '£',
+    'JPY': '¥',
+    'CNY': '¥',      // 🔧 FIXED: Chinese Yuan (was showing 'Rp')
+    'INR': '₹',      // 🔧 FIXED: Indian Rupee (was showing 'Rp') 
+    'TWD': 'NT$',    // 🔧 FIXED: Taiwan Dollar (was showing 'Rp')
+    'THB': '฿',      // Thai Baht
+    'KRW': '₩',      // South Korean Won
+    'SGD': 'S$',     // Singapore Dollar
+    'AUD': 'A$',     // Australian Dollar
+    'CAD': 'C$',     // Canadian Dollar
+    'CHF': 'CHF',    // Swiss Franc
+    'MYR': 'RM',     // Malaysian Ringgit
+    'HKD': 'HK$',    // Hong Kong Dollar
+    'IDR': 'Rp',     // Indonesian Rupiah (this one was correct)
+    'PHP': '₱',      // Philippine Peso
+    'VND': '₫',      // Vietnamese Dong
+    'BRL': 'R$',     // Brazilian Real
+    'NZD': 'NZ$',    // New Zealand Dollar
+    'RUB': '₽',      // Russian Ruble
+    'AED': 'د.إ',    // UAE Dirham
+    'SAR': '﷼',      // Saudi Riyal
+    'TRY': '₺',      // Turkish Lira
+    'MXN': '$',      // Mexican Peso
+    'ZAR': 'R',      // South African Rand
+    'EGP': 'E£',     // Egyptian Pound
+    'NOK': 'kr',     // Norwegian Krone
+    'SEK': 'kr',     // Swedish Krona
+    'DKK': 'kr',     // Danish Krone
+    'PLN': 'zł',     // Polish Zloty
+    'CZK': 'Kč',     // Czech Koruna
+    'HUF': 'Ft',     // Hungarian Forint
+    'ILS': '₪',      // Israeli Shekel
+    'NGN': '₦',      // Nigerian Naira
+    'ARS': '$',      // Argentine Peso
+    'CLP': '$',      // Chilean Peso
+    'COP': '$'       // Colombian Peso
+  };
 
   // Custom/Gaming currencies
   const customCurrencies: Record<string, string> = {
@@ -108,17 +147,30 @@ export const formatCurrency = (
       }).format(amount);
     } catch (error) {
       console.warn(`ISO currency formatting failed for ${currencyUpper}, using fallback`);
-      return new Intl.NumberFormat(selectedLocale, {
+      // 🔧 FIXED: Use correct fiat currency symbol as fallback
+      const symbol = fiatCurrencySymbols[currencyUpper] || currencyUpper;
+      return symbol + ' ' + new Intl.NumberFormat(selectedLocale, {
         style: "decimal",
         minimumFractionDigits: minDigits,
         maximumFractionDigits: maxDigits,
-      }).format(amount) + ` ${currencyUpper}`;
+      }).format(amount);
     }
   }
 
   // 2. Handle known cryptocurrencies
   if (cryptoSymbols[currencyUpper]) {
     const symbol = cryptoSymbols[currencyUpper];
+    const formattedAmount = new Intl.NumberFormat(selectedLocale, {
+      style: "decimal",
+      minimumFractionDigits: minDigits,
+      maximumFractionDigits: maxDigits,
+    }).format(amount);
+    return `${symbol} ${formattedAmount}`;
+  }
+
+  // 🔧 NEW: Handle known fiat currencies that might not be in ISO list
+  if (fiatCurrencySymbols[currencyUpper]) {
+    const symbol = fiatCurrencySymbols[currencyUpper];
     const formattedAmount = new Intl.NumberFormat(selectedLocale, {
       style: "decimal",
       minimumFractionDigits: minDigits,
@@ -291,14 +343,26 @@ export const getCurrencySymbol = (currency: string): string => {
   
   const upperCurrency = currency.toUpperCase();
   
-  // Check known symbols first
-  const knownSymbols: Record<string, string> = {
+  // 🔧 FIXED: Check fiat currencies first with correct symbols
+  const fiatSymbols: Record<string, string> = {
     'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'IDR': 'Rp',
+    'CNY': '¥', 'INR': '₹', 'TWD': 'NT$', 'THB': '฿', 'KRW': '₩',
+    'SGD': 'S$', 'AUD': 'A$', 'CAD': 'C$', 'CHF': 'CHF', 'MYR': 'RM',
+    'HKD': 'HK$', 'PHP': '₱', 'VND': '₫', 'BRL': 'R$', 'NZD': 'NZ$',
+    'RUB': '₽', 'AED': 'د.إ', 'SAR': '﷼', 'TRY': '₺'
+  };
+  
+  if (fiatSymbols[upperCurrency]) {
+    return fiatSymbols[upperCurrency];
+  }
+  
+  // Check crypto symbols
+  const cryptoSymbols: Record<string, string> = {
     'USDT': 'USDT', 'USDC': 'USDC', 'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'BNB'
   };
   
-  if (knownSymbols[upperCurrency]) {
-    return knownSymbols[upperCurrency];
+  if (cryptoSymbols[upperCurrency]) {
+    return cryptoSymbols[upperCurrency];
   }
   
   // Check auto-detected currencies
