@@ -4,7 +4,7 @@ import { ArrowRight, ChevronRight, Shield, BarChart, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export const metadata = {
-  title: "MeowIQ - Aplikasi Manajemen Keuangan Pribadi dan Pintar",
+  title: "MeowIQ - Aplikasi Keuangan Pribadi & Pencatat Pengeluaran Harian Gratis dengan Konsep Unik",
   description: "MeowIQ membantu kamu mencatat pemasukan, pengeluaran, dan mengelola dompet dengan mudah. Gratis, aman, dan bisa diinstal ke perangkatmu.",
 };
 
