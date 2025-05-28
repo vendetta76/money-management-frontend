@@ -101,7 +101,7 @@ const ReportForm: React.FC = () => {
 
     try {
       // Simulate API call - replace with your actual endpoint
-      const response = await fetch("/api/send-report", {
+      const response = await fetch("/api/report/send-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
