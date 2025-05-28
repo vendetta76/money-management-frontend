@@ -50,7 +50,7 @@ import MoneySplitSimulator from './MoneySplitSimulator';
 import BalanceTrendChart from './BalanceTrendChart';
 import WalletPieChart from './WalletPieChart';
 import RecentTransactions from './RecentTransactions';
-import RightSidebar from '@/components/RightSidebar';
+import RightSidebar from '../common/RightSidebar';
 
 // Currency utilities
 import { formatCurrency, getCurrencySymbol, isCryptoCurrency } from '../helpers/formatCurrency';
@@ -80,55 +80,7 @@ const LoadingSkeleton = React.memo(() => (
   </Box>
 ));
 
-const QuickStats = React.memo(({ 
-  totalBalance, 
-  currency, 
-  walletCount 
-}: { 
-  totalBalance: number; 
-  currency: string; 
-  walletCount: number; 
-}) => (
-  <Card elevation={1} sx={{ mb: 3 }}>
-    <CardContent>
-      <Grid container spacing={2}>
-        <Grid item xs={4}>
-          <Box textAlign="center">
-            <Typography variant="h5" fontWeight="bold" color="primary">
-              {formatCurrency(totalBalance, currency)}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Total Balance
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid item xs={4}>
-          <Box textAlign="center">
-            <Typography variant="h5" fontWeight="bold" color="success.main">
-              {walletCount}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Active Wallets
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid item xs={4}>
-          <Box textAlign="center">
-            <Chip 
-              label={currency} 
-              color="primary" 
-              size="medium"
-              icon={<CurrencyIcon />}
-            />
-            <Typography variant="caption" color="text.secondary" display="block">
-              Display Currency
-            </Typography>
-          </Box>
-        </Grid>
-      </Grid>
-    </CardContent>
-  </Card>
-));
+// ❌ REMOVED: QuickStats component as requested
 
 function DashboardPage() {
   const theme = useTheme();
@@ -165,7 +117,7 @@ function DashboardPage() {
 
   // Sidebar states
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarContent, setSidebarContent] = useState<'money-split' | 'analytics' | 'settings' | null>(null);
+  const [sidebarContent, setSidebarContent] = useState<'money-split' | 'settings' | null>(null);
 
   // 🚀 PERFORMANCE: Helper to update loading states
   const updateLoadingState = useCallback((key: keyof LoadingStates, value: boolean) => {
@@ -398,7 +350,7 @@ function DashboardPage() {
   }, [user, updateLoadingState]);
 
   // Sidebar handlers
-  const openSidebar = useCallback((content: 'money-split' | 'analytics' | 'settings') => {
+  const openSidebar = useCallback((content: 'money-split' | 'settings') => {
     setSidebarContent(content);
     setSidebarOpen(true);
   }, []);
@@ -479,14 +431,7 @@ function DashboardPage() {
                 {isSmallMobile ? 'Split' : 'Money Split'}
               </Button>
 
-              <Button
-                variant="outlined"
-                startIcon={<AnalyticsIcon />}
-                onClick={() => openSidebar('analytics')}
-                size={isSmallMobile ? 'small' : 'medium'}
-              >
-                {isSmallMobile ? 'Stats' : 'Analytics'}
-              </Button>
+              {/* ❌ REMOVED: Analytics button as requested */}
             </Stack>
 
             <Box display="flex" alignItems="center" gap={1}>
@@ -524,21 +469,6 @@ function DashboardPage() {
       case 'money-split':
         return <MoneySplitSimulator />;
       
-      case 'analytics':
-        return (
-          <Box>
-            <Typography variant="h6" gutterBottom>
-              📊 Advanced Analytics
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Coming soon! This will show detailed financial analytics, spending patterns, and insights.
-            </Typography>
-            <Alert severity="info">
-              Feature under development. Stay tuned for advanced charts and AI-powered insights!
-            </Alert>
-          </Box>
-        );
-      
       case 'settings':
         return (
           <Box>
@@ -546,10 +476,10 @@ function DashboardPage() {
               ⚙️ Dashboard Settings
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Customize your dashboard experience, notifications, and preferences.
+              We're working hard to bring you customizable dashboard settings.
             </Typography>
             <Alert severity="info">
-              Settings panel coming soon! Configure your dashboard layout, themes, and more.
+              🚧 Work in progress - Please stay tuned! We're building something awesome for you.
             </Alert>
           </Box>
         );
@@ -570,18 +500,10 @@ function DashboardPage() {
           width: 'large' as const,
           headerColor: 'primary' as const
         };
-      case 'analytics':
-        return {
-          title: 'Advanced Analytics',
-          subtitle: 'Detailed financial insights',
-          icon: <AnalyticsIcon />,
-          width: 'medium' as const,
-          headerColor: 'secondary' as const
-        };
       case 'settings':
         return {
           title: 'Dashboard Settings',
-          subtitle: 'Customize your experience',
+          subtitle: 'Work in progress',
           icon: <SettingsIcon />,
           width: 'medium' as const,
           headerColor: 'default' as const
@@ -631,14 +553,7 @@ function DashboardPage() {
         {/* Header - Shows immediately */}
         <DashboardHeader displayName={displayName} />
 
-        {/* 🚀 PERFORMANCE: Show quick stats as soon as wallets load */}
-        {isCoreDataLoaded && currencyData.availableCurrencies.length > 0 && (
-          <QuickStats 
-            totalBalance={currencyData.totalBalance}
-            currency={displayCurrency}
-            walletCount={currencyData.availableCurrencies.reduce((sum, c) => sum + c.count, 0)}
-          />
-        )}
+        {/* 🚀 REMOVED: QuickStats component as requested */}
 
         {/* Enhanced Toolbar - Shows immediately */}
         <DashboardToolbar />
