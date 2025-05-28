@@ -1,3 +1,4 @@
+// src/routes.tsx - FINAL VERSION WITH ADMIN ROUTES
 import React from 'react'
 import { RouteObject, Navigate } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
@@ -45,9 +46,9 @@ import UpgradePage from './pages/upgrade/UpgradePage'
 // 404 Page
 import NotFoundPage from './pages/NotFoundPage'
 
-// 🛡️ ADMIN ROUTES - NEW
-import AdminProtectedRoute from './components/Admin/AdminProtectedRoute'
-import AdminLayoutShell from './layouts/Admin/AdminLayoutShell'
+// 🛡️ ADMIN COMPONENTS
+import AdminProtectedRoute from '@/components/Admin/AdminProtectedRoute'
+import AdminLayoutShell from '@/layouts/Admin/AdminLayoutShell'
 import AdminDashboard from './pages/admin/DashboardPage'
 import UserManagement from './pages/admin/UsersManagementPage'
 import WalletManagement from './pages/admin/WalletsManagementPage'
@@ -66,6 +67,7 @@ const routes: RouteObject[] = [
   // PIN reset flow
   { path: '/forgot-pin', element: <ForgotPinPage /> },
 
+  // USER ROUTES (Your existing routes)
   {
     path: '/dashboard',
     element: (
@@ -235,7 +237,7 @@ const routes: RouteObject[] = [
     ),
   },
 
-  // 🛡️ ADMIN ROUTES SECTION - NEW
+  // 🛡️ ADMIN ROUTES SECTION
   {
     path: '/admin',
     element: (

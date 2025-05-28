@@ -1,3 +1,4 @@
+// src/components/AdminSidebar.tsx - FINAL VERSION
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -22,7 +23,7 @@ import {
   AccountBalanceWallet,
   Receipt,
   Settings,
-  History as ActivityIcon,
+  History,
   ExpandLess,
   ExpandMore,
   Security,
@@ -35,16 +36,12 @@ import {
   TrendingUp,
   Person,
   Tune,
-  Info,
-  Policy,
-  Description,
 } from "@mui/icons-material";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebaseClient";
+import { db } from "../lib/firebaseClient";
 import { toast } from "react-hot-toast";
-import ThemeSelect from "@/components/ThemeSelect";
 
 const DRAWER_WIDTH = 280;
 
@@ -133,7 +130,7 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
   ];
 
   const systemItems = [
-    { path: "/admin/audit-logs", label: "Audit Logs", icon: <Activity /> },
+    { path: "/admin/audit-logs", label: "Audit Logs", icon: <History /> },
     { path: "/admin/system/backup", label: "Backup", icon: <Storage /> },
     { path: "/admin/system/maintenance", label: "Maintenance", icon: <Settings /> },
   ];
@@ -391,8 +388,6 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
           Logout
         </Button>
         
-        <ThemeSelect />
-        
         {/* System Status Indicator */}
         <Box sx={{ 
           mt: 2, 
@@ -418,7 +413,7 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
         open={isOpen}
         onClose={onClose}
         ModalProps={{
-          keepMounted: true, // Better open performance on mobile
+          keepMounted: true,
         }}
         sx={{
           display: { xs: 'block', md: 'none' },

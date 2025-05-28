@@ -1,3 +1,4 @@
+// src/pages/AuditLogs.tsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -14,19 +15,17 @@ import {
   Toolbar,
   Stack,
   Avatar,
-  Paper,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import {
   Timeline,
   TimelineItem,
   TimelineSeparator,
   TimelineConnector,
   TimelineContent,
   TimelineDot,
-  TimelineOppositeContent
-} from '@mui/lab';
+  TimelineOppositeContent,
+  Paper,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import {
   Search,
@@ -47,6 +46,7 @@ import {
   Add,
   Login,
   Logout,
+  History,
 } from '@mui/icons-material';
 
 // Types

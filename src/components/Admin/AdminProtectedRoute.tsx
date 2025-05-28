@@ -1,9 +1,10 @@
+// src/components/AdminProtectedRoute.tsx - FINAL VERSION
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Paper, Alert } from '@mui/material';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebaseClient';
+import { db } from '../lib/firebaseClient';
 import { toast } from 'react-hot-toast';
 
 interface AdminProtectedRouteProps {
@@ -13,7 +14,7 @@ interface AdminProtectedRouteProps {
 
 const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ 
   children, 
-  requiredRole = 'staff' // Default minimum role
+  requiredRole = 'staff'
 }) => {
   const { user, loading: authLoading } = useAuth();
   const [userRole, setUserRole] = useState<string>('');
@@ -31,7 +32,7 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({
 
   // Admin allowed emails (fallback if role system isn't set up yet)
   const adminEmails = [
-    'koutoybox@gmail.com', // Your existing admin email
+    'joeverson.kamantha@gmail.com', // Your existing admin email
     'admin@example.com',
     // Add more admin emails as needed
   ];

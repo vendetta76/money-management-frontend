@@ -25,14 +25,10 @@ import {
   Settings,
   Logout,
   Security,
-  DarkMode,
-  LightMode,
   Refresh,
 } from "@mui/icons-material";
-import AdminSidebar from "@/components/Admin/AdminSidebar";
-import { useTheme as useCustomTheme } from "@/hooks/useThemeAdvanced";
-import { useGesture } from "@use-gesture/react";
-import { useAuth } from "@/context/AuthContext";
+import AdminSidebar from "./AdminSidebar";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
@@ -49,7 +45,6 @@ const AdminLayoutShell = ({ children }: AdminLayoutShellProps) => {
   const [systemStatus, setSystemStatus] = useState<'online' | 'maintenance' | 'warning'>('online');
   const [notificationCount, setNotificationCount] = useState(3);
   
-  const { theme: customTheme } = useCustomTheme();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   
@@ -64,30 +59,6 @@ const AdminLayoutShell = ({ children }: AdminLayoutShellProps) => {
     { id: 2, title: "Large transaction detected", time: "5 minutes ago", type: "warning" },
     { id: 3, title: "System backup completed", time: "1 hour ago", type: "success" },
   ];
-
-  // Gesture handling for PWA slide functionality
-  const bind = useGesture({
-    onDragEnd: ({ swipe: [x], movement: [mx] }) => {
-      if (!isMobile) return;
-      
-      // Swipe right to open (from left edge)
-      if (x === 1 || (mx > 100 && !mobileOpen)) {
-        setMobileOpen(true);
-      }
-      // Swipe left to close
-      if (x === -1 || (mx < -100 && mobileOpen)) {
-        setMobileOpen(false);
-      }
-    },
-    onDrag: ({ movement: [mx], first, memo = mobileOpen }) => {
-      if (!isMobile) return memo;
-      
-      // Only handle gestures from the edge when closed, or anywhere when open
-      if (!memo && first && mx < 20) return memo;
-      
-      return memo;
-    },
-  });
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -140,12 +111,10 @@ const AdminLayoutShell = ({ children }: AdminLayoutShellProps) => {
 
   return (
     <Box 
-      {...bind()} 
       sx={{ 
         display: 'flex',
         minHeight: '100vh',
         backgroundColor: 'background.default',
-        touchAction: 'pan-y',
       }}
     >
       <CssBaseline />
@@ -399,25 +368,6 @@ const AdminLayoutShell = ({ children }: AdminLayoutShellProps) => {
           {children}
         </Box>
       </Box>
-
-      {/* Gesture hint for PWA */}
-      <Box
-        sx={{
-          position: 'fixed',
-          left: 0,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: 4,
-          height: 60,
-          background: `linear-gradient(to right, transparent, ${alpha(theme.palette.primary.main, 0.3)})`,
-          borderRadius: '0 8px 8px 0',
-          display: { xs: 'block', md: 'none' },
-          pointerEvents: 'none',
-          opacity: mobileOpen ? 0 : 0.6,
-          transition: 'opacity 0.3s ease',
-          zIndex: 1000,
-        }}
-      />
     </Box>
   );
 };
