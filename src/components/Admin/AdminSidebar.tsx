@@ -38,9 +38,9 @@ import {
   Tune,
 } from "@mui/icons-material";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../lib/firebaseClient";
+import { db } from "@/lib/firebaseClient";
 import { toast } from "react-hot-toast";
 
 const DRAWER_WIDTH = 280;
