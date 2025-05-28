@@ -1,17 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="icon" href="assets/kucing-cuan.webp" type="image/x-icon" />
-<link rel="icon" type="image/png" sizes="32x32" href="assets/kucing-cuan.webp" />
-<link rel="icon" type="image/png" sizes="16x16" href="assets/kucing-cuan.webp" />
-<link rel="apple-touch-icon" sizes="180x180" href="assets/kucing-cuan.webp" />
-<link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <title>MeowIQ : Money Management</title>
+    <title>MeowIQ - Aplikasi Keuangan Pribadi & Pencatat Pengeluaran Harian Gratis dengan Konsep Unik</title>
+    <meta name="description" content="MeowIQ adalah aplikasi keuangan pribadi dan pencatat pengeluaran harian berbasis PWA dengan fitur unik seperti multi-dompet, laporan otomatis, dan integrasi Telegram. Cocok untuk mahasiswa, pekerja, hingga UMKM. Gratis, ringan, dan beda dari yang lain.">
+    <meta name="keywords" content="aplikasi keuangan pribadi, pencatat pengeluaran harian, aplikasi budgeting gratis, aplikasi dompet digital, laporan keuangan otomatis, aplikasi keuangan mahasiswa, aplikasi keuangan unik, meowiq, aplikasi pwa, telegram bot keuangan">
+    <meta name="author" content="MeowIQ Team">
+    <meta name="robots" content="index, follow">
+    <meta name="google-adsense-account" content="ca-pub-1027680101420926">
+    <link rel="canonical" href="https://meowiq.com" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="MeowIQ - Aplikasi Keuangan yang Beda dari yang Lain">
+    <meta property="og:description" content="Catat pengeluaran, kelola keuangan pribadi, dan nikmati fitur unik yang nggak ada di aplikasi lain. Gratis & ringan.">
+    <meta property="og:image" content="https://meowiq.com/assets/kucing-cuan.webp">
+    <meta property="og:url" content="https://meowiq.com">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MeowIQ - Bikin Ngatur Uang Jadi Seru">
+    <meta name="twitter:description" content="Kelola keuangan dengan cara baru. Coba MeowIQ — gratis, unik, dan beda dari yang lain.">
+    <meta name="twitter:image" content="https://meowiq.com/assets/kucing-cuan.webp">
+
+    <!-- Favicon & Manifest -->
+    <link rel="icon" href="assets/kucing-cuan.webp" type="image/x-icon" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/kucing-cuan.webp" />
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/kucing-cuan.webp" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/kucing-cuan.webp" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- PWA iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#121212" />
+
+    <!-- Optional redirect from pages.dev -->
+    <script>
+      if (window.location.hostname === "moniq.pages.dev") {
+        window.location.href = "https://meowiq.com" + window.location.pathname + window.location.search + window.location.hash;
+      }
+    </script>
   </head>
-  <body>
+  <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
