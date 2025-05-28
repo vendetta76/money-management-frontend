@@ -36,6 +36,9 @@ import SecurityPage from './pages/settings/SecurityPage'
 import PreferencesPage from './pages/settings/PreferencesPage'
 import ReportPage from './pages/settings/ReportPage' // 🆕 Added ReportPage import
 
+// Layout Shell
+import LayoutShell from './components/LayoutShell'
+
 // About MeowIQ Pages ✨
 import AboutPage from './pages/about/AboutPage'
 import PrivacyPolicyPage from './pages/about/PrivacyPolicyPage'
