@@ -1,8 +1,9 @@
-// src/routes.tsx - RESTORED ORIGINAL STRUCTURE + REPORT ROUTE
+// src/routes.tsx - UPDATED WITH LAYOUTSHELL FOR REPORT PAGE
 import React from 'react'
 import { RouteObject, Navigate } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
 import PageTransition from './components/PageTransition'
+import LayoutShell from './components/LayoutShell' // Make sure this import path is correct
 
 // Auth & Utility
 import LoginPage from './pages/LoginPage'
@@ -34,7 +35,7 @@ import EditProfilePage from './pages/EditProfilePage'
 import SettingsProfile from './pages/settings/ProfilePage'
 import SecurityPage from './pages/settings/SecurityPage'
 import PreferencesPage from './pages/settings/PreferencesPage'
-import ReportPage from './pages/settings/ReportPage' // 🆕 Added ReportPage import
+import ReportPage from './pages/settings/ReportPage'
 
 // About MeowIQ Pages ✨
 import AboutPage from './pages/about/AboutPage'
@@ -78,9 +79,11 @@ const routes: RouteObject[] = [
     path: '/dashboard',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <DashboardPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <DashboardPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -88,9 +91,11 @@ const routes: RouteObject[] = [
     path: '/wallet',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <WalletPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <WalletPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -98,9 +103,11 @@ const routes: RouteObject[] = [
     path: '/income',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <IncomePage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <IncomePage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -108,9 +115,11 @@ const routes: RouteObject[] = [
     path: '/outcome',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <OutcomePage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <OutcomePage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -118,9 +127,11 @@ const routes: RouteObject[] = [
     path: '/history',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <HistoryPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <HistoryPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -128,9 +139,11 @@ const routes: RouteObject[] = [
     path: '/transfer',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <TransferPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <TransferPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -138,9 +151,11 @@ const routes: RouteObject[] = [
     path: '/virtual-wallet',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <VirtualWalletPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <VirtualWalletPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -150,9 +165,11 @@ const routes: RouteObject[] = [
     path: '/profile',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <ProfilePage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <ProfilePage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -160,9 +177,11 @@ const routes: RouteObject[] = [
     path: '/profile/edit',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <EditProfilePage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <EditProfilePage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -172,9 +191,11 @@ const routes: RouteObject[] = [
     path: '/settings/profile',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <SettingsProfile />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <SettingsProfile />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -182,9 +203,11 @@ const routes: RouteObject[] = [
     path: '/settings/security',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <SecurityPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <SecurityPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -192,20 +215,24 @@ const routes: RouteObject[] = [
     path: '/settings/preferences',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <PreferencesPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <PreferencesPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
-  // 🆕 Added Report route - MATCHING YOUR EXACT PATTERN
+  // 🆕 Updated Report route - NOW WRAPPED WITH LAYOUTSHELL
   {
     path: '/settings/report',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <ReportPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <ReportPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -215,9 +242,11 @@ const routes: RouteObject[] = [
     path: '/about',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <AboutPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <AboutPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -225,9 +254,11 @@ const routes: RouteObject[] = [
     path: '/about/privacy-policy',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <PrivacyPolicyPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <PrivacyPolicyPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -235,9 +266,11 @@ const routes: RouteObject[] = [
     path: '/about/terms-and-conditions',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <TermsAndConditionsPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <TermsAndConditionsPage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
@@ -247,9 +280,11 @@ const routes: RouteObject[] = [
     path: '/upgrade',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <UpgradePage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <UpgradePage />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
   },
