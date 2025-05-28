@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { NavigateNext, Settings, BugReport } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
-import ReportForm from '../components/ReportForm';
+import ReportForm from '@/components/ReportForm';
 
 const ReportPage: React.FC = () => {
   return (
