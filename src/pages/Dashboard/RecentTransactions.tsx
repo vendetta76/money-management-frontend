@@ -40,6 +40,9 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { id as localeID } from "date-fns/locale";
 
+// 🚀 CLEANED UP: Use centralized currency formatting
+import { formatCurrency, isCryptoCurrency } from '../helpers/formatCurrency';
+
 interface Transaction {
   id: string;
   type: 'income' | 'outcome' | 'transfer';
@@ -70,144 +73,6 @@ interface Props {
   isWalletsLoaded: boolean;
   displayCurrency: string;
 }
-
-// Enhanced currency formatting with better support for all currencies
-const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
-  // Handle undefined/null amounts
-  if (amount === undefined || amount === null || isNaN(amount)) {
-    amount = 0;
-  }
-
-  // Normalize currency to uppercase
-  const normalizedCurrency = (currency || 'IDR').toUpperCase();
-
-  switch (normalizedCurrency) {
-    // Traditional Currencies
-    case 'USD':
-      return amount.toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 2
-      });
-    case 'EUR':
-      return amount.toLocaleString('de-DE', {
-        style: 'currency',
-        currency: 'EUR',
-        maximumFractionDigits: 2
-      });
-    case 'JPY':
-      return amount.toLocaleString('ja-JP', {
-        style: 'currency',
-        currency: 'JPY',
-        maximumFractionDigits: 0
-      });
-    case 'SGD':
-      return amount.toLocaleString('en-SG', {
-        style: 'currency',
-        currency: 'SGD',
-        maximumFractionDigits: 2
-      });
-    case 'GBP':
-      return amount.toLocaleString('en-GB', {
-        style: 'currency',
-        currency: 'GBP',
-        maximumFractionDigits: 2
-      });
-    case 'THB':
-      return amount.toLocaleString('th-TH', {
-        style: 'currency',
-        currency: 'THB',
-        maximumFractionDigits: 2
-      });
-    case 'MYR':
-      return `RM ${amount.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
-    case 'AUD':
-      return amount.toLocaleString('en-AU', {
-        style: 'currency',
-        currency: 'AUD',
-        maximumFractionDigits: 2
-      });
-    case 'CAD':
-      return amount.toLocaleString('en-CA', {
-        style: 'currency',
-        currency: 'CAD',
-        maximumFractionDigits: 2
-      });
-    case 'CHF':
-      return amount.toLocaleString('de-CH', {
-        style: 'currency',
-        currency: 'CHF',
-        maximumFractionDigits: 2
-      });
-    
-    // Cryptocurrencies
-    case 'USDT':
-      return `USDT ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 6 
-      })}`;
-    case 'USDC':
-      return `USDC ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 6 
-      })}`;
-    case 'BTC':
-      return `₿ ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 8 
-      })}`;
-    case 'ETH':
-      return `Ξ ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 6 
-      })}`;
-    case 'BNB':
-      return `BNB ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4 
-      })}`;
-    case 'ADA':
-      return `ADA ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 6 
-      })}`;
-    case 'DOT':
-      return `DOT ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4 
-      })}`;
-    case 'MATIC':
-      return `MATIC ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4 
-      })}`;
-    case 'SOL':
-      return `SOL ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4 
-      })}`;
-    case 'AVAX':
-      return `AVAX ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4 
-      })}`;
-    
-    // Indonesian Rupiah (default)
-    case 'IDR':
-      return amount.toLocaleString('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        maximumFractionDigits: 0
-      });
-    
-    // Fallback for unknown currencies
-    default:
-      return `${normalizedCurrency} ${amount.toLocaleString('en-US', { 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 6 
-      })}`;
-  }
-};
 
 const getWalletName = (walletId: string, wallets: Wallet[]): string => {
   const wallet = wallets.find((w) => w.id === walletId);
@@ -286,14 +151,9 @@ const RecentTransactions: React.FC<Props> = ({
     }
   };
 
+  // 🚀 SIMPLIFIED: Use centralized currency detection
   const getCurrencyChipColor = (currency: string) => {
-    const normalizedCurrency = (currency || '').toUpperCase();
-    // Crypto currencies get special colors
-    if (['BTC', 'ETH', 'BNB', 'USDT', 'USDC'].includes(normalizedCurrency)) {
-      return 'warning';
-    }
-    // Traditional currencies
-    return 'primary';
+    return isCryptoCurrency(currency) ? 'warning' : 'primary';
   };
 
   const clearSearch = () => {

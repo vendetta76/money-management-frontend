@@ -56,84 +56,8 @@ import BalanceTrendChart from './BalanceTrendChart';
 import WalletPieChart from './WalletPieChart';
 import RecentTransactions from './RecentTransactions';
 
-
-// Enhanced currency formatting utility with FIXED symbols
-const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
-  if (amount === undefined || amount === null || isNaN(amount)) {
-    amount = 0;
-  }
-
-  const normalizedCurrency = (currency || 'IDR').toUpperCase();
-
-  // Traditional currencies with proper locale support
-  const traditionalCurrencies = {
-    'USD': { locale: 'en-US', options: { style: 'currency' as const, currency: 'USD', maximumFractionDigits: 2 } },
-    'EUR': { locale: 'de-DE', options: { style: 'currency' as const, currency: 'EUR', maximumFractionDigits: 2 } },
-    'JPY': { locale: 'ja-JP', options: { style: 'currency' as const, currency: 'JPY', maximumFractionDigits: 0 } },
-    'SGD': { locale: 'en-SG', options: { style: 'currency' as const, currency: 'SGD', maximumFractionDigits: 2 } },
-    'GBP': { locale: 'en-GB', options: { style: 'currency' as const, currency: 'GBP', maximumFractionDigits: 2 } },
-    'THB': { locale: 'th-TH', options: { style: 'currency' as const, currency: 'THB', maximumFractionDigits: 2 } },
-    'AUD': { locale: 'en-AU', options: { style: 'currency' as const, currency: 'AUD', maximumFractionDigits: 2 } },
-    'CAD': { locale: 'en-CA', options: { style: 'currency' as const, currency: 'CAD', maximumFractionDigits: 2 } },
-    'CHF': { locale: 'de-CH', options: { style: 'currency' as const, currency: 'CHF', maximumFractionDigits: 2 } },
-    'CNY': { locale: 'zh-CN', options: { style: 'currency' as const, currency: 'CNY', maximumFractionDigits: 2 } },
-    'KRW': { locale: 'ko-KR', options: { style: 'currency' as const, currency: 'KRW', maximumFractionDigits: 0 } },
-    'IDR': { locale: 'id-ID', options: { style: 'currency' as const, currency: 'IDR', maximumFractionDigits: 0 } },
-    'INR': { locale: 'en-IN', options: { style: 'currency' as const, currency: 'INR', maximumFractionDigits: 2 } },
-    'TWD': { locale: 'zh-TW', options: { style: 'currency' as const, currency: 'TWD', maximumFractionDigits: 2 } }
-  };
-
-  // Check if it's a traditional currency
-  if (traditionalCurrencies[normalizedCurrency]) {
-    const { locale, options } = traditionalCurrencies[normalizedCurrency];
-    try {
-      return amount.toLocaleString(locale, options);
-    } catch (error) {
-      // Fallback to manual formatting with correct symbols
-      const symbols = {
-        'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CNY': '¥', 
-        'INR': '₹', 'TWD': 'NT$', 'THB': '฿', 'KRW': '₩', 'IDR': 'Rp'
-      };
-      const symbol = symbols[normalizedCurrency] || normalizedCurrency;
-      return `${symbol} ${amount.toLocaleString()}`;
-    }
-  }
-
-  // Cryptocurrency formatting
-  const cryptoFormats = {
-    'USDT': { symbol: 'USDT', decimals: 2 },
-    'USDC': { symbol: 'USDC', decimals: 2 },
-    'BTC': { symbol: '₿', decimals: 8 },
-    'ETH': { symbol: 'Ξ', decimals: 6 },
-    'BNB': { symbol: 'BNB', decimals: 4 },
-    'ADA': { symbol: 'ADA', decimals: 6 },
-    'DOT': { symbol: 'DOT', decimals: 4 },
-    'MATIC': { symbol: 'MATIC', decimals: 4 },
-    'SOL': { symbol: 'SOL', decimals: 4 },
-    'AVAX': { symbol: 'AVAX', decimals: 4 },
-    'LINK': { symbol: 'LINK', decimals: 4 },
-    'UNI': { symbol: 'UNI', decimals: 4 }
-  };
-
-  if (cryptoFormats[normalizedCurrency]) {
-    const { symbol, decimals } = cryptoFormats[normalizedCurrency];
-    return `${symbol} ${amount.toLocaleString('en-US', { 
-      minimumFractionDigits: 0,
-      maximumFractionDigits: decimals 
-    })}`;
-  }
-
-  // Special case for MYR and other custom formats
-  if (normalizedCurrency === 'MYR') {
-    return `RM ${amount.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
-  }
-
-  // Fallback for unknown currencies
-  return `${normalizedCurrency} ${amount.toLocaleString('en-US', { 
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 6 
-  })}`;
-};
+// 🚀 CLEANED UP: Use centralized currency formatting
+import { formatCurrency, getCurrencySymbol, isCryptoCurrency } from '../helpers/formatCurrency';
 
 function DashboardPage() {
   const theme = useTheme();
@@ -164,37 +88,6 @@ function DashboardPage() {
   // Simple filter states
   const [filterDate, setFilterDate] = useState('30days');
 
-  // Enhanced currency metadata with FIXED symbols
-  const currencyMetadata = {
-    // Traditional currencies - FIXED SYMBOLS
-    'IDR': { name: 'Indonesian Rupiah', symbol: 'Rp', type: 'fiat' },
-    'USD': { name: 'US Dollar', symbol: '$', type: 'fiat' },
-    'EUR': { name: 'Euro', symbol: '€', type: 'fiat' },
-    'JPY': { name: 'Japanese Yen', symbol: '¥', type: 'fiat' },
-    'SGD': { name: 'Singapore Dollar', symbol: 'S$', type: 'fiat' },
-    'GBP': { name: 'British Pound', symbol: '£', type: 'fiat' },
-    'THB': { name: 'Thai Baht', symbol: '฿', type: 'fiat' },
-    'MYR': { name: 'Malaysian Ringgit', symbol: 'RM', type: 'fiat' },
-    'AUD': { name: 'Australian Dollar', symbol: 'A$', type: 'fiat' },
-    'CAD': { name: 'Canadian Dollar', symbol: 'C$', type: 'fiat' },
-    'CHF': { name: 'Swiss Franc', symbol: 'CHF', type: 'fiat' },
-    'CNY': { name: 'Chinese Yuan', symbol: '¥', type: 'fiat' },
-    'INR': { name: 'Indian Rupee', symbol: '₹', type: 'fiat' },
-    'TWD': { name: 'Taiwan Dollar', symbol: 'NT$', type: 'fiat' },
-    'KRW': { name: 'South Korean Won', symbol: '₩', type: 'fiat' },
-    // Cryptocurrencies
-    'USDT': { name: 'Tether USD', symbol: 'USDT', type: 'crypto' },
-    'BTC': { name: 'Bitcoin', symbol: '₿', type: 'crypto' },
-    'ETH': { name: 'Ethereum', symbol: 'Ξ', type: 'crypto' },
-    'BNB': { name: 'Binance Coin', symbol: 'BNB', type: 'crypto' },
-    'USDC': { name: 'USD Coin', symbol: 'USDC', type: 'crypto' },
-    'ADA': { name: 'Cardano', symbol: 'ADA', type: 'crypto' },
-    'DOT': { name: 'Polkadot', symbol: 'DOT', type: 'crypto' },
-    'MATIC': { name: 'Polygon', symbol: 'MATIC', type: 'crypto' },
-    'SOL': { name: 'Solana', symbol: 'SOL', type: 'crypto' },
-    'AVAX': { name: 'Avalanche', symbol: 'AVAX', type: 'crypto' }
-  };
-
   // Load user's currency preference from Firebase
   useEffect(() => {
     if (!user) return;
@@ -217,17 +110,23 @@ function DashboardPage() {
     loadUserPreference();
   }, [user]);
 
-  // Enhanced dynamic currencies and smart currency selection
+  // 🚀 SIMPLIFIED: Enhanced dynamic currencies and smart currency selection
   const { availableCurrencies, smartDefaultCurrency, totalBalanceInSelectedCurrency } = useMemo(() => {
     // Get unique currencies from wallets with balances > 0
-    const walletCurrencies = [...new Set(
-      wallets
-        .filter(wallet => wallet.currency && (wallet.balance || 0) > 0)
-        .map(wallet => wallet.currency)
-    )];
+    const currencyStats = {};
+    
+    wallets.forEach(wallet => {
+      if (wallet.currency && typeof wallet.balance === 'number' && wallet.balance > 0) {
+        if (!currencyStats[wallet.currency]) {
+          currencyStats[wallet.currency] = { balance: 0, count: 0 };
+        }
+        currencyStats[wallet.currency].balance += wallet.balance;
+        currencyStats[wallet.currency].count += 1;
+      }
+    });
     
     // If no wallets yet, return default
-    if (walletCurrencies.length === 0) {
+    if (Object.keys(currencyStats).length === 0) {
       return {
         availableCurrencies: [{ 
           code: 'IDR', 
@@ -242,32 +141,15 @@ function DashboardPage() {
       };
     }
 
-    // Calculate total balance per currency and wallet count
-    const currencyStats = {};
-    wallets.forEach(wallet => {
-      if (wallet.currency && typeof wallet.balance === 'number' && wallet.balance > 0) {
-        if (!currencyStats[wallet.currency]) {
-          currencyStats[wallet.currency] = { balance: 0, count: 0 };
-        }
-        currencyStats[wallet.currency].balance += wallet.balance;
-        currencyStats[wallet.currency].count += 1;
-      }
-    });
-
-    // Map to display format with enhanced metadata
-    const currencies = walletCurrencies.map(currency => {
-      const metadata = currencyMetadata[currency] || { name: currency, symbol: currency, type: 'unknown' };
-      const stats = currencyStats[currency] || { balance: 0, count: 0 };
-      
-      return {
-        code: currency,
-        name: metadata.name,
-        symbol: metadata.symbol,
-        type: metadata.type,
-        balance: stats.balance,
-        walletCount: stats.count
-      };
-    });
+    // 🚀 CLEANED UP: Map to display format using centralized functions
+    const currencies = Object.entries(currencyStats).map(([currency, stats]) => ({
+      code: currency,
+      name: currency, // Let formatCurrency handle proper display
+      symbol: getCurrencySymbol(currency),
+      type: isCryptoCurrency(currency) ? 'crypto' : 'fiat',
+      balance: stats.balance,
+      walletCount: stats.count
+    }));
 
     // Sort by balance (highest first), then by wallet count
     currencies.sort((a, b) => {

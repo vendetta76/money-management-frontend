@@ -40,6 +40,9 @@ import {
 } from '@mui/icons-material';
 import { format, subDays, subMonths, subYears, parseISO } from 'date-fns';
 
+// 🚀 CLEANED UP: Use centralized currency formatting
+import { formatCurrency } from '../helpers/formatCurrency';
+
 interface Transaction {
   id: string;
   type: 'income' | 'outcome' | 'transfer';
@@ -169,61 +172,6 @@ const BalanceTrendChart: React.FC<Props> = ({
       netChange: totIncome - totOutcome
     };
   }, [transactions, selectedCurrency, filterDate, isSmallMobile]);
-
-  const formatCurrency = (value: number, currency: string = 'IDR') => {
-    // Handle different currency formats
-    switch (currency.toUpperCase()) {
-      case 'USD':
-        return value.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          maximumFractionDigits: 2
-        });
-      case 'EUR':
-        return value.toLocaleString('de-DE', {
-          style: 'currency',
-          currency: 'EUR',
-          maximumFractionDigits: 2
-        });
-      case 'JPY':
-        return value.toLocaleString('ja-JP', {
-          style: 'currency',
-          currency: 'JPY',
-          maximumFractionDigits: 0
-        });
-      case 'SGD':
-        return value.toLocaleString('en-SG', {
-          style: 'currency',
-          currency: 'SGD',
-          maximumFractionDigits: 2
-        });
-      case 'GBP':
-        return value.toLocaleString('en-GB', {
-          style: 'currency',
-          currency: 'GBP',
-          maximumFractionDigits: 2
-        });
-      case 'THB':
-        return value.toLocaleString('th-TH', {
-          style: 'currency',
-          currency: 'THB',
-          maximumFractionDigits: 2
-        });
-      case 'USDT':
-        return `USDT ${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-      case 'BTC':
-        return `₿ ${value.toLocaleString('en-US', { maximumFractionDigits: 8 })}`;
-      case 'ETH':
-        return `Ξ ${value.toLocaleString('en-US', { maximumFractionDigits: 6 })}`;
-      case 'IDR':
-      default:
-        return value.toLocaleString('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          maximumFractionDigits: 0
-        });
-    }
-  };
 
   // Get display currency
   const getDisplayCurrency = () => {

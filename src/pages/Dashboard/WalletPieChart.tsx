@@ -62,6 +62,9 @@ import {
   CartesianGrid
 } from "recharts";
 
+// 🚀 CLEANED UP: Use centralized currency formatting
+import { formatCurrency, isCryptoCurrency } from '../helpers/formatCurrency';
+
 interface Wallet {
   id: string;
   name: string;
@@ -123,36 +126,6 @@ const WalletPieChart: React.FC<Props> = ({ wallets, selectedCurrency }) => {
   }, [wallets, selectedCurrency]);
 
   const colors = COLOR_SCHEMES[colorScheme];
-
-  // Enhanced formatCurrency to handle crypto currencies
-  const formatCurrency = (value: number, currency?: string) => {
-    // List of valid ISO currency codes
-    const validIsoCurrencies = ['USD', 'EUR', 'IDR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SGD'];
-    
-    // Check if it's a valid ISO currency
-    if (validIsoCurrencies.includes(currency?.toUpperCase())) {
-      return value.toLocaleString('id-ID', {
-        style: 'currency',
-        currency: currency || 'IDR',
-        maximumFractionDigits: currency === 'IDR' ? 0 : 2
-      });
-    }
-    
-    // Handle cryptocurrencies and other non-ISO currencies
-    const cryptoSymbols = {
-      'USDT': '$',
-      'BTC': '₿',
-      'ETH': 'Ξ',
-      'BNB': 'BNB',
-      'USDC': '$',
-    };
-    
-    const symbol = cryptoSymbols[currency?.toUpperCase()] || currency || '';
-    
-    return `${symbol} ${value.toLocaleString('id-ID', {
-      maximumFractionDigits: 2
-    })}`;
-  };
 
   const getPercentage = (value: number) => {
     return totalBalance > 0 ? ((value / totalBalance) * 100).toFixed(1) : '0';

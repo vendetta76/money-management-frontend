@@ -31,6 +31,9 @@ import {
   Info as InfoIcon
 } from "@mui/icons-material";
 
+// 🚀 CLEANED UP: Use centralized currency formatting
+import { formatCurrency } from '../helpers/formatCurrency';
+
 interface Wallet {
   id: string;
   name: string;
@@ -70,36 +73,6 @@ const WalletLegend: React.FC<Props> = ({
     }
     return true;
   });
-
-  // ✅ FIXED: Updated formatCurrency to handle crypto currencies
-  const formatCurrency = (amount: number = 0, currency: string = 'IDR') => {
-    // List of valid ISO currency codes
-    const validIsoCurrencies = ['USD', 'EUR', 'IDR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SGD'];
-    
-    // Check if it's a valid ISO currency
-    if (validIsoCurrencies.includes(currency?.toUpperCase())) {
-      return amount.toLocaleString('id-ID', {
-        style: 'currency',
-        currency: currency,
-        maximumFractionDigits: currency === 'IDR' ? 0 : 2
-      });
-    }
-    
-    // Handle cryptocurrencies and other non-ISO currencies
-    const cryptoSymbols = {
-      'USDT': '$',
-      'BTC': '₿',
-      'ETH': 'Ξ',
-      'BNB': 'BNB',
-      'USDC': '$',
-    };
-    
-    const symbol = cryptoSymbols[currency?.toUpperCase()] || currency || '';
-    
-    return `${symbol} ${amount.toLocaleString('id-ID', {
-      maximumFractionDigits: 2
-    })}`;
-  };
 
   const getTotalBalance = () => {
     return filteredWallets.reduce((sum, wallet) => sum + (wallet.balance || 0), 0);
