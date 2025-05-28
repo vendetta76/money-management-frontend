@@ -1,8 +1,9 @@
-// src/routes.tsx - COMPLETE VERSION WITH ALL NEW FEATURES
+// src/routes.tsx - FIXED VERSION WITH PROPER LAYOUTSHELL INTEGRATION
 import React from 'react'
 import { RouteObject, Navigate } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
 import PageTransition from './components/PageTransition'
+import LayoutShell from './components/LayoutShell' // 🔧 Added LayoutShell import
 
 // Auth & Utility
 import LoginPage from './pages/LoginPage'
@@ -34,10 +35,7 @@ import EditProfilePage from './pages/EditProfilePage'
 import SettingsProfile from './pages/settings/ProfilePage'
 import SecurityPage from './pages/settings/SecurityPage'
 import PreferencesPage from './pages/settings/PreferencesPage'
-import ReportPage from './pages/settings/ReportPage' // 🆕 Added ReportPage import
-
-// Layout Shell
-import LayoutShell from './components/LayoutShell'
+import ReportPage from './pages/settings/ReportPage'
 
 // About MeowIQ Pages ✨
 import AboutPage from './pages/about/AboutPage'
@@ -66,198 +64,117 @@ import SystemManagement from './pages/admin/SystemManagement'
 import SecurityManagement from './pages/admin/SecurityManagement'
 
 const routes: RouteObject[] = [
+  // 🌐 PUBLIC ROUTES (No LayoutShell)
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/verify-email-pending', element: <VerifyEmailPending /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
-
-  // PIN reset flow
   { path: '/forgot-pin', element: <ForgotPinPage /> },
 
-  // USER ROUTES (Your existing routes)
+  // 🔒 PROTECTED ROUTES (With LayoutShell) - FIXED STRUCTURE
   {
-    path: '/dashboard',
+    path: '/',
     element: (
       <PrivateRoute>
-        <PageTransition>
-          <DashboardPage />
-        </PageTransition>
+        <LayoutShell>
+          <PageTransition>
+            <div />
+          </PageTransition>
+        </LayoutShell>
       </PrivateRoute>
     ),
-  },
-  {
-    path: '/wallet',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <WalletPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/income',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <IncomePage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/outcome',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <OutcomePage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/history',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <HistoryPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/transfer',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <TransferPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/virtual-wallet',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <VirtualWalletPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
+    children: [
+      // Dashboard
+      {
+        path: 'dashboard',
+        element: <DashboardPage />
+      },
+      
+      // Core Features
+      {
+        path: 'wallet',
+        element: <WalletPage />
+      },
+      {
+        path: 'virtual-wallet',
+        element: <VirtualWalletPage />
+      },
+      {
+        path: 'income',
+        element: <IncomePage />
+      },
+      {
+        path: 'outcome',
+        element: <OutcomePage />
+      },
+      {
+        path: 'transfer',
+        element: <TransferPage />
+      },
+      {
+        path: 'history',
+        element: <HistoryPage />
+      },
+
+      // Profile
+      {
+        path: 'profile',
+        element: <ProfilePage />
+      },
+      {
+        path: 'profile/edit',
+        element: <EditProfilePage />
+      },
+
+      // Settings Routes - 🔧 FIXED
+      {
+        path: 'settings/profile',
+        element: <SettingsProfile />
+      },
+      {
+        path: 'settings/security',
+        element: <SecurityPage />
+      },
+      {
+        path: 'settings/preferences',
+        element: <PreferencesPage />
+      },
+      {
+        path: 'settings/report',
+        element: <ReportPage />
+      },
+
+      // About MeowIQ
+      {
+        path: 'about',
+        element: <AboutPage />
+      },
+      {
+        path: 'about/privacy-policy',
+        element: <PrivacyPolicyPage />
+      },
+      {
+        path: 'about/terms-and-conditions',
+        element: <TermsAndConditionsPage />
+      },
+
+      // Upgrade
+      {
+        path: 'upgrade',
+        element: <UpgradePage />
+      },
+
+      // Default redirect
+      {
+        index: true,
+        element: <Navigate to="/dashboard" replace />
+      }
+    ]
   },
 
-  // Profile
-  {
-    path: '/profile',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <ProfilePage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/profile/edit',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <EditProfilePage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-
-  // Settings
-  {
-    path: '/settings/profile',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <SettingsProfile />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/settings/security',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <SecurityPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/settings/preferences',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <PreferencesPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  // 🆕 Added Report route
-  {
-    path: '/settings/report',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <ReportPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-
-  // About MeowIQ
-  {
-    path: '/about',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <AboutPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/about/privacy-policy',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <PrivacyPolicyPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/about/terms-and-conditions',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <TermsAndConditionsPage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-
-  // Upgrade
-  {
-    path: '/upgrade',
-    element: (
-      <PrivateRoute>
-        <PageTransition>
-          <UpgradePage />
-        </PageTransition>
-      </PrivateRoute>
-    ),
-  },
-
-  // 🛡️ COMPLETE ADMIN ROUTES SECTION
+  // 🛡️ ADMIN ROUTES SECTION (Separate from main app)
   {
     path: '/admin',
     element: (

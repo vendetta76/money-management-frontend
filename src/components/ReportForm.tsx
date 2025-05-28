@@ -100,16 +100,16 @@ const ReportForm: React.FC = () => {
     setError("");
 
     try {
-      // Simulate API call - replace with your actual endpoint
-      const response = await fetch("/api/report/send-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent,
-        }),
-      });
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/report/send-report`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    ...formData,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+  }),
+});
+
 
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
