@@ -15,6 +15,11 @@ import {
   Toolbar,
   Stack,
   Avatar,
+  Paper,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
+import {
   Timeline,
   TimelineItem,
   TimelineSeparator,
@@ -22,10 +27,7 @@ import {
   TimelineContent,
   TimelineDot,
   TimelineOppositeContent,
-  Paper,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+} from '@mui/lab';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import {
   Search,

@@ -27,7 +27,7 @@ import {
   Security,
   Refresh,
 } from "@mui/icons-material";
-import AdminSidebar from "@/components/AdminSidebar";
+import AdminSidebar from "@/components/Admin/AdminSidebar";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
