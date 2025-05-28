@@ -14,14 +14,15 @@ import {
   Divider,
   Chip,
   Button,
-  Paper,
   Badge,
   useTheme,
   useMediaQuery,
   alpha,
   Fade,
   Stack,
-  Collapse
+  Collapse,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -32,9 +33,17 @@ import {
   Update as UpdateIcon,
   Verified as VerifiedIcon,
   ExpandMore as ExpandMoreIcon,
-  Menu as MenuIcon
+  Menu as MenuIcon,
+  CheckCircle as CheckCircleIcon,
+  ClearAll as ClearAllIcon,
+  Circle as CircleIcon
 } from '@mui/icons-material';
+import { format } from 'date-fns';
+import { id as localeID } from 'date-fns/locale';
 import LangToggle from './LangToggle';
+
+// 🚀 Import real notification system
+import { useNotifications, getNotificationIcon, getNotificationColor } from '../hooks/useNotifications';
 
 interface Props {
   displayName?: string | null;
@@ -45,7 +54,16 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [notificationMenuAnchor, setNotificationMenuAnchor] = useState<null | HTMLElement>(null);
-  const [showDetails, setShowDetails] = useState(!isMobile); // Auto-collapse on mobile
+  const [showDetails, setShowDetails] = useState(!isMobile);
+
+  // 🔔 Real notification system
+  const { 
+    notifications, 
+    unreadCount, 
+    loading: notificationsLoading,
+    markAsRead,
+    markAllAsRead 
+  } = useNotifications();
 
   // Get greeting based on time of day
   const greeting = useMemo(() => {
@@ -56,36 +74,6 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
     return 'Selamat Malam';
   }, []);
 
-  // Mock notifications
-  const notifications = [
-    {
-      id: 1,
-      title: 'Transaksi Baru',
-      message: 'Pemasukan sebesar Rp 500.000',
-      time: '5 menit lalu',
-      read: false,
-      type: 'income'
-    },
-    {
-      id: 2,
-      title: 'Target Tercapai',
-      message: 'Target tabungan bulan ini telah tercapai!',
-      time: '1 jam lalu',
-      read: false,
-      type: 'achievement'
-    },
-    {
-      id: 3,
-      title: 'Reminder',
-      message: 'Jangan lupa bayar tagihan listrik',
-      time: '2 jam lalu',
-      read: true,
-      type: 'reminder'
-    }
-  ];
-
-  const unreadNotifications = notifications.filter(n => !n.read).length;
-
   const handleNotificationMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setNotificationMenuAnchor(event.currentTarget);
   };
@@ -94,17 +82,24 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
     setNotificationMenuAnchor(null);
   };
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'income':
-        return <TrendingUpIcon color="success" fontSize="small" />;
-      case 'achievement':
-        return <StarIcon color="warning" fontSize="small" />;
-      case 'reminder':
-        return <ScheduleIcon color="info" fontSize="small" />;
-      default:
-        return <NotificationsIcon fontSize="small" />;
+  // 🔔 Handle notification click
+  const handleNotificationClick = async (notification: any) => {
+    // Mark as read if unread
+    if (!notification.read) {
+      await markAsRead(notification.id);
     }
+
+    // Navigate to action URL if provided
+    if (notification.actionUrl) {
+      window.location.href = notification.actionUrl;
+    }
+
+    handleNotificationMenuClose();
+  };
+
+  // 🔔 Handle mark all as read
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead();
   };
 
   const currentTime = new Date().toLocaleString('id-ID', {
@@ -115,6 +110,25 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
     hour: '2-digit',
     minute: '2-digit'
   });
+
+  // 🔔 Format notification time
+  const formatNotificationTime = (createdAt: any) => {
+    if (!createdAt) return '';
+    
+    try {
+      const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+      const now = new Date();
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
+      
+      if (diffInMinutes < 1) return 'Baru saja';
+      if (diffInMinutes < 60) return `${diffInMinutes} menit lalu`;
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} jam lalu`;
+      
+      return format(date, 'dd MMM, HH:mm', { locale: localeID });
+    } catch (error) {
+      return '';
+    }
+  };
 
   return (
     <Fade in={true} timeout={500}>
@@ -178,7 +192,7 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
                     <LangToggle variant="chip" compact={true} size="small" showFlags={!isSmallMobile} />
                   </Box>
 
-                  {/* Notifications */}
+                  {/* 🔔 Real Notifications */}
                   <IconButton
                     onClick={handleNotificationMenuOpen}
                     size="small"
@@ -190,7 +204,11 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
                       }
                     }}
                   >
-                    <Badge badgeContent={unreadNotifications} color="error">
+                    <Badge 
+                      badgeContent={unreadCount} 
+                      color="error"
+                      max={99}
+                    >
                       <NotificationsIcon fontSize="small" />
                     </Badge>
                   </IconButton>
@@ -239,7 +257,7 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
               </Collapse>
             </Box>
           ) : (
-            /* Desktop Layout - Original */
+            /* Desktop Layout */
             <Box display="flex" justifyContent="space-between" alignItems="center">
               {/* Left Section */}
               <Box display="flex" alignItems="center" gap={2}>
@@ -298,8 +316,7 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
 
               {/* Right Section */}
               <Box display="flex" alignItems="center" gap={2}>
-                <Paper 
-                  elevation={0}
+                <Box 
                   sx={{ 
                     bgcolor: alpha(theme.palette.common.white, 0.1),
                     p: 1,
@@ -307,8 +324,9 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
                   }}
                 >
                   <LangToggle />
-                </Paper>
+                </Box>
 
+                {/* 🔔 Real Notifications */}
                 <Tooltip title="Notifikasi">
                   <IconButton
                     onClick={handleNotificationMenuOpen}
@@ -320,7 +338,11 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
                       }
                     }}
                   >
-                    <Badge badgeContent={unreadNotifications} color="error">
+                    <Badge 
+                      badgeContent={unreadCount} 
+                      color="error"
+                      max={99}
+                    >
                       <NotificationsIcon />
                     </Badge>
                   </IconButton>
@@ -330,7 +352,7 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
           )}
         </CardContent>
 
-        {/* Notifications Menu - Responsive */}
+        {/* 🔔 Real Notifications Menu */}
         <Menu
           anchorEl={notificationMenuAnchor}
           open={Boolean(notificationMenuAnchor)}
@@ -347,100 +369,153 @@ const DashboardHeader: React.FC<Props> = ({ displayName }) => {
             },
           }}
         >
+          {/* Header */}
           <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6" fontWeight="bold">
-                Notifikasi
+                🔔 Notifikasi
               </Typography>
-              <Chip 
-                label={`${unreadNotifications} baru`}
-                size="small"
-                color="primary"
-              />
+              <Box display="flex" alignItems="center" gap={1}>
+                {unreadCount > 0 && (
+                  <Chip 
+                    label={`${unreadCount} baru`}
+                    size="small"
+                    color="primary"
+                  />
+                )}
+                {!notificationsLoading && unreadCount > 0 && (
+                  <Tooltip title="Tandai semua sebagai dibaca">
+                    <IconButton size="small" onClick={handleMarkAllAsRead}>
+                      <CheckCircleIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
             </Box>
           </Box>
 
+          {/* Content */}
           <Box sx={{ maxHeight: { xs: '50vh', sm: 400 }, overflow: 'auto' }}>
-            {notifications.map((notification) => (
-              <MenuItem 
-                key={notification.id}
-                onClick={handleNotificationMenuClose}
-                sx={{
-                  alignItems: 'flex-start',
-                  py: 2,
-                  px: { xs: 1.5, sm: 2 },
-                  borderBottom: 1,
-                  borderColor: 'divider',
-                  bgcolor: notification.read ? 'transparent' : alpha(theme.palette.primary.main, 0.05)
-                }}
-              >
-                <ListItemIcon sx={{ mt: 0.5, minWidth: { xs: 32, sm: 40 } }}>
-                  {getNotificationIcon(notification.type)}
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography 
-                        variant="subtitle2" 
-                        fontWeight="bold"
-                        sx={{ 
-                          fontSize: { xs: '0.85rem', sm: '0.875rem' },
-                          lineHeight: 1.2
-                        }}
-                      >
-                        {notification.title}
-                      </Typography>
-                      {!notification.read && (
-                        <Box
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            bgcolor: 'primary.main',
-                            flexShrink: 0,
-                            ml: 1
+            {notificationsLoading ? (
+              <Box display="flex" justifyContent="center" alignItems="center" p={3}>
+                <CircularProgress size={24} />
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Loading notifications...
+                </Typography>
+              </Box>
+            ) : notifications.length === 0 ? (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  🔕 Belum ada notifikasi
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Notifikasi akan muncul di sini
+                </Typography>
+              </Box>
+            ) : (
+              notifications.map((notification) => (
+                <MenuItem 
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  sx={{
+                    alignItems: 'flex-start',
+                    py: 2,
+                    px: { xs: 1.5, sm: 2 },
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    bgcolor: notification.read ? 'transparent' : alpha(theme.palette.primary.main, 0.05),
+                    '&:hover': {
+                      bgcolor: notification.read 
+                        ? alpha(theme.palette.action.hover, 0.5)
+                        : alpha(theme.palette.primary.main, 0.1)
+                    }
+                  }}
+                >
+                  <ListItemIcon sx={{ mt: 0.5, minWidth: { xs: 32, sm: 40 } }}>
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        bgcolor: alpha(getNotificationColor(notification.type), 0.1),
+                        color: getNotificationColor(notification.type),
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.2rem'
+                      }}
+                    >
+                      {getNotificationIcon(notification.type)}
+                    </Box>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography 
+                          variant="subtitle2" 
+                          fontWeight="bold"
+                          sx={{ 
+                            fontSize: { xs: '0.85rem', sm: '0.875rem' },
+                            lineHeight: 1.2
                           }}
-                        />
-                      )}
-                    </Box>
-                  }
-                  secondary={
-                    <Box>
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary"
-                        sx={{ 
-                          fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                          lineHeight: 1.3,
-                          mb: 0.5
-                        }}
-                      >
-                        {notification.message}
-                      </Typography>
-                      <Typography 
-                        variant="caption" 
-                        color="text.secondary"
-                        sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
-                      >
-                        {notification.time}
-                      </Typography>
-                    </Box>
-                  }
-                />
-              </MenuItem>
-            ))}
+                        >
+                          {notification.title}
+                        </Typography>
+                        {!notification.read && (
+                          <CircleIcon
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              color: 'primary.main',
+                              flexShrink: 0,
+                              ml: 1
+                            }}
+                          />
+                        )}
+                      </Box>
+                    }
+                    secondary={
+                      <Box>
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{ 
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                            lineHeight: 1.3,
+                            mb: 0.5
+                          }}
+                        >
+                          {notification.message}
+                        </Typography>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary"
+                          sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                        >
+                          {formatNotificationTime(notification.createdAt)}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </MenuItem>
+              ))
+            )}
           </Box>
 
-          <Box sx={{ p: { xs: 1.5, sm: 2 }, borderTop: 1, borderColor: 'divider' }}>
-            <Button 
-              fullWidth 
-              variant="outlined" 
-              size="small"
-              sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
-            >
-              Lihat Semua Notifikasi
-            </Button>
-          </Box>
+          {/* Footer */}
+          {notifications.length > 0 && (
+            <Box sx={{ p: { xs: 1.5, sm: 2 }, borderTop: 1, borderColor: 'divider' }}>
+              <Button 
+                fullWidth 
+                variant="outlined" 
+                size="small"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                onClick={handleNotificationMenuClose}
+              >
+                Tutup
+              </Button>
+            </Box>
+          )}
         </Menu>
       </Card>
     </Fade>
