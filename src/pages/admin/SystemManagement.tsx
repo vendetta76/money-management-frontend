@@ -45,7 +45,7 @@ import {
   PlayArrow,
   Stop,
   Schedule,
-  Database,
+  Storage,
   NetworkCheck,
   Security,
   BugReport,
