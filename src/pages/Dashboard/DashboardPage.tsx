@@ -50,7 +50,7 @@ import MoneySplitSimulator from './MoneySplitSimulator';
 import BalanceTrendChart from './BalanceTrendChart';
 import WalletPieChart from './WalletPieChart';
 import RecentTransactions from './RecentTransactions';
-import RightSidebar from '../common/RightSidebar';
+import RightSidebar from '@/components/RightSidebar';
 
 // Currency utilities
 import { formatCurrency, getCurrencySymbol, isCryptoCurrency } from '../helpers/formatCurrency';
