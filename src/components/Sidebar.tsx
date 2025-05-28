@@ -34,6 +34,7 @@ import {
   MenuBook,
   Policy,
   Description,
+  BugReport, // Added for Report icon
 } from "@mui/icons-material";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -128,6 +129,7 @@ const Sidebar = ({ isOpen, onClose, variant = 'temporary' }: SidebarProps) => {
     { path: "/settings/profile", label: "Profile", icon: <Person /> },
     { path: "/settings/security", label: "Security", icon: <Security /> },
     { path: "/settings/preferences", label: "Preferences", icon: <Tune /> },
+    { path: "/settings/report", label: "Report & Feedback", icon: <BugReport /> }, // Added Report item
   ];
 
   const aboutItems = [

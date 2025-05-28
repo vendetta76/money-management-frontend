@@ -34,6 +34,7 @@ import EditProfilePage from './pages/EditProfilePage'
 import SettingsProfile from './pages/settings/ProfilePage'
 import SecurityPage from './pages/settings/SecurityPage'
 import PreferencesPage from './pages/settings/PreferencesPage'
+import ReportPage from './pages/settings/ReportPage' // 🆕 Added ReportPage import
 
 // About MeowIQ Pages ✨
 import AboutPage from './pages/about/AboutPage'
@@ -193,6 +194,17 @@ const routes: RouteObject[] = [
       <PrivateRoute>
         <PageTransition>
           <PreferencesPage />
+        </PageTransition>
+      </PrivateRoute>
+    ),
+  },
+  // 🆕 Added Report route
+  {
+    path: '/settings/report',
+    element: (
+      <PrivateRoute>
+        <PageTransition>
+          <ReportPage />
         </PageTransition>
       </PrivateRoute>
     ),
