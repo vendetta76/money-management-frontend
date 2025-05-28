@@ -26,7 +26,9 @@ import {
   Divider,
   Avatar,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Stack,
+  Paper
 } from '@mui/material';
 import {
   Calculate as CalculatorIcon,
@@ -39,7 +41,9 @@ import {
   AttachMoney as CurrencyIcon,
   AccountBalanceWallet as WalletIcon,
   Star as StarIcon,
-  Check as CheckIcon
+  Check as CheckIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
 
 import LayoutShell from '../../layouts/LayoutShell';
@@ -134,6 +138,7 @@ const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
 function DashboardPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -153,6 +158,9 @@ function DashboardPage() {
   const [isLoadingPreference, setIsLoadingPreference] = useState(true);
   const [preferenceSource, setPreferenceSource] = useState<'user' | 'auto' | 'default'>('default');
 
+  // Mobile UI states
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
   // Simple filter states
   const [filterDate, setFilterDate] = useState('30days');
 
@@ -170,9 +178,9 @@ function DashboardPage() {
     'AUD': { name: 'Australian Dollar', symbol: 'A$', type: 'fiat' },
     'CAD': { name: 'Canadian Dollar', symbol: 'C$', type: 'fiat' },
     'CHF': { name: 'Swiss Franc', symbol: 'CHF', type: 'fiat' },
-    'CNY': { name: 'Chinese Yuan', symbol: '¥', type: 'fiat' },        // FIXED: was 'Rp'
-    'INR': { name: 'Indian Rupee', symbol: '₹', type: 'fiat' },        // FIXED: was 'Rp'
-    'TWD': { name: 'Taiwan Dollar', symbol: 'NT$', type: 'fiat' },     // FIXED: was 'Rp'
+    'CNY': { name: 'Chinese Yuan', symbol: '¥', type: 'fiat' },
+    'INR': { name: 'Indian Rupee', symbol: '₹', type: 'fiat' },
+    'TWD': { name: 'Taiwan Dollar', symbol: 'NT$', type: 'fiat' },
     'KRW': { name: 'South Korean Won', symbol: '₩', type: 'fiat' },
     // Cryptocurrencies
     'USDT': { name: 'Tether USD', symbol: 'USDT', type: 'crypto' },
@@ -431,71 +439,56 @@ function DashboardPage() {
     };
   }, [user]);
 
-  // Enhanced Filters Component - FIXED: Added Currency Selector
-  const EnhancedFilters = () => (
+  // Mobile-Friendly Filters Component
+  const MobileFilters = () => (
     <Box sx={{ mb: 3 }}>
-      {/* Basic Controls Row */}
-      <Card elevation={1} sx={{ mb: 2 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            {/* Period Filter */}
-            <Grid item xs={12} sm={6} md={3}>
+      {/* Main Controls - Always Visible */}
+      <Card elevation={1}>
+        <CardContent sx={{ pb: 2 }}>
+          {/* Top Row - Essential Controls */}
+          <Grid container spacing={2} sx={{ mb: 1 }}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">
-                <InputLabel>Periode</InputLabel>
+                <InputLabel>Period</InputLabel>
                 <Select
                   value={filterDate}
-                  label="Periode"
+                  label="Period"
                   onChange={(e) => setFilterDate(e.target.value)}
                 >
-                  <MenuItem value="7days">7 Hari</MenuItem>
-                  <MenuItem value="30days">30 Hari</MenuItem>
-                  <MenuItem value="1year">1 Tahun</MenuItem>
-                  <MenuItem value="all">Semua</MenuItem>
+                  <MenuItem value="7days">7 Days</MenuItem>
+                  <MenuItem value="30days">30 Days</MenuItem>
+                  <MenuItem value="1year">1 Year</MenuItem>
+                  <MenuItem value="all">All Time</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
 
-            {/* Currency Selector - ADDED */}
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth size="small">
-                <InputLabel>💱 Currency Display</InputLabel>
+                <InputLabel>Currency</InputLabel>
                 <Select
                   value={displayCurrency}
-                  label="💱 Currency Display"
+                  label="Currency"
                   onChange={(e) => handleCurrencyChange(e.target.value)}
                 >
                   {availableCurrencies.map((currency) => (
                     <MenuItem key={currency.code} value={currency.code}>
                       <Box display="flex" alignItems="center" gap={1} width="100%">
-                        <ListItemIcon sx={{ minWidth: '24px !important' }}>
-                          <Avatar sx={{ width: 20, height: 20, fontSize: '0.7rem', bgcolor: currency.type === 'crypto' ? 'warning.light' : 'primary.light' }}>
-                            {currency.symbol}
-                          </Avatar>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
-                              <Box>
-                                <Typography variant="body2" fontWeight="medium">
-                                  {currency.code}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {currency.name}
-                                </Typography>
-                              </Box>
-                              <Box textAlign="right">
-                                <Typography variant="caption" color="primary.main" fontWeight="bold">
-                                  {formatCurrency(currency.balance, currency.code)}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" display="block">
-                                  {currency.walletCount} wallet{currency.walletCount !== 1 ? 's' : ''}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          }
-                        />
+                        <Typography variant="body2" fontWeight="bold">
+                          {currency.symbol}
+                        </Typography>
+                        <Box>
+                          <Typography variant="body2">
+                            {currency.code}
+                          </Typography>
+                          {!isSmallMobile && (
+                            <Typography variant="caption" color="text.secondary">
+                              {formatCurrency(currency.balance, currency.code)}
+                            </Typography>
+                          )}
+                        </Box>
                         {displayCurrency === currency.code && (
-                          <CheckIcon fontSize="small" color="primary" />
+                          <CheckIcon fontSize="small" color="primary" sx={{ ml: 'auto' }} />
                         )}
                       </Box>
                     </MenuItem>
@@ -503,24 +496,63 @@ function DashboardPage() {
                 </Select>
               </FormControl>
             </Grid>
+          </Grid>
 
-            {/* Money Split Button */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Button
-                variant={showSplit ? 'contained' : 'outlined'}
-                startIcon={<CalculatorIcon />}
-                onClick={() => setShowSplit(!showSplit)}
-                fullWidth
-                sx={{ height: 40 }}
+          {/* Action Buttons Row */}
+          <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
+            <Button
+              variant={showSplit ? 'contained' : 'outlined'}
+              startIcon={<CalculatorIcon />}
+              onClick={() => setShowSplit(!showSplit)}
+              size={isSmallMobile ? 'small' : 'medium'}
+            >
+              {isSmallMobile ? 'Split' : 'Money Split'}
+            </Button>
+
+            <Box display="flex" alignItems="center" gap={1}>
+              {smartDefaultCurrency && smartDefaultCurrency !== displayCurrency && (
+                <Tooltip title={`Auto-select ${smartDefaultCurrency}`}>
+                  <IconButton
+                    size="small"
+                    onClick={handleAutoSelectCurrency}
+                    color="primary"
+                  >
+                    <StarIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              <IconButton
+                size="small"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                color={showAdvancedFilters ? 'primary' : 'default'}
               >
-                Money Split
-              </Button>
-            </Grid>
+                {showAdvancedFilters ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+          </Stack>
+        </CardContent>
 
-            {/* Currency Status & Actions */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Box display="flex" flexDirection="column" gap={1}>
-                <Box display="flex" alignItems="center" gap={1}>
+        {/* Advanced/Info Section - Collapsible */}
+        <Collapse in={showAdvancedFilters}>
+          <Divider />
+          <CardContent sx={{ pt: 2 }}>
+            {/* Currency Info */}
+            <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                Current Display: {displayCurrency}
+              </Typography>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Balance:
+                  </Typography>
+                  <Typography variant="body2" fontWeight="bold" color="primary.main">
+                    {formatCurrency(totalBalanceInSelectedCurrency, displayCurrency)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
                     Mode:
                   </Typography>
@@ -534,46 +566,33 @@ function DashboardPage() {
                     color={preferenceSource === 'user' ? 'primary' : 'default'}
                     variant="outlined"
                   />
-                </Box>
-                
-                {/* Auto-select button */}
-                {smartDefaultCurrency && smartDefaultCurrency !== displayCurrency && (
-                  <Tooltip title={`Auto-select ${smartDefaultCurrency} (highest balance)`}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<AutoIcon />}
-                      onClick={handleAutoSelectCurrency}
-                      sx={{ fontSize: '0.75rem', py: 0.5 }}
-                    >
-                      Auto: {smartDefaultCurrency}
-                    </Button>
-                  </Tooltip>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+                </Grid>
+              </Grid>
 
-      {/* Currency Summary Card */}
-      {availableCurrencies.length > 1 && (
-        <Alert 
-          severity="info" 
-          sx={{ mb: 2 }}
-          action={
-            <IconButton size="small" onClick={handleAutoSelectCurrency}>
-              <StarIcon />
-            </IconButton>
-          }
-        >
-          <Typography variant="body2">
-            <strong>Currently showing data in {displayCurrency}</strong> • 
-            Total: {formatCurrency(totalBalanceInSelectedCurrency, displayCurrency)} • 
-            {availableCurrencies.length} currencies available
-          </Typography>
-        </Alert>
-      )}
+              {availableCurrencies.length > 1 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {availableCurrencies.length} currencies available
+                  </Typography>
+                  <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ mt: 0.5 }}>
+                    {availableCurrencies.map((currency) => (
+                      <Chip
+                        key={currency.code}
+                        label={currency.code}
+                        size="small"
+                        variant={currency.code === displayCurrency ? 'filled' : 'outlined'}
+                        color={currency.code === displayCurrency ? 'primary' : 'default'}
+                        onClick={() => handleCurrencyChange(currency.code)}
+                        sx={{ fontSize: '0.7rem', height: 20 }}
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+            </Paper>
+          </CardContent>
+        </Collapse>
+      </Card>
     </Box>
   );
 
@@ -581,34 +600,36 @@ function DashboardPage() {
   if (isLoading || isLoadingPreference) {
     return (
       <LayoutShell>
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          minHeight="50vh"
-          gap={3}
-        >
-          <CircularProgress size={60} />
-          <Typography variant="h6" color="primary">
-            Loading Dashboard...
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Loading currency preferences and wallet data...
-          </Typography>
-        </Box>
+        <Container maxWidth="xl" sx={{ py: 2 }}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            minHeight="50vh"
+            gap={3}
+          >
+            <CircularProgress size={60} />
+            <Typography variant="h6" color="primary">
+              Loading Dashboard...
+            </Typography>
+            <Typography variant="body2" color="text.secondary" textAlign="center">
+              Loading currency preferences and wallet data...
+            </Typography>
+          </Box>
+        </Container>
       </LayoutShell>
     );
   }
 
   return (
     <LayoutShell>
-      <Container maxWidth="xl" sx={{ py: 2 }}>
+      <Container maxWidth="xl" sx={{ py: { xs: 1, md: 2 }, px: { xs: 1, md: 3 } }}>
         {/* Header */}
         <DashboardHeader displayName={displayName} />
 
-        {/* Enhanced Filters with Currency Selector */}
-        <EnhancedFilters />
+        {/* Mobile-Friendly Filters */}
+        <MobileFilters />
 
         {/* Money Split Simulator */}
         <Collapse in={showSplit}>
@@ -617,18 +638,26 @@ function DashboardPage() {
           </Box>
         </Collapse>
 
-        {/* Simplified Trend Chart */}
+        {/* Balance Trend Chart */}
         <Card elevation={1} sx={{ mb: 3 }}>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+            <Box 
+              display="flex" 
+              flexDirection={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between" 
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              gap={1}
+              mb={2}
+            >
               <Typography variant="h6" fontWeight="bold">
-                Grafik Saldo - {displayCurrency}
+                Balance Trend - {displayCurrency}
               </Typography>
               <Chip 
-                label={`Balance: ${formatCurrency(totalBalanceInSelectedCurrency, displayCurrency)}`}
+                label={formatCurrency(totalBalanceInSelectedCurrency, displayCurrency)}
                 color="primary"
                 variant="outlined"
                 icon={<TrendingUpIcon />}
+                size={isSmallMobile ? 'small' : 'medium'}
               />
             </Box>
             <BalanceTrendChart
@@ -643,9 +672,9 @@ function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Main Content Grid */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+        {/* Main Content Grid - Responsive */}
+        <Grid container spacing={{ xs: 2, md: 3 }}>
+          <Grid item xs={12} lg={6}>
             <WalletPieChart 
               wallets={wallets} 
               selectedCurrency={displayCurrency}
@@ -653,7 +682,7 @@ function DashboardPage() {
             />
           </Grid>
           
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} lg={6}>
             <RecentTransactions
               transactions={transactions}
               wallets={wallets}
