@@ -3,7 +3,7 @@ import React from 'react'
 import { RouteObject, Navigate } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
 import PageTransition from './components/PageTransition'
-import LayoutShell from './components/LayoutShell' // 🔧 Added LayoutShell import
+import LayoutShell from '@/layouts/LayoutShell' // 🔧 Added LayoutShell import
 
 // Auth & Utility
 import LoginPage from './pages/LoginPage'
