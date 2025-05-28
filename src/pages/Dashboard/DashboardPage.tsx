@@ -43,7 +43,7 @@ import MoneySplitSimulator from './MoneySplitSimulator';
 import BalanceTrendChart from './BalanceTrendChart';
 import WalletPieChart from './WalletPieChart';
 import RecentTransactions from './RecentTransactions';
-import CollapsibleCurrencyView from './CollapsibleCurrencyView';
+
 
 // Enhanced currency formatting utility with FIXED symbols
 const formatCurrency = (amount: number, currency: string = 'IDR'): string => {
@@ -478,18 +478,6 @@ function DashboardPage() {
           </Grid>
         </CardContent>
       </Card>
-
-      {/* NEW: Collapsible Currency View */}
-      <CollapsibleCurrencyView
-        availableCurrencies={availableCurrencies}
-        displayCurrency={displayCurrency}
-        onCurrencyChange={handleCurrencyChange}
-        smartDefaultCurrency={smartDefaultCurrency}
-        preferenceSource={preferenceSource}
-        totalBalance={totalBalanceInSelectedCurrency}
-        onAutoSelect={handleAutoSelectCurrency}
-        showSaveIndicator={preferenceSource === 'user'}
-      />
     </Box>
   );
 
@@ -536,16 +524,9 @@ function DashboardPage() {
         {/* Simplified Trend Chart */}
         <Card elevation={1} sx={{ mb: 3 }}>
           <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" gutterBottom fontWeight="bold">
-                Grafik Saldo - {displayCurrency}
-              </Typography>
-              <Chip 
-                label={`${formatCurrency(totalBalanceInSelectedCurrency, displayCurrency)}`}
-                color="primary"
-                variant="outlined"
-              />
-            </Box>
+            <Typography variant="h6" gutterBottom fontWeight="bold">
+              Grafik Saldo - {displayCurrency}
+            </Typography>
             <BalanceTrendChart
               transactions={transactions}
               selectedCurrency={displayCurrency}
