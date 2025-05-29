@@ -35,6 +35,7 @@
     "react-countup": "^6.5.3",
     "react-cropper": "^2.3.3",
     "react-dom": "^18.2.0",
+    "react-helmet": "^6.1.0",
     "react-hot-toast": "^2.5.2",
     "react-i18next": "^15.5.1",
     "react-router-dom": "^6.14.1",

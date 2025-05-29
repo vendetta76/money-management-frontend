@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet';
 import {
   Plus,
   Minus,
@@ -468,6 +469,18 @@ const LandingPage = () => {
 
   return (
     <div className="bg-white min-h-screen relative">
+      <Helmet>
+        <title>MeowIQ – Aplikasi Keuangan Pintar</title>
+        <meta name="description" content="Kelola keuangan pribadi dan catat pengeluaran harian dengan MeowIQ. Gratis, unik, dan berbeda dari yang lain." />
+        <meta name="keywords" content="aplikasi keuangan pribadi, pengeluaran harian, budgeting gratis, dompet digital" />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="MeowIQ – Aplikasi Keuangan Pintar" />
+        <meta property="og:description" content="Catat pengeluaran, kelola keuangan pribadi, dan nikmati fitur unik gratis. Cocok untuk semua kalangan." />
+        <meta property="og:image" content="https://meowiq.com/assets/kucing-cuan.webp" />
+        <meta property="og:url" content="https://meowiq.com" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href="https://meowiq.com" />
+      </Helmet>
       
       {/* Floating background elements */}
       <div className="absolute top-5 left-5 w-32 h-32 bg-gradient-to-r from-pink-500 to-teal-500 rounded-full opacity-10 animate-bounce"></div>
