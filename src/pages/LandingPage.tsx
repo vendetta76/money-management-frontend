@@ -19,7 +19,15 @@ import {
   Grow,
   Slide,
   Stack,
-  Rating
+  Rating,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider
 } from '@mui/material';
 import {
   ThemeProvider,
@@ -37,7 +45,16 @@ import {
   AccountBalance,
   Rocket,
   AutoAwesome,
-  ChevronRight
+  ChevronRight,
+  Close,
+  PlayArrow,
+  Add,
+  Remove,
+  Wallet,
+  ShoppingCart,
+  Restaurant,
+  LocalGasStation,
+  Home
 } from '@mui/icons-material';
 
 // Tema warna yang lebih cerah dan modern
@@ -202,6 +219,324 @@ const HeroSection = styled(Box)(({ theme }) => ({
   overflow: 'hidden',
 }));
 
+// Interactive Demo Component
+const InteractiveDemo = ({ open, onClose }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(2450000);
+
+  const sampleTransactions = [
+    { id: 1, name: 'Gaji Bulanan', amount: 5000000, type: 'income', icon: <AccountBalance />, date: '15 Jan 2025' },
+    { id: 2, name: 'Belanja Groceries', amount: -350000, type: 'expense', icon: <ShoppingCart />, date: '14 Jan 2025' },
+    { id: 3, name: 'Makan di Restoran', amount: -150000, type: 'expense', icon: <Restaurant />, date: '13 Jan 2025' },
+    { id: 4, name: 'Isi Bensin', amount: -100000, type: 'expense', icon: <LocalGasStation />, date: '12 Jan 2025' },
+    { id: 5, name: 'Freelance Project', amount: 800000, type: 'income', icon: <Star />, date: '10 Jan 2025' },
+  ];
+
+  const demoSteps = [
+    {
+      title: 'Dashboard Utama',
+      description: 'Lihat ringkasan keuangan Anda dalam satu tampilan'
+    },
+    {
+      title: 'Tambah Transaksi',
+      description: 'Mudah menambah pemasukan atau pengeluaran'
+    },
+    {
+      title: 'Analisis Keuangan',
+      description: 'Grafik dan insights untuk keputusan yang lebih baik'
+    }
+  ];
+
+  const addTransaction = (amount, type) => {
+    if (type === 'income') {
+      setWalletBalance(prev => prev + amount);
+    } else {
+      setWalletBalance(prev => prev - amount);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const renderDashboard = () => (
+    <Box sx={{ p: 3 }}>
+      {/* Header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+          Selamat datang, Demo User! 👋
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Berikut ringkasan keuangan Anda hari ini
+        </Typography>
+      </Box>
+
+      {/* Balance Card */}
+      <Card sx={{ 
+        background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)', 
+        color: 'white', 
+        mb: 3,
+        transform: currentStep === 0 ? 'scale(1.02)' : 'scale(1)',
+        transition: 'all 0.3s ease'
+      }}>
+        <CardContent>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Wallet sx={{ fontSize: '2rem' }} />
+            <Box>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                Saldo Total
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                {formatCurrency(walletBalance)}
+              </Typography>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6}>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => addTransaction(500000, 'income')}
+            sx={{ 
+              background: 'linear-gradient(45deg, #48BB78, #68D391)',
+              '&:hover': { background: 'linear-gradient(45deg, #38A169, #48BB78)' }
+            }}
+          >
+            Tambah Pemasukan
+          </Button>
+        </Grid>
+        <Grid item xs={6}>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<Remove />}
+            onClick={() => addTransaction(200000, 'expense')}
+            sx={{ 
+              background: 'linear-gradient(45deg, #F56565, #FC8181)',
+              '&:hover': { background: 'linear-gradient(45deg, #E53E3E, #F56565)' }
+            }}
+          >
+            Tambah Pengeluaran
+          </Button>
+        </Grid>
+      </Grid>
+
+      {/* Recent Transactions */}
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+        Transaksi Terbaru
+      </Typography>
+      <List sx={{ background: '#F7FAFC', borderRadius: 2 }}>
+        {sampleTransactions.slice(0, 4).map((transaction, index) => (
+          <React.Fragment key={transaction.id}>
+            <ListItem>
+              <ListItemIcon>
+                <Avatar sx={{ 
+                  background: transaction.type === 'income' ? 'linear-gradient(45deg, #48BB78, #68D391)' : 'linear-gradient(45deg, #F56565, #FC8181)',
+                  width: 40,
+                  height: 40
+                }}>
+                  {transaction.icon}
+                </Avatar>
+              </ListItemIcon>
+              <ListItemText
+                primary={transaction.name}
+                secondary={transaction.date}
+              />
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600,
+                  color: transaction.type === 'income' ? 'success.main' : 'error.main'
+                }}
+              >
+                {transaction.type === 'income' ? '+' : ''}{formatCurrency(transaction.amount)}
+              </Typography>
+            </ListItem>
+            {index < 3 && <Divider />}
+          </React.Fragment>
+        ))}
+      </List>
+    </Box>
+  );
+
+  const renderAnalytics = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
+        📊 Analisis Keuangan
+      </Typography>
+      
+      {/* Summary Cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <Typography variant="h4" sx={{ color: 'success.main', fontWeight: 700 }}>
+              +23%
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Pemasukan
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <Typography variant="h4" sx={{ color: 'error.main', fontWeight: 700 }}>
+              -12%
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Pengeluaran
+            </Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <Typography variant="h4" sx={{ color: 'primary.main', fontWeight: 700 }}>
+              Rp2.4M
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Tabungan
+            </Typography>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Chart Placeholder */}
+      <Card sx={{ p: 3, textAlign: 'center', mb: 3 }}>
+        <TrendingUp sx={{ fontSize: '4rem', color: 'primary.main', mb: 2 }} />
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+          Grafik Keuangan Interaktif
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Visualisasi pengeluaran dan pemasukan dalam 30 hari terakhir
+        </Typography>
+      </Card>
+
+      {/* AI Insights */}
+      <Card sx={{ 
+        background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)', 
+        color: 'white',
+        p: 3
+      }}>
+        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+          <AutoAwesome sx={{ fontSize: '1.5rem' }} />
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            AI Insights
+          </Typography>
+        </Stack>
+        <Typography variant="body1">
+          💡 Pengeluaran makanan Anda turun 15% bulan ini. Pertahankan kebiasaan baik ini!
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
+          Saran: Alokasikan 20% dari penghematan untuk investasi jangka panjang.
+        </Typography>
+      </Card>
+    </Box>
+  );
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 0:
+        return renderDashboard();
+      case 1:
+        return renderDashboard();
+      case 2:
+        return renderAnalytics();
+      default:
+        return renderDashboard();
+    }
+  };
+
+  return (
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 3, minHeight: '80vh' }
+      }}
+    >
+      <DialogTitle sx={{ p: 0 }}>
+        <Box sx={{ 
+          background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)', 
+          color: 'white',
+          p: 3,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              🎮 Demo Interaktif MeowIQ
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              {demoSteps[currentStep].description}
+            </Typography>
+          </Box>
+          <IconButton onClick={onClose} sx={{ color: 'white' }}>
+            <Close />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      
+      <DialogContent sx={{ p: 0 }}>
+        {renderCurrentStep()}
+        
+        {/* Navigation */}
+        <Box sx={{ 
+          p: 3, 
+          borderTop: '1px solid #E2E8F0',
+          background: '#F7FAFC'
+        }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Button
+              disabled={currentStep === 0}
+              onClick={() => setCurrentStep(prev => prev - 1)}
+            >
+              Sebelumnya
+            </Button>
+            
+            <Stack direction="row" spacing={1}>
+              {demoSteps.map((_, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: currentStep === index ? '#FF6B6B' : '#E2E8F0',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setCurrentStep(index)}
+                />
+              ))}
+            </Stack>
+            
+            <Button
+              variant="contained"
+              disabled={currentStep === demoSteps.length - 1}
+              onClick={() => setCurrentStep(prev => prev + 1)}
+              sx={{
+                background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
+              }}
+            >
+              Selanjutnya
+            </Button>
+          </Stack>
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const LoadingAnimation = () => {
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState("Mohon tunggu, sedang mempersiapkan dashboard Anda...");
@@ -320,6 +655,7 @@ const LoadingAnimation = () => {
 const LandingPage = () => {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -357,6 +693,7 @@ const LandingPage = () => {
             <Stack direction="row" spacing={2}>
               <Button 
                 color="primary" 
+                href="/login"
                 sx={{ 
                   color: 'text.primary',
                   '&:hover': { 
@@ -366,7 +703,10 @@ const LandingPage = () => {
               >
                 Masuk
               </Button>
-              <GradientButton variant="contained">
+              <GradientButton 
+                variant="contained"
+                href="/register"
+              >
                 Daftar
               </GradientButton>
             </Stack>
@@ -415,6 +755,7 @@ const LandingPage = () => {
                     variant="outlined"
                     size="large"
                     endIcon={<ChevronRight />}
+                    href="/login"
                     sx={{
                       borderColor: 'rgba(255, 255, 255, 0.5)',
                       color: 'white',
@@ -434,6 +775,7 @@ const LandingPage = () => {
                     variant="contained"
                     size="large"
                     endIcon={<ArrowForward />}
+                    href="/register"
                     sx={{
                       background: 'rgba(255, 255, 255, 0.9)',
                       color: '#2D3748',
@@ -478,22 +820,69 @@ const LandingPage = () => {
                 aspectRatio: '16/9',
                 background: 'linear-gradient(135deg, #FFFFFF 0%, #F7FAFC 100%)',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 border: '1px solid #E2E8F0',
                 position: 'relative',
                 overflow: 'hidden',
                 borderRadius: 4,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  boxShadow: '0 30px 60px rgba(255, 107, 107, 0.2)',
+                }
               }}
+              onClick={() => setDemoOpen(true)}
             >
               <Box sx={{ textAlign: 'center' }}>
-                <TrendingUp sx={{ fontSize: 100, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h4" color="text.primary" sx={{ fontWeight: 600 }}>
-                  Demo Interaktif Segera Hadir
+                <Box sx={{ 
+                  position: 'relative',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mb: 3
+                }}>
+                  <Box sx={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    animation: `${pulse} 2s ease-in-out infinite`,
+                  }}>
+                    <PlayArrow sx={{ fontSize: '3rem', color: 'white' }} />
+                  </Box>
+                </Box>
+                
+                <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
+                  🎮 Coba Demo Interaktif
                 </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-                  Pengalaman dashboard yang menakjubkan menanti Anda
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
+                  Rasakan pengalaman MeowIQ secara langsung!
                 </Typography>
+                
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<PlayArrow />}
+                  sx={{
+                    background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
+                    borderRadius: 25,
+                    px: 4,
+                    py: 1.5,
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #E55555 30%, #3BA89F 90%)',
+                    }
+                  }}
+                >
+                  Mulai Demo
+                </Button>
               </Box>
               
               {/* Elemen dekoratif mengambang */}
@@ -680,6 +1069,7 @@ const LandingPage = () => {
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForward />}
+                href="/register"
                 sx={{ 
                   fontSize: '1.3rem', 
                   py: 2, 
@@ -731,6 +1121,12 @@ const LandingPage = () => {
             </Grid>
           </Container>
         </Box>
+        
+        {/* Interactive Demo Modal */}
+        <InteractiveDemo 
+          open={demoOpen} 
+          onClose={() => setDemoOpen(false)} 
+        />
       </Box>
     </ThemeProvider>
   );
