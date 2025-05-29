@@ -351,7 +351,7 @@ const InteractiveDemo = ({ open, onClose }) => {
             onClick={onClose}
             className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
           >
-            <X className="w-6 h-6" />
+            <Close className="w-6 h-6" />
           </button>
         </div>
 
@@ -497,7 +497,7 @@ const InteractiveDemo = ({ open, onClose }) => {
                   onClick={() => setOpenTransactionDialog(false)}
                   className="p-1 hover:bg-white hover:bg-opacity-20 rounded-full"
                 >
-                  <X className="w-4 h-4" />
+                  <Close className="w-4 h-4" />
                 </button>
               </div>
               
