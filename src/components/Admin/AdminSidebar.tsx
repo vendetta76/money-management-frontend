@@ -37,6 +37,7 @@ import {
   TrendingUp,
   Person,
   Tune,
+  Article,
   // New icons for enhanced features
   Campaign,
   Email,
@@ -136,6 +137,7 @@ const AdminSidebar = ({ isOpen, onClose, variant = 'temporary' }: AdminSidebarPr
     { path: "/admin/users", label: "User Management", icon: <People /> },
     { path: "/admin/wallets", label: "Wallet Management", icon: <AccountBalanceWallet /> },
     { path: "/admin/transactions", label: "Transactions", icon: <Receipt /> },
+    { path: "/admin/posts", label: "Post Management", icon: <Article /> },
   ];
 
   // 📨 NEW: Communication System
