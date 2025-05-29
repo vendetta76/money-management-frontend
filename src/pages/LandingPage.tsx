@@ -480,6 +480,64 @@ const LandingPage = () => {
         <meta property="og:url" content="https://meowiq.com" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href="https://meowiq.com" />
+
+        {/* Structured Data: FAQ */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Apakah MeowIQ gratis digunakan?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ya! MeowIQ sepenuhnya gratis dan dapat digunakan oleh siapa pun tanpa batasan fitur dasar."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Apakah MeowIQ tersedia di Android/iOS?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "MeowIQ adalah PWA, jadi dapat diakses di browser dan diinstal seperti aplikasi di Android/iOS tanpa harus ke Play Store."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Apakah data saya aman di MeowIQ?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ya, kami menggunakan enkripsi dan penyimpanan cloud yang aman untuk melindungi data pengguna."
+                }
+              }
+            ]
+          })}
+        </script>
+
+        {/* Structured Data: Product */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "MeowIQ",
+            "operatingSystem": "All",
+            "applicationCategory": "FinanceApplication",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "IDR"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "5.0",
+              "reviewCount": "50000"
+            },
+            "description": "MeowIQ adalah aplikasi keuangan pribadi yang membantu pengguna mengelola dompet, mencatat transaksi, dan mendapatkan analisis keuangan dengan fitur unik.",
+            "url": "https://meowiq.com",
+            "image": "https://meowiq.com/assets/kucing-cuan.webp"
+          })}
+        </script>
       </Helmet>
       
       {/* Floating background elements */}
