@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Input, Textarea } from '@/components/ui';
-import AdminLayoutShell from '@/components/Admin/AdminLayoutShell';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import AdminLayoutShell from '@/layouts/Admin/AdminLayoutShell';
 
 const API_URL = 'https://money-management-backend-f6dg.onrender.com/api/posts';
 const AUTH_TOKEN = typeof window !== 'undefined' ? localStorage.getItem('authToken') || '' : '';
