@@ -328,58 +328,58 @@ const InteractiveDemo = ({ open, onClose }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-3xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 md:p-4 z-50">
+      <div className="bg-white rounded-2xl md:rounded-3xl w-full max-w-6xl max-h-[95vh] md:max-h-[90vh] overflow-hidden shadow-3xl mx-2 md:mx-0">
         
         {/* Success Alert */}
         {showSuccess && (
-          <div className="absolute top-4 right-4 z-50">
-            <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center space-x-2 animate-bounce">
+          <div className="absolute top-2 right-2 md:top-4 md:right-4 z-50">
+            <div className="bg-green-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-2xl flex items-center space-x-2 animate-bounce">
               <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-              <span className="font-semibold">{successMessage}</span>
+              <span className="font-semibold text-sm md:text-base">{successMessage}</span>
             </div>
           </div>
         )}
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-pink-500 to-teal-500 text-white p-6 flex justify-between items-center">
+        <div className="bg-gradient-to-r from-pink-500 to-teal-500 text-white p-4 md:p-6 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold mb-1">🎮 Demo Interaktif MeowIQ</h2>
-            <p className="opacity-90">Rasakan pengalaman mengelola keuangan yang sesungguhnya</p>
+            <h2 className="text-xl md:text-2xl font-bold mb-1">🎮 Demo Interaktif MeowIQ</h2>
+            <p className="opacity-90 text-sm md:text-base">Rasakan pengalaman mengelola keuangan yang sesungguhnya</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors flex-shrink-0"
           >
-            <Close className="w-6 h-6" />
+            <Close className="w-5 h-5 md:w-6 md:h-6" />
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-100px)]">
-          <div className="p-6">
+        <div className="overflow-y-auto max-h-[calc(95vh-80px)] md:max-h-[calc(90vh-100px)]">
+          <div className="p-4 md:p-6">
             
             {/* Total Balance */}
             <div className="text-center mb-6">
-              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-full font-bold text-lg shadow-lg">
-                <Sparkles className="w-5 h-5 mr-2" />
+              <div className="inline-flex items-center px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-full font-bold text-sm md:text-lg shadow-lg">
+                <Star className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 Total Saldo: {formatCurrency(totalBalance)}
               </div>
             </div>
 
             {/* Wallets */}
-            <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-6">
               {wallets.map((wallet) => (
                 <div
                   key={wallet.id}
-                  className={`bg-gradient-to-r ${wallet.gradient} text-white rounded-2xl p-6 shadow-lg`}
+                  className={`bg-gradient-to-r ${wallet.gradient} text-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-lg`}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-white bg-opacity-20 rounded-full p-3">
-                      <Wallet className="w-6 h-6" />
+                  <div className="flex items-center space-x-3 md:space-x-4">
+                    <div className="bg-white bg-opacity-20 rounded-full p-2 md:p-3">
+                      <Wallet className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold">{wallet.name}</h3>
-                      <p className="text-2xl font-bold">{formatCurrency(wallet.balance)}</p>
+                      <h3 className="text-base md:text-lg font-semibold">{wallet.name}</h3>
+                      <p className="text-xl md:text-2xl font-bold">{formatCurrency(wallet.balance)}</p>
                     </div>
                   </div>
                 </div>
@@ -387,46 +387,46 @@ const InteractiveDemo = ({ open, onClose }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6">
               <button
                 onClick={() => openTransactionDialogHandler('income')}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl p-3 md:p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
               >
-                <Plus className="w-5 h-5" />
-                <span className="font-semibold">Pemasukan</span>
+                <Plus className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="font-semibold text-sm md:text-base">Pemasukan</span>
               </button>
               
               <button
                 onClick={() => openTransactionDialogHandler('expense')}
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl p-3 md:p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
               >
-                <Minus className="w-5 h-5" />
-                <span className="font-semibold">Pengeluaran</span>
+                <Minus className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="font-semibold text-sm md:text-base">Pengeluaran</span>
               </button>
               
               <button
                 onClick={() => openTransactionDialogHandler('transfer')}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl p-3 md:p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105 md:col-span-1 col-span-1"
               >
-                <ArrowLeftRight className="w-5 h-5" />
-                <span className="font-semibold">Transfer</span>
+                <ArrowLeftRight className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="font-semibold text-sm md:text-base">Transfer</span>
               </button>
             </div>
 
             {/* Transactions */}
-            <div className="bg-gray-50 rounded-2xl overflow-hidden mb-6">
-              <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
-                <h3 className="text-lg font-bold flex items-center">
-                  <BarChart3 className="w-5 h-5 mr-2" />
+            <div className="bg-gray-50 rounded-xl md:rounded-2xl overflow-hidden mb-6">
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-3 md:p-4">
+                <h3 className="text-base md:text-lg font-bold flex items-center">
+                  <BarChart3 className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                   Riwayat Transaksi ({transactions.length})
                 </h3>
               </div>
               
-              <div className="max-h-64 overflow-y-auto">
+              <div className="max-h-56 md:max-h-64 overflow-y-auto">
                 {transactions.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-2">🤷‍♂️</div>
-                    <p className="text-gray-600">Belum ada transaksi</p>
+                  <div className="text-center py-6 md:py-8">
+                    <div className="text-3xl md:text-4xl mb-2">🤷‍♂️</div>
+                    <p className="text-gray-600 text-sm md:text-base">Belum ada transaksi</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-200">
@@ -436,22 +436,22 @@ const InteractiveDemo = ({ open, onClose }) => {
                       const toWallet = getWalletInfo(tx.to);
                       
                       return (
-                        <div key={tx.id} className="p-4 flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${
+                        <div key={tx.id} className="p-3 md:p-4 flex items-center justify-between">
+                          <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
+                            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 ${
                               tx.type === 'income' ? 'bg-green-500' :
                               tx.type === 'expense' ? 'bg-red-500' : 'bg-blue-500'
                             }`}>
-                              {tx.type === 'transfer' ? <ArrowLeftRight className="w-4 h-4" /> : categoryInfo.icon}
+                              {tx.type === 'transfer' ? <ArrowLeftRight className="w-3 h-3 md:w-4 md:h-4" /> : categoryInfo.icon}
                             </div>
-                            <div>
-                              <p className="font-semibold">{tx.name}</p>
-                              <p className="text-sm text-gray-600">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-sm md:text-base truncate">{tx.name}</p>
+                              <p className="text-xs md:text-sm text-gray-600 truncate">
                                 {tx.type !== 'transfer' ? categoryInfo.name : `${fromWallet?.name} → ${toWallet?.name}`}
                               </p>
                             </div>
                           </div>
-                          <div className={`font-bold ${
+                          <div className={`font-bold text-sm md:text-base flex-shrink-0 ml-2 ${
                             tx.amount > 0 ? 'text-green-600' : tx.type === 'transfer' ? 'text-blue-600' : 'text-red-600'
                           }`}>
                             {tx.amount > 0 ? '+' : ''}{formatCurrency(Math.abs(tx.amount))}
@@ -465,16 +465,16 @@ const InteractiveDemo = ({ open, onClose }) => {
             </div>
 
             {/* Footer Actions */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
               <button
                 onClick={resetDemo}
-                className="px-6 py-2 border-2 border-pink-500 text-pink-500 rounded-full font-semibold hover:bg-pink-500 hover:text-white transition-all"
+                className="w-full md:w-auto px-4 md:px-6 py-2 border-2 border-pink-500 text-pink-500 rounded-full font-semibold hover:bg-pink-500 hover:text-white transition-all text-sm md:text-base"
               >
                 🔄 Reset Demo
               </button>
               <button
                 onClick={() => window.open('/register', '_blank')}
-                className="px-6 py-2 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-full font-semibold hover:from-pink-600 hover:to-teal-600 transition-all"
+                className="w-full md:w-auto px-4 md:px-6 py-2 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-full font-semibold hover:from-pink-600 hover:to-teal-600 transition-all text-sm md:text-base"
               >
                 🚀 Mulai Sekarang
               </button>
@@ -485,10 +485,10 @@ const InteractiveDemo = ({ open, onClose }) => {
         {/* Transaction Dialog */}
         {openTransactionDialog && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl mx-4">
               
               <div className="bg-gradient-to-r from-pink-500 to-teal-500 text-white p-4 rounded-t-2xl flex justify-between items-center">
-                <h3 className="text-lg font-bold">
+                <h3 className="text-base md:text-lg font-bold">
                   {dialogType === 'income' ? '💰 Tambah Pemasukan' : 
                    dialogType === 'expense' ? '💸 Tambah Pengeluaran' : 
                    '🔄 Transfer Dompet'}
@@ -507,7 +507,7 @@ const InteractiveDemo = ({ open, onClose }) => {
                   placeholder="Nama transaksi"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm md:text-base"
                 />
                 
                 <input
@@ -515,14 +515,14 @@ const InteractiveDemo = ({ open, onClose }) => {
                   placeholder="Jumlah (Rp)"
                   value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm md:text-base"
                 />
                 
                 {(dialogType === 'income' || dialogType === 'expense') && (
                   <select
                     value={form.category}
                     onChange={e => setForm({ ...form, category: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm md:text-base"
                   >
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>
@@ -535,7 +535,7 @@ const InteractiveDemo = ({ open, onClose }) => {
                 <select
                   value={form.from}
                   onChange={e => setForm({ ...form, from: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm md:text-base"
                 >
                   {wallets.map(w => (
                     <option key={w.id} value={w.id}>
@@ -548,7 +548,7 @@ const InteractiveDemo = ({ open, onClose }) => {
                   <select
                     value={form.to}
                     onChange={e => setForm({ ...form, to: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-sm md:text-base"
                   >
                     {wallets.filter(w => w.id !== form.from).map(w => (
                       <option key={w.id} value={w.id}>
@@ -558,17 +558,17 @@ const InteractiveDemo = ({ open, onClose }) => {
                   </select>
                 )}
                 
-                <div className="flex space-x-3 pt-2">
+                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 pt-2">
                   <button
                     onClick={() => setOpenTransactionDialog(false)}
-                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors text-sm md:text-base"
                   >
                     Batal
                   </button>
                   <button
                     onClick={handleTransaction}
                     disabled={!form.name || !form.amount}
-                    className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-lg hover:from-pink-600 hover:to-teal-600 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-lg hover:from-pink-600 hover:to-teal-600 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm md:text-base"
                   >
                     Simpan
                   </button>
