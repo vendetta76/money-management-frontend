@@ -1,4 +1,4 @@
-// src/routes.tsx - RESTORED ORIGINAL STRUCTURE + REPORT ROUTE
+// src/routes.tsx - RESTORED ORIGINAL STRUCTURE + REPORT ROUTE + ARTICLE MANAGEMENT
 import React from 'react'
 import { RouteObject, Navigate } from 'react-router-dom'
 import PrivateRoute from './components/PrivateRoute'
@@ -61,6 +61,7 @@ import AuditLogs from '@/pages/admin/AuditLogsPage'
 import CommunicationSystem from './pages/admin/CommunicationSystem'
 import SystemManagement from './pages/admin/SystemManagement'
 import SecurityManagement from './pages/admin/SecurityManagement'
+import PostsManagementPage from './pages/admin/PostsManagementPage'
 
 const routes: RouteObject[] = [
   { path: '/', element: <LandingPage /> },
@@ -295,6 +296,32 @@ const routes: RouteObject[] = [
         element: (
           <PageTransition>
             <TransactionManagement />
+          </PageTransition>
+        )
+      },
+
+      // 📝 POSTS MANAGEMENT
+      { 
+        path: 'articles', 
+        element: (
+          <PageTransition>
+            <PostsManagementPage />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'posts', 
+        element: (
+          <PageTransition>
+            <PostsManagementPage />
+          </PageTransition>
+        )
+      },
+      { 
+        path: 'blog', 
+        element: (
+          <PageTransition>
+            <PostsManagementPage />
           </PageTransition>
         )
       },
