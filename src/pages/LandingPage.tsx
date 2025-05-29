@@ -219,41 +219,33 @@ const HeroSection = styled(Box)(({ theme }) => ({
   overflow: 'hidden',
 }));
 
-// Interactive Demo Component
+// Enhanced Interactive Demo Component
 const InteractiveDemo = ({ open, onClose }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [walletBalance, setWalletBalance] = useState(2450000);
+  const [wallets, setWallets] = useState([
+    { id: 'main', name: 'Dompet Utama', balance: 2500000, gradient: 'from-pink-500 to-teal-500' },
+    { id: 'savings', name: 'Tabungan', balance: 5000000, gradient: 'from-green-500 to-emerald-600' },
+  ]);
+  
+  const [transactions, setTransactions] = useState([
+    { id: 1, name: 'Gaji Bulanan', amount: 8000000, type: 'income', category: 'salary', date: new Date(), from: 'main' },
+    { id: 2, name: 'Belanja Groceries', amount: -350000, type: 'expense', category: 'shopping', date: new Date(), from: 'main' },
+    { id: 3, name: 'Makan di Restoran', amount: -150000, type: 'expense', category: 'food', date: new Date(), from: 'main' },
+  ]);
+  
+  const [openTransactionDialog, setOpenTransactionDialog] = useState(false);
+  const [dialogType, setDialogType] = useState(null);
+  const [form, setForm] = useState({ name: '', amount: '', category: 'food', from: 'main', to: 'savings' });
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const sampleTransactions = [
-    { id: 1, name: 'Gaji Bulanan', amount: 5000000, type: 'income', icon: <AccountBalance />, date: '15 Jan 2025' },
-    { id: 2, name: 'Belanja Groceries', amount: -350000, type: 'expense', icon: <ShoppingCart />, date: '14 Jan 2025' },
-    { id: 3, name: 'Makan di Restoran', amount: -150000, type: 'expense', icon: <Restaurant />, date: '13 Jan 2025' },
-    { id: 4, name: 'Isi Bensin', amount: -100000, type: 'expense', icon: <LocalGasStation />, date: '12 Jan 2025' },
-    { id: 5, name: 'Freelance Project', amount: 800000, type: 'income', icon: <Star />, date: '10 Jan 2025' },
+  const categories = [
+    { id: 'food', name: 'Makanan & Minuman', icon: '🍽️', color: 'bg-red-500' },
+    { id: 'transport', name: 'Transportasi', icon: '🚗', color: 'bg-blue-500' },
+    { id: 'shopping', name: 'Belanja', icon: '🛍️', color: 'bg-yellow-500' },
+    { id: 'bills', name: 'Tagihan', icon: '🏠', color: 'bg-purple-500' },
+    { id: 'salary', name: 'Gaji', icon: '💼', color: 'bg-green-500' },
+    { id: 'investment', name: 'Investasi', icon: '📈', color: 'bg-indigo-500' },
   ];
-
-  const demoSteps = [
-    {
-      title: 'Dashboard Utama',
-      description: 'Lihat ringkasan keuangan Anda dalam satu tampilan'
-    },
-    {
-      title: 'Tambah Transaksi',
-      description: 'Mudah menambah pemasukan atau pengeluaran'
-    },
-    {
-      title: 'Analisis Keuangan',
-      description: 'Grafik dan insights untuk keputusan yang lebih baik'
-    }
-  ];
-
-  const addTransaction = (amount, type) => {
-    if (type === 'income') {
-      setWalletBalance(prev => prev + amount);
-    } else {
-      setWalletBalance(prev => prev - amount);
-    }
-  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', {
@@ -263,283 +255,336 @@ const InteractiveDemo = ({ open, onClose }) => {
     }).format(amount);
   };
 
-  const renderDashboard = () => (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-          Selamat datang, Demo User! 👋
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Berikut ringkasan keuangan Anda hari ini
-        </Typography>
-      </Box>
-
-      {/* Balance Card */}
-      <Card sx={{ 
-        background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)', 
-        color: 'white', 
-        mb: 3,
-        transform: currentStep === 0 ? 'scale(1.02)' : 'scale(1)',
-        transition: 'all 0.3s ease'
-      }}>
-        <CardContent>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Wallet sx={{ fontSize: '2rem' }} />
-            <Box>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Saldo Total
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                {formatCurrency(walletBalance)}
-              </Typography>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={6}>
-          <Button
-            fullWidth
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => addTransaction(500000, 'income')}
-            sx={{ 
-              background: 'linear-gradient(45deg, #48BB78, #68D391)',
-              '&:hover': { background: 'linear-gradient(45deg, #38A169, #48BB78)' }
-            }}
-          >
-            Tambah Pemasukan
-          </Button>
-        </Grid>
-        <Grid item xs={6}>
-          <Button
-            fullWidth
-            variant="contained"
-            startIcon={<Remove />}
-            onClick={() => addTransaction(200000, 'expense')}
-            sx={{ 
-              background: 'linear-gradient(45deg, #F56565, #FC8181)',
-              '&:hover': { background: 'linear-gradient(45deg, #E53E3E, #F56565)' }
-            }}
-          >
-            Tambah Pengeluaran
-          </Button>
-        </Grid>
-      </Grid>
-
-      {/* Recent Transactions */}
-      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-        Transaksi Terbaru
-      </Typography>
-      <List sx={{ background: '#F7FAFC', borderRadius: 2 }}>
-        {sampleTransactions.slice(0, 4).map((transaction, index) => (
-          <React.Fragment key={transaction.id}>
-            <ListItem>
-              <ListItemIcon>
-                <Avatar sx={{ 
-                  background: transaction.type === 'income' ? 'linear-gradient(45deg, #48BB78, #68D391)' : 'linear-gradient(45deg, #F56565, #FC8181)',
-                  width: 40,
-                  height: 40
-                }}>
-                  {transaction.icon}
-                </Avatar>
-              </ListItemIcon>
-              <ListItemText
-                primary={transaction.name}
-                secondary={transaction.date}
-              />
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontWeight: 600,
-                  color: transaction.type === 'income' ? 'success.main' : 'error.main'
-                }}
-              >
-                {transaction.type === 'income' ? '+' : ''}{formatCurrency(transaction.amount)}
-              </Typography>
-            </ListItem>
-            {index < 3 && <Divider />}
-          </React.Fragment>
-        ))}
-      </List>
-    </Box>
-  );
-
-  const renderAnalytics = () => (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
-        📊 Analisis Keuangan
-      </Typography>
-      
-      {/* Summary Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={4}>
-          <Card sx={{ textAlign: 'center', p: 2 }}>
-            <Typography variant="h4" sx={{ color: 'success.main', fontWeight: 700 }}>
-              +23%
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Pemasukan
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={4}>
-          <Card sx={{ textAlign: 'center', p: 2 }}>
-            <Typography variant="h4" sx={{ color: 'error.main', fontWeight: 700 }}>
-              -12%
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Pengeluaran
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={4}>
-          <Card sx={{ textAlign: 'center', p: 2 }}>
-            <Typography variant="h4" sx={{ color: 'primary.main', fontWeight: 700 }}>
-              Rp2.4M
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tabungan
-            </Typography>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Chart Placeholder */}
-      <Card sx={{ p: 3, textAlign: 'center', mb: 3 }}>
-        <TrendingUp sx={{ fontSize: '4rem', color: 'primary.main', mb: 2 }} />
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-          Grafik Keuangan Interaktif
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Visualisasi pengeluaran dan pemasukan dalam 30 hari terakhir
-        </Typography>
-      </Card>
-
-      {/* AI Insights */}
-      <Card sx={{ 
-        background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)', 
-        color: 'white',
-        p: 3
-      }}>
-        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-          <AutoAwesome sx={{ fontSize: '1.5rem' }} />
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            AI Insights
-          </Typography>
-        </Stack>
-        <Typography variant="body1">
-          💡 Pengeluaran makanan Anda turun 15% bulan ini. Pertahankan kebiasaan baik ini!
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-          Saran: Alokasikan 20% dari penghematan untuk investasi jangka panjang.
-        </Typography>
-      </Card>
-    </Box>
-  );
-
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 0:
-        return renderDashboard();
-      case 1:
-        return renderDashboard();
-      case 2:
-        return renderAnalytics();
-      default:
-        return renderDashboard();
-    }
+  const getCategoryInfo = (categoryId) => {
+    return categories.find(cat => cat.id === categoryId) || categories[0];
   };
 
+  const getWalletInfo = (walletId) => {
+    return wallets.find(w => w.id === walletId);
+  };
+
+  const handleTransaction = () => {
+    const amount = parseFloat(form.amount);
+    if (!form.name || !amount) return;
+
+    const newTransaction = {
+      ...form,
+      amount: dialogType === 'expense' ? -amount : amount,
+      type: dialogType,
+      date: new Date(),
+      id: Date.now()
+    };
+
+    setTransactions(prev => [newTransaction, ...prev]);
+
+    // Update wallet balances
+    if (dialogType === 'income') {
+      setWallets(prev => prev.map(w => 
+        w.id === form.from ? { ...w, balance: w.balance + amount } : w
+      ));
+      setSuccessMessage('💰 Pemasukan berhasil ditambahkan!');
+    } else if (dialogType === 'expense') {
+      setWallets(prev => prev.map(w => 
+        w.id === form.from ? { ...w, balance: w.balance - amount } : w
+      ));
+      setSuccessMessage('💸 Pengeluaran berhasil dicatat!');
+    } else if (dialogType === 'transfer' && form.from !== form.to) {
+      setWallets(prev => prev.map(w => {
+        if (w.id === form.from) return { ...w, balance: w.balance - amount };
+        if (w.id === form.to) return { ...w, balance: w.balance + amount };
+        return w;
+      }));
+      setSuccessMessage('🔄 Transfer berhasil dilakukan!');
+    }
+
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+    setOpenTransactionDialog(false);
+    setForm({ name: '', amount: '', category: 'food', from: 'main', to: 'savings' });
+  };
+
+  const openTransactionDialogHandler = (type) => {
+    setDialogType(type);
+    setOpenTransactionDialog(true);
+  };
+
+  const resetDemo = () => {
+    setWallets([
+      { id: 'main', name: 'Dompet Utama', balance: 2500000, gradient: 'from-pink-500 to-teal-500' },
+      { id: 'savings', name: 'Tabungan', balance: 5000000, gradient: 'from-green-500 to-emerald-600' },
+    ]);
+    setTransactions([
+      { id: 1, name: 'Gaji Bulanan', amount: 8000000, type: 'income', category: 'salary', date: new Date(), from: 'main' },
+      { id: 2, name: 'Belanja Groceries', amount: -350000, type: 'expense', category: 'shopping', date: new Date(), from: 'main' },
+      { id: 3, name: 'Makan di Restoran', amount: -150000, type: 'expense', category: 'food', date: new Date(), from: 'main' },
+    ]);
+    setSuccessMessage('🔄 Demo telah direset!');
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
+
+  if (!open) return null;
+
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
-      fullWidth
-      PaperProps={{
-        sx: { borderRadius: 3, minHeight: '80vh' }
-      }}
-    >
-      <DialogTitle sx={{ p: 0 }}>
-        <Box sx={{ 
-          background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)', 
-          color: 'white',
-          p: 3,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              🎮 Demo Interaktif MeowIQ
-            </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              {demoSteps[currentStep].description}
-            </Typography>
-          </Box>
-          <IconButton onClick={onClose} sx={{ color: 'white' }}>
-            <Close />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-      
-      <DialogContent sx={{ p: 0 }}>
-        {renderCurrentStep()}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-3xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-3xl">
         
-        {/* Navigation */}
-        <Box sx={{ 
-          p: 3, 
-          borderTop: '1px solid #E2E8F0',
-          background: '#F7FAFC'
-        }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Button
-              disabled={currentStep === 0}
-              onClick={() => setCurrentStep(prev => prev - 1)}
-            >
-              Sebelumnya
-            </Button>
+        {/* Success Alert */}
+        {showSuccess && (
+          <div className="absolute top-4 right-4 z-50">
+            <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center space-x-2 animate-bounce">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              <span className="font-semibold">{successMessage}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="bg-gradient-to-r from-pink-500 to-teal-500 text-white p-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold mb-1">🎮 Demo Interaktif MeowIQ</h2>
+            <p className="opacity-90">Rasakan pengalaman mengelola keuangan yang sesungguhnya</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto max-h-[calc(90vh-100px)]">
+          <div className="p-6">
             
-            <Stack direction="row" spacing={1}>
-              {demoSteps.map((_, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    background: currentStep === index ? '#FF6B6B' : '#E2E8F0',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setCurrentStep(index)}
-                />
+            {/* Total Balance */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-full font-bold text-lg shadow-lg">
+                <Sparkles className="w-5 h-5 mr-2" />
+                Total Saldo: {formatCurrency(totalBalance)}
+              </div>
+            </div>
+
+            {/* Wallets */}
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              {wallets.map((wallet) => (
+                <div
+                  key={wallet.id}
+                  className={`bg-gradient-to-r ${wallet.gradient} text-white rounded-2xl p-6 shadow-lg`}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-white bg-opacity-20 rounded-full p-3">
+                      <Wallet className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">{wallet.name}</h3>
+                      <p className="text-2xl font-bold">{formatCurrency(wallet.balance)}</p>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </Stack>
-            
-            <Button
-              variant="contained"
-              disabled={currentStep === demoSteps.length - 1}
-              onClick={() => setCurrentStep(prev => prev + 1)}
-              sx={{
-                background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
-              }}
-            >
-              Selanjutnya
-            </Button>
-          </Stack>
-        </Box>
-      </DialogContent>
-    </Dialog>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <button
+                onClick={() => openTransactionDialogHandler('income')}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="font-semibold">Pemasukan</span>
+              </button>
+              
+              <button
+                onClick={() => openTransactionDialogHandler('expense')}
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
+              >
+                <Minus className="w-5 h-5" />
+                <span className="font-semibold">Pengeluaran</span>
+              </button>
+              
+              <button
+                onClick={() => openTransactionDialogHandler('transfer')}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl p-4 flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
+              >
+                <ArrowLeftRight className="w-5 h-5" />
+                <span className="font-semibold">Transfer</span>
+              </button>
+            </div>
+
+            {/* Transactions */}
+            <div className="bg-gray-50 rounded-2xl overflow-hidden mb-6">
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
+                <h3 className="text-lg font-bold flex items-center">
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  Riwayat Transaksi ({transactions.length})
+                </h3>
+              </div>
+              
+              <div className="max-h-64 overflow-y-auto">
+                {transactions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-2">🤷‍♂️</div>
+                    <p className="text-gray-600">Belum ada transaksi</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {transactions.slice(0, 5).map((tx) => {
+                      const categoryInfo = getCategoryInfo(tx.category);
+                      const fromWallet = getWalletInfo(tx.from);
+                      const toWallet = getWalletInfo(tx.to);
+                      
+                      return (
+                        <div key={tx.id} className="p-4 flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${
+                              tx.type === 'income' ? 'bg-green-500' :
+                              tx.type === 'expense' ? 'bg-red-500' : 'bg-blue-500'
+                            }`}>
+                              {tx.type === 'transfer' ? <ArrowLeftRight className="w-4 h-4" /> : categoryInfo.icon}
+                            </div>
+                            <div>
+                              <p className="font-semibold">{tx.name}</p>
+                              <p className="text-sm text-gray-600">
+                                {tx.type !== 'transfer' ? categoryInfo.name : `${fromWallet?.name} → ${toWallet?.name}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className={`font-bold ${
+                            tx.amount > 0 ? 'text-green-600' : tx.type === 'transfer' ? 'text-blue-600' : 'text-red-600'
+                          }`}>
+                            {tx.amount > 0 ? '+' : ''}{formatCurrency(Math.abs(tx.amount))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex justify-between items-center">
+              <button
+                onClick={resetDemo}
+                className="px-6 py-2 border-2 border-pink-500 text-pink-500 rounded-full font-semibold hover:bg-pink-500 hover:text-white transition-all"
+              >
+                🔄 Reset Demo
+              </button>
+              <button
+                onClick={() => window.open('/register', '_blank')}
+                className="px-6 py-2 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-full font-semibold hover:from-pink-600 hover:to-teal-600 transition-all"
+              >
+                🚀 Mulai Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Transaction Dialog */}
+        {openTransactionDialog && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+              
+              <div className="bg-gradient-to-r from-pink-500 to-teal-500 text-white p-4 rounded-t-2xl flex justify-between items-center">
+                <h3 className="text-lg font-bold">
+                  {dialogType === 'income' ? '💰 Tambah Pemasukan' : 
+                   dialogType === 'expense' ? '💸 Tambah Pengeluaran' : 
+                   '🔄 Transfer Dompet'}
+                </h3>
+                <button
+                  onClick={() => setOpenTransactionDialog(false)}
+                  className="p-1 hover:bg-white hover:bg-opacity-20 rounded-full"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="p-4 space-y-4">
+                <input
+                  type="text"
+                  placeholder="Nama transaksi"
+                  value={form.name}
+                  onChange={e => setForm({ ...form, name: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                />
+                
+                <input
+                  type="number"
+                  placeholder="Jumlah (Rp)"
+                  value={form.amount}
+                  onChange={e => setForm({ ...form, amount: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                />
+                
+                {(dialogType === 'income' || dialogType === 'expense') && (
+                  <select
+                    value={form.category}
+                    onChange={e => setForm({ ...form, category: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  >
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.icon} {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                
+                <select
+                  value={form.from}
+                  onChange={e => setForm({ ...form, from: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                >
+                  {wallets.map(w => (
+                    <option key={w.id} value={w.id}>
+                      🏦 {w.name} ({formatCurrency(w.balance)})
+                    </option>
+                  ))}
+                </select>
+                
+                {dialogType === 'transfer' && (
+                  <select
+                    value={form.to}
+                    onChange={e => setForm({ ...form, to: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  >
+                    {wallets.filter(w => w.id !== form.from).map(w => (
+                      <option key={w.id} value={w.id}>
+                        🏦 {w.name} ({formatCurrency(w.balance)})
+                      </option>
+                    ))}
+                  </select>
+                )}
+                
+                <div className="flex space-x-3 pt-2">
+                  <button
+                    onClick={() => setOpenTransactionDialog(false)}
+                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleTransaction}
+                    disabled={!form.name || !form.amount}
+                    className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-lg hover:from-pink-600 hover:to-teal-600 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
 const LoadingAnimation = () => {
   const [progress, setProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState("Mohon tunggu, sedang mempersiapkan dashboard Anda...");
+  const [loadingText, setLoadingText] = useState("Memuat halaman MeowIQ...");
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -549,11 +594,11 @@ const LoadingAnimation = () => {
       });
     }, 400);
 
-    const texts = [
-      "Mohon tunggu, sedang mempersiapkan dashboard Anda...",
-      "Memuat data keuangan Anda...",
-      "Menyiapkan analisis pintar...",
-      "Hampir selesai!",
+      const texts = [
+      "Memuat halaman MeowIQ...",
+      "Menyiapkan konten website...",
+      "Menampilkan informasi produk...",
+      "Hampir siap!",
     ];
 
     const textTimer = setInterval(() => {
