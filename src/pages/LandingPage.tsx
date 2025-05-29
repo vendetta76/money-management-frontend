@@ -1,223 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Box,
-  Chip,
-  Avatar,
-  LinearProgress,
-  Paper,
-  IconButton,
-  Fab,
-  Zoom,
-  Grow,
-  Slide,
-  Stack,
-  Rating,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider
-} from '@mui/material';
-import {
-  ThemeProvider,
-  createTheme,
-  styled,
-  keyframes
-} from '@mui/material/styles';
-import {
-  ArrowForward,
-  Security,
-  Analytics,
-  Speed,
+  Plus,
+  Minus,
+  ArrowLeftRight,
+  X,
   Star,
-  TrendingUp,
-  AccountBalance,
-  Rocket,
-  AutoAwesome,
-  ChevronRight,
-  Close,
-  PlayArrow,
-  Add,
-  Remove,
   Wallet,
-  ShoppingCart,
-  Restaurant,
-  LocalGasStation,
-  Home
-} from '@mui/icons-material';
-
-// Tema warna yang lebih cerah dan modern
-const modernTheme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#FF6B6B',
-      light: '#FF8E8E',
-      dark: '#E55555',
-    },
-    secondary: {
-      main: '#4ECDC4',
-      light: '#7ED6CF',
-      dark: '#3BA89F',
-    },
-    background: {
-      default: '#FFFFFF',
-      paper: '#FFFFFF',
-    },
-    text: {
-      primary: '#2D3748',
-      secondary: '#718096',
-    },
-    warning: {
-      main: '#FFD93D',
-    },
-    success: {
-      main: '#48BB78',
-    },
-    error: {
-      main: '#F56565',
-    },
-    info: {
-      main: '#4299E1',
-    }
-  },
-  typography: {
-    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 800,
-      fontSize: '3.5rem',
-      lineHeight: 1.2,
-    },
-    h2: {
-      fontWeight: 700,
-      fontSize: '2.5rem',
-      lineHeight: 1.3,
-    },
-    h3: {
-      fontWeight: 600,
-      fontSize: '2rem',
-      lineHeight: 1.4,
-    },
-    h4: {
-      fontWeight: 600,
-      fontSize: '1.5rem',
-    },
-    body1: {
-      fontSize: '1.1rem',
-      lineHeight: 1.6,
-    },
-  },
-  shape: {
-    borderRadius: 16,
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          borderRadius: 25,
-          padding: '12px 24px',
-          fontSize: '1rem',
-          fontWeight: 600,
-          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-          border: 'none',
-        },
-      },
-    },
-  },
-});
-
-// Animasi
-const float = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-`;
-
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-`;
-
-const bounce = keyframes`
-  0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
-  40%, 43% { transform: translate3d(0, -15px, 0); }
-  70% { transform: translate3d(0, -7px, 0); }
-  90% { transform: translate3d(0, -2px, 0); }
-`;
-
-// Komponen Styled
-const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  background: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(20px)',
-  boxShadow: '0 2px 20px rgba(0, 0, 0, 0.1)',
-  color: theme.palette.text.primary,
-}));
-
-const GradientButton = styled(Button)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
-  color: 'white',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    background: 'linear-gradient(45deg, #E55555 30%, #3BA89F 90%)',
-    transform: 'translateY(-2px)',
-    boxShadow: '0 15px 35px rgba(255, 107, 107, 0.4)',
-  },
-}));
-
-const PlayfulCard = styled(Card)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #FFFFFF 0%, #F7FAFC 100%)',
-  border: '1px solid #E2E8F0',
-  transition: 'all 0.4s ease',
-  cursor: 'pointer',
-  '&:hover': {
-    transform: 'translateY(-10px)',
-    boxShadow: '0 25px 50px rgba(255, 107, 107, 0.15)',
-    '& .card-icon': {
-      animation: `${bounce} 1s ease-in-out`,
-    },
-  },
-}));
-
-const GradientText = styled(Typography)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 70%, #48BB78 90%)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  backgroundClip: 'text',
-}));
-
-const FloatingElement = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  animation: `${float} 6s ease-in-out infinite`,
-  opacity: 0.3,
-}));
-
-const HeroSection = styled(Box)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%)',
-  minHeight: '100vh',
-  display: 'flex',
-  alignItems: 'center',
-  position: 'relative',
-  overflow: 'hidden',
-}));
+  BarChart3,
+  ArrowRight,
+  Shield,
+  Zap,
+  TrendingUp,
+  Building2,
+  Rocket,
+  Sparkles,
+  ChevronRight,
+  Play,
+  RotateCcw
+} from 'lucide-react';
 
 // Enhanced Interactive Demo Component
 const InteractiveDemo = ({ open, onClose }) => {
@@ -351,7 +151,7 @@ const InteractiveDemo = ({ open, onClose }) => {
             onClick={onClose}
             className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors flex-shrink-0"
           >
-            <Close className="w-5 h-5 md:w-6 md:h-6" />
+            <X className="w-5 h-5 md:w-6 md:h-6" />
           </button>
         </div>
 
@@ -497,7 +297,7 @@ const InteractiveDemo = ({ open, onClose }) => {
                   onClick={() => setOpenTransactionDialog(false)}
                   className="p-1 hover:bg-white hover:bg-opacity-20 rounded-full"
                 >
-                  <Close className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               
@@ -594,7 +394,7 @@ const LoadingAnimation = () => {
       });
     }, 400);
 
-      const texts = [
+    const texts = [
       "Memuat halaman MeowIQ...",
       "Menyiapkan konten website...",
       "Menampilkan informasi produk...",
@@ -612,88 +412,43 @@ const LoadingAnimation = () => {
   }, []);
 
   return (
-    <ThemeProvider theme={modernTheme}>
-      <Box
-        sx={{
-          height: '100vh',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Elemen dekoratif mengambang */}
-        <FloatingElement sx={{ top: '10%', left: '10%', animationDelay: '0s' }}>
-          <Box sx={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)' }} />
-        </FloatingElement>
-        <FloatingElement sx={{ top: '20%', right: '15%', animationDelay: '1s' }}>
-          <Box sx={{ width: 60, height: 60, borderRadius: 2, background: 'rgba(255, 255, 255, 0.15)' }} />
-        </FloatingElement>
-        <FloatingElement sx={{ bottom: '20%', left: '20%', animationDelay: '2s' }}>
-          <Box sx={{ width: 70, height: 70, borderRadius: 1, background: 'rgba(255, 255, 255, 0.1)' }} />
-        </FloatingElement>
+    <div className="h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Floating elements */}
+      <div className="absolute top-10 left-10 w-20 h-20 bg-white bg-opacity-20 rounded-full animate-bounce"></div>
+      <div className="absolute top-20 right-16 w-16 h-16 bg-white bg-opacity-15 rounded transform rotate-45"></div>
+      <div className="absolute bottom-20 left-20 w-20 h-20 bg-white bg-opacity-10 rounded"></div>
 
-        <Container maxWidth="sm">
-          <Box sx={{ textAlign: 'center' }}>
-            <Avatar
-              sx={{
-                width: 100,
-                height: 100,
-                mx: 'auto',
-                mb: 4,
-                background: 'rgba(255, 255, 255, 0.9)',
-                color: '#FF6B6B',
-                animation: `${pulse} 2s ease-in-out infinite`,
-              }}
-            >
-              <AutoAwesome sx={{ fontSize: '3rem' }} />
-            </Avatar>
+      <div className="text-center max-w-md mx-auto px-6">
+        <div className="w-24 h-24 mx-auto mb-8 bg-white bg-opacity-90 rounded-full flex items-center justify-center animate-pulse">
+          <Sparkles className="w-12 h-12 text-pink-500" />
+        </div>
 
-            <Typography variant="h2" sx={{ mb: 3, fontWeight: 800, color: 'white' }}>
-              MeowIQ
-            </Typography>
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+          MeowIQ
+        </h1>
 
-            <Typography variant="h6" sx={{ mb: 4, minHeight: 80, color: 'rgba(255, 255, 255, 0.9)' }}>
-              {loadingText}
-            </Typography>
+        <p className="text-lg md:text-xl mb-8 text-white text-opacity-90 min-h-[2.5rem]">
+          {loadingText}
+        </p>
 
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 10,
-                borderRadius: 5,
-                mb: 6,
-                background: 'rgba(255, 255, 255, 0.3)',
-                '& .MuiLinearProgress-bar': {
-                  background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
-                  borderRadius: 5,
-                },
-              }}
-            />
+        <div className="w-full bg-white bg-opacity-30 rounded-full h-2.5 mb-8">
+          <div 
+            className="bg-gradient-to-r from-pink-500 to-teal-500 h-2.5 rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
 
-            <Stack direction="row" spacing={4} justifyContent="center">
-              {[0, 1, 2].map((i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    animation: `${pulse} 1.5s ease-in-out infinite`,
-                    animationDelay: `${i * 0.3}s`,
-                  }}
-                />
-              ))}
-            </Stack>
-          </Box>
-        </Container>
-      </Box>
-    </ThemeProvider>
+        <div className="flex justify-center space-x-1">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-4 h-4 bg-white bg-opacity-80 rounded-full animate-bounce"
+              style={{ animationDelay: `${i * 0.3}s` }}
+            ></div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -712,468 +467,282 @@ const LandingPage = () => {
   }
 
   return (
-    <ThemeProvider theme={modernTheme}>
-      <Box sx={{ background: '#FFFFFF', minHeight: '100vh', position: 'relative' }}>
-        
-        {/* Elemen latar belakang */}
-        <FloatingElement sx={{ top: '5%', left: '5%', animationDelay: '0s' }}>
-          <Box sx={{ width: 120, height: 120, borderRadius: '50%', background: 'linear-gradient(45deg, #FF6B6B, #4ECDC4)', opacity: 0.1 }} />
-        </FloatingElement>
-        <FloatingElement sx={{ top: '60%', right: '10%', animationDelay: '2s' }}>
-          <Box sx={{ width: 100, height: 100, borderRadius: 2, background: 'linear-gradient(45deg, #48BB78, #FFD93D)', opacity: 0.1 }} />
-        </FloatingElement>
-        <FloatingElement sx={{ bottom: '10%', left: '15%', animationDelay: '4s' }}>
-          <Box sx={{ width: 80, height: 80, borderRadius: 1, background: 'linear-gradient(45deg, #4299E1, #F56565)', opacity: 0.1 }} />
-        </FloatingElement>
+    <div className="bg-white min-h-screen relative">
+      
+      {/* Floating background elements */}
+      <div className="absolute top-5 left-5 w-32 h-32 bg-gradient-to-r from-pink-500 to-teal-500 rounded-full opacity-10 animate-bounce"></div>
+      <div className="absolute top-60 right-10 w-24 h-24 bg-gradient-to-r from-green-500 to-yellow-500 rounded opacity-10 animate-bounce" style={{animationDelay: '2s'}}></div>
+      <div className="absolute bottom-10 left-16 w-20 h-20 bg-gradient-to-r from-blue-500 to-red-500 rounded opacity-10 animate-bounce" style={{animationDelay: '4s'}}></div>
 
-        {/* AppBar */}
-        <StyledAppBar position="sticky" elevation={0}>
-          <Toolbar>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: 1 }}>
-              <AutoAwesome sx={{ color: 'primary.main', fontSize: '2rem' }} />
-              <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                MeowIQ
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={2}>
-              <Button 
-                color="primary" 
+      {/* AppBar */}
+      <nav className="sticky top-0 bg-white bg-opacity-95 backdrop-blur-sm shadow-sm z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-8 h-8 text-pink-500" />
+              <span className="text-2xl font-bold text-pink-500">MeowIQ</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <a 
                 href="/login"
-                sx={{ 
-                  color: 'text.primary',
-                  '&:hover': { 
-                    background: 'rgba(255, 107, 107, 0.1)' 
-                  }
-                }}
+                className="text-gray-700 hover:text-pink-500 px-4 py-2 rounded-lg hover:bg-pink-50 transition-colors"
               >
                 Masuk
-              </Button>
-              <GradientButton 
-                variant="contained"
+              </a>
+              <a 
                 href="/register"
+                className="bg-gradient-to-r from-pink-500 to-teal-500 text-white px-6 py-2 rounded-full hover:from-pink-600 hover:to-teal-600 transition-all transform hover:scale-105"
               >
                 Daftar
-              </GradientButton>
-            </Stack>
-          </Toolbar>
-        </StyledAppBar>
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
 
-        {/* Bagian Hero */}
-        <HeroSection>
-          <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-            <Grow in={mounted} timeout={1000}>
-              <Box sx={{ textAlign: 'center', py: { xs: 8, md: 12 } }}>
-                <Chip
-                  icon={<Rocket sx={{ color: 'white !important' }} />}
-                  label="Transformasi Masa Depan Keuangan Anda"
-                  sx={{
-                    mb: 4,
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    fontWeight: 600,
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    fontSize: '1rem',
-                    height: 40,
-                  }}
-                />
+      {/* Hero Section */}
+      <section className="relative min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center py-12 md:py-20">
+            <div className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-full text-white font-semibold mb-6 backdrop-blur-sm border border-white border-opacity-30">
+              <Rocket className="w-5 h-5 mr-2" />
+              Transformasi Masa Depan Keuangan Anda
+            </div>
 
-                <Typography variant="h1" sx={{ mb: 4, fontWeight: 800, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-                  Kelola Keuangan
-                  <br />
-                  <Typography variant="h1" component="span" sx={{ 
-                    background: 'linear-gradient(45deg, #FFD93D 30%, #FFFFFF 90%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    fontWeight: 800,
-                  }}>
-                    Dengan Cerdas
-                  </Typography>
-                </Typography>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white drop-shadow-lg">
+              Kelola Keuangan
+              <br />
+              <span className="bg-gradient-to-r from-yellow-300 to-white bg-clip-text text-transparent">
+                Dengan Cerdas
+              </span>
+            </h1>
 
-                <Typography variant="h5" sx={{ mb: 6, maxWidth: 700, mx: 'auto', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 400 }}>
-                  Aplikasi PWA revolusioner yang mengubah cara Anda mengelola dompet, melacak transaksi, dan melihat wawasan keuangan dengan analisis bertenaga AI.
-                </Typography>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white text-opacity-90 font-light">
+              Aplikasi PWA revolusioner yang mengubah cara Anda mengelola dompet, melacak transaksi, dan melihat wawasan keuangan dengan analisis bertenaga AI.
+            </p>
 
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} justifyContent="center" alignItems="center">
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    endIcon={<ChevronRight />}
-                    href="/login"
-                    sx={{
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
-                      color: 'white',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      '&:hover': {
-                        borderColor: 'white',
-                        background: 'rgba(255, 255, 255, 0.2)',
-                      },
-                      fontWeight: 600,
-                    }}
-                  >
-                    Masuk Sekarang
-                  </Button>
-                  
-                  <Button
-                    variant="contained"
-                    size="large"
-                    endIcon={<ArrowForward />}
-                    href="/register"
-                    sx={{
-                      background: 'rgba(255, 255, 255, 0.9)',
-                      color: '#2D3748',
-                      fontWeight: 700,
-                      '&:hover': {
-                        background: 'white',
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2)',
-                      },
-                    }}
-                  >
-                    Mulai Gratis
-                  </Button>
-                </Stack>
-
-                {/* Statistik */}
-                <Grid container spacing={4} sx={{ mt: 8, justifyContent: 'center' }}>
-                  <Grid item xs={4} sm="auto">
-                    <Typography variant="h3" sx={{ fontWeight: 800, color: 'white' }}>50K+</Typography>
-                    <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>Pengguna Aktif</Typography>
-                  </Grid>
-                  <Grid item xs={4} sm="auto">
-                    <Typography variant="h3" sx={{ fontWeight: 800, color: 'white' }}>Rp10M+</Typography>
-                    <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>Dikelola</Typography>
-                  </Grid>
-                  <Grid item xs={4} sm="auto">
-                    <Typography variant="h3" sx={{ fontWeight: 800, color: 'white' }}>99.9%</Typography>
-                    <Typography sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>Uptime</Typography>
-                  </Grid>
-                </Grid>
-              </Box>
-            </Grow>
-          </Container>
-        </HeroSection>
-
-        {/* Preview Aplikasi */}
-        <Container maxWidth="lg" sx={{ py: 8, mt: -8, position: 'relative', zIndex: 3 }}>
-          <Zoom in={mounted} timeout={1500}>
-            <Paper
-              elevation={24}
-              sx={{
-                aspectRatio: '16/9',
-                background: 'linear-gradient(135deg, #FFFFFF 0%, #F7FAFC 100%)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid #E2E8F0',
-                position: 'relative',
-                overflow: 'hidden',
-                borderRadius: 4,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  boxShadow: '0 30px 60px rgba(255, 107, 107, 0.2)',
-                }
-              }}
-              onClick={() => setDemoOpen(true)}
-            >
-              <Box sx={{ textAlign: 'center' }}>
-                <Box sx={{ 
-                  position: 'relative',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mb: 3
-                }}>
-                  <Box sx={{
-                    width: 120,
-                    height: 120,
-                    borderRadius: '50%',
-                    background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    animation: `${pulse} 2s ease-in-out infinite`,
-                  }}>
-                    <PlayArrow sx={{ fontSize: '3rem', color: 'white' }} />
-                  </Box>
-                </Box>
-                
-                <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
-                  🎮 Coba Demo Interaktif
-                </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-                  Rasakan pengalaman MeowIQ secara langsung!
-                </Typography>
-                
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<PlayArrow />}
-                  sx={{
-                    background: 'linear-gradient(45deg, #FF6B6B 30%, #4ECDC4 90%)',
-                    borderRadius: 25,
-                    px: 4,
-                    py: 1.5,
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    '&:hover': {
-                      background: 'linear-gradient(45deg, #E55555 30%, #3BA89F 90%)',
-                    }
-                  }}
-                >
-                  Mulai Demo
-                </Button>
-              </Box>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-12">
+              <a 
+                href="/login"
+                className="inline-flex items-center px-8 py-4 border-2 border-white border-opacity-50 text-white bg-white bg-opacity-10 rounded-full hover:bg-opacity-20 transition-all backdrop-blur-sm font-semibold"
+              >
+                Masuk Sekarang
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </a>
               
-              {/* Elemen dekoratif mengambang */}
-              <Box sx={{ position: 'absolute', top: 30, left: 30, width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(45deg, #FF6B6B, #4ECDC4)', animation: `${float} 4s ease-in-out infinite` }} />
-              <Box sx={{ position: 'absolute', bottom: 30, right: 30, width: 50, height: 50, borderRadius: 2, background: 'linear-gradient(45deg, #48BB78, #FFD93D)', animation: `${float} 5s ease-in-out infinite` }} />
-            </Paper>
-          </Zoom>
-        </Container>
+              <a 
+                href="/register"
+                className="inline-flex items-center px-8 py-4 bg-white text-gray-800 rounded-full hover:bg-gray-100 transition-all transform hover:scale-105 font-bold shadow-lg"
+              >
+                Mulai Gratis
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </a>
+            </div>
 
-        {/* Fitur-fitur */}
-        <Container maxWidth="lg" sx={{ py: 8 }}>
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
-            <Typography variant="h2" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
-              Fitur <GradientText variant="h2" component="span">Canggih</GradientText>
-            </Typography>
-            <Typography variant="h6" color="text.secondary">
-              Semua yang Anda butuhkan untuk menguasai keuangan
-            </Typography>
-          </Box>
+            {/* Statistics */}
+            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+              <div>
+                <div className="text-3xl md:text-4xl font-bold text-white">50K+</div>
+                <div className="text-white text-opacity-80">Pengguna Aktif</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-4xl font-bold text-white">Rp10M+</div>
+                <div className="text-white text-opacity-80">Dikelola</div>
+              </div>
+              <div>
+                <div className="text-3xl md:text-4xl font-bold text-white">99.9%</div>
+                <div className="text-white text-opacity-80">Uptime</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={4}>
-              <Slide direction="up" in={mounted} timeout={800}>
-                <PlayfulCard>
-                  <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                    <Avatar
-                      className="card-icon"
-                      sx={{
-                        width: 70,
-                        height: 70,
-                        mx: 'auto',
-                        mb: 3,
-                        background: 'linear-gradient(45deg, #FF6B6B, #F56565)',
-                      }}
-                    >
-                      <Security sx={{ fontSize: '2rem' }} />
-                    </Avatar>
-                    <Typography variant="h5" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-                      Keamanan Tingkat Bank
-                    </Typography>
-                    <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                      Enkripsi tingkat militer dan protokol keamanan berlapis melindungi data keuangan Anda dengan arsitektur zero-trust.
-                    </Typography>
-                  </CardContent>
-                </PlayfulCard>
-              </Slide>
-            </Grid>
+      {/* App Preview */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-8 relative z-20">
+        <div 
+          className="aspect-video bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-300 relative overflow-hidden"
+          onClick={() => setDemoOpen(true)}
+        >
+          <div className="text-center">
+            <div className="relative inline-flex items-center justify-center mb-6">
+              <div className="w-32 h-32 bg-gradient-to-r from-pink-500 to-teal-500 rounded-full flex items-center justify-center animate-pulse">
+                <Play className="w-12 h-12 text-white" />
+              </div>
+            </div>
+            
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+              🎮 Coba Demo Interaktif
+            </h3>
+            <p className="text-xl text-gray-600 mb-6">
+              Rasakan pengalaman MeowIQ secara langsung!
+            </p>
+            
+            <button className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-pink-500 to-teal-500 text-white rounded-full font-semibold text-lg hover:from-pink-600 hover:to-teal-600 transition-all transform hover:scale-105">
+              <Play className="w-6 h-6 mr-2" />
+              Mulai Demo
+            </button>
+          </div>
+          
+          {/* Decorative floating elements */}
+          <div className="absolute top-8 left-8 w-10 h-10 bg-gradient-to-r from-pink-500 to-teal-500 rounded-full opacity-20 animate-bounce"></div>
+          <div className="absolute bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-green-500 to-yellow-500 rounded opacity-20 animate-bounce" style={{animationDelay: '1s'}}></div>
+        </div>
+      </section>
 
-            <Grid item xs={12} md={4}>
-              <Slide direction="up" in={mounted} timeout={1000}>
-                <PlayfulCard>
-                  <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                    <Avatar
-                      className="card-icon"
-                      sx={{
-                        width: 70,
-                        height: 70,
-                        mx: 'auto',
-                        mb: 3,
-                        background: 'linear-gradient(45deg, #4ECDC4, #48BB78)',
-                      }}
-                    >
-                      <Analytics sx={{ fontSize: '2rem' }} />
-                    </Avatar>
-                    <Typography variant="h5" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-                      Wawasan Bertenaga AI
-                    </Typography>
-                    <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                      Algoritma pembelajaran mesin menganalisis pola pengeluaran Anda dan memberikan rekomendasi personal untuk kesehatan keuangan optimal.
-                    </Typography>
-                  </CardContent>
-                </PlayfulCard>
-              </Slide>
-            </Grid>
+      {/* Features */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-800">
+            Fitur <span className="bg-gradient-to-r from-pink-500 via-teal-500 to-green-500 bg-clip-text text-transparent">Canggih</span>
+          </h2>
+          <p className="text-xl text-gray-600">
+            Semua yang Anda butuhkan untuk menguasai keuangan
+          </p>
+        </div>
 
-            <Grid item xs={12} md={4}>
-              <Slide direction="up" in={mounted} timeout={1200}>
-                <PlayfulCard>
-                  <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                    <Avatar
-                      className="card-icon"
-                      sx={{
-                        width: 70,
-                        height: 70,
-                        mx: 'auto',
-                        mb: 3,
-                        background: 'linear-gradient(45deg, #FFD93D, #4299E1)',
-                      }}
-                    >
-                      <Speed sx={{ fontSize: '2rem' }} />
-                    </Avatar>
-                    <Typography variant="h5" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-                      Super Cepat
-                    </Typography>
-                    <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                      Teknologi Progressive Web App memastikan loading instan, fungsi offline, dan performa seperti aplikasi native.
-                    </Typography>
-                  </CardContent>
-                </PlayfulCard>
-              </Slide>
-            </Grid>
-          </Grid>
-        </Container>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 text-center hover:transform hover:-translate-y-2 transition-all duration-300 hover:shadow-xl cursor-pointer">
+            <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">
+              Keamanan Tingkat Bank
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Enkripsi tingkat militer dan protokol keamanan berlapis melindungi data keuangan Anda dengan arsitektur zero-trust.
+            </p>
+          </div>
 
-        {/* Cara Kerja */}
-        <Container maxWidth="lg" sx={{ py: 8, background: 'linear-gradient(135deg, #F7FAFC 0%, #EDF2F7 100%)', borderRadius: 4, my: 4 }}>
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
-            <Typography variant="h2" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
-              Mulai dalam <GradientText variant="h2" component="span">Hitungan Menit</GradientText>
-            </Typography>
-            <Typography variant="h6" color="text.secondary">
+          <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 text-center hover:transform hover:-translate-y-2 transition-all duration-300 hover:shadow-xl cursor-pointer">
+            <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <BarChart3 className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">
+              Wawasan Bertenaga AI
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Algoritma pembelajaran mesin menganalisis pola pengeluaran Anda dan memberikan rekomendasi personal untuk kesehatan keuangan optimal.
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 text-center hover:transform hover:-translate-y-2 transition-all duration-300 hover:shadow-xl cursor-pointer">
+            <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Zap className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">
+              Super Cepat
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Teknologi Progressive Web App memastikan loading instan, fungsi offline, dan performa seperti aplikasi native.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-16 my-16 rounded-3xl max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-800">
+              Mulai dalam <span className="bg-gradient-to-r from-pink-500 via-teal-500 to-green-500 bg-clip-text text-transparent">Hitungan Menit</span>
+            </h2>
+            <p className="text-xl text-gray-600">
               Setup sederhana, hasil yang powerful
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
-          <Grid container spacing={6}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {[
-              { icon: <AccountBalance />, title: "Buat Akun", desc: "Daftar secara instan dengan email atau login sosial. Tidak perlu kartu kredit." },
-              { icon: <AutoAwesome />, title: "Setup Pintar", desc: "Konfigurasi dompet dengan panduan AI yang disesuaikan dengan tujuan dan preferensi keuangan Anda." },
+              { icon: <Building2 />, title: "Buat Akun", desc: "Daftar secara instan dengan email atau login sosial. Tidak perlu kartu kredit." },
+              { icon: <Sparkles />, title: "Setup Pintar", desc: "Konfigurasi dompet dengan panduan AI yang disesuaikan dengan tujuan dan preferensi keuangan Anda." },
               { icon: <TrendingUp />, title: "Lacak & Analisis", desc: "Kategorisasi transaksi otomatis dengan wawasan real-time dan peringatan pengeluaran." },
               { icon: <Star />, title: "Optimalisasi & Berkembang", desc: "Terima rekomendasi personal untuk memaksimalkan tabungan dan peluang investasi." }
             ].map((item, index) => (
-              <Grid item xs={12} sm={6} key={index}>
-                <Grow in={mounted} timeout={800 + index * 200}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
-                    <Avatar
-                      sx={{
-                        width: 60,
-                        height: 60,
-                        background: `linear-gradient(45deg, ${index % 2 === 0 ? '#FF6B6B, #4ECDC4' : '#48BB78, #FFD93D'})`,
-                        fontWeight: 800,
-                        fontSize: '1.5rem',
-                        color: 'white',
-                      }}
-                    >
-                      {index + 1}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="h5" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
-                        {item.title}
-                      </Typography>
-                      <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>
-                        {item.desc}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grow>
-              </Grid>
+              <div key={index} className="flex items-start space-x-4">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl bg-gradient-to-r ${
+                  index % 2 === 0 ? 'from-pink-500 to-teal-500' : 'from-green-500 to-yellow-500'
+                }`}>
+                  {index + 1}
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold mb-2 text-gray-800">{item.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
             ))}
-          </Grid>
-        </Container>
+          </div>
+        </div>
+      </section>
 
-        {/* Bagian CTA */}
-        <Container maxWidth="md" sx={{ py: 12, textAlign: 'center' }}>
-          <Zoom in={mounted} timeout={1500}>
-            <Paper
-              elevation={12}
-              sx={{
-                p: 6,
-                background: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%)',
-                color: 'white',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <Typography variant="h3" sx={{ mb: 3, fontWeight: 700 }}>
-                Siap Mengubah
-                <br />
-                Masa Depan Keuangan Anda?
-              </Typography>
-              
-              <Typography variant="h6" sx={{ mb: 4, maxWidth: 500, mx: 'auto', opacity: 0.9 }}>
-                Bergabunglah dengan ribuan pengguna cerdas yang telah merevolusi manajemen keuangan mereka dengan MeowIQ.
-              </Typography>
+      {/* CTA Section */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="bg-gradient-to-r from-pink-500 to-teal-500 rounded-3xl p-12 text-white relative overflow-hidden">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Siap Mengubah
+            <br />
+            Masa Depan Keuangan Anda?
+          </h2>
+          
+          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+            Bergabunglah dengan ribuan pengguna cerdas yang telah merevolusi manajemen keuangan mereka dengan MeowIQ.
+          </p>
 
-              <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 4 }}>
-                <Rating value={5} readOnly sx={{ color: '#FFD93D' }} />
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Rating 5.0 dari 50,000+ pengguna
-                </Typography>
-              </Stack>
+          <div className="flex items-center justify-center space-x-2 mb-8">
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-6 h-6 text-yellow-300 fill-current" />
+              ))}
+            </div>
+            <span className="text-white opacity-90 ml-2">
+              Rating 5.0 dari 50,000+ pengguna
+            </span>
+          </div>
 
-              <Button
-                variant="contained"
-                size="large"
-                endIcon={<ArrowForward />}
-                href="/register"
-                sx={{ 
-                  fontSize: '1.3rem', 
-                  py: 2, 
-                  px: 5,
-                  background: 'white',
-                  color: '#FF6B6B',
-                  fontWeight: 700,
-                  '&:hover': {
-                    background: '#F7FAFC',
-                    transform: 'translateY(-3px)',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
-                  },
-                }}
-              >
-                Mulai Perjalanan Anda
-              </Button>
-            </Paper>
-          </Zoom>
-        </Container>
+          <a 
+            href="/register"
+            className="inline-flex items-center px-10 py-4 bg-white text-pink-500 rounded-full font-bold text-xl hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
+          >
+            Mulai Perjalanan Anda
+            <ArrowRight className="w-6 h-6 ml-2" />
+          </a>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-gray-50 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <Sparkles className="w-8 h-8 text-pink-500" />
+                <span className="text-3xl font-bold text-pink-500">MeowIQ</span>
+              </div>
+              <p className="text-xl text-gray-600">
+                Masa Depan Manajemen Keuangan Pribadi
+              </p>
+            </div>
+            
+            <div className="text-center md:text-right">
+              <p className="text-gray-600">
+                © 2025 MeowIQ. Dibuat dengan ❤️ dan teknologi terdepan
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Footer */}
-        <Box
-          component="footer"
-          sx={{
-            borderTop: '1px solid #E2E8F0',
-            background: '#F7FAFC',
-            mt: 8,
-          }}
-        >
-          <Container maxWidth="lg" sx={{ py: 6 }}>
-            <Grid container spacing={4} alignItems="center">
-              <Grid item xs={12} md={6}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-                  <AutoAwesome sx={{ color: 'primary.main', fontSize: '2rem' }} />
-                  <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                    MeowIQ
-                  </Typography>
-                </Stack>
-                <Typography color="text.secondary" variant="h6">
-                  Masa Depan Manajemen Keuangan Pribadi
-                </Typography>
-              </Grid>
-              
-              <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'center', md: 'right' } }}>
-                <Typography variant="body1" color="text.secondary">
-                  © 2025 MeowIQ. Dibuat dengan ❤️ dan teknologi terdepan
-                </Typography>
-              </Grid>
-            </Grid>
-          </Container>
-        </Box>
-        
-        {/* Interactive Demo Modal */}
-        <InteractiveDemo 
-          open={demoOpen} 
-          onClose={() => setDemoOpen(false)} 
-        />
-      </Box>
-    </ThemeProvider>
+        <p style={{textAlign: 'center', fontSize: '14px', marginTop: '40px', paddingBottom: '20px'}}>
+          Powered by <a href="https://meowiq.com" rel="dofollow" target="_blank">MeowIQ</a>
+        </p>
+      </footer>
+      
+      {/* Interactive Demo Modal */}
+      <InteractiveDemo 
+        open={demoOpen} 
+        onClose={() => setDemoOpen(false)} 
+      />
+    </div>
   );
 };
 
