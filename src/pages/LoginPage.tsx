@@ -124,6 +124,10 @@ const LoginPage = () => {
       
       // Attempt login with Firebase
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      // 🔐 Store token for backend auth
+      const token = await userCredential.user.getIdToken();
+      localStorage.setItem('authToken', token);
       
       // Reset login attempts counter
       localStorage.setItem(LOGIN_LOOP_STORAGE_KEY, '0');
