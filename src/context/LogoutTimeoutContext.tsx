@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { doc, updateDoc, getDoc, onSnapshot } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { doc, updateDoc, getDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from '../lib/firebaseClient';
 import { useAuth } from './AuthContext';
 
@@ -20,123 +20,217 @@ const LOCAL_STORAGE_KEY = 'logoutTimeout';
 export const LogoutTimeoutProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [logoutTimeout, setLogoutTimeoutState] = useState<number>(() => {
-    const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return savedTimeout ? parseInt(savedTimeout, 10) : 0;
+    try {
+      const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return savedTimeout ? parseInt(savedTimeout, 10) : 0;
+    } catch {
+      return 0;
+    }
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // FIXED: Proper debounce management to prevent memory leaks
+  const firestoreUpdateTimeoutRef = useRef<number | null>(null);
+  const isMountedRef = useRef<boolean>(true);
 
-  // Fungsi untuk menyimpan timeout ke Firestore dan localStorage
-  const setLogoutTimeout = async (timeout: number): Promise<void> => {
+  // Update localStorage safely
+  const updateLocalStorage = useCallback((timeout: number) => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
+    } catch (error) {
+      // Handle localStorage errors (quota exceeded, private mode, etc.)
+      console.warn('Failed to update localStorage:', error);
+    }
+  }, []);
+
+  // Update Firestore safely with proper error handling
+  const updateFirestore = useCallback(async (timeout: number): Promise<boolean> => {
+    if (!user || !isMountedRef.current) return false;
+    
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      
+      // Try to update directly first (more efficient)
+      await updateDoc(userDocRef, { logoutTimeout: timeout });
+      return true;
+    } catch (error: any) {
+      // If document doesn't exist, that's handled in AuthContext
+      // Just log and return false for other errors
+      if (error?.code !== 'not-found') {
+        console.warn('Failed to update Firestore:', error);
+      }
+      return false;
+    }
+  }, [user]);
+
+  // FIXED: Properly managed debounced Firestore updates
+  const debouncedFirestoreUpdate = useCallback((timeout: number) => {
+    // Clear any pending update
+    if (firestoreUpdateTimeoutRef.current) {
+      clearTimeout(firestoreUpdateTimeoutRef.current);
+      firestoreUpdateTimeoutRef.current = null;
+    }
+    
+    // Schedule new update if component is still mounted
+    if (isMountedRef.current) {
+      firestoreUpdateTimeoutRef.current = window.setTimeout(async () => {
+        if (isMountedRef.current) {
+          await updateFirestore(timeout);
+          if (isMountedRef.current) {
+            firestoreUpdateTimeoutRef.current = null;
+          }
+        }
+      }, 500);
+    }
+  }, [updateFirestore]);
+
+  // Main function to set logout timeout
+  const setLogoutTimeout = useCallback(async (timeout: number): Promise<void> => {
+    // Validate timeout value
+    if (typeof timeout !== 'number' || timeout < 0) {
+      throw new Error('Invalid timeout value: must be a non-negative number');
+    }
+    
     setIsLoading(true);
     
     try {
-      // Simpan ke localStorage
-      localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
+      // Update local state immediately for responsive UI
       setLogoutTimeoutState(timeout);
       
-      // Simpan ke Firestore jika user login
-      if (user) {
-        const userDocRef = doc(db, 'users', user.uid);
-        
-        try {
-          // Periksa dulu apakah dokumen ada
-          const docSnap = await getDoc(userDocRef);
-          
-          if (docSnap.exists()) {
-            await updateDoc(userDocRef, { logoutTimeout: timeout });
-          } else {
-            // Document will be created in AuthContext
-          }
-        } catch (err) {
-          // Handle permission errors gracefully - continue with localStorage only
-        }
-      }
+      // Update localStorage immediately
+      updateLocalStorage(timeout);
+      
+      // Debounce Firestore updates to prevent rapid calls
+      debouncedFirestoreUpdate(timeout);
+      
     } catch (error) {
-      // Handle errors gracefully without logging
+      console.warn('Error setting logout timeout:', error);
+      // Don't throw - localStorage update should be sufficient
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [updateLocalStorage, debouncedFirestoreUpdate]);
 
-  // Load timeout dari Firestore ketika user berubah
+  // Load timeout from Firestore when user changes
   useEffect(() => {
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
     setIsLoading(true);
-    
-    let unsubscribe = () => {};
-    
-    // Use a more defensive approach
-    const loadTimeout = async () => {
+    let unsubscribe: Unsubscribe | null = null;
+    let isMounted = true;
+
+    const setupFirestoreSync = async () => {
       try {
         const userDocRef = doc(db, 'users', user.uid);
         
-        // Gunakan getDoc untuk mendapatkan nilai awal
+        // Get initial value
         const docSnap = await getDoc(userDocRef);
         
-        if (docSnap.exists()) {
+        if (isMounted && docSnap.exists()) {
           const data = docSnap.data();
-          if (data.logoutTimeout !== undefined) {
-            const timeout = data.logoutTimeout;
-            setLogoutTimeoutState(timeout);
-            localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
+          if (typeof data.logoutTimeout === 'number') {
+            const firestoreTimeout = data.logoutTimeout;
+            setLogoutTimeoutState(firestoreTimeout);
+            updateLocalStorage(firestoreTimeout);
           }
         }
         
-        // Setup listener for real-time updates with better error handling
+        // Setup real-time listener
         unsubscribe = onSnapshot(
-          userDocRef, 
+          userDocRef,
           (docSnap) => {
+            if (!isMounted) return;
+            
             if (docSnap.exists()) {
               const data = docSnap.data();
-              if (data.logoutTimeout !== undefined) {
-                const timeout = data.logoutTimeout;
-                setLogoutTimeoutState(timeout);
-                localStorage.setItem(LOCAL_STORAGE_KEY, timeout.toString());
+              if (typeof data.logoutTimeout === 'number') {
+                const firestoreTimeout = data.logoutTimeout;
+                setLogoutTimeoutState(firestoreTimeout);
+                updateLocalStorage(firestoreTimeout);
               }
             }
-          }, 
+          },
           (error) => {
-            // Handle permission errors gracefully - use localStorage
-            const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (savedTimeout) {
-              setLogoutTimeoutState(parseInt(savedTimeout, 10));
+            console.warn('Firestore listener error:', error);
+            // Fallback to localStorage on error
+            try {
+              const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
+              if (savedTimeout && isMounted) {
+                const parsedTimeout = parseInt(savedTimeout, 10);
+                if (!isNaN(parsedTimeout)) {
+                  setLogoutTimeoutState(parsedTimeout);
+                }
+              }
+            } catch {
+              // Ignore localStorage errors
             }
           }
         );
         
       } catch (error) {
-        // Fall back to localStorage
-        const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (savedTimeout) {
-          setLogoutTimeoutState(parseInt(savedTimeout, 10));
+        console.warn('Failed to setup Firestore sync:', error);
+        // Fallback to localStorage
+        try {
+          const savedTimeout = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (savedTimeout && isMounted) {
+            const parsedTimeout = parseInt(savedTimeout, 10);
+            if (!isNaN(parsedTimeout)) {
+              setLogoutTimeoutState(parsedTimeout);
+            }
+          }
+        } catch {
+          // Ignore localStorage errors
         }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
-    
-    loadTimeout();
+
+    setupFirestoreSync();
 
     return () => {
-      unsubscribe();
+      isMounted = false;
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-  }, [user]);
+  }, [user, updateLocalStorage]);
 
-  // Sync dengan localStorage jika diubah di tab lain
+  // Sync with localStorage changes from other tabs
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === LOCAL_STORAGE_KEY && e.newValue !== null) {
-        const newTimeout = parseInt(e.newValue, 10);
-        setLogoutTimeoutState(newTimeout);
+      if (e.key === LOCAL_STORAGE_KEY && e.newValue !== null && e.newValue !== e.oldValue) {
+        try {
+          const newTimeout = parseInt(e.newValue, 10);
+          if (!isNaN(newTimeout) && newTimeout >= 0) {
+            setLogoutTimeoutState(newTimeout);
+          }
+        } catch {
+          // Ignore parsing errors
+        }
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // FIXED: Proper cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+      
+      // Clean up debounce timeout to prevent memory leaks
+      if (firestoreUpdateTimeoutRef.current) {
+        clearTimeout(firestoreUpdateTimeoutRef.current);
+        firestoreUpdateTimeoutRef.current = null;
+      }
     };
   }, []);
 

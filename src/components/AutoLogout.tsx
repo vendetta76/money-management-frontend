@@ -12,416 +12,553 @@ import {
 } from '@mui/material';
 import { useSession } from '../hooks/useSession';
 
-// Constants moved to the top level
-const AUTO_LOGOUT_WARNING_TIME = 60000; // 1 minute warning before logout
-const ACTIVITY_CHECK_INTERVAL = 10000; // Check activity every 10 seconds
-const ACTIVITY_THRESHOLD = 500; // Debounce threshold for activity events in ms
+const AUTO_LOGOUT_WARNING_TIME = 60000; // 1 minute warning
+const ACTIVITY_CHECK_INTERVAL = 15000; // Check every 15 seconds (FIXED: was 5s)
+const ACTIVITY_DEBOUNCE = 500; // Debounce activity events
+const LEADER_HEARTBEAT_INTERVAL = 2000; // Leader heartbeat every 2 seconds
+const LEADER_TIMEOUT = 5000; // Consider leader dead after 5 seconds
+
+// Storage keys for cross-tab communication
+const STORAGE_KEYS = {
+  LEADER_ID: 'autoLogout_leaderId',
+  LEADER_HEARTBEAT: 'autoLogout_leaderHeartbeat',
+  LEADER_CLAIM_TIME: 'autoLogout_leaderClaimTime', // NEW: For atomic election
+  LOGOUT_TIME: 'autoLogout_scheduledTime',
+  WARNING_TIME: 'autoLogout_warningTime',
+  LAST_ACTIVITY: 'autoLogout_lastActivity',
+  FORCE_LOGOUT: 'autoLogout_forceLogout',
+  SESSION_EXTENDED: 'autoLogout_sessionExtended'
+};
+
+interface CrossTabState {
+  logoutTime: number;
+  warningTime: number;
+  lastActivity: number;
+  isActive: boolean;
+}
 
 const AutoLogout: React.FC = () => {
-  // Use our custom hook to get all session-related functionality
-  const { 
-    user, 
-    isAuthPage, 
-    logout, 
-    continueSession,
-    logoutTimeout 
-  } = useSession();
+  const { user, isAuthPage, logout, continueSession, logoutTimeout } = useSession();
   
-  // States
-  const [showWarning, setShowWarning] = useState<boolean>(false);
-  const [remainingTime, setRemainingTime] = useState<number>(0);
+  // Warning dialog state
+  const [warningState, setWarningState] = useState({
+    show: false,
+    remainingTime: 0
+  });
   
-  // Refs for state persistence across renders
-  const warningIntervalRef = useRef<number | null>(null);
-  const checkIntervalRef = useRef<number | null>(null);
-  const absoluteTimerRef = useRef<number | null>(null);
-  const warningTimerRef = useRef<number | null>(null);
+  // Tab identity and leadership
+  const tabIdRef = useRef<string>(`tab_${Date.now()}_${Math.random()}`);
+  const isLeaderRef = useRef<boolean>(false);
+  const [isLeader, setIsLeader] = useState<boolean>(false);
+  const leaderHeartbeatRef = useRef<number | null>(null);
+  
+  // Timer management
+  const timersRef = useRef<{
+    logout?: number;
+    warning?: number;
+    countdown?: number;
+    activityCheck?: number;
+    leaderElection?: number;
+  }>({});
+  
+  // Activity and state tracking
   const lastActivityRef = useRef<number>(Date.now());
   const lastActivityEventRef = useRef<number>(Date.now());
-  const logoutScheduledRef = useRef<boolean>(false);
-  const logoutTimeRef = useRef<number>(0);
-  const isLoggingOutRef = useRef<boolean>(false);
-  const initialTimeoutSetRef = useRef<boolean>(false);
-  const activityProcessingRef = useRef<boolean>(false);
+  const isProcessingRef = useRef<boolean>(false);
+  const stateRef = useRef<CrossTabState>({
+    logoutTime: 0,
+    warningTime: 0,
+    lastActivity: Date.now(),
+    isActive: false
+  });
 
-  // Clear all timers and schedules
-  const clearAllLogoutSchedules = useCallback(() => {
-    if (warningIntervalRef.current) {
-      clearInterval(warningIntervalRef.current);
-      warningIntervalRef.current = null;
+  // Utility functions for localStorage
+  const setStorageItem = useCallback((key: string, value: string) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn('Failed to set localStorage item:', key, error);
     }
-    
-    if (checkIntervalRef.current) {
-      clearInterval(checkIntervalRef.current);
-      checkIntervalRef.current = null;
-    }
-    
-    if (absoluteTimerRef.current) {
-      clearTimeout(absoluteTimerRef.current);
-      absoluteTimerRef.current = null;
-    }
-
-    if (warningTimerRef.current) {
-      clearTimeout(warningTimerRef.current);
-      warningTimerRef.current = null;
-    }
-    
-    logoutScheduledRef.current = false;
-    logoutTimeRef.current = 0;
-    
-    localStorage.removeItem('logoutScheduledTime');
-    localStorage.removeItem('lastActivityTime');
-    
-    setShowWarning(false);
-    setRemainingTime(0);
   }, []);
 
-  // Handle logout with checks for running state
-  const handleLogout = useCallback(async (reason: 'timeout' | 'user' = 'user') => {
-    if (isAuthPage || !user || isLoggingOutRef.current) {
-      clearAllLogoutSchedules();
+  const getStorageItem = useCallback((key: string): string | null => {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.warn('Failed to get localStorage item:', key, error);
+      return null;
+    }
+  }, []);
+
+  const removeStorageItem = useCallback((key: string) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn('Failed to remove localStorage item:', key, error);
+    }
+  }, []);
+
+  // Clear all timers
+  const clearAllTimers = useCallback(() => {
+    Object.values(timersRef.current).forEach(timerId => {
+      if (timerId) {
+        clearTimeout(timerId);
+        clearInterval(timerId);
+      }
+    });
+    timersRef.current = {};
+  }, []);
+
+  // Clean up storage when becoming leader or shutting down
+  const cleanupStorage = useCallback(() => {
+    removeStorageItem(STORAGE_KEYS.LOGOUT_TIME);
+    removeStorageItem(STORAGE_KEYS.WARNING_TIME);
+    removeStorageItem(STORAGE_KEYS.FORCE_LOGOUT);
+    removeStorageItem(STORAGE_KEYS.SESSION_EXTENDED);
+  }, [removeStorageItem]);
+
+  // FIXED: Atomic leader election with compare-and-swap
+  const becomeLeader = useCallback(() => {
+    if (isLeaderRef.current) return;
+    
+    const now = Date.now();
+    const claimTime = now.toString();
+    
+    // Atomic compare-and-swap operation
+    const currentClaim = getStorageItem(STORAGE_KEYS.LEADER_CLAIM_TIME);
+    const currentLeader = getStorageItem(STORAGE_KEYS.LEADER_ID);
+    
+    // Only claim leadership if no recent claim or if current leader is dead
+    if (!currentClaim || !currentLeader || 
+        (now - parseInt(currentClaim, 10) > LEADER_TIMEOUT)) {
+      
+      // Set claim time first (atomic operation)
+      setStorageItem(STORAGE_KEYS.LEADER_CLAIM_TIME, claimTime);
+      
+      // Small delay to allow other tabs to see the claim
+      setTimeout(() => {
+        const latestClaim = getStorageItem(STORAGE_KEYS.LEADER_CLAIM_TIME);
+        
+        // Only become leader if our claim is still the latest
+        if (latestClaim === claimTime) {
+          isLeaderRef.current = true;
+          setIsLeader(true);
+          setStorageItem(STORAGE_KEYS.LEADER_ID, tabIdRef.current);
+          setStorageItem(STORAGE_KEYS.LEADER_HEARTBEAT, now.toString());
+          
+          // Start heartbeat
+          if (leaderHeartbeatRef.current) {
+            clearInterval(leaderHeartbeatRef.current);
+          }
+          leaderHeartbeatRef.current = window.setInterval(() => {
+            setStorageItem(STORAGE_KEYS.LEADER_HEARTBEAT, Date.now().toString());
+          }, LEADER_HEARTBEAT_INTERVAL);
+          
+          console.log(`🏆 Tab ${tabIdRef.current} became leader`);
+        }
+      }, 50); // 50ms delay for atomic election
+    }
+  }, [setStorageItem, getStorageItem]);
+
+  // Resign from leadership
+  const resignLeadership = useCallback(() => {
+    if (!isLeaderRef.current) return;
+    
+    isLeaderRef.current = false;
+    setIsLeader(false);
+    
+    // Clear heartbeat first
+    if (leaderHeartbeatRef.current) {
+      clearInterval(leaderHeartbeatRef.current);
+      leaderHeartbeatRef.current = null;
+    }
+    
+    // Clear all timers
+    clearAllTimers();
+    
+    // Clear leadership claim (do this last to avoid race conditions)
+    removeStorageItem(STORAGE_KEYS.LEADER_ID);
+    removeStorageItem(STORAGE_KEYS.LEADER_HEARTBEAT);
+    removeStorageItem(STORAGE_KEYS.LEADER_CLAIM_TIME);
+    
+    // Clean up session storage
+    cleanupStorage();
+    
+    console.log(`👋 Tab ${tabIdRef.current} resigned leadership`);
+  }, [clearAllTimers, removeStorageItem, cleanupStorage]);
+
+  // FIXED: Improved leadership check with atomic election
+  const checkLeadership = useCallback(() => {
+    const currentLeader = getStorageItem(STORAGE_KEYS.LEADER_ID);
+    const lastHeartbeat = getStorageItem(STORAGE_KEYS.LEADER_HEARTBEAT);
+    
+    if (!currentLeader || currentLeader === tabIdRef.current) {
+      if (!isLeaderRef.current) {
+        becomeLeader();
+      }
       return;
     }
     
-    isLoggingOutRef.current = true;
-    setShowWarning(false);
-    clearAllLogoutSchedules();
+    // Check if leader is still alive
+    if (lastHeartbeat) {
+      const heartbeatTime = parseInt(lastHeartbeat, 10);
+      if (isNaN(heartbeatTime)) return; // Invalid heartbeat
+      
+      const now = Date.now();
+      
+      if (now - heartbeatTime > LEADER_TIMEOUT) {
+        // Try atomic leader election
+        becomeLeader();
+      }
+    } else {
+      // No heartbeat, try to become leader
+      becomeLeader();
+    }
+  }, [getStorageItem, becomeLeader]);
+
+  // Handle logout
+  const handleLogout = useCallback(async (reason: 'timeout' | 'user' = 'user') => {
+    if (isAuthPage || !user || isProcessingRef.current) return;
+    
+    isProcessingRef.current = true;
+    
+    // If leader, broadcast logout to other tabs
+    if (isLeaderRef.current) {
+      setStorageItem(STORAGE_KEYS.FORCE_LOGOUT, Date.now().toString());
+    }
+    
+    clearAllTimers();
+    resignLeadership();
+    setWarningState({ show: false, remainingTime: 0 });
     
     try {
       await logout(reason);
     } finally {
-      isLoggingOutRef.current = false;
+      isProcessingRef.current = false;
     }
-  }, [logout, isAuthPage, user, clearAllLogoutSchedules]);
+  }, [logout, isAuthPage, user, clearAllTimers, resignLeadership, setStorageItem]);
 
-  // Show warning dialog before logout
-  const showLogoutWarning = useCallback((timeLeftMs: number) => {
-    if (showWarning || isAuthPage || !user || isLoggingOutRef.current) return;
+  // Start warning countdown
+  const startWarningCountdown = useCallback((remainingMs: number) => {
+    if (warningState.show || isAuthPage || !user) return;
     
-    setShowWarning(true);
-    setRemainingTime(Math.max(timeLeftMs, 1000));
-    
-    if (warningIntervalRef.current) {
-      clearInterval(warningIntervalRef.current);
+    // Clear any existing countdown timer
+    if (timersRef.current.countdown) {
+      clearInterval(timersRef.current.countdown);
+      delete timersRef.current.countdown;
     }
     
-    warningIntervalRef.current = window.setInterval(() => {
-      setRemainingTime(prev => {
-        const newTime = prev - 1000;
-        if (newTime <= 0) {
-          if (warningIntervalRef.current) {
-            clearInterval(warningIntervalRef.current);
-            warningIntervalRef.current = null;
-          }
-          handleLogout('timeout');
-          return 0;
+    setWarningState({
+      show: true,
+      remainingTime: Math.max(remainingMs, 1000)
+    });
+    
+    timersRef.current.countdown = window.setInterval(() => {
+      setWarningState(prev => {
+        // Guard against component unmounting
+        if (!prev.show) {
+          return prev;
         }
-        return newTime;
+        
+        const newTime = prev.remainingTime - 1000;
+        if (newTime <= 0) {
+          handleLogout('timeout');
+          return { show: false, remainingTime: 0 };
+        }
+        return { ...prev, remainingTime: newTime };
       });
     }, 1000);
-  }, [showWarning, isAuthPage, user, handleLogout]);
+  }, [warningState.show, isAuthPage, user, handleLogout]);
 
-  // Schedule absolute logout time
-  const scheduleAbsoluteLogout = useCallback(() => {
-    if (isAuthPage || !user || isLoggingOutRef.current) {
-      clearAllLogoutSchedules();
+  // FIXED: Added validation for negative timeouts
+  const scheduleLogout = useCallback(() => {
+    if (!isLeaderRef.current || isAuthPage || !user || !logoutTimeout || logoutTimeout === 0) {
       return;
     }
     
-    if (!logoutTimeout || logoutTimeout === 0) {
-      clearAllLogoutSchedules();
+    // FIXED: Validate minimum timeout
+    if (logoutTimeout < 1000) {
+      console.warn('Logout timeout too short, minimum 1 second required');
       return;
     }
     
-    // Clear any existing timers
-    if (absoluteTimerRef.current) {
-      clearTimeout(absoluteTimerRef.current);
-      absoluteTimerRef.current = null;
-    }
-    if (warningTimerRef.current) {
-      clearTimeout(warningTimerRef.current);
-      warningTimerRef.current = null;
-    }
+    clearAllTimers();
     
     const now = Date.now();
     const logoutTime = now + logoutTimeout;
-    logoutTimeRef.current = logoutTime;
-    logoutScheduledRef.current = true;
     
-    const timeToWarning = logoutTimeout - AUTO_LOGOUT_WARNING_TIME;
+    // FIXED: Proper validation for warning time
+    const effectiveWarningTime = Math.max(0, Math.min(AUTO_LOGOUT_WARNING_TIME, logoutTimeout - 1000));
+    const warningTime = logoutTime - effectiveWarningTime;
     
-    // Schedule warning if there's enough time
-    if (timeToWarning > 0) {
-      warningTimerRef.current = window.setTimeout(() => {
-        if (!user || isAuthPage || isLoggingOutRef.current || showWarning) return;
-        
-        if (logoutScheduledRef.current && document.visibilityState === 'visible') {
-          showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
+    stateRef.current = {
+      logoutTime,
+      warningTime,
+      lastActivity: lastActivityRef.current,
+      isActive: true
+    };
+    
+    // Broadcast schedule to other tabs
+    setStorageItem(STORAGE_KEYS.LOGOUT_TIME, logoutTime.toString());
+    setStorageItem(STORAGE_KEYS.WARNING_TIME, warningTime.toString());
+    setStorageItem(STORAGE_KEYS.LAST_ACTIVITY, lastActivityRef.current.toString());
+    
+    // Schedule warning
+    if (effectiveWarningTime > 0 && logoutTimeout > effectiveWarningTime) {
+      timersRef.current.warning = window.setTimeout(() => {
+        if (stateRef.current.isActive && document.visibilityState === 'visible') {
+          startWarningCountdown(effectiveWarningTime);
         }
-      }, timeToWarning);
+      }, logoutTimeout - effectiveWarningTime);
+    } else {
+      // If timeout is very short, show warning immediately
+      if (document.visibilityState === 'visible') {
+        startWarningCountdown(logoutTimeout);
+      }
     }
     
-    // Schedule absolute logout
-    absoluteTimerRef.current = window.setTimeout(() => {
-      if (!user || isAuthPage || isLoggingOutRef.current) return;
-      
-      if (logoutScheduledRef.current) {
+    // Schedule logout
+    timersRef.current.logout = window.setTimeout(() => {
+      if (stateRef.current.isActive) {
         handleLogout('timeout');
       }
     }, logoutTimeout);
     
-    localStorage.setItem('logoutScheduledTime', logoutTime.toString());
-    
-  }, [logoutTimeout, showWarning, user, isAuthPage, clearAllLogoutSchedules, handleLogout, showLogoutWarning]);
+    console.log(`⏰ Leader scheduled logout for ${new Date(logoutTime).toLocaleTimeString()}`);
+  }, [isAuthPage, user, logoutTimeout, clearAllTimers, startWarningCountdown, handleLogout, setStorageItem]);
 
-  // Reset activity timer
-  const resetActivityTimer = useCallback(() => {
-    if (isAuthPage || !user || isLoggingOutRef.current) return;
-    
-    if (activityProcessingRef.current) return;
+  // Reset activity (leader updates, followers listen)
+  const resetActivity = useCallback(() => {
+    if (isAuthPage || !user || isProcessingRef.current) return;
     
     const now = Date.now();
-    if (now - lastActivityEventRef.current < ACTIVITY_THRESHOLD) return;
     
-    activityProcessingRef.current = true;
+    // Debounce activity events
+    if (now - lastActivityEventRef.current < ACTIVITY_DEBOUNCE) return;
     lastActivityEventRef.current = now;
     
     lastActivityRef.current = now;
     
-    // Clear warning dialog if showing
-    if (showWarning) {
-      setShowWarning(false);
-      if (warningIntervalRef.current) {
-        clearInterval(warningIntervalRef.current);
-        warningIntervalRef.current = null;
+    // Hide warning if showing
+    if (warningState.show) {
+      setWarningState({ show: false, remainingTime: 0 });
+      if (timersRef.current.countdown) {
+        clearInterval(timersRef.current.countdown);
+        delete timersRef.current.countdown;
       }
     }
     
-    // Reset all timers and schedule new logout
-    logoutScheduledRef.current = false;
-    scheduleAbsoluteLogout();
-    
-    activityProcessingRef.current = false;
-    
-  }, [scheduleAbsoluteLogout, isAuthPage, user, showWarning]);
-
-  // Visibility change handler
-  const handleVisibilityChange = useCallback(() => {
-    if (isAuthPage || !user || isLoggingOutRef.current) return;
-    
-    const now = Date.now();
-    
-    if (document.visibilityState === 'visible') {
-      
-      if (logoutScheduledRef.current && logoutTimeRef.current > 0 && now >= logoutTimeRef.current) {
-        handleLogout('timeout');
-        return;
-      }
-      
-      if (logoutScheduledRef.current && logoutTimeRef.current > 0) {
-        const remainingMs = logoutTimeRef.current - now;
-        
-        if (remainingMs <= AUTO_LOGOUT_WARNING_TIME && !showWarning) {
-          showLogoutWarning(remainingMs);
-        }
-      }
-      
-      if (!logoutScheduledRef.current && logoutTimeout > 0) {
-        scheduleAbsoluteLogout();
-      }
-      
-    } else {
-      localStorage.setItem('lastActivityTime', lastActivityRef.current.toString());
+    // If leader, reschedule and broadcast
+    if (isLeaderRef.current) {
+      setStorageItem(STORAGE_KEYS.SESSION_EXTENDED, now.toString());
+      scheduleLogout();
     }
-  }, [logoutTimeout, scheduleAbsoluteLogout, isAuthPage, user, handleLogout, showLogoutWarning, showWarning]);
+  }, [isAuthPage, user, warningState.show, scheduleLogout, setStorageItem]);
 
-  // Handle session continuation
+  // Handle continue session
   const handleContinueSession = useCallback(() => {
-    // Clear warning immediately
-    setShowWarning(false);
-    setRemainingTime(0);
-    
-    // Clear all warning-related timers
-    if (warningIntervalRef.current) {
-      clearInterval(warningIntervalRef.current);
-      warningIntervalRef.current = null;
+    setWarningState({ show: false, remainingTime: 0 });
+    if (timersRef.current.countdown) {
+      clearInterval(timersRef.current.countdown);
+      delete timersRef.current.countdown;
     }
-    
-    // Reset activity and reschedule logout
-    resetActivityTimer();
+    resetActivity();
     continueSession();
-  }, [resetActivityTimer, continueSession]);
+  }, [resetActivity, continueSession]);
 
-  // Initialize timeout on mount
-  useEffect(() => {
-    if (!user || isAuthPage || isLoggingOutRef.current) {
-      clearAllLogoutSchedules();
-      return;
-    }
+  // Handle storage events from other tabs
+  const handleStorageChange = useCallback((e: StorageEvent) => {
+    if (isAuthPage || !user) return;
     
-    if (!logoutTimeout || logoutTimeout === 0) {
-      clearAllLogoutSchedules();
-      return;
-    }
+    // Ignore events from this tab (some browsers fire storage events for the origin tab)
+    if (e.storageArea !== localStorage) return;
     
-    if (!initialTimeoutSetRef.current) {
-      initialTimeoutSetRef.current = true;
-      resetActivityTimer();
-    }
-  }, [logoutTimeout, user, isAuthPage, clearAllLogoutSchedules, resetActivityTimer]);
-
-  // Main inactivity tracking effect
-  useEffect(() => {
-    if (isAuthPage || !user) {
-      clearAllLogoutSchedules();
-      return () => {};
-    }
-    
-    if (!logoutTimeout || logoutTimeout === 0) {
-      clearAllLogoutSchedules();
-      return () => {};
-    }
-
-    scheduleAbsoluteLogout();
-
-    // Check for stored schedule from other tabs
-    const storedScheduleTime = localStorage.getItem('logoutScheduledTime');
-    if (storedScheduleTime) {
-      const scheduledTime = parseInt(storedScheduleTime, 10);
-      const now = Date.now();
-      
-      if (scheduledTime && scheduledTime <= now) {
-        handleLogout('timeout');
-      }
-      else if (scheduledTime && scheduledTime > now) {
-        logoutTimeRef.current = scheduledTime;
-        logoutScheduledRef.current = true;
+    switch (e.key) {
+      case STORAGE_KEYS.FORCE_LOGOUT:
+        if (e.newValue && e.newValue !== e.oldValue) {
+          handleLogout('timeout');
+        }
+        break;
         
-        const remainingTime = scheduledTime - now;
+      case STORAGE_KEYS.SESSION_EXTENDED:
+        if (e.newValue && e.newValue !== e.oldValue && !isLeaderRef.current) {
+          // Another tab extended the session, hide warning
+          if (warningState.show) {
+            setWarningState({ show: false, remainingTime: 0 });
+            if (timersRef.current.countdown) {
+              clearInterval(timersRef.current.countdown);
+              delete timersRef.current.countdown;
+            }
+          }
+        }
+        break;
         
-        if (remainingTime > AUTO_LOGOUT_WARNING_TIME) {
-          warningTimerRef.current = window.setTimeout(() => {
-            if (!showWarning && logoutScheduledRef.current && user && !isAuthPage && !isLoggingOutRef.current) {
-              if (document.visibilityState === 'visible') {
-                showLogoutWarning(AUTO_LOGOUT_WARNING_TIME);
+      case STORAGE_KEYS.WARNING_TIME:
+        if (e.newValue && e.newValue !== e.oldValue && !isLeaderRef.current && !warningState.show) {
+          const warningTime = parseInt(e.newValue, 10);
+          if (isNaN(warningTime)) return; // Invalid value
+          
+          const now = Date.now();
+          if (warningTime <= now && document.visibilityState === 'visible') {
+            const logoutTimeStr = getStorageItem(STORAGE_KEYS.LOGOUT_TIME);
+            if (logoutTimeStr) {
+              const logoutTime = parseInt(logoutTimeStr, 10);
+              if (!isNaN(logoutTime)) {
+                const remainingTime = logoutTime - now;
+                if (remainingTime > 0 && remainingTime <= AUTO_LOGOUT_WARNING_TIME) {
+                  startWarningCountdown(remainingTime);
+                }
               }
             }
-          }, remainingTime - AUTO_LOGOUT_WARNING_TIME);
-        }
-        else if (document.visibilityState === 'visible' && !showWarning) {
-          showLogoutWarning(remainingTime);
-        }
-        
-        absoluteTimerRef.current = window.setTimeout(() => {
-          if (logoutScheduledRef.current && user && !isAuthPage && !isLoggingOutRef.current) {
-            handleLogout('timeout');
           }
-        }, remainingTime);
-      }
+        }
+        break;
+        
+      case STORAGE_KEYS.LEADER_ID:
+        // Leader changed, check if we should become leader
+        if (e.newValue !== tabIdRef.current) {
+          // Small delay to prevent race conditions
+          setTimeout(checkLeadership, 100);
+        }
+        break;
     }
+  }, [isAuthPage, user, warningState.show, handleLogout, getStorageItem, startWarningCountdown, checkLeadership]);
 
-    // Periodic inactivity check
-    const checkInactivity = () => {
-      if (document.visibilityState !== 'visible') return;
-      
-      if (isAuthPage || !user || isLoggingOutRef.current) {
-        clearAllLogoutSchedules();
-        return;
-      }
-      
-      const now = Date.now();
-      const inactiveTime = now - lastActivityRef.current;
-      
-      if (inactiveTime >= logoutTimeout) {
-        handleLogout('timeout');
-        return;
-      }
-      
-      if (logoutScheduledRef.current && logoutTimeRef.current > 0 && now >= logoutTimeRef.current) {
-        handleLogout('timeout');
-        return;
-      }
-      
-      const timeUntilLogout = logoutTimeRef.current - now;
-      if (logoutScheduledRef.current && timeUntilLogout <= AUTO_LOGOUT_WARNING_TIME && !showWarning) {
-        showLogoutWarning(timeUntilLogout);
-      }
-    };
-
-    checkIntervalRef.current = window.setInterval(checkInactivity, ACTIVITY_CHECK_INTERVAL);
+  // Periodic activity check (leader only)
+  const checkActivity = useCallback(() => {
+    if (!isLeaderRef.current || isAuthPage || !user || !stateRef.current.isActive) return;
+    if (document.visibilityState !== 'visible') return;
     
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const now = Date.now();
+    const inactiveTime = now - lastActivityRef.current;
     
-    return () => {
-      if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
-      if (warningIntervalRef.current) clearInterval(warningIntervalRef.current);
-      if (absoluteTimerRef.current) clearTimeout(absoluteTimerRef.current);
-      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [
-    logoutTimeout, 
-    showWarning, 
-    handleVisibilityChange, 
-    showLogoutWarning, 
-    handleLogout, 
-    scheduleAbsoluteLogout,
-    user,
-    isAuthPage,
-    clearAllLogoutSchedules
-  ]);
-
-  // Track user activity
-  useEffect(() => {
-    if (isAuthPage || !user || !logoutTimeout || logoutTimeout === 0) {
+    // If we've been inactive longer than the timeout, logout
+    if (logoutTimeout && inactiveTime >= logoutTimeout) {
+      handleLogout('timeout');
       return;
     }
+    
+    // Check if absolute logout time has passed
+    if (now >= stateRef.current.logoutTime) {
+      handleLogout('timeout');
+      return;
+    }
+    
+    // Check if we should show warning
+    const timeUntilLogout = stateRef.current.logoutTime - now;
+    if (timeUntilLogout <= AUTO_LOGOUT_WARNING_TIME && !warningState.show) {
+      startWarningCountdown(timeUntilLogout);
+    }
+  }, [isAuthPage, user, logoutTimeout, warningState.show, handleLogout, startWarningCountdown]);
 
-    const activityEvents = [
-      'mousedown', 'mousemove', 'keydown',
-      'scroll', 'touchstart', 'click', 'keypress',
-      'focus', 'mouseup', 'touchend'
-    ];
-
-    const handleActivity = () => {
-      if (!isLoggingOutRef.current) {
-        resetActivityTimer();
-      }
-    };
-
-    activityEvents.forEach(event => {
-      window.addEventListener(event, handleActivity, { passive: true });
-    });
-
-    window.addEventListener('beforeunload', () => {
-      if (user && !isAuthPage && !isLoggingOutRef.current) {
-        localStorage.setItem('lastActivityTime', lastActivityRef.current.toString());
+  // Handle visibility change
+  const handleVisibilityChange = useCallback(() => {
+    if (isAuthPage || !user) return;
+    
+    if (document.visibilityState === 'visible') {
+      // Check leadership when tab becomes visible
+      checkLeadership();
+      
+      // If we're leader, check for expired logout time
+      if (isLeaderRef.current && stateRef.current.isActive) {
+        const now = Date.now();
+        if (now >= stateRef.current.logoutTime) {
+          handleLogout('timeout');
+          return;
+        }
         
-        if (logoutScheduledRef.current && logoutTimeRef.current > 0) {
-          localStorage.setItem('logoutScheduledTime', logoutTimeRef.current.toString());
+        const timeUntilLogout = stateRef.current.logoutTime - now;
+        if (timeUntilLogout <= AUTO_LOGOUT_WARNING_TIME && !warningState.show) {
+          startWarningCountdown(timeUntilLogout);
         }
       }
-    });
+    }
+  }, [isAuthPage, user, checkLeadership, warningState.show, startWarningCountdown, handleLogout]);
 
+  // Main effect - setup when user/timeout changes
+  useEffect(() => {
+    if (!user || isAuthPage) {
+      clearAllTimers();
+      resignLeadership();
+      return;
+    }
+    
+    if (!logoutTimeout || logoutTimeout === 0) {
+      clearAllTimers();
+      resignLeadership();
+      return;
+    }
+    
+    // Start leader election
+    checkLeadership();
+    
+    // Setup leader election interval
+    timersRef.current.leaderElection = window.setInterval(checkLeadership, LEADER_HEARTBEAT_INTERVAL);
+    
+    // Setup activity check (only runs when leader)
+    timersRef.current.activityCheck = window.setInterval(checkActivity, ACTIVITY_CHECK_INTERVAL);
+    
+    return () => {
+      clearAllTimers();
+      resignLeadership();
+    };
+  }, [user, isAuthPage, logoutTimeout, checkLeadership, checkActivity, clearAllTimers, resignLeadership]);
+
+  // Leader scheduling effect
+  useEffect(() => {
+    if (isLeader && user && !isAuthPage && logoutTimeout && logoutTimeout > 0) {
+      scheduleLogout();
+    }
+  }, [isLeader, user, isAuthPage, logoutTimeout, scheduleLogout]);
+
+  // Activity tracking effect
+  useEffect(() => {
+    if (isAuthPage || !user || !logoutTimeout) {
+      return;
+    }
+    
+    const activityEvents = [
+      'mousedown', 'mousemove', 'keydown', 'scroll', 
+      'touchstart', 'click', 'keypress', 'focus'
+    ];
+    
+    activityEvents.forEach(event => {
+      window.addEventListener(event, resetActivity, { passive: true });
+    });
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Cleanup on beforeunload
+    const handleBeforeUnload = () => {
+      if (isLeaderRef.current) {
+        resignLeadership();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
     return () => {
       activityEvents.forEach(event => {
-        window.removeEventListener(event, handleActivity);
+        window.removeEventListener(event, resetActivity);
       });
-      window.removeEventListener('beforeunload', () => {});
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [logoutTimeout, resetActivityTimer, isAuthPage, user]);
+  }, [isAuthPage, user, logoutTimeout, resetActivity, handleVisibilityChange, handleStorageChange, resignLeadership]);
 
-  // Don't render anything on auth pages
+  // Don't render on auth pages
   if (isAuthPage || !user) {
     return null;
   }
-
-  // Calculate progress percentage for warning dialog
-  const progressPercentage = Math.max(0, Math.min(100, (remainingTime / AUTO_LOGOUT_WARNING_TIME) * 100));
-
+  
+  const progressPercentage = Math.max(0, Math.min(100, 
+    (warningState.remainingTime / AUTO_LOGOUT_WARNING_TIME) * 100
+  ));
+  
   return (
     <Dialog
-      open={showWarning}
+      open={warningState.show}
       aria-labelledby="logout-warning-dialog-title"
       aria-describedby="logout-warning-dialog-description"
       className="dark:bg-gray-900"
@@ -431,12 +568,12 @@ const AutoLogout: React.FC = () => {
       </DialogTitle>
       <DialogContent className="dark:bg-gray-800">
         <DialogContentText id="logout-warning-dialog-description" className="dark:text-gray-300">
-          Anda akan keluar secara otomatis dalam {Math.ceil(remainingTime / 1000)} detik karena tidak ada aktivitas.
+          Anda akan keluar secara otomatis dalam {Math.ceil(warningState.remainingTime / 1000)} detik karena tidak ada aktivitas.
         </DialogContentText>
         <Box sx={{ width: '100%', mt: 2 }}>
           <LinearProgress variant="determinate" value={progressPercentage} color="warning" />
           <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'center' }} className="dark:text-gray-300">
-            {Math.ceil(remainingTime / 1000)} detik tersisa
+            {Math.ceil(warningState.remainingTime / 1000)} detik tersisa
           </Typography>
         </Box>
       </DialogContent>
